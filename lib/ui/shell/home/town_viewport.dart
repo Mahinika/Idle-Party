@@ -16,6 +16,7 @@ import '../../hero_doll_sprite.dart';
 import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
+import '../menu_surface.dart';
 import 'home_gold_dock.dart';
 import 'upgrade_panel.dart';
 
@@ -92,27 +93,29 @@ class TownViewport extends StatelessWidget {
                     excludeFromSemantics: true,
                   ),
                 ),
-                Align(
-                  alignment: Alignment(0, short ? -0.05 : 0.12),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: GameTheme.edgeGap,
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        for (final building in TownBuilding.all) ...[
-                          Expanded(
-                            child: _TownBuildingButton(
-                              building: building,
-                              state: state,
-                              onTap: () => _openBuilding(context, building),
-                            ),
+                Positioned(
+                  left: GameTheme.edgeGap,
+                  right: GameTheme.edgeGap,
+                  bottom: short ? 48 : 64,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      for (final building in TownBuilding.all)
+                        Expanded(
+                          child: _TownBuildingButton(
+                            building: building,
+                            state: state,
+                            onTap: () => _openBuilding(context, building),
                           ),
-                        ],
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
+                ),
+                Positioned(
+                  left: GameTheme.edgeGap,
+                  right: GameTheme.edgeGap,
+                  bottom: short ? 4 : 8,
+                  child: _PartyRow(heroes: state.heroes),
                 ),
               ],
             ),
@@ -132,8 +135,6 @@ class TownViewport extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: GameTheme.section(),
                   ),
-                  const SizedBox(height: GameTheme.clusterGap),
-                  _PartyRow(heroes: state.heroes),
                   const SizedBox(height: GameTheme.clusterGap),
                   WebClickScope(
                     label: label,
@@ -344,7 +345,23 @@ class TownPreview extends StatelessWidget {
       ),
       child: SizedBox.fromSize(
         size: phoneSize,
-        child: TownViewport(director: director, router: router),
+        child: ListenableBuilder(
+          listenable: router,
+          builder: (context, _) {
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                TownViewport(director: director, router: router),
+                if (router.route == MenuRoute.gear)
+                  MenuSurface(
+                    director: director,
+                    router: router,
+                    home: true,
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

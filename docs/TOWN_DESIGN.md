@@ -14,14 +14,14 @@ square, one ENTER. It is not a second grid of the same rail icons.
 
 | Piece | Where | What it does |
 |-------|--------|----------------|
-| Town scene | `TownViewport` | Backdrop + cobble + FORGE / MARKET / INN + party dolls + ENTER |
+| Town scene | `TownViewport` | Backdrop + cobble + FORGE / MARKET / INN; party stands on the square; ENTER |
 | FORGE tap | existing GOLD sheet | `showHomeGoldSheet` → FORGE tracks |
 | MARKET tap | existing GOLD sheet | `showHomeGoldSheet` → MARKET |
 | INN tap | existing HEROES | `MenuRoute.gear` + ROSTER when that tab exists, else GEAR |
 | ENTER | existing chase | Same `runChasePlan` as camp |
 | Art | `assets/custom/town/` | Owned pixel facades, backdrop, ground, A56 composite |
 | Shortcut policy | `TownNavPolicy` | One home for SCROLLS; WATCH/WISP are not extra buttons |
-| Preview harness | `TownPreview` | 360×780 pump **without** `HomeShell` |
+| Preview harness | `TownPreview` | 360×780 pump **without** `HomeShell`; INN stacks `MenuSurface` |
 
 No new currency, no new save field, no ad gate, no energy, no chore
 timer. Offline gold, auto combat, SHOP, and WISP-in-the-cave are
@@ -137,9 +137,10 @@ Previews also copied to `/opt/cursor/artifacts/town_*.png` on generate
 
 ## Layout (A56)
 
-Portrait 360×780. Buildings in one row (min 44 px hit). Party well
-under the square. One brown ENTER. Labels use `GameTheme.hint` so
-text scale 1.45 still fits. Short height (`<720`) tucks the row up.
+Portrait 360×780. Buildings sit on the cobble in one row (min 44 px
+hit). Party wells stand in front of the facades. One brown ENTER.
+Labels use `GameTheme.hint` so text scale 1.45 still fits. Short
+height (`<720`) tucks the row down toward the dock.
 
 Rails (SCROLLS / QUESTS / …) stay on `HomeShell` after the swap.
 TownViewport does not duplicate them.

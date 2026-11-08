@@ -106,16 +106,24 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('INN opens HEROES without touching game_logic', (tester) async {
+    testWidgets('INN opens the existing HEROES sheet', (tester) async {
       await pumpTown(tester);
       await tester.tap(find.text('INN'));
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
       expect(router.route, MenuRoute.gear);
       expect(
         router.gearPanel == GearPanel.roster ||
             router.gearPanel == GearPanel.gear,
         isTrue,
       );
+      expect(find.text('GEAR'), findsWidgets);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('party stands on the square', (tester) async {
+      await pumpTown(tester);
+      expect(find.bySemanticsLabel('Party resting in town'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
