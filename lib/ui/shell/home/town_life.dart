@@ -6,10 +6,15 @@ import 'package:flutter/material.dart';
 import '../../../assets/custom_assets.dart';
 import '../../../models/vfx_quality.dart';
 
-/// Folk sheet from `tool/generate_town_art.py` (40×48 cells).
+/// Folk sheet from `tool/town_life_art.py` (96×112 cells).
+///
+/// The source is hero-sized. [displayW] and [displayH] are the on-screen
+/// size beside the 42px party, a clean 2:1 nearest downsample.
 abstract final class TownFolkSheet {
-  static const cellW = 40;
-  static const cellH = 48;
+  static const cellW = 96;
+  static const cellH = 112;
+  static const displayW = 48.0;
+  static const displayH = 56.0;
   static const frames = 5;
   static const people = 3;
   static const loop = Duration(milliseconds: 4800);
@@ -211,9 +216,9 @@ class _FolkPainter extends CustomPainter {
     final moving = clock?.isAnimating ?? false;
     final t = clock?.value ?? 0;
     final frames = townFolkFrames(t, moving: moving);
-    // Native cells are already hero-sized. Shrink only when the yard is short.
-    var spriteW = TownFolkSheet.cellW * scale.toDouble();
-    var spriteH = TownFolkSheet.cellH * scale.toDouble();
+    // Nearest-neighbor down to the party. Shrink further only on a short yard.
+    var spriteW = TownFolkSheet.displayW * scale;
+    var spriteH = TownFolkSheet.displayH * scale;
     final maxH = lane.height - 1;
     if (spriteH > maxH) {
       final fit = maxH / spriteH;

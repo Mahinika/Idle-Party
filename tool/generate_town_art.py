@@ -8,7 +8,8 @@ Nothing here is a foreign sprite. Deterministic: no RNG.
 
     python3 tool/generate_town_art.py
 
-Folk cells are 40×48. Dart `TownFolkSheet` must match.
+Folk cells are 96×112. Dart `TownFolkSheet` must match. The painter
+nearest-neighbors them down beside the party.
 """
 from __future__ import annotations
 
@@ -22,6 +23,9 @@ from PIL import Image
 TOOL_DIR = Path(__file__).resolve().parent
 ASSETS_DIR = TOOL_DIR.parent / "assets" / "custom" / "town"
 ROOT = TOOL_DIR.parent
+if str(TOOL_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOL_DIR))
+import town_life_art as life_art  # noqa: E402
 
 INK = (32, 22, 18, 255)
 
@@ -185,8 +189,8 @@ CLOUD = [
     (250, 252, 252),
 ]
 
-FOLK_CELL_W = 40
-FOLK_CELL_H = 48
+FOLK_CELL_W = life_art.CELL_W
+FOLK_CELL_H = life_art.CELL_H
 FOLK_FRAMES = 5
 FOLK_PEOPLE = 3
 
@@ -1070,117 +1074,19 @@ def generate_tree_tall() -> Image.Image:
 
 
 def generate_flowers() -> Image.Image:
-    pix = Pix(32, 20)
-    stems = (4, 11, 18, 25)
-    colors = ((196, 64, 72), (230, 186, 70), (236, 228, 210), (176, 86, 150))
-    for i, sx in enumerate(stems):
-        pix.rect(sx, 8, 1, 8, LEAF[2])
-        pix.put(sx - 1, 12, LEAF[4])
-        pix.put(sx + 1, 14, LEAF[3])
-        col = colors[i]
-        pix.put(sx, 6, col)
-        pix.put(sx - 1, 7, col)
-        pix.put(sx + 1, 7, col)
-        pix.put(sx, 8, (255, 230, 140) if i != 2 else GOLD[5])
-        pix.put(sx, 5, col)
-    pix.outline()
-    return pix.image()
+    return life_art.flowers()
 
 
 def generate_ground() -> Image.Image:
-    pix = Pix(48, 48)
-    pix.rect(0, 0, 48, 48, GRASS[2])
-    # Low-contrast irregular shade. One step off the base, so the repeat
-    # does not turn into a field of bubbles.
-    shade = (
-        (3, 5), (4, 5), (5, 5), (4, 6), (5, 6), (6, 6), (5, 7),
-        (18, 12), (19, 12), (20, 12), (18, 13), (19, 13), (17, 13), (19, 14),
-        (33, 7), (34, 7), (34, 8), (35, 8), (35, 9),
-        (8, 27), (9, 27), (10, 27), (9, 28), (10, 28), (11, 28), (10, 29),
-        (26, 34), (27, 34), (28, 34), (27, 35), (26, 35),
-        (40, 22), (41, 22), (41, 23), (42, 23),
-        (14, 40), (15, 40), (15, 41),
-    )
-    lit = (
-        (12, 18), (13, 18), (13, 19), (14, 19),
-        (28, 20), (29, 20), (30, 20), (29, 21),
-        (6, 16), (7, 16), (7, 17),
-        (36, 38), (37, 38), (37, 39), (38, 39),
-        (22, 8), (23, 8), (23, 9),
-    )
-    for x, y in shade:
-        pix.put(x, y, GRASS[1])
-    for x, y in lit:
-        pix.put(x, y, GRASS[3])
-    tufts = (
-        (6, 14, 5),
-        (14, 8, 4),
-        (24, 16, 6),
-        (38, 12, 4),
-        (10, 28, 5),
-        (28, 32, 4),
-        (40, 36, 5),
-        (18, 40, 3),
-        (44, 22, 4),
-        (8, 44, 3),
-    )
-    for cx, cy, h in tufts:
-        for i in range(h):
-            pix.put(cx, cy - i, GRASS[4 if i < 2 else 5])
-            if i % 2 == 0:
-                pix.put(cx + 1, cy - i, GRASS[3])
-        pix.put(cx - 1, cy, GRASS[1])
-    # Daisy and a pebble. Kept off the tile edge so the repeat stays quiet.
-    pix.put(22, 26, (240, 236, 220))
-    pix.put(23, 25, (236, 200, 90))
-    pix.put(21, 26, (236, 200, 90))
-    pix.put(22, 27, LEAF[3])
-    pix.put(22, 24, LEAF[4])
-    pix.rect(33, 18, 3, 2, PATH_STONE[3])
-    pix.put(34, 18, PATH_STONE[5])
-    return pix.image()
+    return life_art.ground()
 
 
 def generate_path() -> Image.Image:
-    """A wrapping cobble course. The widget repeats it; it is not stretched."""
-    pix = Pix(64, 28)
-    # Soil bed.
-    pix.rect(0, 0, 64, 28, (96, 72, 46))
-    stones = (
-        (1, 2, 10, 8),
-        (12, 1, 8, 9),
-        (21, 3, 12, 7),
-        (34, 2, 9, 8),
-        (44, 1, 8, 9),
-        (53, 3, 10, 7),
-        (2, 12, 9, 8),
-        (12, 13, 11, 7),
-        (24, 12, 8, 9),
-        (33, 14, 10, 7),
-        (44, 12, 9, 8),
-        (54, 13, 8, 8),
-        (0, 22, 14, 6),
-        (16, 22, 12, 6),
-        (30, 21, 10, 7),
-        (42, 22, 12, 6),
-        (56, 21, 8, 7),
-    )
-    for i, (x, y, w, h) in enumerate(stones):
-        tone = 2 + (i % 3)
-        pix.rect(x, y, w, h, PATH_STONE[tone])
-        pix.rect(x, y, w - 1, 1, PATH_STONE[min(tone + 1, 5)])
-        pix.rect(x, y + h - 1, w, 1, PATH_STONE[0])
-        pix.put(x + w - 1, y + 1, PATH_STONE[1])
-        if i % 4 == 0:
-            pix.put(x + 2, y + 2, PATH_STONE[5])
-        if i % 5 == 0:
-            pix.put(x + w // 2, y + h // 2, PATH_STONE[1])
-    # Grass in a crack, and a loose chip.
-    pix.put(18, 11, GRASS[3])
-    pix.put(19, 11, GRASS[4])
-    pix.put(40, 20, PATH_STONE[4])
-    pix.put(41, 20, PATH_STONE[2])
-    return pix.image()
+    return life_art.path()
+
+
+def generate_folk() -> Image.Image:
+    return life_art.folk()
 
 
 def generate_backdrop() -> Image.Image:
@@ -1204,7 +1110,6 @@ def generate_backdrop() -> Image.Image:
                 pix.put(x, y, (255, 236, 180))
     for rx, ry in ((18, 28), (54, 28), (36, 10), (36, 46), (22, 16), (50, 40)):
         pix.put(rx, ry, (255, 220, 140))
-    # Clouds as lumpy clusters with shaded undersides.
     # Lumpy clouds: stacked runs, flat shaded bottoms, not one oval.
     clouds = (
         (78, 22, (10, 18, 26, 22, 14)),
@@ -1242,203 +1147,6 @@ def generate_backdrop() -> Image.Image:
     return pix.image()
 
 
-def _head(pix: Pix, cx: int, top: int, hair: list[tuple[int, int, int]], style: str) -> None:
-    # Cel-shaded skull.
-    for y in range(top, top + 12):
-        for x in range(cx - 6, cx + 7):
-            nx = (x - cx) / 6
-            ny = (y - (top + 5)) / 6
-            if nx * nx + ny * ny > 1.05:
-                continue
-            light = 0.2 - 0.5 * nx - 0.35 * ny
-            tone = 4 if light > 0.35 else 3 if light > 0 else 2 if light > -0.35 else 1
-            pix.put(x, y, SKIN[tone])
-    # Ears.
-    pix.put(cx - 7, top + 6, SKIN[2])
-    pix.put(cx + 7, top + 6, SKIN[1])
-    # Eyes large enough to read beside a 42px hero.
-    for ex in (cx - 3, cx + 2):
-        pix.put(ex, top + 6, (24, 14, 12))
-        pix.put(ex + 1, top + 6, (24, 14, 12))
-        pix.put(ex, top + 7, (24, 14, 12))
-        pix.put(ex + 1, top + 5, (255, 248, 236))
-    pix.put(cx - 1, top + 9, (168, 92, 82))
-    pix.put(cx, top + 9, (120, 60, 54))
-    # Hair.
-    if style == "cap":
-        pix.rect(cx - 7, top - 1, 15, 4, hair[2])
-        pix.rect(cx - 8, top + 1, 3, 3, hair[1])
-        pix.rect(cx + 6, top + 1, 3, 3, hair[1])
-        pix.rect(cx - 6, top - 1, 8, 1, hair[4])
-        pix.put(cx - 8, top + 3, hair[3])
-    elif style == "bun":
-        for y in range(top, top + 5):
-            pix.rect(cx - 6, y, 13, 1, hair[2 if y % 2 else 3])
-        pix.rect(cx - 7, top + 2, 2, 6, hair[2])
-        pix.rect(cx + 6, top + 2, 2, 5, hair[1])
-        pix.rect(cx + 4, top - 3, 5, 5, hair[3])
-        pix.put(cx + 5, top - 3, hair[4])
-        pix.put(cx + 7, top - 1, hair[1])
-    else:
-        for y in range(top, top + 4):
-            pix.rect(cx - 6, y, 13, 1, hair[2 if y != top else 3])
-        pix.rect(cx - 7, top + 2, 2, 4, hair[1])
-        pix.rect(cx + 6, top + 3, 2, 3, hair[1])
-        pix.put(cx - 2, top, hair[4])
-        pix.put(cx - 5, top + 1, hair[4])
-
-
-def _boot(pix: Pix, x: int, y: int, w: int = 4) -> None:
-    pix.rect(x, y, w, 3, (42, 30, 24))
-    pix.rect(x, y + 2, w + 1, 2, (28, 20, 16))
-    pix.put(x, y, (86, 64, 48))
-
-
-def _person(pix: Pix, ox: int, oy: int, frame: int, kind: int) -> None:
-    """Chibi townsfolk. Frame 0 is idle. Frames 1–4 are a walk cycle facing right."""
-    if kind == 0:
-        cloth, hair, style = MOSS_CLOTH, HAIR, "short"
-    elif kind == 1:
-        cloth, hair, style = WOOL, HAIR, "cap"
-    else:
-        cloth, hair, style = ROSE, [
-            (72, 36, 24),
-            (110, 58, 36),
-            (150, 84, 52),
-            (186, 116, 72),
-            (214, 156, 110),
-        ], "bun"
-
-    bob = -1 if frame in (2, 4) else 0
-    top = oy + 6 + bob
-    cx = ox + 18
-
-    def torso(y0: int, y1: int, wide: int = 0) -> None:
-        for y in range(y0, y1):
-            inset = 0 if y < y0 + 3 else wide
-            for x in range(cx - 6 - inset, cx + 7 + inset):
-                local = x - (cx - 6)
-                if local < 2:
-                    col = cloth[1]
-                elif local < 5:
-                    col = cloth[4]
-                elif local > 10:
-                    col = cloth[1]
-                else:
-                    col = cloth[3]
-                pix.put(x, y, col)
-        # Belt.
-        pix.rect(cx - 6, y0 + 6, 13, 2, TIMBER[1])
-        pix.put(cx + 2, y0 + 6, GOLD[4])
-        pix.put(cx + 3, y0 + 7, GOLD[2])
-
-    _head(pix, cx, top, hair, style)
-    torso(top + 11, top + 22, wide=1 if kind == 0 else 0)
-
-    if kind == 0:
-        # Leather apron over the tunic.
-        pix.rect(cx - 4, top + 13, 9, 12, TIMBER[2])
-        pix.rect(cx - 4, top + 13, 9, 1, TIMBER[4])
-        pix.rect(cx - 1, top + 12, 2, 3, TIMBER[3])
-        pix.put(cx - 2, top + 18, TIMBER[1])
-        pix.put(cx + 2, top + 20, TIMBER[0])
-    elif kind == 1:
-        # Satchel on the left hip.
-        pix.rect(cx - 10, top + 16, 5, 7, TIMBER[2])
-        pix.rect(cx - 10, top + 16, 5, 1, TIMBER[4])
-        pix.put(cx - 8, top + 15, TIMBER[1])
-        pix.rect(cx - 9, top + 12, 1, 5, TIMBER[1])
-    else:
-        # Shawl.
-        pix.rect(cx - 7, top + 11, 15, 3, CREAM[3])
-        pix.rect(cx - 7, top + 11, 15, 1, CREAM[5])
-        pix.put(cx - 6, top + 14, CREAM[2])
-        pix.put(cx + 6, top + 14, CREAM[1])
-
-    # Arms. Opposite the leading leg.
-    swing = (0, -2, -1, 2, 1)[frame]
-    arm_y0 = top + 13
-    # Near arm (right, screen-right) and far arm.
-    for side, shift in ((-1, -swing), (1, swing)):
-        ax = cx + side * 7
-        pix.rect(ax, arm_y0, 3, 6, cloth[2] if side < 0 else cloth[4])
-        hand_y = arm_y0 + 6 + (1 if shift > 0 else 0)
-        pix.put(ax + 1, hand_y, SKIN[4])
-        pix.put(ax, hand_y, SKIN[2])
-        pix.put(ax + 1, hand_y + 1, SKIN[3])
-        if shift:
-            pix.put(ax + (1 if side > 0 else 0), hand_y - 1, cloth[3])
-
-    if kind == 0:
-        # Hammer held in the right hand: short haft, wide iron head.
-        hx = cx + 8
-        hy = top + 20 + (0 if swing <= 0 else 1)
-        pix.rect(hx + 1, hy, 2, 6, TIMBER[2])
-        pix.put(hx + 1, hy + 5, TIMBER[4])
-        pix.rect(hx - 1, hy - 1, 6, 3, IRON[3])
-        pix.rect(hx - 1, hy - 1, 6, 1, IRON[5])
-        pix.rect(hx - 1, hy + 1, 6, 1, IRON[1])
-
-    # Legs or skirt. Feet stay under the hips so a stride does not detach them.
-    if kind == 2:
-        sway = (0, -2, -1, 2, 1)[frame]
-        hem = top + 34
-        for y in range(top + 21, hem):
-            flare = 1 if y > top + 28 else 0
-            for x in range(cx - 7 - flare + sway, cx + 8 + flare + sway):
-                col = ROSE[2] if x < cx else ROSE[3]
-                if y > hem - 3:
-                    col = ROSE[1]
-                pix.put(x, y, col)
-        pix.put(cx - 6 + sway, hem, (42, 30, 24))
-        pix.put(cx + 4 + sway, hem, (42, 30, 24))
-        pix.put(cx - 5 + sway, hem + 1, (28, 20, 16))
-        pix.put(cx + 5 + sway, hem + 1, (28, 20, 16))
-        # Basket on the left.
-        bx = cx - 12
-        by = top + 22
-        pix.rect(bx, by, 6, 5, TIMBER[3])
-        pix.rect(bx, by, 6, 1, TIMBER[5])
-        apple(pix, bx + 1, by - 3, True)
-    else:
-        # (dx from cx, hip drop, foot reach). Both legs start in the torso.
-        cycles = {
-            0: ((-4, 0, 12), (1, 0, 12)),
-            1: ((-5, 0, 13), (2, 1, 10)),
-            2: ((-3, 0, 11), (1, 0, 11)),
-            3: ((-2, 1, 10), (3, 0, 13)),
-            4: ((-2, 0, 11), (1, 0, 11)),
-        }
-        trouser = TIMBER[1] if kind == 0 else cloth[1]
-        trouser_hi = TIMBER[3] if kind == 0 else cloth[3]
-        hip = top + 18
-        for dx, drop, reach in cycles[frame]:
-            x = cx + dx
-            y0 = hip + drop
-            pix.rect(x, y0, 3, reach, trouser)
-            pix.rect(x, y0, 1, reach, trouser_hi)
-            _boot(pix, x, y0 + reach - 2, 3)
-
-    if kind == 1 and frame == 0:
-        # Idle weight: the cap brim already separates him.
-        pass
-
-
-def generate_folk() -> Image.Image:
-    pix = Pix(FOLK_CELL_W * FOLK_FRAMES, FOLK_CELL_H * FOLK_PEOPLE)
-    for person in range(FOLK_PEOPLE):
-        for frame in range(FOLK_FRAMES):
-            _person(
-                pix,
-                frame * FOLK_CELL_W,
-                person * FOLK_CELL_H,
-                frame,
-                person,
-            )
-    pix.outline()
-    return pix.image()
-
-
 def generate_sheet() -> Image.Image:
     sheet = Image.new("RGBA", (680, 640), (186, 206, 196, 255))
     kinds = (
@@ -1472,7 +1180,8 @@ Owned Idle Party pixel art for the out-of-dungeon town.
 
 Three painted facade tiers (timber / plaster or ashlar / banners). AL10
 pennants and AL20 lanterns are Flutter overlays. Townsfolk frames share
-one sheet. `TownFolkSheet` in Dart uses the same 40×48 cells.
+one sheet. `TownFolkSheet` in Dart uses the same 96×112 cells and
+draws them at about half size with nearest-neighbor.
 
 Deterministic: no RNG. Regenerate:
 
@@ -1486,11 +1195,11 @@ python3 tool/generate_town_art.py
 |------|--------|
 | Ink (32, 22, 18), 1 px contour | Same warm ink as the heroes |
 | Light | Upper-left, in clusters on each stone, tile, and fold |
-| Ground | Grass clumps and a repeating cobble, not a flat wash |
+| Ground | Quiet meadow, stepping stones, four different plantings |
 | Roofs | Individual tiles. Guild slate, houses terracotta, market a folded awning |
 | Windows | Amber glass, wood mullions |
-| People | Three chibi figures at hero scale, idle + 4 walk frames |
-| Scale | `FilterQuality.none`. Folk draw at native size and only shrink to fit a short yard |
+| People | Three villagers at hero source size, idle + 4 walk frames |
+| Scale | `FilterQuality.none`. Folk source is 96×112 and draws near 48×56 |
 
 ## Files
 
@@ -1498,10 +1207,13 @@ python3 tool/generate_town_art.py
 |------|-----|
 | backdrop.png | Banded sky, clouds, ridge, distant roof |
 | ground.png | Repeating grass tile |
-| path.png | Repeating cobble tile |
+| path.png | One ragged stepping-stone course, 360×40, transparent gaps |
 | tree_round.png / tree_tall.png | Clumped canopies |
-| flowers.png | Flower cluster |
-| folk.png | 3 people × 5 frames, 40×48 cells |
+| flowers.png / shrub.png / wild.png / herbs.png | Four different plantings |
+| meadow.png / thicket.png / scuff.png | Unique lawn clumps, placed once |
+| worn.png | Small worn patch for a doorway |
+| contact.png | Dark grass under a building |
+| folk.png | 3 people × 5 frames, 96×112 cells |
 | well.png | Stone well |
 | forge / market / inn / guild `_t0..t2` | Facades |
 | vault_shut.png / vault_open.png | Ironbound chest on a plinth |
@@ -1521,6 +1233,14 @@ def main() -> int:
         ("tree_round.png", generate_tree_round()),
         ("tree_tall.png", generate_tree_tall()),
         ("flowers.png", generate_flowers()),
+        ("shrub.png", life_art.shrub()),
+        ("wild.png", life_art.wild()),
+        ("herbs.png", life_art.herbs()),
+        ("worn.png", life_art.worn()),
+        ("meadow.png", life_art.meadow()),
+        ("thicket.png", life_art.thicket()),
+        ("scuff.png", life_art.scuff()),
+        ("contact.png", life_art.contact()),
         ("folk.png", generate_folk()),
         ("well.png", generate_well()),
         ("vault_shut.png", generate_vault(False)),
@@ -1548,9 +1268,12 @@ def main() -> int:
         for x in range(0, 360, grass.width):
             preview.paste(grass, (x, y))
     path = by_name["path.png"]
-    for x in range(0, 360, path.width):
-        preview.paste(path, (x, 300))
-        preview.paste(path, (x, 430))
+    preview.paste(path, (0, 300), path)
+    paste(preview, by_name["worn.png"], (20, 430))
+    paste(preview, by_name["worn.png"], (150, 436))
+    paste(preview, by_name["worn.png"], (270, 428))
+    paste(preview, by_name["flowers.png"], (8, 250))
+    paste(preview, by_name["shrub.png"], (300, 246))
     paste(preview, by_name["tree_round.png"], (0, 200))
     paste(preview, by_name["tree_tall.png"], (312, 188))
     paste(preview, by_name["guild_t1.png"], (8, 210))
@@ -1560,7 +1283,7 @@ def main() -> int:
     paste(preview, by_name["market_t1.png"], (120, 376))
     paste(preview, by_name["inn_t1.png"], (236, 356))
     folk = by_name["folk.png"]
-    for person, fx in ((0, 40), (1, 250), (2, 150)):
+    for person, fx in ((0, 24), (1, 280), (2, 156)):
         cell = folk.crop(
             (
                 0,
@@ -1569,7 +1292,8 @@ def main() -> int:
                 person * FOLK_CELL_H + FOLK_CELL_H,
             )
         )
-        paste(preview, cell, (fx, 330))
+        shown = cell.resize((FOLK_CELL_W // 2, FOLK_CELL_H // 2), Image.Resampling.NEAREST)
+        paste(preview, shown, (fx, 340))
     assets.append(("preview_a56.png", preview))
 
     for name, img in assets:

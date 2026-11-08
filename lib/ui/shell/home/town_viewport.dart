@@ -298,8 +298,14 @@ class _TownSquare extends StatelessWidget {
             excludeFromSemantics: true,
           ),
         ),
-        _pathStrip(layout.courtyardPath),
-        _pathStrip(layout.doorPath),
+        _yardPath(layout.courtyardPath),
+        for (final shade in layout.contacts)
+          _sprite(
+            shade,
+            CustomAssets.townContact,
+            fit: BoxFit.fill,
+            align: Alignment.bottomCenter,
+          ),
         for (final tree in layout.trees)
           _sprite(
             tree,
@@ -307,11 +313,11 @@ class _TownSquare extends StatelessWidget {
             fit: BoxFit.contain,
             align: Alignment.bottomCenter,
           ),
-        for (final flower in layout.flowers)
-          if (!_coversLabel(flower, labels))
+        for (final planting in layout.plantings)
+          if (!_coversLabel(planting.rect, labels))
             _sprite(
-              flower,
-              CustomAssets.townFlowers,
+              planting.rect,
+              _plantingAsset(planting.asset),
               fit: BoxFit.contain,
               align: Alignment.bottomCenter,
             ),
@@ -331,6 +337,14 @@ class _TownSquare extends StatelessWidget {
             TownBuilding.frontRow[i],
             TownBuilding.frontRow[i].assetPath(tier),
           ),
+        for (final patch in layout.thresholds)
+          if (!_coversLabel(patch, labels))
+            _sprite(
+              patch,
+              CustomAssets.townWorn,
+              fit: BoxFit.contain,
+              align: Alignment.bottomCenter,
+            ),
         if (TownTier.showArcade(state.ascensionLevel))
           Positioned(
             left: layout.doorPath.left + 16,
@@ -369,25 +383,41 @@ class _TownSquare extends StatelessWidget {
     return false;
   }
 
-  /// Cobbles repeat. Stretching one strip into a tall yard looked like a wall.
-  Widget _pathStrip(Rect rect) {
-    const tileH = 28.0;
-    final height = rect.height < tileH ? rect.height : tileH;
+  /// One authored course. It is not repeated into a ruled strip.
+  Widget _yardPath(Rect rect) {
+    const nativeH = 40.0;
+    final height = rect.height < nativeH ? rect.height : nativeH;
     return Positioned(
       left: rect.left,
       width: rect.width,
       top: rect.bottom - height,
       height: height,
       child: IgnorePointer(
-        child: Image.asset(
-          CustomAssets.townPath,
-          repeat: ImageRepeat.repeat,
-          alignment: Alignment.topLeft,
-          filterQuality: FilterQuality.none,
-          excludeFromSemantics: true,
+        child: FittedBox(
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.bottomCenter,
+          child: Image.asset(
+            CustomAssets.townPath,
+            width: 360,
+            height: nativeH,
+            filterQuality: FilterQuality.none,
+            excludeFromSemantics: true,
+          ),
         ),
       ),
     );
+  }
+
+  String _plantingAsset(String key) {
+    return switch (key) {
+      'shrub' => CustomAssets.townShrub,
+      'wild' => CustomAssets.townWild,
+      'herbs' => CustomAssets.townHerbs,
+      'meadow' => CustomAssets.townMeadow,
+      'thicket' => CustomAssets.townThicket,
+      'scuff' => CustomAssets.townScuff,
+      _ => CustomAssets.townFlowers,
+    };
   }
 
   Widget _sprite(

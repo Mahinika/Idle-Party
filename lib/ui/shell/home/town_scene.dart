@@ -11,6 +11,14 @@ abstract final class TownSpriteSize {
   static const well = Size(56, 68);
 }
 
+/// One planting. Each uses its own sprite so the yard is not six copies.
+class TownPlanting {
+  const TownPlanting(this.rect, this.asset);
+
+  final Rect rect;
+  final String asset;
+}
+
 /// Packed town square. Hit boxes do not overlap. Name chips sit on the
 /// facades. The yard between the rows is the walking lane.
 class TownSceneLayout {
@@ -28,7 +36,9 @@ class TownSceneLayout {
     required this.courtyardPath,
     required this.doorPath,
     required this.trees,
-    required this.flowers,
+    required this.plantings,
+    required this.thresholds,
+    required this.contacts,
     required this.grassTop,
   });
 
@@ -45,7 +55,13 @@ class TownSceneLayout {
   final Rect courtyardPath;
   final Rect doorPath;
   final List<Rect> trees;
-  final List<Rect> flowers;
+  final List<TownPlanting> plantings;
+
+  /// Worn stone in front of each front door. Not a second full-width path.
+  final List<Rect> thresholds;
+
+  /// Dark grass under each structure, so the walls meet the ground.
+  final List<Rect> contacts;
 
   /// Grass starts here. The backdrop shows above it.
   final double grassTop;
@@ -124,8 +140,8 @@ class TownSceneLayout {
     }
 
     final lane = Rect.fromLTRB(8, backBottom + 1, math.max(8, w - 8), frontTop - 1);
-    // 1 means "draw them". The painter fits the native cell into the lane
-    // and never doubles it, so a short square still has people.
+    // 1 means "draw them". The painter nearest-neighbors the 96×112 cell
+    // down beside the party, and shrinks further when the yard is short.
     var folkScale = 0;
     if (lane.width >= 48 && lane.height >= 16) {
       folkScale = 1;
@@ -138,13 +154,49 @@ class TownSceneLayout {
       Rect.fromLTWH(guild.right - 8, math.max(0, canopy + 10), 40, 52),
     ];
 
-    final flowers = <Rect>[
-      Rect.fromLTWH(4, backBottom - 14, 28, 18),
-      Rect.fromLTWH(w - 32, backBottom - 14, 28, 18),
-      Rect.fromLTWH(front.first.left, frontBottom - 12, 28, 18),
-      Rect.fromLTWH(front.last.right - 28, frontBottom - 12, 28, 18),
-      Rect.fromLTWH(12, frontBottom - 8, 28, 18),
-      Rect.fromLTWH(w - 40, frontBottom - 8, 28, 18),
+    final plantings = <TownPlanting>[
+      TownPlanting(Rect.fromLTWH(0, backBottom - 36, 56, 44), 'flowers'),
+      TownPlanting(Rect.fromLTWH(w - 56, backBottom - 40, 56, 44), 'shrub'),
+    ];
+    if (lane.height >= 40) {
+      plantings.add(
+        TownPlanting(Rect.fromLTWH(0, lane.bottom - 44, 52, 44), 'wild'),
+      );
+      plantings.add(
+        TownPlanting(Rect.fromLTWH(w - 52, lane.bottom - 48, 52, 44), 'herbs'),
+      );
+      plantings.add(
+        TownPlanting(Rect.fromLTWH(18, lane.top + 2, 72, 36), 'scuff'),
+      );
+    }
+    final grass = math.max(0.0, backBottom - gh - 6);
+    plantings.add(
+      TownPlanting(Rect.fromLTWH(w * 0.34, grass + 2, 104, 52), 'meadow'),
+    );
+    final rightGap = vault.left - well.right - 12;
+    if (rightGap >= 36) {
+      plantings.add(
+        TownPlanting(
+          Rect.fromLTWH(well.right + 6, well.center.dy - 8, math.min(rightGap, 88), 48),
+          'thicket',
+        ),
+      );
+    }
+    final thresholds = <Rect>[
+      for (final building in front)
+        Rect.fromLTWH(building.center.dx - 28, building.bottom + 1, 56, 22),
+    ];
+    Rect shade(Rect body) {
+      final width = math.min(math.max(28.0, body.width * 0.62), 96.0);
+      return Rect.fromLTWH(body.center.dx - width / 2, body.bottom - 8, width, 12);
+    }
+
+    final contacts = <Rect>[
+      shade(guild),
+      shade(vault),
+      shade(well),
+      for (final building in front) shade(building),
+      for (final tree in trees) shade(tree),
     ];
 
     return TownSceneLayout(
@@ -161,7 +213,9 @@ class TownSceneLayout {
       courtyardPath: Rect.fromLTRB(0, backBottom - 8, w, frontTop),
       doorPath: Rect.fromLTRB(0, frontBottom - 16, w, math.min(h, frontBottom + 10)),
       trees: trees,
-      flowers: flowers,
+      plantings: plantings,
+      thresholds: thresholds,
+      contacts: contacts,
       grassTop: math.max(0, backBottom - gh - 6),
     );
   }

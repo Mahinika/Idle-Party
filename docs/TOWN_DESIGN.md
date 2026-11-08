@@ -103,10 +103,11 @@ Source: `tool/generate_town_art.py`. License: owned, same as
 `FilterQuality.none`.
 
 The first daylight pass was too flat (checker grass, stick villagers,
-hatched awnings). This pass paints the same materials as the heroes and
-the hub scene: ashlar courses, tile rows, cloth folds, iron rivets, and
-chibi townsfolk with a real walk. Warm ink `(32, 22, 18)` and upper-left
-light still match the heroes. Dungeon art is unchanged.
+hatched awnings). The stone-and-tile buildings stay. This pass replaces
+the lawn and the people: a quiet meadow, one ragged stepping-stone
+course, four different plantings, and villagers painted at hero source
+size. Warm ink `(32, 22, 18)` and upper-left light still match the
+heroes. Dungeon art is unchanged.
 
 Guild is a pale stone hall. Forge, Market, and Inn keep their jobs
 (chimney and anvil, stall, jetty). Name chips paint last, on the
@@ -115,14 +116,14 @@ facades. Hit boxes do not overlap.
 Three painted tiers per facade (timber / plaster / banners). AL10
 pennants and AL20 lanterns stay Flutter overlays, drawn as pixel blocks.
 
-Townsfolk live on `folk.png` (3 people × idle + 4 walk frames, 40×48
-cells, about the size of a party hero). `TownFolkLayer` walks two of
-them through the yard and idles the third. They draw at native size and
-only shrink when the yard is short. The clock runs only while motion is
-on, the route's `TickerMode` is enabled, and the app is resumed. Minimal
-VFX and the system reduce-motion flag hold the idle pose. Goldens stay
-deterministic: Minimal VFX does not tick, and a full-VFX capture is a
-fixed pump duration.
+Townsfolk live on `folk.png` (3 people × idle + 4 walk frames, 96×112
+cells). `TownFolkLayer` nearest-neighbors them to 48×56, beside the
+42px party, and shrinks further when the yard is short. It walks two of
+them through the yard and idles the third. The clock runs only while
+motion is on, the route's `TickerMode` is enabled, and the app is
+resumed. Minimal VFX and the system reduce-motion flag hold the idle
+pose. Goldens stay deterministic: Minimal VFX does not tick, and a
+full-VFX capture is a fixed pump duration.
 
 ---
 
