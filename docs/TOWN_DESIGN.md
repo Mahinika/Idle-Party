@@ -102,10 +102,11 @@ Source: `tool/generate_town_art.py`. License: owned, same as
 `assets/custom/`. No paid packs. Deterministic (no RNG).
 `FilterQuality.none`.
 
-The owner saw the cave-brown paving on device and asked for a brighter,
-living town. The square is daylight: grass tile, a dirt path, trees,
-flowers, red roofs, and three townsfolk. Warm ink `(32, 22, 18)` and
-upper-left light still match the heroes. Dungeon art is unchanged.
+The first daylight pass was too flat (checker grass, stick villagers,
+hatched awnings). This pass paints the same materials as the heroes and
+the hub scene: ashlar courses, tile rows, cloth folds, iron rivets, and
+chibi townsfolk with a real walk. Warm ink `(32, 22, 18)` and upper-left
+light still match the heroes. Dungeon art is unchanged.
 
 Guild is a pale stone hall. Forge, Market, and Inn keep their jobs
 (chimney and anvil, stall, jetty). Name chips paint last, on the
@@ -114,11 +115,12 @@ facades. Hit boxes do not overlap.
 Three painted tiers per facade (timber / plaster / banners). AL10
 pennants and AL20 lanterns stay Flutter overlays, drawn as pixel blocks.
 
-Townsfolk live on `folk.png` (3 people × idle + 4 walk frames, 18×26
-cells). `TownFolkLayer` walks two of them through the yard and idles
-the third. The clock runs only while motion is on, the route's
-`TickerMode` is enabled, and the app is resumed. Minimal VFX and the
-system reduce-motion flag hold the idle pose. Goldens stay
+Townsfolk live on `folk.png` (3 people × idle + 4 walk frames, 40×48
+cells, about the size of a party hero). `TownFolkLayer` walks two of
+them through the yard and idles the third. They draw at native size and
+only shrink when the yard is short. The clock runs only while motion is
+on, the route's `TickerMode` is enabled, and the app is resumed. Minimal
+VFX and the system reduce-motion flag hold the idle pose. Goldens stay
 deterministic: Minimal VFX does not tick, and a full-VFX capture is a
 fixed pump duration.
 

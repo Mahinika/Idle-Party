@@ -304,10 +304,17 @@ class _TownSquare extends StatelessWidget {
           _sprite(
             tree,
             tree.width > 60 ? CustomAssets.townTreeRound : CustomAssets.townTreeTall,
+            fit: BoxFit.contain,
+            align: Alignment.bottomCenter,
           ),
         for (final flower in layout.flowers)
           if (!_coversLabel(flower, labels))
-            _sprite(flower, CustomAssets.townFlowers),
+            _sprite(
+              flower,
+              CustomAssets.townFlowers,
+              fit: BoxFit.contain,
+              align: Alignment.bottomCenter,
+            ),
         _building(layout.guild, guild, guild.assetPath(tier)),
         _building(layout.vault, vault, vaultPath),
         _sprite(layout.well, CustomAssets.townWell),
@@ -362,10 +369,10 @@ class _TownSquare extends StatelessWidget {
     return false;
   }
 
-  /// The path art is a short strip. Filling a tall yard with it turns the
-  /// grass gap into a stretched plank wall.
+  /// Cobbles repeat. Stretching one strip into a tall yard looked like a wall.
   Widget _pathStrip(Rect rect) {
-    final height = rect.height < 40 ? rect.height : 40.0;
+    const tileH = 28.0;
+    final height = rect.height < tileH ? rect.height : tileH;
     return Positioned(
       left: rect.left,
       width: rect.width,
@@ -374,7 +381,8 @@ class _TownSquare extends StatelessWidget {
       child: IgnorePointer(
         child: Image.asset(
           CustomAssets.townPath,
-          fit: BoxFit.fill,
+          repeat: ImageRepeat.repeat,
+          alignment: Alignment.topLeft,
           filterQuality: FilterQuality.none,
           excludeFromSemantics: true,
         ),
@@ -382,13 +390,19 @@ class _TownSquare extends StatelessWidget {
     );
   }
 
-  Widget _sprite(Rect rect, String asset) {
+  Widget _sprite(
+    Rect rect,
+    String asset, {
+    BoxFit fit = BoxFit.contain,
+    Alignment align = Alignment.bottomCenter,
+  }) {
     return Positioned.fromRect(
       rect: rect,
       child: IgnorePointer(
         child: Image.asset(
           asset,
-          fit: BoxFit.fill,
+          fit: fit,
+          alignment: align,
           filterQuality: FilterQuality.none,
           excludeFromSemantics: true,
         ),

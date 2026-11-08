@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 import '../../../assets/custom_assets.dart';
 import '../../../models/vfx_quality.dart';
 
-/// Folk sheet from `tool/generate_town_art.py` (18×26 cells).
+/// Folk sheet from `tool/generate_town_art.py` (40×48 cells).
 abstract final class TownFolkSheet {
-  static const cellW = 18;
-  static const cellH = 26;
+  static const cellW = 40;
+  static const cellH = 48;
   static const frames = 5;
   static const people = 3;
   static const loop = Duration(milliseconds: 4800);
@@ -211,10 +211,17 @@ class _FolkPainter extends CustomPainter {
     final moving = clock?.isAnimating ?? false;
     final t = clock?.value ?? 0;
     final frames = townFolkFrames(t, moving: moving);
-    final spriteW = TownFolkSheet.cellW * scale;
-    final spriteH = TownFolkSheet.cellH * scale;
+    // Native cells are already hero-sized. Shrink only when the yard is short.
+    var spriteW = TownFolkSheet.cellW * scale.toDouble();
+    var spriteH = TownFolkSheet.cellH * scale.toDouble();
+    final maxH = lane.height - 1;
+    if (spriteH > maxH) {
+      final fit = maxH / spriteH;
+      spriteH = maxH;
+      spriteW *= fit;
+    }
     final travel = lane.width - spriteW;
-    if (travel < 4 || spriteH > lane.height + 2) return;
+    if (travel < 4 || spriteH < 8 || spriteW < 6) return;
     final paint = Paint()..filterQuality = FilterQuality.none;
     for (final frame in frames) {
       final x = lane.left + frame.u * travel;
@@ -229,12 +236,12 @@ class _FolkPainter extends CustomPainter {
       if (frame.flip) {
         canvas.translate(x + spriteW, y);
         canvas.scale(-1, 1);
-        canvas.drawImageRect(image, src, Rect.fromLTWH(0, 0, spriteW.toDouble(), spriteH.toDouble()), paint);
+        canvas.drawImageRect(image, src, Rect.fromLTWH(0, 0, spriteW, spriteH), paint);
       } else {
         canvas.drawImageRect(
           image,
           src,
-          Rect.fromLTWH(x, y, spriteW.toDouble(), spriteH.toDouble()),
+          Rect.fromLTWH(x, y, spriteW, spriteH),
           paint,
         );
       }

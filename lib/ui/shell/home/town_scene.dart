@@ -1,8 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'town_life.dart';
-
 /// Sprite pixel sizes from `tool/generate_town_art.py`.
 abstract final class TownSpriteSize {
   static const forge = Size(120, 156);
@@ -126,10 +124,10 @@ class TownSceneLayout {
     }
 
     final lane = Rect.fromLTRB(8, backBottom + 1, math.max(8, w - 8), frontTop - 1);
+    // 1 means "draw them". The painter fits the native cell into the lane
+    // and never doubles it, so a short square still has people.
     var folkScale = 0;
-    if (lane.width >= 80 && lane.height >= TownFolkSheet.cellH * 2) {
-      folkScale = 2;
-    } else if (lane.width >= 48 && lane.height >= TownFolkSheet.cellH) {
+    if (lane.width >= 48 && lane.height >= 16) {
       folkScale = 1;
     }
 
