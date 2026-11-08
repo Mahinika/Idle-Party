@@ -12,6 +12,8 @@ import '../../../core/town_access.dart';
 import '../../../models/dungeon_def.dart';
 import '../../../models/hero.dart';
 import '../../../models/town_building.dart';
+import 'town_life.dart';
+import 'town_scene.dart';
 import '../../chase_bind.dart';
 import '../../confirm_dialogs.dart';
 import '../../game_theme.dart';
@@ -148,15 +150,6 @@ class _TownViewportState extends State<TownViewport> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                const Positioned.fill(child: _TownBackdrop()),
-                if (TownTier.showPennants(al))
-                  const Positioned(
-                    left: 24,
-                    right: 24,
-                    top: 18,
-                    height: 36,
-                    child: IgnorePointer(child: _TownPennants()),
-                  ),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     return _TownSquare(
@@ -268,163 +261,156 @@ class _TownSquare extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final h = size.height;
-    final w = size.width;
-    final compact = h < 420;
+    final layout = TownSceneLayout.pack(
+      size,
+      textScale: MediaQuery.textScalerOf(context).scale(1),
+    );
     final guild = TownBuilding.byId(TownBuildingId.guild);
     final vault = TownBuilding.byId(TownBuildingId.vault);
-    final partyH = compact ? 46.0 : 54.0;
-    double fit(double value, double lo, double hi) {
-      if (hi < lo) return hi;
-      return value.clamp(lo, hi);
-    }
-
-    final frontW = fit(w / 3.15, compact ? 96.0 : 108.0, 128.0);
-    // Hit boxes do not overlap, so the forge chimney cannot cover GUILD
-    // or steal its tap. The cave stays visible above the plaza.
-    final frontRoom = h - partyH - 64;
-    final frontH = fit(
-      h * 0.40,
-      compact ? 88.0 : 112.0,
-      fit(168, 72, frontRoom),
-    );
-    final frontTop = h - partyH - frontH;
-    final backTop = compact ? 0.0 : 2.0;
-    final guildW = fit(w * 0.46, compact ? 112.0 : 128.0, 176.0);
-    final guildH = fit(frontTop - backTop - 2, 0, h);
-    final vaultW = fit(w * 0.26, 72.0, 104.0);
-    final vaultH = fit(guildH * 0.62, 64.0, guildH);
-    final well = compact ? 36.0 : 44.0;
-    final cobbleH = fit(frontTop + frontH * 0.55, partyH + 48, h * 0.78);
     final vaultPath = TownAccess.vaultClaimedToday(state)
         ? CustomAssets.townVaultOpen
         : CustomAssets.townVaultShut;
-    final guildLeft = w * 0.02;
-    final vaultLeft = w - vaultW - w * 0.03;
+    final motion = townFolkMotionEnabled(
+      quality: state.vfxQuality,
+      disableAnimations: MediaQuery.disableAnimationsOf(context),
+    );
+    final labels = <(String, Rect)>[
+      (guild.label, layout.guildLabel),
+      (vault.label, layout.vaultLabel),
+      for (var i = 0; i < TownBuilding.frontRow.length; i++)
+        (TownBuilding.frontRow[i].label, layout.frontLabels[i]),
+    ];
 
     return Stack(
       fit: StackFit.expand,
       children: [
+        const Positioned.fill(child: _TownBackdrop()),
         Positioned(
           left: 0,
           right: 0,
+          top: layout.grassTop,
           bottom: 0,
-          height: cobbleH,
           child: Image.asset(
             CustomAssets.townGround,
             repeat: ImageRepeat.repeat,
-            alignment: Alignment.bottomCenter,
+            alignment: Alignment.topLeft,
             filterQuality: FilterQuality.none,
             excludeFromSemantics: true,
           ),
         ),
+        _pathStrip(layout.courtyardPath),
+        _pathStrip(layout.doorPath),
+        for (final tree in layout.trees)
+          _sprite(
+            tree,
+            tree.width > 60 ? CustomAssets.townTreeRound : CustomAssets.townTreeTall,
+          ),
+        for (final flower in layout.flowers)
+          if (!_coversLabel(flower, labels))
+            _sprite(flower, CustomAssets.townFlowers),
+        _building(layout.guild, guild, guild.assetPath(tier)),
+        _building(layout.vault, vault, vaultPath),
+        _sprite(layout.well, CustomAssets.townWell),
+        Positioned.fill(
+          child: TownFolkLayer(
+            motion: motion,
+            lane: layout.lane,
+            scale: layout.folkScale,
+          ),
+        ),
+        for (var i = 0; i < TownBuilding.frontRow.length; i++)
+          _building(
+            layout.front[i],
+            TownBuilding.frontRow[i],
+            TownBuilding.frontRow[i].assetPath(tier),
+          ),
         if (TownTier.showArcade(state.ascensionLevel))
           Positioned(
-            left: 20,
-            right: 20,
-            bottom: cobbleH - 8,
-            height: 18,
+            left: layout.doorPath.left + 16,
+            right: 16,
+            top: layout.doorPath.top,
+            height: 14,
             child: const IgnorePointer(child: _TownArcade()),
           ),
         Positioned(
-          left: guildLeft,
-          top: backTop,
-          width: guildW,
-          height: guildH,
-          child: _TownBuildingButton(
-            building: guild,
-            assetPath: guild.assetPath(tier),
-            badge: badgeOf(guild.id),
-            onTap: () => onTap(guild),
-          ),
-        ),
-        Positioned(
-          left: vaultLeft,
-          top: backTop + 8,
-          width: vaultW,
-          height: vaultH,
-          child: _TownBuildingButton(
-            building: vault,
-            assetPath: vaultPath,
-            badge: badgeOf(vault.id),
-            onTap: () => onTap(vault),
-          ),
-        ),
-        Positioned(
-          left: (w - well) / 2,
-          top: frontTop - well - 2,
-          width: well,
-          height: well,
-          child: IgnorePointer(
-            child: Image.asset(
-              CustomAssets.townWell,
-              filterQuality: FilterQuality.none,
-              fit: BoxFit.contain,
-              excludeFromSemantics: true,
-            ),
-          ),
-        ),
-        for (var i = 0; i < TownBuilding.frontRow.length; i++)
-          Positioned(
-            left: _frontLeft(w, frontW, i),
-            top: frontTop,
-            width: frontW,
-            height: frontH,
-            child: _TownBuildingButton(
-              building: TownBuilding.frontRow[i],
-              assetPath: TownBuilding.frontRow[i].assetPath(tier),
-              badge: badgeOf(TownBuilding.frontRow[i].id),
-              onTap: () => onTap(TownBuilding.frontRow[i]),
-            ),
-          ),
-        Positioned(
-          left: GameTheme.edgeGap,
-          right: GameTheme.edgeGap,
+          left: layout.party.left,
+          right: size.width - layout.party.right,
           bottom: 0,
-          height: partyH,
-          child: _PartyRow(heroes: state.heroes, compact: compact),
-        ),
-        // Chips sit on the sprites. Bottom-aligned art leaves sky above
-        // the towers, so the names are not pinned to the top of the box.
-        _nameChip(
-          guild.label,
-          left: guildLeft + 8,
-          top: backTop + guildH * 0.22,
-        ),
-        _nameChip(
-          vault.label,
-          left: vaultLeft + 4,
-          top: backTop + vaultH * 0.22,
-        ),
-        for (var i = 0; i < TownBuilding.frontRow.length; i++)
-          _nameChip(
-            TownBuilding.frontRow[i].label,
-            left: _frontLeft(w, frontW, i) + 10,
-            bottom: partyH + 2,
+          height: layout.party.height,
+          child: _PartyRow(
+            heroes: state.heroes,
+            compact: size.height < 380,
           ),
+        ),
+        if (TownTier.showPennants(state.ascensionLevel) && layout.grassTop > 26)
+          const Positioned(
+            left: 16,
+            right: 16,
+            top: 2,
+            height: 22,
+            child: IgnorePointer(child: _TownPennants()),
+          ),
+        for (final (label, rect) in labels) _nameChip(label, rect),
       ],
     );
   }
 
-  double _frontLeft(double w, double frontW, int i) {
-    const gap = 6.0;
-    final total = frontW * 3 + gap * 2;
-    final start = (w - total) / 2;
-    return start + i * (frontW + gap);
+  bool _coversLabel(Rect flower, List<(String, Rect)> labels) {
+    for (final (_, label) in labels) {
+      if (flower.overlaps(label.inflate(2))) return true;
+    }
+    return false;
   }
 
-  Widget _nameChip(
-    String label, {
-    double? left,
-    double? top,
-    double? bottom,
-    double? width,
-  }) {
+  /// The path art is a short strip. Filling a tall yard with it turns the
+  /// grass gap into a stretched plank wall.
+  Widget _pathStrip(Rect rect) {
+    final height = rect.height < 40 ? rect.height : 40.0;
     return Positioned(
-      left: left,
-      top: top,
-      bottom: bottom,
-      width: width,
+      left: rect.left,
+      width: rect.width,
+      top: rect.bottom - height,
+      height: height,
+      child: IgnorePointer(
+        child: Image.asset(
+          CustomAssets.townPath,
+          fit: BoxFit.fill,
+          filterQuality: FilterQuality.none,
+          excludeFromSemantics: true,
+        ),
+      ),
+    );
+  }
+
+  Widget _sprite(Rect rect, String asset) {
+    return Positioned.fromRect(
+      rect: rect,
+      child: IgnorePointer(
+        child: Image.asset(
+          asset,
+          fit: BoxFit.fill,
+          filterQuality: FilterQuality.none,
+          excludeFromSemantics: true,
+        ),
+      ),
+    );
+  }
+
+  Widget _building(Rect rect, TownBuilding building, String asset) {
+    return Positioned.fromRect(
+      rect: rect,
+      child: _TownBuildingButton(
+        building: building,
+        assetPath: asset,
+        badge: badgeOf(building.id),
+        onTap: () => onTap(building),
+      ),
+    );
+  }
+
+  Widget _nameChip(String label, Rect rect) {
+    return Positioned.fromRect(
+      rect: rect,
       child: IgnorePointer(
         child: DecoratedBox(
           decoration: BoxDecoration(
@@ -438,6 +424,7 @@ class _TownSquare extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: GameTheme.hint(color: GameTheme.parchment),
             ),
           ),
@@ -474,25 +461,23 @@ class _TownPennants extends StatelessWidget {
 class _PennantPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final line = Paint()
-      ..color = GameTheme.equipChipNeutral
-      ..strokeWidth = 2;
-    canvas.drawLine(Offset(0, 6), Offset(size.width, 6), line);
+    final line = Paint()..color = GameTheme.borderLit;
+    for (var x = 0.0; x < size.width; x += 2) {
+      canvas.drawRect(Rect.fromLTWH(x, 2, 2, 2), line);
+    }
     const colors = [
       GameTheme.blood,
       GameTheme.borderLit,
-      GameTheme.moss,
+      GameTheme.mossLit,
       GameTheme.navGear,
     ];
-    final n = 7;
+    const n = 7;
     for (var i = 0; i < n; i++) {
       final x = size.width * (i + 0.5) / n;
-      final path = Path()
-        ..moveTo(x - 7, 6)
-        ..lineTo(x + 7, 6)
-        ..lineTo(x, 28)
-        ..close();
-      canvas.drawPath(path, Paint()..color = colors[i % colors.length]);
+      final paint = Paint()..color = colors[i % colors.length];
+      canvas.drawRect(Rect.fromLTWH(x - 4, 4, 8, 4), paint);
+      canvas.drawRect(Rect.fromLTWH(x - 2, 8, 4, 6), paint);
+      canvas.drawRect(Rect.fromLTWH(x - 1, 14, 2, 4), paint);
     }
   }
 
@@ -510,12 +495,9 @@ class _TownArcade extends StatelessWidget {
       children: [
         for (var i = 0; i < 5; i++)
           Container(
-            width: 10,
-            height: 10,
-            decoration: const BoxDecoration(
-              color: GameTheme.torch,
-              shape: BoxShape.circle,
-            ),
+            width: 8,
+            height: 8,
+            color: GameTheme.torch,
           ),
       ],
     );

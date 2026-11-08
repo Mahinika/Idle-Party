@@ -307,6 +307,11 @@ abstract final class CustomAssets {
   static const String _townRoot = '$_root/town';
   static const String townBackdrop = '$_townRoot/backdrop.png';
   static const String townGround = '$_townRoot/ground.png';
+  static const String townPath = '$_townRoot/path.png';
+  static const String townTreeRound = '$_townRoot/tree_round.png';
+  static const String townTreeTall = '$_townRoot/tree_tall.png';
+  static const String townFlowers = '$_townRoot/flowers.png';
+  static const String townFolk = '$_townRoot/folk.png';
   static const String townWell = '$_townRoot/well.png';
   static const String townVaultShut = '$_townRoot/vault_shut.png';
   static const String townVaultOpen = '$_townRoot/vault_open.png';
@@ -323,6 +328,11 @@ abstract final class CustomAssets {
   static List<String> get townAssetPaths => [
     townBackdrop,
     townGround,
+    townPath,
+    townTreeRound,
+    townTreeTall,
+    townFlowers,
+    townFolk,
     townWell,
     townVaultShut,
     townVaultOpen,
