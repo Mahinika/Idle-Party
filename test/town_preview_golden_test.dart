@@ -79,13 +79,12 @@ void main() {
   testWidgets('town preview golden A56', (tester) async {
     bindA56View(tester);
     final director = GameDirector.preview(
-      initialState: GameLogic.createInitialState(now: shellGoldenNow)
-          .copyWith(
-            inDungeon: false,
-            bossVictories: 1,
-            highestFloorCleared: 2,
-            ascensionLevel: 1,
-          ),
+      initialState: GameLogic.createInitialState(now: shellGoldenNow).copyWith(
+        inDungeon: false,
+        bossVictories: 1,
+        highestFloorCleared: 2,
+        ascensionLevel: 1,
+      ),
     );
     final router = MenuRouter();
     addTearDown(router.dispose);
@@ -144,11 +143,7 @@ void main() {
       shellGoldenScaffold(
         RepaintBoundary(
           key: key,
-          child: HomeShell(
-            director: director,
-            router: router,
-            onLeave: () {},
-          ),
+          child: HomeShell(director: director, router: router, onLeave: () {}),
         ),
       ),
     );
@@ -158,4 +153,91 @@ void main() {
       matchesGoldenFile('goldens/town/home_shell_town_a56.png'),
     );
   });
+
+  testWidgets('home shell town timber tier golden A56', (tester) async {
+    await _pumpTownTier(
+      tester,
+      al: 0,
+      golden: 'goldens/town/home_shell_town_t0_a56.png',
+    );
+  });
+
+  testWidgets('home shell town banner tier golden A56', (tester) async {
+    await _pumpTownTier(
+      tester,
+      al: 5,
+      golden: 'goldens/town/home_shell_town_t2_a56.png',
+    );
+  });
+}
+
+Future<void> _pumpTownTier(
+  WidgetTester tester, {
+  required int al,
+  required String golden,
+}) async {
+  bindA56View(tester);
+  final base = GameLogic.createInitialState(now: shellGoldenNow);
+  final director = GameDirector.preview(
+    initialState: base.copyWith(
+      inDungeon: false,
+      homeLayout: HomeLayout.home,
+      bossVictories: 1,
+      highestFloorCleared: 2,
+      ascensionLevel: al,
+      vfxQuality: VfxQuality.minimal,
+      seenChangelogVersion: MetaSystems.currentVersion,
+      seenTips: const [
+        'first_run',
+        'discord_thanks',
+        'hub_enter',
+        'godhand',
+        'farm_push',
+        'kit_abilities',
+        'bag',
+        'forge',
+        'sanctuary',
+      ],
+      metaDepth: base.metaDepth.copyWith(
+        reviewPrompted: true,
+        notifyPrompted: true,
+        notifyOptIn: true,
+      ),
+    ),
+  );
+  final router = MenuRouter();
+  addTearDown(router.dispose);
+  addTearDown(director.dispose);
+  final key = GlobalKey();
+  await tester.pumpWidget(
+    shellGoldenScaffold(
+      RepaintBoundary(
+        key: key,
+        child: HomeShell(director: director, router: router, onLeave: () {}),
+      ),
+    ),
+  );
+  await tester.pump();
+  await tester.runAsync(() async {
+    final ctx = tester.element(find.byType(TownViewport));
+    for (final path in CustomAssets.townAssetPaths) {
+      await precacheImage(AssetImage(path), ctx);
+    }
+  });
+  final sw = Stopwatch()..start();
+  var idle = 0;
+  while (sw.elapsedMilliseconds < 8000) {
+    if (HeroDollSprite.pendingLoads == 0) {
+      idle++;
+      if (idle >= 5) break;
+    } else {
+      idle = 0;
+    }
+    await tester.pump();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 16)),
+    );
+  }
+  await pumpGoldenFrames(tester, ms: 400);
+  await expectLater(find.byKey(key), matchesGoldenFile(golden));
 }

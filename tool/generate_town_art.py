@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
-"""Idle Party town art — owned pixel buildings for the out-of-dungeon hub.
+"""Idle Party town art — owned pixel town in the Sandy Caverns palette.
 
-Same legal path as generate_floor_props.py: authored in this repo with PIL,
-warm ink, upper-left light, no foreign packs. Run from repo root:
+Measured from shipped art (not a new style):
+
+- Ink: tool/gear_style.py INK (32, 22, 18). Heroes sit near (30, 20, 13).
+- Sand floor: assets/custom/dungeon/sandy/tiles/floor_a.png
+  (58, 44, 24), (90, 68, 40), (122, 90, 52), (200, 136, 64)
+- Sand wall: assets/custom/dungeon/sandy/tiles/wall_a.png
+  (23, 17, 11), (42, 34, 24), (74, 58, 36)
+- Leather / wood ramps: tool/gear_style.py MATERIAL_RAMPS
+- Iron: assets/custom/dungeon/fallback/props/anvil.png
+- Cave mouth: assets/custom/ui/backdrops/sandy.png and ui/hub_scene.png
+
+Rules: 1 px warm ink on the outer silhouette only, upper-left light,
+chunky stones (not a grey brick grid), amber windows (not blue glass).
+Deterministic. No foreign packs. Run from the repo root:
 
     python3 tool/generate_town_art.py
-    python3 tool/generate_town_art.py --preview /opt/cursor/artifacts
-
-Outputs live under assets/custom/town/.
 """
 from __future__ import annotations
 
@@ -21,414 +30,582 @@ TOOL_DIR = Path(__file__).resolve().parent
 ASSETS_DIR = TOOL_DIR.parent / "assets" / "custom" / "town"
 
 INK = (32, 22, 18, 255)
-INK_SOFT = (52, 42, 38, 255)
 
-P = {
-    "sky_top": (124, 156, 188),
-    "sky_mid": (176, 188, 204),
-    "sky_bottom": (214, 198, 178),
-    "hill_far": (98, 118, 104),
-    "hill_near": (78, 98, 84),
-    "tree": (52, 78, 54),
-    "tree_hi": (78, 108, 72),
-    "ground": (142, 108, 76),
-    "ground_hi": (168, 132, 94),
-    "ground_lo": (108, 80, 56),
-    "cobble": (132, 128, 124),
-    "cobble_hi": (164, 158, 150),
-    "cobble_lo": (96, 92, 88),
-    "stone": (128, 122, 116),
-    "stone_hi": (164, 156, 146),
-    "stone_lo": (92, 86, 80),
-    "stone_pale": (168, 162, 154),
-    "mortar": (86, 78, 70),
-    "wood": (118, 74, 38),
-    "wood_hi": (156, 108, 56),
+# Named steps. Every fill below is one of these, then snapped.
+C = {
+    "void": (23, 17, 11),
+    "wall_lo": (42, 34, 24),
+    "wall": (74, 58, 36),
+    "floor_lo": (58, 44, 24),
+    "floor": (90, 68, 40),
+    "floor_hi": (122, 90, 52),
+    "sand": (161, 126, 88),
+    "sand_hi": (200, 136, 64),
+    "dust": (224, 176, 104),
     "wood_lo": (72, 44, 24),
-    "roof": (148, 58, 40),
-    "roof_hi": (186, 86, 58),
-    "roof_lo": (108, 38, 26),
-    "roof_blue": (58, 82, 128),
-    "thatch": (186, 150, 88),
-    "thatch_hi": (216, 184, 118),
-    "thatch_lo": (138, 104, 58),
-    "metal": (92, 96, 104),
-    "metal_hi": (148, 152, 160),
-    "metal_lo": (58, 62, 68),
-    "fire": (232, 148, 48),
-    "fire_hi": (252, 204, 96),
-    "fire_lo": (188, 72, 28),
-    "awning": (176, 48, 40),
-    "awning_hi": (210, 84, 62),
-    "awning_lo": (128, 28, 26),
-    "awning2": (48, 92, 78),
-    "sign": (96, 62, 32),
-    "sign_hi": (132, 92, 48),
-    "door": (62, 40, 26),
-    "door_hi": (92, 62, 38),
-    "window": (48, 78, 108),
-    "window_hi": (168, 204, 220),
-    "crate": (128, 86, 44),
-    "crate_hi": (164, 118, 64),
-    "anvil": (72, 76, 84),
-    "anvil_hi": (118, 122, 130),
-    "path": (168, 140, 102),
-    "paper": (228, 214, 186),
-    "flower": (196, 72, 96),
-    "flower2": (72, 140, 88),
-    "banner": (176, 48, 40),
-    "banner2": (201, 162, 74),
-    "gold": (212, 168, 72),
+    "wood": (112, 72, 36),
+    "wood_hi": (148, 102, 52),
+    "wood_top": (176, 132, 76),
+    "iron_lo": (34, 30, 26),
+    "iron": (68, 58, 48),
+    "iron_hi": (92, 78, 62),
+    "iron_top": (140, 124, 100),
+    "gold_lo": (92, 62, 22),
+    "gold": (148, 104, 36),
+    "gold_hi": (196, 152, 52),
+    "gold_top": (232, 196, 96),
+    "ember_lo": (140, 56, 32),
+    "ember": (188, 96, 40),
+    "ember_hi": (232, 148, 48),
+    "flame": (252, 204, 96),
+    "cloth_lo": (92, 36, 24),
+    "cloth": (140, 56, 32),
+    "cloth_hi": (176, 88, 48),
+    "plaster_lo": (140, 108, 72),
+    "plaster": (176, 140, 96),
+    "plaster_hi": (200, 168, 120),
 }
 
-
-def c(name: str, a: int = 255) -> tuple[int, int, int, int]:
-    r, g, b = P[name]
-    return (r, g, b, a)
+ALLOWED = [INK[:3]] + list(C.values())
 
 
-def px(img: Image.Image, x: int, y: int, color: tuple[int, int, int, int]) -> None:
+def rgba(name: str) -> tuple[int, int, int, int]:
+    r, g, b = C[name]
+    return (r, g, b, 255)
+
+
+def blank(w: int, h: int) -> Image.Image:
+    return Image.new("RGBA", (w, h), (0, 0, 0, 0))
+
+
+def put(img: Image.Image, x: int, y: int, name: str) -> None:
     if 0 <= x < img.width and 0 <= y < img.height:
-        img.putpixel((x, y), color)
+        img.putpixel((x, y), rgba(name))
 
 
-def brick_wall(
-    d: ImageDraw.ImageDraw,
+def fill_rect(img: Image.Image, x0: int, y0: int, x1: int, y1: int, name: str) -> None:
+    color = rgba(name)
+    for y in range(y0, y1):
+        if y < 0 or y >= img.height:
+            continue
+        for x in range(x0, x1):
+            if 0 <= x < img.width:
+                img.putpixel((x, y), color)
+
+
+def shade_rect(
     img: Image.Image,
     x0: int,
     y0: int,
     x1: int,
     y1: int,
-    pale: bool = False,
+    lo: str,
+    mid: str,
+    hi: str,
 ) -> None:
-    fill = c("stone_pale") if pale else c("stone")
-    d.rectangle([x0, y0, x1, y1], fill=fill, outline=INK)
-    d.line([(x0 + 1, y0 + 1), (x1 - 1, y0 + 1)], fill=c("stone_hi"))
-    row_h = 7
-    for i, y in enumerate(range(y0 + 5, y1 - 2, row_h)):
-        d.line([(x0 + 1, y), (x1 - 1, y)], fill=c("mortar"))
-        shift = 5 if i % 2 else 0
-        for x in range(x0 + 4 + shift, x1 - 2, 10):
-            d.line([(x, y - 4), (x, y)], fill=c("mortar"))
-    d.line([(x0 + 1, y1 - 1), (x1 - 1, y1 - 1)], fill=c("stone_lo"))
+    """Upper-left light. Bands, not a gradient."""
+    span = max(1, x1 - x0)
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            t = (x - x0) + (y - y0) * 0.35
+            if t < span * 0.38:
+                name = hi
+            elif t > span * 0.85:
+                name = lo
+            else:
+                name = mid
+            put(img, x, y, name)
 
 
-def timber_wall(d: ImageDraw.ImageDraw, x0: int, y0: int, x1: int, y1: int) -> None:
-    d.rectangle([x0, y0, x1, y1], fill=c("wood"), outline=INK)
-    d.line([(x0 + 1, y0 + 1), (x1 - 1, y0 + 1)], fill=c("wood_hi"))
-    for y in range(y0 + 7, y1 - 2, 8):
-        d.line([(x0 + 1, y), (x1 - 1, y)], fill=c("wood_lo"))
-    d.rectangle([x0, y0, x0 + 4, y1], fill=c("wood_lo"), outline=INK)
-    d.rectangle([x1 - 4, y0, x1, y1], fill=c("wood_lo"), outline=INK)
+def mortar_courses(
+    img: Image.Image,
+    x0: int,
+    y0: int,
+    x1: int,
+    y1: int,
+    lo: str,
+    mid: str,
+    hi: str,
+    mortar: str,
+) -> None:
+    """Irregular sandstone courses. Mortar is dark sand, not a grey grid."""
+    y = y0
+    row = 0
+    while y < y1:
+        h = 4 + ((row * 3) % 2)
+        if y + h > y1:
+            h = y1 - y
+        shade_rect(img, x0, y, x1, y + h - 1, lo, mid, hi)
+        if y + h - 1 < y1:
+            for x in range(x0, x1):
+                put(img, x, y + h - 1, mortar)
+        x = x0 + (0 if row % 2 == 0 else 3)
+        while x < x1 - 1:
+            w = 5 + ((x * 3 + row * 7) % 4)
+            put(img, x, y, mortar)
+            for yy in range(y, min(y1, y + h - 1)):
+                put(img, x, yy, mortar)
+            x += w
+        y += h
+        row += 1
 
 
-def tiled_roof(
-    d: ImageDraw.ImageDraw,
+def timber_wall(img: Image.Image, x0: int, y0: int, x1: int, y1: int) -> None:
+    shade_rect(img, x0, y0, x1, y1, "wood_lo", "wood", "wood_hi")
+    for y in range(y0 + 4, y1, 5):
+        for x in range(x0, x1):
+            put(img, x, y, "wood_lo")
+    for x in (x0, x0 + 1, x1 - 2, x1 - 1):
+        for y in range(y0, y1):
+            put(img, x, y, "floor_lo")
+
+
+def plaster_wall(img: Image.Image, x0: int, y0: int, x1: int, y1: int) -> None:
+    shade_rect(img, x0, y0, x1, y1, "plaster_lo", "plaster", "plaster_hi")
+    # A few cracks, not noise.
+    for i, (x, y, n) in enumerate(
+        ((x0 + 6, y0 + 8, 7), (x1 - 10, y0 + 14, 5), (x0 + 12, y1 - 8, 6))
+    ):
+        name = "plaster_lo" if i % 2 == 0 else "floor"
+        for k in range(n):
+            put(img, x + k, y + (k // 3), name)
+
+
+def roof_slope(
+    img: Image.Image,
     peak: tuple[int, int],
     left: tuple[int, int],
     right: tuple[int, int],
-    blue: bool = False,
+    tile: str,
+    tile_hi: str,
+    tile_lo: str,
 ) -> None:
-    fill = c("roof_blue") if blue else c("roof")
-    d.polygon([left, peak, right], fill=fill, outline=INK)
-    d.line([left, peak], fill=c("roof_hi"))
-    for i in range(5):
-        y = left[1] - 4 - i * 7
+    d = ImageDraw.Draw(img)
+    d.polygon([left, peak, right], fill=rgba(tile))
+    # Tile courses follow the eave.
+    for i in range(1, 14):
+        y = left[1] - i * 3
         if y <= peak[1] + 2:
             break
-        inset = 8 + i * 6
-        d.line([(left[0] + inset, y), (right[0] - inset, y)], fill=c("roof_lo"))
+        span = right[0] - left[0]
+        drop = (left[1] - peak[1]) or 1
+        t = (left[1] - y) / drop
+        inset = int((span * 0.5) * t)
+        name = tile_hi if i % 3 == 1 else tile_lo
+        for x in range(left[0] + inset, right[0] - inset):
+            put(img, x, y, name)
+    # Left eave highlight.
+    for i in range(8):
+        y = peak[1] + i * 3
+        x = peak[0] - int((peak[0] - left[0]) * (i / 8))
+        put(img, x, y, tile_hi)
+        put(img, x + 1, y, tile_hi)
 
 
-def thatch_roof(d: ImageDraw.ImageDraw, peak: tuple[int, int], left: tuple[int, int], right: tuple[int, int]) -> None:
-    d.polygon([left, peak, right], fill=c("thatch"), outline=INK)
-    d.line([left, peak], fill=c("thatch_hi"))
-    mid = peak[0]
-    for x in range(left[0] + 8, right[0] - 6, 7):
-        drop = abs(x - mid) // 4
-        d.line([(x, left[1] - 4 - drop), (x + 4, left[1])], fill=c("thatch_lo"))
+def window(img: Image.Image, x: int, y: int, w: int = 8, h: int = 9, lit: bool = True) -> None:
+    fill_rect(img, x, y, x + w, y + h, "void")
+    if lit:
+        fill_rect(img, x + 1, y + 1, x + w - 1, y + h - 1, "gold_lo")
+        fill_rect(img, x + 2, y + 2, x + w // 2, y + h // 2, "flame")
+    else:
+        fill_rect(img, x + 1, y + 1, x + w - 1, y + h - 1, "wall_lo")
+    for yy in range(y, y + h):
+        put(img, x + w // 2, yy, "floor_lo")
+    for xx in range(x, x + w):
+        put(img, xx, y + h // 2, "floor_lo")
 
 
-def window(d: ImageDraw.ImageDraw, img: Image.Image, x: int, y: int, w: int = 16, h: int = 14, lit: bool = False) -> None:
-    d.rectangle([x, y, x + w, y + h], fill=c("window"), outline=INK)
-    d.line([(x + w // 2, y + 1), (x + w // 2, y + h - 1)], fill=INK_SOFT)
-    d.line([(x + 1, y + h // 2), (x + w - 1, y + h // 2)], fill=INK_SOFT)
-    hi = c("fire_hi") if lit else c("window_hi")
-    px(img, x + 2, y + 2, hi)
-    px(img, x + 3, y + 3, hi)
+def door(img: Image.Image, x: int, y: int, w: int = 14, h: int = 24, arch: bool = False) -> None:
+    fill_rect(img, x, y, x + w, y + h, "floor_lo")
+    fill_rect(img, x + 1, y + 1, x + w - 3, y + h, "wood_lo")
+    fill_rect(img, x + 2, y + 2, x + 4, y + h - 1, "wood")
+    if arch:
+        for i in range(w // 2):
+            put(img, x + i, y - 1 - (i // 2), "floor_lo")
+            put(img, x + w - 1 - i, y - 1 - (i // 2), "floor_lo")
+    put(img, x + w - 4, y + h // 2, "gold")
 
 
-def door(d: ImageDraw.ImageDraw, x: int, y: int, w: int = 22, h: int = 36) -> None:
-    d.rectangle([x, y, x + w, y + h], fill=c("door"), outline=INK)
-    d.line([(x + 2, y + 2), (x + 2, y + h - 2)], fill=c("door_hi"))
-    d.rectangle([x + 5, y + 5, x + w - 5, y + 16], fill=c("window"), outline=INK)
-    d.ellipse([x + w - 8, y + h // 2 + 2, x + w - 4, y + h // 2 + 6], fill=c("metal_hi"))
+def lantern(img: Image.Image, x: int, y: int) -> None:
+    fill_rect(img, x + 2, y, x + 4, y + 4, "wood_lo")
+    fill_rect(img, x, y + 4, x + 6, y + 11, "iron")
+    fill_rect(img, x + 1, y + 5, x + 5, y + 10, "ember")
+    put(img, x + 2, y + 6, "flame")
 
 
-def lantern(d: ImageDraw.ImageDraw, img: Image.Image, x: int, y: int) -> None:
-    d.rectangle([x + 3, y, x + 5, y + 6], fill=c("wood_lo"), outline=INK)
-    d.rectangle([x, y + 6, x + 8, y + 16], fill=c("fire_lo"), outline=INK)
-    d.rectangle([x + 2, y + 8, x + 6, y + 14], fill=c("fire"))
-    px(img, x + 3, y + 9, c("fire_hi"))
+def banner(img: Image.Image, x: int, y: int, h: int = 22) -> None:
+    fill_rect(img, x, y, x + 10, y + 3, "wood")
+    for yy in range(3, h):
+        inset = 0 if yy < h - 4 else (yy - (h - 4))
+        for xx in range(inset, 10 - inset):
+            name = "cloth_hi" if xx < 3 else "cloth" if xx < 7 else "cloth_lo"
+            put(img, x + xx, y + yy, name)
+    put(img, x + 4, y + 8, "gold_hi")
+    put(img, x + 5, y + 9, "gold")
+    put(img, x + 4, y + 10, "gold_lo")
 
 
-def flowers(d: ImageDraw.ImageDraw, x: int, y: int, w: int = 18) -> None:
-    d.rectangle([x, y + 6, x + w, y + 12], fill=c("wood_lo"), outline=INK)
-    d.ellipse([x + 2, y, x + 8, y + 8], fill=c("flower"), outline=INK)
-    d.ellipse([x + 10, y + 1, x + 16, y + 8], fill=c("flower2"), outline=INK)
+def chimney(img: Image.Image, x: int, y: int, h: int) -> None:
+    mortar_courses(img, x, y + 4, x + 12, y + h, "wall_lo", "wall", "floor", "void")
+    fill_rect(img, x - 1, y + h - 4, x + 13, y + h, "floor_lo")
+    fill_rect(img, x + 3, y, x + 9, y + 5, "void")
+    put(img, x + 4, y + 1, "iron")
+    put(img, x + 6, y - 1, "iron_hi")
+    put(img, x + 7, y - 3, "iron")
 
 
-def pennant(d: ImageDraw.ImageDraw, x: int, y: int, gold: bool = False) -> None:
-    fill = c("banner2") if gold else c("banner")
-    d.polygon([(x, y), (x + 10, y), (x + 5, y + 16)], fill=fill, outline=INK)
+def contact_shadow(img: Image.Image, y: int, x0: int, x1: int) -> None:
+    for x in range(x0, x1):
+        if (x + y) % 2 == 0:
+            put(img, x, y, "void")
+        put(img, x, y + 1, "void")
 
 
-def sill(d: ImageDraw.ImageDraw, x0: int, y: int, x1: int) -> None:
-    d.rectangle([x0, y, x1, y + 4], fill=c("stone_pale"), outline=INK)
+def snap_and_outline(img: Image.Image) -> Image.Image:
+    """Kill any Draw fringe, then a 1 px warm ink contour."""
+    w, h = img.size
+    src = img.load()
+    for y in range(h):
+        for x in range(w):
+            p = src[x, y]
+            if p[3] < 16:
+                src[x, y] = (0, 0, 0, 0)
+                continue
+            rgb = p[:3]
+            best = ALLOWED[0]
+            best_d = 10**9
+            for c in ALLOWED:
+                d = max(abs(rgb[0] - c[0]), abs(rgb[1] - c[1]), abs(rgb[2] - c[2]))
+                if d < best_d:
+                    best_d = d
+                    best = c
+            src[x, y] = (*best, 255)
+    out = img.copy()
+    op = out.load()
+    for y in range(h):
+        for x in range(w):
+            if src[x, y][3] > 0:
+                continue
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and 0 <= ny < h and src[nx, ny][3] > 0:
+                    op[x, y] = INK
+                    break
+    return out
 
 
-def generate_backdrop() -> Image.Image:
-    img = Image.new("RGBA", (360, 520), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    for y in range(220):
-        t = y / 220.0
-        r = int(P["sky_top"][0] * (1 - t) + P["sky_bottom"][0] * t)
-        g = int(P["sky_top"][1] * (1 - t) + P["sky_bottom"][1] * t)
-        b = int(P["sky_top"][2] * (1 - t) + P["sky_bottom"][2] * t)
-        d.line([(0, y), (359, y)], fill=(r, g, b, 255))
-    d.polygon(
-        [(0, 188), (48, 148), (96, 170), (150, 138), (210, 162),
-         (268, 142), (320, 168), (359, 152), (359, 220), (0, 220)],
-        fill=c("hill_far"),
-    )
-    d.polygon(
-        [(0, 198), (70, 178), (130, 194), (200, 170), (270, 188),
-         (330, 174), (359, 190), (359, 250), (0, 250)],
-        fill=c("hill_near"),
-    )
-    for tx, ty in ((28, 188), (310, 184), (338, 192)):
-        d.polygon([(tx, ty + 22), (tx + 8, ty), (tx + 16, ty + 22)], fill=c("tree"))
-        d.rectangle([tx + 6, ty + 20, tx + 10, ty + 28], fill=c("wood_lo"))
-        px(img, tx + 9, ty + 6, c("tree_hi"))
-    d.ellipse([268, 22, 308, 62], fill=(236, 214, 160, 255), outline=INK_SOFT)
-    d.ellipse([276, 30, 298, 52], fill=(252, 236, 196, 255))
-    for y in range(210, 520):
-        t = (y - 210) / 310.0
-        r = int(P["ground"][0] * (1 - t) + P["ground_lo"][0] * t)
-        g = int(P["ground"][1] * (1 - t) + P["ground_lo"][1] * t)
-        b = int(P["ground"][2] * (1 - t) + P["ground_lo"][2] * t)
-        d.line([(0, y), (359, y)], fill=(r, g, b, 255))
-    d.polygon([(24, 280), (180, 258), (336, 280), (348, 519), (12, 519)], fill=c("path"))
-    d.line([(36, 282), (180, 262)], fill=c("ground_hi"))
-    return img
-
-
-def generate_ground() -> Image.Image:
-    img = Image.new("RGBA", (360, 64), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rectangle([0, 0, 359, 63], fill=c("ground"))
-    for row in range(4):
-        y = row * 16
-        offset = (row % 2) * 10
-        for x in range(-10 + offset, 370, 20):
-            d.rectangle([x, y, x + 16, y + 13], fill=c("cobble"), outline=INK_SOFT)
-            d.line([(x + 1, y + 2), (x + 15, y + 2)], fill=c("cobble_hi"))
-            d.line([(x + 1, y + 11), (x + 15, y + 11)], fill=c("cobble_lo"))
-    return img
-
-
-def generate_well() -> Image.Image:
-    img = Image.new("RGBA", (48, 56), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.ellipse([6, 28, 42, 52], fill=c("stone_lo"), outline=INK)
-    d.ellipse([10, 24, 38, 46], fill=c("stone"), outline=INK)
-    d.ellipse([14, 28, 34, 42], fill=c("window"), outline=INK)
-    d.rectangle([21, 8, 27, 30], fill=c("wood_lo"), outline=INK)
-    d.rectangle([8, 8, 40, 14], fill=c("wood"), outline=INK)
-    d.line([(10, 10), (38, 10)], fill=c("wood_hi"))
-    d.ellipse([20, 2, 28, 10], fill=c("metal"), outline=INK)
-    return img
+def _wall(img: Image.Image, tier: int, x0: int, y0: int, x1: int, y1: int) -> None:
+    if tier <= 0:
+        timber_wall(img, x0, y0, x1, y1)
+    else:
+        mortar_courses(img, x0, y0, x1, y1, "wall_lo", "floor", "floor_hi", "floor_lo")
 
 
 def generate_forge(tier: int) -> Image.Image:
-    img = Image.new("RGBA", (128, 176), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rectangle([18, 164, 114, 174], fill=c("stone_lo"), outline=INK)
-    pale = tier >= 1
-    brick_wall(d, img, 16, 70, 112, 164, pale=pale)
-    tiled_roof(d, (64, 18), (4, 74), (124, 74), blue=tier >= 2)
-    d.rectangle([92, 8, 114, 70], fill=c("stone"), outline=INK)
-    d.rectangle([88, 4, 118, 14], fill=c("stone_lo"), outline=INK)
-    d.rectangle([98, 12, 108, 28], fill=c("stone_lo"))
-    for i, (sx, sy) in enumerate(((94, 0), (100, 2), (106, 1), (90, 3))):
-        px(img, sx, sy, (160, 160, 164, 140 - i * 20))
-    if tier >= 1:
-        sill(d, 16, 68, 112)
-        lantern(d, img, 20, 108)
-    window(d, img, 26, 84, lit=True)
-    window(d, img, 82, 84, lit=tier >= 1)
-    door(d, 52, 122, 24, 42)
-    d.polygon([(22, 156), (40, 140), (58, 156), (50, 162), (30, 162)], fill=c("anvil"), outline=INK)
-    d.line([(24, 154), (40, 142)], fill=c("anvil_hi"))
-    d.ellipse([16, 148, 30, 162], fill=c("fire_lo"), outline=INK)
-    d.ellipse([18, 150, 28, 160], fill=c("fire"))
-    px(img, 22, 152, c("fire_hi"))
-    d.rectangle([78, 138, 86, 164], fill=c("wood_lo"), outline=INK)
-    d.line([(68, 144), (96, 132)], fill=c("metal"), width=3)
+    img = blank(120, 156)
+    contact_shadow(img, 148, 14, 104)
+    # Plinth breaks the box: wider than the shed.
+    mortar_courses(img, 10, 124, 108, 148, "wall_lo", "floor", "floor_hi", "void")
+    _wall(img, tier, 22, 78, 86, 128)
+    roof_slope(
+        img,
+        (54, 40),
+        (12, 86),
+        (96, 82),
+        "cloth_lo" if tier == 0 else "ember_lo",
+        "wood_hi" if tier == 0 else "ember",
+        "wood_lo" if tier == 0 else "cloth_lo",
+    )
+    # Chimney on the right, away from the guild on the left of the square.
+    chimney(img, 92, 22, 64)
+    # Open forge bay.
+    fill_rect(img, 34, 96, 64, 126, "void")
+    fill_rect(img, 38, 108, 58, 124, "ember_lo")
+    fill_rect(img, 42, 112, 54, 122, "ember")
+    put(img, 46, 114, "flame")
+    put(img, 48, 116, "gold_top")
+    # Anvil in front of the bay, iron ramp.
+    # Horned anvil, same iron family as fallback/props/anvil.png.
+    fill_rect(img, 58, 114, 90, 120, "iron_hi")
+    fill_rect(img, 64, 110, 72, 116, "iron_top")
+    fill_rect(img, 70, 118, 84, 128, "iron")
+    fill_rect(img, 74, 126, 80, 132, "iron_lo")
+    put(img, 60, 112, "iron_top")
+    # Bellows.
+    fill_rect(img, 18, 108, 32, 122, "wood")
+    fill_rect(img, 20, 110, 30, 118, "cloth")
+    window(img, 70, 88, 8, 8, lit=True)
+    lantern(img, 24, 86)
     if tier >= 2:
-        pennant(d, 56, 28)
-        flowers(d, 18, 150)
-        d.rectangle([84, 96, 108, 112], fill=c("sign"), outline=INK)
-        d.line([(86, 98), (106, 98)], fill=c("sign_hi"))
-    return img
+        banner(img, 28, 48, 18)
+        fill_rect(img, 14, 78, 98, 81, "gold")
+    return snap_and_outline(img)
 
 
 def generate_market(tier: int) -> Image.Image:
-    img = Image.new("RGBA", (128, 176), (0, 0, 0, 0))
+    img = blank(120, 140)
+    contact_shadow(img, 132, 16, 108)
+    mortar_courses(img, 14, 112, 106, 134, "wall_lo", "floor", "floor_hi", "void")
+    # Posts and counter. Stall, not a house.
+    fill_rect(img, 22, 70, 28, 116, "wood_lo")
+    fill_rect(img, 86, 74, 92, 116, "wood_lo")
+    shade_rect(img, 20, 100, 100, 116, "wood_lo", "wood", "wood_hi")
+    # Sagging awning.
     d = ImageDraw.Draw(img)
-    d.rectangle([12, 164, 116, 174], fill=c("wood_lo"), outline=INK)
-    if tier == 0:
-        timber_wall(d, 16, 78, 112, 164)
-    else:
-        brick_wall(d, img, 16, 78, 112, 164, pale=True)
-    awn = c("awning2") if tier >= 2 else c("awning")
-    d.polygon([(2, 56), (64, 22), (126, 56), (126, 78), (2, 78)], fill=awn, outline=INK)
-    d.line([(8, 58), (64, 26)], fill=c("awning_hi"))
-    for x in range(12, 116, 12):
-        drop = abs(x - 64) // 8
-        d.line([(x, 56 + drop), (x, 76)], fill=c("awning_lo"))
+    d.polygon(
+        [(16, 62), (100, 58), (96, 86), (58, 96), (18, 84)],
+        fill=rgba("cloth" if tier else "wood"),
+    )
+    cloth = "cloth" if tier else "wood"
+    hi = "cloth_hi" if tier else "wood_hi"
+    lo = "cloth_lo" if tier else "wood_lo"
+    for y in range(60, 94):
+        for x in range(16, 100):
+            p = img.getpixel((x, y))
+            if p[3] == 0:
+                continue
+            if (y // 3) % 2 == 0:
+                put(img, x, y, hi if x < 50 else cloth)
+            elif x > 70:
+                put(img, x, y, lo)
+    # Crates sticking out on the right.
+    shade_rect(img, 92, 96, 112, 112, "wood_lo", "wood", "wood_hi")
+    shade_rect(img, 96, 84, 114, 98, "floor_lo", "wood", "wood_top")
+    # Hanging flasks.
+    fill_rect(img, 36, 88, 40, 98, "gold")
+    fill_rect(img, 44, 90, 48, 100, "sand_hi")
+    fill_rect(img, 52, 88, 57, 99, "iron_hi")
+    put(img, 37, 89, "gold_top")
+    # Sign board.
+    shade_rect(img, 58, 66, 82, 80, "wood_lo", "wood", "wood_hi")
+    put(img, 64, 70, "gold_hi")
+    put(img, 68, 74, "gold")
     if tier >= 1:
-        sill(d, 16, 76, 112)
-        lantern(d, img, 20, 118)
-    window(d, img, 26, 90, 14, 12, lit=tier >= 1)
-    window(d, img, 86, 90, 14, 12)
-    door(d, 52, 118, 24, 46)
-    for box, y, w in ((8, 142, 20), (96, 136, 22), (102, 122, 16)):
-        d.rectangle([box, y, box + w, 164], fill=c("crate"), outline=INK)
-        d.line([(box + 2, y + 2), (box + w - 2, y + 2)], fill=c("crate_hi"))
-        d.line([(box + w // 2, y), (box + w // 2, 164)], fill=c("wood_lo"))
-    d.ellipse([14, 134, 24, 144], fill=c("awning"), outline=INK)
-    d.ellipse([26, 136, 34, 144], fill=c("flower2"), outline=INK)
+        lantern(img, 26, 84)
     if tier >= 2:
-        pennant(d, 58, 24, gold=True)
-        flowers(d, 88, 150)
-        d.ellipse([16, 128, 26, 138], fill=c("gold"), outline=INK)
-    return img
+        banner(img, 8, 40, 20)
+        fill_rect(img, 16, 56, 100, 59, "gold")
+    return snap_and_outline(img)
 
 
 def generate_inn(tier: int) -> Image.Image:
-    img = Image.new("RGBA", (128, 176), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rectangle([16, 164, 114, 174], fill=c("stone_lo"), outline=INK)
-    brick_wall(d, img, 18, 68, 110, 164, pale=tier >= 1)
+    img = blank(120, 160)
+    contact_shadow(img, 152, 22, 100)
+    mortar_courses(img, 28, 118, 92, 154, "wall_lo", "floor", "floor_hi", "void")
+    # Ground floor narrower than the jetty above it.
+    _wall(img, tier, 32, 96, 88, 140)
     if tier == 0:
-        thatch_roof(d, (64, 12), (6, 72), (122, 72))
+        timber_wall(img, 18, 58, 102, 100)
     else:
-        tiled_roof(d, (64, 12), (6, 72), (122, 72), blue=tier >= 2)
+        plaster_wall(img, 18, 58, 102, 100)
+        # Timber frame on the jetty.
+        for x in (18, 19, 100, 101, 58, 59):
+            for y in range(58, 100):
+                put(img, x, y, "wood_lo")
+        for y in (58, 78, 98):
+            for x in range(18, 102):
+                put(img, x, y, "wood")
+    roof_slope(
+        img,
+        (60, 22),
+        (10, 66),
+        (110, 62),
+        "wood_lo" if tier == 0 else "ember_lo",
+        "wood_hi" if tier == 0 else "sand_hi",
+        "floor_lo" if tier == 0 else "cloth_lo",
+    )
+    door(img, 48, 112, 14, 28)
+    window(img, 36, 70, 10, 12, lit=True)
+    window(img, 72, 70, 10, 12, lit=True)
+    window(img, 54, 108, 8, 8, lit=False)
+    # Hanging sign on the right, clear of the market.
+    fill_rect(img, 96, 78, 98, 96, "wood_lo")
+    shade_rect(img, 90, 90, 114, 108, "wood_lo", "wood", "wood_hi")
+    put(img, 98, 96, "gold_hi")
+    put(img, 104, 100, "gold")
+    lantern(img, 34, 104)
     if tier >= 1:
-        sill(d, 18, 66, 110)
-        lantern(d, img, 24, 110)
-    window(d, img, 28, 82, lit=True)
-    window(d, img, 82, 82, lit=True)
-    door(d, 52, 118, 24, 46)
-    d.rectangle([4, 74, 32, 98], fill=c("sign"), outline=INK)
-    d.line([(6, 76), (30, 76)], fill=c("sign_hi"))
-    d.rectangle([16, 60, 20, 74], fill=c("wood"), outline=INK)
-    d.ellipse([8, 78, 28, 94], fill=c("fire"), outline=INK)
-    d.rectangle([16, 84, 20, 96], fill=c("fire_lo"))
-    d.rectangle([94, 122, 104, 164], fill=c("wood_lo"), outline=INK)
-    d.ellipse([90, 110, 108, 126], fill=c("fire_lo"), outline=INK)
-    px(img, 98, 116, c("fire_hi"))
+        chimney(img, 96, 28, 36)
     if tier >= 2:
-        pennant(d, 60, 20)
-        flowers(d, 20, 150)
-        flowers(d, 90, 150)
-    return img
+        banner(img, 22, 36, 18)
+        fill_rect(img, 12, 60, 108, 63, "gold")
+    return snap_and_outline(img)
 
 
 def generate_guild(tier: int) -> Image.Image:
-    img = Image.new("RGBA", (152, 204), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rectangle([12, 192, 140, 202], fill=c("stone_lo"), outline=INK)
+    """Gatehouse, kin to ui/hub_scene.png. Crenellations, not a house roof."""
+    img = blank(156, 176)
+    contact_shadow(img, 168, 12, 144)
+    mortar_courses(img, 8, 148, 148, 170, "wall_lo", "floor", "floor_hi", "void")
+    # Side towers.
+    mortar_courses(img, 10, 36, 48, 152, "wall_lo", "floor", "floor_hi", "floor_lo")
+    mortar_courses(img, 108, 52, 146, 152, "wall_lo", "wall", "floor", "floor_lo")
+    # Curtain wall between them, slightly lower.
+    mortar_courses(img, 44, 70, 112, 152, "wall_lo", "floor", "floor_hi", "void")
+    # Merlons sit on top of the towers (drawn after the courses).
+    for x in range(12, 46, 10):
+        fill_rect(img, x, 22, x + 6, 40, "floor")
+        fill_rect(img, x, 22, x + 6, 25, "floor_hi")
+        fill_rect(img, x + 6, 30, x + 10, 40, "void")
+    for x in range(110, 144, 10):
+        fill_rect(img, x, 38, x + 6, 56, "floor")
+        fill_rect(img, x, 38, x + 6, 41, "floor_hi")
+        fill_rect(img, x + 6, 46, x + 10, 56, "void")
+    # Arch: a real half-round, not a rectangle with two pixels.
+    door(img, 66, 116, 20, 34, arch=False)
+    for i in range(12):
+        y = 116 - int((12 * 12 - i * i) ** 0.5)
+        put(img, 66 + i, y, "floor_lo")
+        put(img, 86 - i, y, "floor_lo")
+        for xx in range(66 + i, 86 - i):
+            if y + 1 < 116:
+                put(img, xx, y + 1, "void")
+    window(img, 22, 70, 10, 14, lit=True)
+    window(img, 120, 78, 8, 10, lit=True)
+    window(img, 22, 100, 8, 8, lit=tier > 0)
     if tier == 0:
-        timber_wall(d, 18, 88, 134, 192)
-    else:
-        brick_wall(d, img, 18, 88, 134, 192, pale=tier >= 1)
-    tiled_roof(d, (76, 18), (4, 92), (148, 92), blue=tier >= 2)
-    d.rectangle([58, 8, 94, 70], fill=c("stone"), outline=INK)
-    d.polygon([(50, 12), (76, 0), (102, 12), (94, 18), (58, 18)], fill=c("roof"), outline=INK)
-    window(d, img, 64, 28, 24, 18, lit=True)
+        # Timber hoarding on the left tower only.
+        timber_wall(img, 14, 48, 44, 78)
+    banner(img, 30, 78, 28 if tier >= 2 else 16)
     if tier >= 1:
-        sill(d, 18, 86, 134)
-        lantern(d, img, 24, 130)
-        lantern(d, img, 120, 130)
-    # Job board
-    d.rectangle([28, 108, 70, 148], fill=c("wood_lo"), outline=INK)
-    for i, (px0, py0) in enumerate(((32, 112), (48, 116), (36, 128), (50, 132))):
-        d.rectangle([px0, py0, px0 + 12, py0 + 10], fill=c("paper"), outline=INK)
-    window(d, img, 86, 108, 18, 14, lit=tier >= 1)
-    door(d, 64, 148, 26, 44)
+        lantern(img, 96, 100)
+        lantern(img, 54, 108)
     if tier >= 2:
-        pennant(d, 40, 40)
-        pennant(d, 100, 40, gold=True)
-        flowers(d, 22, 176)
-        flowers(d, 112, 176)
-        d.rectangle([96, 128, 128, 146], fill=c("sign"), outline=INK)
-        d.line([(98, 130), (126, 130)], fill=c("sign_hi"))
-    return img
+        banner(img, 112, 60, 26)
+        fill_rect(img, 10, 34, 48, 37, "gold")
+        fill_rect(img, 108, 50, 146, 53, "gold")
+    return snap_and_outline(img)
 
 
 def generate_vault(open_lid: bool) -> Image.Image:
-    img = Image.new("RGBA", (88, 112), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rectangle([8, 100, 80, 110], fill=c("stone_lo"), outline=INK)
-    d.rectangle([14, 48, 74, 100], fill=c("stone"), outline=INK)
-    d.line([(16, 50), (72, 50)], fill=c("stone_hi"))
-    d.rectangle([20, 56, 68, 94], fill=c("gold") if open_lid else c("wood_lo"), outline=INK)
+    """Iron-bound chest on a step. Same family as sandy/props/chest.png."""
+    img = blank(88, 104)
+    contact_shadow(img, 96, 14, 74)
+    mortar_courses(img, 10, 78, 78, 98, "wall_lo", "floor", "floor_hi", "void")
+    # Body bulges: narrower at the bottom, wider at the lid line.
+    shade_rect(img, 22, 58, 66, 86, "wood_lo", "wood", "wood_hi")
+    shade_rect(img, 16, 50, 72, 64, "wood_lo", "wood", "wood_top")
+    for y in (58, 74):
+        fill_rect(img, 16, y, 72, y + 3, "iron")
+        put(img, 18, y, "iron_top")
+    fill_rect(img, 40, 52, 48, 82, "iron_hi")
+    fill_rect(img, 41, 66, 47, 72, "gold")
+    put(img, 43, 68, "gold_top")
     if open_lid:
-        d.polygon([(20, 56), (68, 56), (74, 28), (14, 28)], fill=c("gold"), outline=INK)
-        d.line([(22, 54), (66, 54)], fill=c("fire_hi"))
-        d.ellipse([38, 68, 50, 80], fill=c("fire"), outline=INK)
+        shade_rect(img, 14, 28, 74, 48, "wood", "wood_hi", "wood_top")
+        fill_rect(img, 22, 50, 66, 60, "gold_lo")
+        fill_rect(img, 28, 52, 60, 58, "gold_hi")
+        put(img, 40, 53, "gold_top")
+        put(img, 48, 55, "flame")
     else:
-        d.rectangle([38, 70, 50, 82], fill=c("metal"), outline=INK)
-        d.ellipse([40, 72, 48, 80], fill=c("metal_hi"), outline=INK)
-        d.line([(24, 64), (64, 64)], fill=c("metal_lo"))
-    d.rectangle([36, 36, 52, 48], fill=c("stone_pale"), outline=INK)
-    return img
+        shade_rect(img, 18, 34, 70, 52, "wood_lo", "wood", "wood_hi")
+        fill_rect(img, 18, 48, 70, 52, "iron")
+        put(img, 22, 36, "wood_top")
+        put(img, 64, 38, "sand_hi")
+    return snap_and_outline(img)
 
 
-def generate_preview() -> Image.Image:
-    """360×780 layout composite (not a Flutter screenshot)."""
-    preview = Image.new("RGBA", (360, 780), P["sky_top"] + (255,))
-    backdrop = generate_backdrop().resize((360, 520), Image.NEAREST)
-    preview.paste(backdrop, (0, 0), backdrop)
-    ground = generate_ground()
-    preview.paste(ground, (0, 500), ground)
-    guild = generate_guild(1).resize((140, 188), Image.NEAREST)
-    vault = generate_vault(False)
-    forge = generate_forge(1)
-    market = generate_market(1)
-    inn = generate_inn(1)
-    well = generate_well()
-    preview.paste(guild, (18, 70), guild)
-    preview.paste(vault, (250, 150), vault)
-    preview.paste(well, (156, 280), well)
-    preview.paste(forge, (8, 340), forge)
-    preview.paste(market, (116, 340), market)
-    preview.paste(inn, (224, 340), inn)
-    d = ImageDraw.Draw(preview)
-    d.rectangle([12, 620, 347, 768], fill=(24, 32, 40, 255), outline=INK)
-    d.text((110, 628), "Stone town · banners at Ascend 5", fill=(180, 188, 200, 255))
-    d.text((118, 648), "SANDY CAVERNS", fill=(236, 232, 223, 255))
-    d.rectangle([40, 700, 319, 748], fill=(107, 78, 46, 255), outline=(201, 162, 74, 255))
-    d.text((148, 716), "ENTER", fill=(255, 226, 168, 255))
-    return preview
+def generate_well() -> Image.Image:
+    img = blank(56, 68)
+    contact_shadow(img, 62, 8, 48)
+    # Stone ring.
+    shade_rect(img, 10, 36, 46, 62, "wall_lo", "floor", "floor_hi")
+    fill_rect(img, 18, 40, 38, 56, "void")
+    fill_rect(img, 22, 44, 34, 52, "iron")
+    # Beam and bucket.
+    fill_rect(img, 16, 18, 20, 40, "wood_lo")
+    fill_rect(img, 36, 18, 40, 40, "wood_lo")
+    fill_rect(img, 14, 16, 42, 22, "wood")
+    fill_rect(img, 26, 22, 30, 36, "wood_hi")
+    fill_rect(img, 24, 34, 32, 40, "iron_hi")
+    roof_slope(img, (28, 4), (8, 20), (48, 20), "wood_lo", "wood_hi", "floor_lo")
+    return snap_and_outline(img)
+
+
+def generate_ground() -> Image.Image:
+    """360×48 repeat tile. Irregular sand flags, 1:1 with the phone."""
+    img = blank(360, 48)
+    fill_rect(img, 0, 0, 360, 48, "floor_lo")
+    y = 0
+    row = 0
+    while y < 48:
+        h = 7 + (row % 3)
+        x = 0 if row % 2 == 0 else -4
+        col = 0
+        while x < 360:
+            w = 9 + ((row * 5 + col * 3) % 6)
+            names = ("floor_lo", "floor", "floor_hi", "sand")
+            name = names[(row + col) % 3]
+            if (row + col) % 11 == 0:
+                name = "sand"
+            fill_rect(img, x, y, min(360, x + w - 1), min(48, y + h - 1), name)
+            for yy in range(y, min(48, y + h)):
+                put(img, x, yy, "void")
+            for xx in range(max(0, x), min(360, x + w)):
+                put(img, xx, y, "floor_lo")
+            # Upper-left chip on each stone.
+            put(img, x + 2, y + 2, "sand_hi" if name == "sand" else "floor_hi")
+            x += w
+            col += 1
+        y += h
+        row += 1
+    # A worn path of lighter flags, not a dither hole.
+    for y in range(6, 42, 8):
+        for x in range(156, 204, 10):
+            fill_rect(img, x + 1, y + 1, x + 8, y + 6, "sand")
+            put(img, x + 2, y + 2, "sand_hi")
+    return snap_and_outline(img)
+
+
+def generate_backdrop() -> Image.Image:
+    """Ochre sky, dithered ridges, one cave arch. Kin to sandy.png."""
+    img = Image.new("RGBA", (360, 400), rgba("dust"))
+    fill_rect(img, 0, 0, 360, 96, "dust")
+    fill_rect(img, 0, 96, 360, 168, "sand_hi")
+    fill_rect(img, 0, 168, 360, 230, "sand")
+    fill_rect(img, 0, 230, 360, 400, "floor")
+    # Ridge line, pixel steps, then dithered rock below it.
+    ridge = []
+    for x in range(360):
+        n = (x * 3) % 17
+        base = 200 + (40 if x < 80 or x > 280 else 0)
+        ridge.append(base - (n % 9) * 2)
+    for x, top in enumerate(ridge):
+        for y in range(top, 400):
+            put(img, x, y, "wall" if ((x // 4) + (y // 4)) % 2 == 0 else "wall_lo")
+    # Arched cave mouth. Wider at the floor, round at the crown.
+    cx, crown, rx, ry = 180, 168, 46, 70
+    for y in range(crown, 340):
+        dy = (y - (crown + ry)) / ry
+        half = rx if y > crown + ry else int(rx * (1 - dy * dy) ** 0.5)
+        for x in range(cx - half, cx + half):
+            put(img, x, y, "void")
+            if y < crown + 18 and (x + y) % 4 == 0:
+                put(img, x, y, "wall_lo")
+    # Stalactites on the crown.
+    for x in (158, 170, 182, 194, 206):
+        length = 6 + (x % 5)
+        for k in range(length):
+            put(img, x, crown + 8 + k, "wall")
+            put(img, x + 1, crown + 10 + k, "void")
+    # Two torches, same job as the sandy backdrop.
+    for tx in (118, 232):
+        fill_rect(img, tx, 230, tx + 3, 248, "iron")
+        fill_rect(img, tx - 1, 222, tx + 4, 232, "ember")
+        put(img, tx, 220, "flame")
+        put(img, tx + 1, 224, "gold_top")
+    # Small warm sun. Hard pixels, no disc fringe.
+    for y in range(16, 36):
+        for x in range(24, 44):
+            if (x - 34) ** 2 + (y - 26) ** 2 < 70:
+                put(img, x, y, "gold_top" if (x + y) % 2 == 0 else "flame")
+    return snap_and_outline(img)
 
 
 def generate_sheet() -> Image.Image:
-    sheet = Image.new("RGBA", (520, 420), (12, 16, 22, 255))
+    sheet = Image.new("RGBA", (560, 560), rgba("void"))
     d = ImageDraw.Draw(sheet)
-    d.text((8, 6), "Idle Party town  (owned pixel art, three painted tiers)", fill=(228, 176, 74, 255))
+    d.text((8, 4), "town tiers  t0 timber   t1 stone   t2 banners", fill=rgba("dust"))
     kinds = (
         ("FORGE", generate_forge),
         ("MARKET", generate_market),
@@ -438,17 +615,10 @@ def generate_sheet() -> Image.Image:
     for col, (name, fn) in enumerate(kinds):
         for tier in range(3):
             sprite = fn(tier)
-            sprite = sprite.resize((int(sprite.width * 0.7), int(sprite.height * 0.7)), Image.NEAREST)
-            x = 8 + col * 128
-            y = 24 + tier * 128
+            x = 8 + col * 140
+            y = 28 + tier * 170
             sheet.paste(sprite, (x, y), sprite)
-        d.text((8 + col * 128 + 28, 404), name, fill=(236, 232, 223, 255))
-    vault_s = generate_vault(False)
-    vault_o = generate_vault(True)
-    sheet.paste(vault_s, (430, 40), vault_s)
-    sheet.paste(vault_o, (430, 170), vault_o)
-    d.text((438, 150), "SHUT", fill=(236, 232, 223, 255))
-    d.text((438, 280), "OPEN", fill=(236, 232, 223, 255))
+        d.text((8 + col * 140, 540), name, fill=rgba("dust"))
     return sheet
 
 
@@ -462,33 +632,43 @@ Owned Idle Party pixel art for the out-of-dungeon town hub.
 |-------|--------|
 | Author | Idle Party (this repository) |
 | Tool | `tool/generate_town_art.py` |
-| Method | Hand-specified pixel geometry (PIL), same path as `generate_floor_props.py` |
+| Method | Hand-specified pixel geometry (PIL). Palette measured from Sandy floor/wall, `gear_style.py` ramps, and `ui/hub_scene.png` |
 | External packs | None. No Kenney, no marketplace, no paid downloads |
 | License | Same as the rest of `assets/custom/` — original game art |
 
 Three **painted** facade tiers (timber / stone / banners). AL10 pennants and
 AL20 lantern arcade are drawn in Flutter on top of these sprites.
 
-Regenerate:
+Deterministic: no RNG. Regenerate:
 
 ```
 python3 tool/generate_town_art.py
 ```
 
+## Style rules (same game)
+
+| Rule | Source |
+|------|--------|
+| Warm ink (32, 22, 18), 1 px outer contour | `tool/gear_style.py` |
+| Upper-left light | `LIGHT_DIR` in `gear_style.py` |
+| Sand stone, not grey brick | `dungeon/sandy/tiles/floor_a.png`, `wall_a.png` |
+| Amber windows, torch light | Sandy backdrop + chest highlight |
+| Gatehouse guild | `ui/hub_scene.png` arch and banners |
+| Nearest-neighbor only | `FilterQuality.none` |
+
 ## Files
 
 | File | Size | Use |
 |------|------|-----|
-| backdrop.png | 360×520 | Sky, hills, dirt square |
-| ground.png | 360×64 | Cobble strip |
-| well.png | 48×56 | Square well (non-interactive) |
-| forge_t0/t1/t2.png | 128×176 | Forge facades |
-| market_t0/t1/t2.png | 128×176 | Market facades |
-| inn_t0/t1/t2.png | 128×176 | Inn facades |
-| guild_t0/t1/t2.png | 152×204 | Guild hall facades |
-| vault_shut.png / vault_open.png | 88×112 | Daily Vault chest |
-| preview_a56.png | 360×780 | Layout composite (not a Flutter screenshot) |
-| buildings_sheet.png | 520×420 | Tier strip for review |
+| backdrop.png | 360×400 | Ochre sky, ridges, cave mouth |
+| ground.png | 360×48 | Repeating sand flags (paint 1:1, no cover-scale) |
+| well.png | 56×68 | Well (non-interactive) |
+| forge_t0/t1/t2.png | 120×156 | Smithy. Chimney on the right |
+| market_t0/t1/t2.png | 120×140 | Stall, not a house |
+| inn_t0/t1/t2.png | 120×160 | Jetty inn |
+| guild_t0/t1/t2.png | 156×176 | Crenellated gatehouse |
+| vault_shut.png / vault_open.png | 88×104 | Bound chest |
+| buildings_sheet.png | tier strip for review |
 
 Paint with `FilterQuality.none` via `CustomAssets.town*`.
 """
@@ -499,7 +679,7 @@ def main() -> int:
     parser.add_argument(
         "--preview",
         default="",
-        help="Also copy preview PNGs to this directory",
+        help="Also copy review PNGs to this directory",
     )
     args = parser.parse_args()
     ASSETS_DIR.mkdir(parents=True, exist_ok=True)
@@ -510,7 +690,6 @@ def main() -> int:
         ("well.png", generate_well()),
         ("vault_shut.png", generate_vault(False)),
         ("vault_open.png", generate_vault(True)),
-        ("preview_a56.png", generate_preview()),
         ("buildings_sheet.png", generate_sheet()),
     ]
     for t in range(3):
@@ -522,30 +701,29 @@ def main() -> int:
                 (f"guild_t{t}.png", generate_guild(t)),
             ]
         )
+    # preview_a56.png is a layout composite, not the Flutter screenshot.
+    # Keep a nearest-neighbor paste so the file still exists for the README.
+    preview = generate_backdrop().resize((360, 520), Image.Resampling.NEAREST)
+    preview.paste(generate_ground(), (0, 460), generate_ground())
+    preview.paste(generate_guild(1), (16, 180), generate_guild(1))
+    preview.paste(generate_vault(False), (250, 250), generate_vault(False))
+    preview.paste(generate_forge(1), (8, 340), generate_forge(1))
+    preview.paste(generate_market(1), (120, 360), generate_market(1))
+    preview.paste(generate_inn(1), (230, 340), generate_inn(1))
+    assets.append(("preview_a56.png", preview))
+
     for name, img in assets:
         path = ASSETS_DIR / name
         img.save(path)
-        print(f"Wrote {path}")
+        print(f"Wrote {path} {img.size}")
 
     (ASSETS_DIR / "README.md").write_text(README)
     print(f"Wrote {ASSETS_DIR / 'README.md'}")
-
-    # Drop superseded 96×128 v1 names so the folder only holds current art.
-    for stale in (
-        "building_forge.png",
-        "building_market.png",
-        "building_inn.png",
-    ):
-        stale_path = ASSETS_DIR / stale
-        if stale_path.exists():
-            stale_path.unlink()
-            print(f"Removed {stale_path}")
 
     if args.preview:
         dest = Path(args.preview)
         dest.mkdir(parents=True, exist_ok=True)
         for name in (
-            "preview_a56.png",
             "buildings_sheet.png",
             "forge_t0.png",
             "forge_t1.png",
@@ -554,13 +732,11 @@ def main() -> int:
             "inn_t1.png",
             "guild_t1.png",
             "vault_shut.png",
-            "vault_open.png",
             "backdrop.png",
-            "well.png",
+            "ground.png",
         ):
             data = (ASSETS_DIR / name).read_bytes()
             (dest / f"town_{name}").write_bytes(data)
-            print(f"Copied {dest / ('town_' + name)}")
     return 0
 
 

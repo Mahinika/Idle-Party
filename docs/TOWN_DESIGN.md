@@ -98,10 +98,31 @@ paid façade SKUs, NPC chatter trees, a sixth currency.
 ## Art
 
 Source: `tool/generate_town_art.py`. License: owned, same as
-`assets/custom/`. No paid packs. `FilterQuality.none`.
+`assets/custom/`. No paid packs. Deterministic (no RNG).
+`FilterQuality.none`. Ground repeats 1:1 (`ImageRepeat.repeat`),
+backdrop uses `BoxFit.fitWidth`, so the phone does not stretch a
+64px strip into giant bricks.
 
-Three painted tiers per facade (forge / market / inn / guild), vault
-shut/open, well, backdrop 360×520, cobble.
+Measured from shipped art, not a new style:
+
+| Rule | Where it already lives |
+|------|------------------------|
+| Warm ink (32, 22, 18), 1 px outer contour | `tool/gear_style.py` `INK` |
+| Upper-left light | `gear_style.py` `LIGHT_DIR` |
+| Sand stone (58, 44, 24)…(200, 136, 64) | `dungeon/sandy/tiles/floor_a.png` |
+| Dark wall (23, 17, 11)…(74, 58, 36) | `dungeon/sandy/tiles/wall_a.png` |
+| Leather / wood / gold ramps | `gear_style.py` `MATERIAL_RAMPS` |
+| Iron | `dungeon/fallback/props/anvil.png` |
+| Cave mouth, torches, banners | `ui/backdrops/sandy.png`, `ui/hub_scene.png` |
+| Hero density | `char/warrior/human_m_body_idle.png` |
+
+Guild is a crenellated gatehouse (the hub gate's cousin). Forge chimney
+sits on the right of the smithy. Name chips paint after the sprites, and
+hit boxes do not overlap, so GUILD stays readable and tappable.
+Heroes stand on the flags with a contact shadow.
+
+Three painted tiers per facade. AL10 pennants and AL20 lanterns stay
+Flutter overlays.
 
 Previews: `assets/custom/town/preview_a56.png` (composite) and the
 Flutter golden `test/goldens/town/town_preview_a56.png`.
@@ -110,13 +131,11 @@ Flutter golden `test/goldens/town/town_preview_a56.png`.
 
 ## Layout (A56)
 
-Portrait 360×780. Facades scale from the square's own height (not the
-full screen). Cobble covers ~72% of the square so Guild, Vault, well,
-and the front row share one plaza instead of a dirt courtyard. Guild is
-the tall back building; Vault sits inward on the cobble; well in the
-court; FORGE / MARKET / INN in front; party on the stone; SCROLLS rail
-and ENTER in the dock. Labels `GameTheme.hint`; hit targets ≥44px. Text
-scale 1.45 and 2.0 still show ENTER. 360×640 uses the compact pack.
+Portrait 360×780. The cave sky stays above the plaza. Guild and Vault
+stand on the back of the flags; FORGE / MARKET / INN and the party fill
+the front. Name chips sit on the buildings. Labels `GameTheme.hint`;
+hit targets stay on the building boxes. Text scale 1.45 and 2.0 still
+show ENTER. 360×640 uses the compact pack.
 
 ---
 
@@ -153,4 +172,4 @@ intercept only while `inDungeon`; drop out-of-dungeon `HomeGoldDock`.
 - `test/town_viewport_test.dart` — catalog, unlocks, locked/unlocked taps, dismiss, repeat, text scale, short 360×640
 - `test/town_nav_test.dart` — SCROLLS home, WATCH/WISP drop, POUCH keep
 - `test/home_shell_town_test.dart` — live HomeShell routes, hub↔dungeon, Welcome Back, ads chips, vault credit, 1.45 / 2.0 / 360×640
-- `test/town_preview_golden_test.dart` — town preview + HomeShell town goldens under `goldens/town/` (≤0.02% doll AA comparator so parallel doll loads do not flake 4px)
+- `test/town_preview_golden_test.dart` — HomeShell town goldens under `goldens/town/` for stone (AL1), timber (AL0), and banners (AL5). ≤0.02% doll AA comparator so parallel doll loads do not flake 4px
