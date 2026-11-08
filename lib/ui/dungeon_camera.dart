@@ -199,6 +199,85 @@ const double dungeonCamShakeOmegaY = 38;
   return (x: party.x + shiftX, y: party.y + shiftY);
 }
 
+/// Live aim. An in-frame fight stays on the party.
+///
+/// The old in-frame branch sat halfway between the party and the single
+/// nearest living enemy. A death, or two foes trading which one is nearer,
+/// moved that point to the other side of the party and the view snapped
+/// with it. The pack is already on screen in that case, so the party
+/// (or the pinned hero) is the aim. A foe that does not fit still uses the
+/// gate, then the capped pack nudge. The exit and a chest with no fight
+/// still use the stairs framing.
+({double x, double y}) dungeonLiveFocus({
+  required bool awaitingExit,
+  required bool inFight,
+  required bool goalInClearView,
+  required double partyX,
+  required double partyY,
+  required double? goalX,
+  required double? goalY,
+  required double exitX,
+  required double exitY,
+  required ({double x, double y})? gateFocus,
+  required Iterable<({double x, double y, bool alive, int index})> heroes,
+  required Iterable<({double x, double y, bool alive})> awakeEnemies,
+  required double mapCenterX,
+  required double mapCenterY,
+  int? pinIndex,
+  required double visibleCols,
+  required double visibleRows,
+  double marginTop = 4.5,
+  double marginBottom = 4.5,
+  double nearbyTiles = 9,
+  double maxShiftX = 3.5,
+  double maxShiftY = 3.5,
+}) {
+  if (awaitingExit) {
+    return dungeonStairsFocus(
+      partyX: partyX,
+      partyY: partyY,
+      exitX: exitX,
+      exitY: exitY,
+      visibleCols: visibleCols,
+      visibleRows: visibleRows,
+    );
+  }
+  if (inFight) {
+    if (goalInClearView) {
+      return dungeonPartyFocus(
+        heroes: heroes,
+        mapCenterX: mapCenterX,
+        mapCenterY: mapCenterY,
+        pinIndex: pinIndex,
+      );
+    }
+    return gateFocus ??
+        dungeonCombatFocus(
+          heroes: heroes,
+          awakeEnemies: awakeEnemies,
+          mapCenterX: mapCenterX,
+          mapCenterY: mapCenterY,
+          pinIndex: pinIndex,
+          nearbyTiles: nearbyTiles,
+          maxShiftX: maxShiftX,
+          maxShiftY: maxShiftY,
+        );
+  }
+  if (goalInClearView && goalX != null && goalY != null) {
+    return dungeonStairsFocus(
+      partyX: partyX,
+      partyY: partyY,
+      exitX: goalX,
+      exitY: goalY,
+      visibleCols: visibleCols,
+      visibleRows: visibleRows,
+      topInset: marginTop,
+      bottomInset: marginBottom,
+    );
+  }
+  return gateFocus ?? (x: partyX, y: partyY);
+}
+
 /// Pull the cleared floor toward the stairs so the exit sits under the HUD.
 ///
 /// The party stays in the same clear area. If the gap is longer than the
