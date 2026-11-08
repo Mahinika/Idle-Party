@@ -262,7 +262,8 @@ extension _DungeonPaintActors on _TileRoomPainter {
           .toInt();
       final partyHero = party.isEmpty ? null : party[idx];
       final flash = hero.attackFlash;
-      var c = center(hero.x, hero.y);
+      final shown = hero.picturePoint();
+      var c = center(shown.x, shown.y);
       // Prefer smoothed face aim; fall back to attack punch aim.
       final aimX = (hero.faceAimX != 0 || hero.faceAimY != 0)
           ? hero.faceAimX
@@ -272,8 +273,8 @@ extension _DungeonPaintActors on _TileRoomPainter {
           : hero.attackAimY;
       // Melee lunge toward the target while attacking (warrior especially).
       if (flash > 0.02 && (aimX != 0 || aimY != 0)) {
-        final adx = aimX - hero.x;
-        final ady = aimY - hero.y;
+        final adx = aimX - shown.x;
+        final ady = aimY - shown.y;
         final alen = math.sqrt(adx * adx + ady * ady);
         if (alen > 0.05) {
           final punch = hero.heroRole == HeroRole.warrior ? 0.38 : 0.22;
@@ -284,8 +285,8 @@ extension _DungeonPaintActors on _TileRoomPainter {
         }
       } else if (aimX != 0 || aimY != 0) {
         // Tiny lean toward facing so idle kits don't look glued forward.
-        final adx = aimX - hero.x;
-        final ady = aimY - hero.y;
+        final adx = aimX - shown.x;
+        final ady = aimY - shown.y;
         final alen = math.sqrt(adx * adx + ady * ady);
         if (alen > 0.08) {
           c = Offset(
@@ -294,7 +295,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
           );
         }
       }
-      final flipX = (aimX - hero.x) < -0.15;
+      final flipX = (aimX - shown.x) < -0.15;
       final alpha = hero.isAlive ? 1.0 : 0.25;
       final paintAlpha = hero.vanishTimer > 0 ? 0.35 : alpha;
       var scale = 0.95;

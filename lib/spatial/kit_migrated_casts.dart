@@ -116,6 +116,8 @@ abstract final class KitNamedCasts {
         }
         if (len > 0.1) {
           final stop = math.max(0.55, hero.attackRange * 0.85);
+          final fromX = hero.x;
+          final fromY = hero.y;
           final snapped = SpatialCombat.clampAlongWalk(
             world.map,
             world.openGateIds,
@@ -126,6 +128,7 @@ abstract final class KitNamedCasts {
           );
           hero.x = snapped.$1;
           hero.y = snapped.$2;
+          hero.beginPictureRush(fromX, fromY);
         }
         focus.rootTimer = math.max(focus.rootTimer, 0.85);
         SpatialCombat.gainRage(hero, 8);

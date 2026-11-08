@@ -1241,9 +1241,10 @@ class _TileCamera {
         visibleRows: 1,
       );
     }
-    final heroRows = world.heroes
-        .where((h) => !h.isPet)
-        .map((h) => (x: h.x, y: h.y, alive: h.isAlive, index: h.assetIndex));
+    final heroRows = world.heroes.where((h) => !h.isPet).map((h) {
+      final shown = h.picturePoint();
+      return (x: shown.x, y: shown.y, alive: h.isAlive, index: h.assetIndex);
+    });
     final awakeEnemies = world.enemies
         .where((e) => e.hp > 0 && !e.dormant)
         .map((e) => (x: e.x, y: e.y, alive: true));
@@ -1357,7 +1358,7 @@ class _TileCamera {
         .where((g) => !world.openGateIds.contains(g.id))
         .map((g) => (x: g.x + 0.5, y: g.y + 0.5));
     // A far pack does not steal the frame. The closed gate stays with the
-    // party. Stairs-focus on that pack is what pushed the heroes off the phone.
+    // party. An in-frame fight does not lock onto the nearest body.
     final gateFocus = !world.awaitingExit && approach != null && !clear
         ? dungeonGateFocus(
             partyX: party.x,
@@ -1371,39 +1372,30 @@ class _TileCamera {
             onlyWhenApart: false,
           )
         : null;
-    final raw = world.awaitingExit
-        ? dungeonStairsFocus(
-            partyX: party.x,
-            partyY: party.y,
-            exitX: exit.$1 + 0.5,
-            exitY: exit.$2 + 0.5,
-            visibleCols: cols,
-            visibleRows: visibleRows,
-          )
-        : visibleGoal != null && clear
-        ? dungeonStairsFocus(
-            partyX: party.x,
-            partyY: party.y,
-            exitX: visibleGoal.x,
-            exitY: visibleGoal.y,
-            visibleCols: cols,
-            visibleRows: visibleRows,
-            topInset: marginTop,
-            bottomInset: marginBottom,
-          )
-        : gateFocus ??
-              (inFight
-                  ? dungeonCombatFocus(
-                      heroes: heroRows,
-                      awakeEnemies: awakeEnemies,
-                      mapCenterX: world.cols / 2,
-                      mapCenterY: world.rows / 2,
-                      pinIndex: pinHeroIndex,
-                      nearbyTiles: math.min(cols, visibleRows) * 0.45,
-                      maxShiftX: cols * 0.18,
-                      maxShiftY: visibleRows * 0.14,
-                    )
-                  : party);
+    final raw = dungeonLiveFocus(
+      awaitingExit: world.awaitingExit,
+      inFight: inFight,
+      goalInClearView: clear,
+      partyX: party.x,
+      partyY: party.y,
+      goalX: visibleGoal?.x,
+      goalY: visibleGoal?.y,
+      exitX: exit.$1 + 0.5,
+      exitY: exit.$2 + 0.5,
+      gateFocus: gateFocus,
+      heroes: heroRows,
+      awakeEnemies: awakeEnemies,
+      mapCenterX: world.cols / 2,
+      mapCenterY: world.rows / 2,
+      pinIndex: pinHeroIndex,
+      visibleCols: cols,
+      visibleRows: visibleRows,
+      marginTop: marginTop,
+      marginBottom: marginBottom,
+      nearbyTiles: math.min(cols, visibleRows) * 0.45,
+      maxShiftX: cols * 0.18,
+      maxShiftY: visibleRows * 0.14,
+    );
     final focus = world.awaitingExit
         ? raw
         : dungeonIncludeParty(

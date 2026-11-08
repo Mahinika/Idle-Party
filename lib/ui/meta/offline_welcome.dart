@@ -9,13 +9,18 @@ import '../../core/chase_dispatcher.dart';
 import '../../core/comeback_chest.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/menu_router.dart';
 import '../../core/gold_income.dart';
+import '../../core/home_layout.dart';
 import '../../core/hub_chase.dart';
+import '../../core/menu_alerts.dart';
 import '../../core/pet_service.dart';
 import '../chase_bind.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/home/home_gold_dock.dart';
+import '../shell/home/upgrade_panel.dart';
 import '../shell/shell_layout.dart';
 import '../shell/play_nav.dart';
 import '../web_click_bridge.dart';
@@ -23,8 +28,9 @@ import '../web_click_bridge.dart';
 /// Short Welcome Back: wow lead, ≤3 highlights, one Up next, dismiss.
 Future<void> showOfflineProgressDialog(
   BuildContext context,
-  GameDirector director,
-) async {
+  GameDirector director, {
+  MenuRouter? router,
+}) async {
   final summary = director.offlineSummary;
   final rewardState = summary?.state ?? director.state;
   final now = DateTime.now();
@@ -47,6 +53,8 @@ Future<void> showOfflineProgressDialog(
       : '';
 
   final nav = PlayNav.maybeOf(context);
+  final menu = router ?? nav?.router;
+  final home = director.state.homeLayout == HomeLayout.home;
   final plan = ChaseDispatcher.plan(
     chase,
     state: director.state,
@@ -99,6 +107,16 @@ Future<void> showOfflineProgressDialog(
   // prize is still one tap, and the next press is the fight.
   final inCave = director.state.inDungeon;
   final returnLabel = inCave ? 'CONTINUE' : 'ENTER DUNGEON';
+  final canSpend = menu != null && (home || nav != null);
+  final gainLine = GameLogic.returnGainLine(
+    rewardState,
+    goldGained: summary?.goldGained ?? 0,
+    essenceGained: summary?.essenceGained ?? 0,
+    canOpenGold: canSpend && MenuTabs.showGold(rewardState),
+    canOpenEssence: canSpend && MenuTabs.showCamp(rewardState),
+  );
+  final openGold = canSpend && gainLine.contains('Open GOLD');
+  final openEssence = canSpend && gainLine.contains('Open ESSENCE');
   var showWatch = summary?.welcomeBackAdOffer == true;
   var watchBusy = false;
   var adNote = '';
@@ -119,10 +137,7 @@ Future<void> showOfflineProgressDialog(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (lead != null) ...[
-            Text(
-              lead,
-              style: GameTheme.readable(color: GameTheme.torchHot),
-            ),
+            Text(lead, style: GameTheme.readable(color: GameTheme.torchHot)),
             const SizedBox(height: 6),
           ],
           if (summary != null) ...[
@@ -167,10 +182,7 @@ Future<void> showOfflineProgressDialog(
           ],
           if (petLine.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(
-              petLine,
-              style: GameTheme.readable(color: GameTheme.torchHot),
-            ),
+            Text(petLine, style: GameTheme.readable(color: GameTheme.torchHot)),
           ],
           if (showCheckIn) ...[
             const SizedBox(height: 6),
@@ -244,10 +256,11 @@ Future<void> showOfflineProgressDialog(
                                 setLocal(() => watchBusy = true);
                                 final beforeGold = director.state.gold;
                                 final beforeEssence = director.state.essence;
-                                final ok = await director.watchWelcomeBackGoldAd(
-                                  summary.goldGained,
-                                  baseEssence: summary.essenceGained,
-                                );
+                                final ok = await director
+                                    .watchWelcomeBackGoldAd(
+                                      summary.goldGained,
+                                      baseEssence: summary.essenceGained,
+                                    );
                                 if (!context.mounted) return;
                                 setLocal(() {
                                   watchBusy = false;
@@ -274,12 +287,14 @@ Future<void> showOfflineProgressDialog(
               },
             ),
           const SizedBox(height: 10),
+          Text(gainLine, style: GameTheme.readable(color: GameTheme.parchment)),
+          const SizedBox(height: 6),
           Text(
             contract.upNextLine,
-            style: GameTheme.readable(color: chase.urgency == HubChaseUrgency.normal
-                  ? GameTheme.mossLit
-                  : GameTheme.accentWarn),
+            style: GameTheme.readable(color: GameTheme.parchment),
           ),
+          ShellLayout.gap(4),
+          ShellLayout.hint(contract.whyLine, maxLines: 2),
           if (contract.detail.isNotEmpty) ...[
             ShellLayout.gap(4),
             ShellLayout.hint(contract.detail, maxLines: 3),
@@ -287,6 +302,36 @@ Future<void> showOfflineProgressDialog(
         ],
       ),
       actions: [
+        if (openGold)
+          GameButton(
+            label: 'OPEN GOLD',
+            expanded: false,
+            style: GameButtonStyle.grey,
+            onPressed: () => _openReturnSpend(
+              context,
+              ctx,
+              director,
+              menu,
+              home: home,
+              panel: HomeGoldPanel.forge,
+              route: MenuRoute.gold,
+            ),
+          ),
+        if (openEssence)
+          GameButton(
+            label: 'OPEN ESSENCE',
+            expanded: false,
+            style: GameButtonStyle.grey,
+            onPressed: () => _openReturnSpend(
+              context,
+              ctx,
+              director,
+              menu,
+              home: home,
+              panel: HomeGoldPanel.camp,
+              route: MenuRoute.essence,
+            ),
+          ),
         if (showChaseCta)
           GameButton(
             label: readyLabel,
@@ -313,6 +358,14 @@ Future<void> showOfflineProgressDialog(
               return;
             }
             final id = GameLogic.recommendedDungeonId(director.state);
+            // Home already enters from the shell. PlayNav on that tree must
+            // not skip the unlock check the camp button uses.
+            if (home) {
+              if (ChaseDispatcher.zoneUnlocked(director.state, id)) {
+                director.enterDungeon(dungeonId: id);
+              }
+              return;
+            }
             if (nav != null) {
               nav.onEnterDungeon(id);
             } else if (ChaseDispatcher.zoneUnlocked(director.state, id)) {
@@ -323,6 +376,30 @@ Future<void> showOfflineProgressDialog(
       ],
     ),
   ).whenComplete(WebClickBridge.popLayer);
+}
+
+void _openReturnSpend(
+  BuildContext context,
+  BuildContext dialogContext,
+  GameDirector director,
+  MenuRouter menu, {
+  required bool home,
+  required HomeGoldPanel panel,
+  required MenuRoute route,
+}) {
+  director.claimReturnRewards();
+  director.dismissOfflineSummary();
+  Navigator.pop(dialogContext);
+  if (home) {
+    showHomeGoldSheet(
+      context,
+      director: director,
+      router: menu,
+      initialPanel: panel,
+    );
+    return;
+  }
+  menu.open(route);
 }
 
 bool _lootAlreadySaid(String label) =>
