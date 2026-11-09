@@ -40,6 +40,7 @@ void main() {
       'sandy_tank.png',
       'king_tank.png',
       'hell_brute.png',
+      'storm_brute.png',
       'boss_brass.png',
       'boss_rime.png',
     ]) {
