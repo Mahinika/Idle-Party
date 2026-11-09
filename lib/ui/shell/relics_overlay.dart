@@ -27,68 +27,134 @@ class RelicsOverlay extends StatelessWidget {
     final trades = GameLogic.cinderExchangesUsed(state);
     final canDiscover = next != null && md.embers >= discoverCost;
     final nextRelic = next;
+    final ownedCount = state.unlockedRelics.length;
+    final ownedHeight = (ownedCount * 132.0).clamp(0.0, 280.0);
     return Padding(
       padding: ShellLayout.listPadding,
       child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ShellLayout.hint(
-          '${_pile(md.embers, 'Ember', 'Embers')} · '
-          '${_pile(md.cinders, 'Cinder', 'Cinders')} · survive Ascend',
-          maxLines: 2,
-        ),
-        ShellLayout.gap(8),
-        if (nextRelic != null)
-          GameButton(
-            label: canDiscover
-                ? 'DISCOVER ${nextRelic.name} · ${_pile(discoverCost, 'Ember', 'Embers')}'
-                : 'DISCOVER ${nextRelic.name} · need ${discoverCost - md.embers} more Embers',
-            tip: canDiscover
-                ? null
-                : 'Need ${discoverCost - md.embers} more Embers',
-            style: canDiscover ? GameButtonStyle.brown : GameButtonStyle.grey,
-            primary: canDiscover,
-            onPressed: canDiscover
-                ? () => director.unlockRelic(nextRelic.id)
-                : null,
-          ),
-        if (state.unlockedRelics.isEmpty) ...[
-          ShellLayout.gap(8),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
           ShellLayout.hint(
-            'No relics yet. Embers from bosses, Ascend, and salvage. '
-            'Cinders from Daily Vault — discover your first relic here.',
-            maxLines: 3,
+            '${_pile(md.embers, 'Ember', 'Embers')} · '
+            '${_pile(md.cinders, 'Cinder', 'Cinders')} · survive Ascend',
+            maxLines: 2,
           ),
-        ],
-        ShellLayout.gap(8),
-        for (final id in state.unlockedRelics.reversed)
-          _OwnedRelic(director: director, relicId: id),
-        ShellLayout.secondaryActionRow(
-          children: [
-            GameButton(
-              label:
-                  '4 Cinders → 1 Ember · $trades/${GameLogic.cinderExchangeWeeklyCap} this week',
-              style: GameButtonStyle.grey,
-              dense: true,
-              onPressed:
-                  trades < GameLogic.cinderExchangeWeeklyCap &&
-                      md.cinders >= GameLogic.cinderExchangeCost
-                  ? director.exchangeCinders
-                  : null,
+          ShellLayout.gap(8),
+          if (nextRelic != null)
+            Semantics(
+              button: canDiscover,
+              label: 'Discover ${nextRelic.name}',
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: canDiscover
+                      ? () => director.unlockRelic(nextRelic.id)
+                      : null,
+                  borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                  child: Ink(
+                    decoration: BoxDecoration(
+                      color: canDiscover
+                          ? GameTheme.buttonBrownBottom
+                          : GameTheme.buttonDisabledBottom,
+                      borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                      border: Border.all(
+                        color: canDiscover
+                            ? GameTheme.torch.withValues(alpha: 0.65)
+                            : GameTheme.buttonDisabledBorder,
+                      ),
+                    ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        minHeight: GameTheme.minTouch,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'DISCOVER ${nextRelic.name}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: GameTheme.button(
+                                color: canDiscover
+                                    ? GameTheme.torchHot
+                                    : GameTheme.buttonDisabledText,
+                              ),
+                            ),
+                            Text(
+                              canDiscover
+                                  ? _pile(discoverCost, 'Ember', 'Embers')
+                                  : 'Need ${discoverCost - md.embers} more Embers',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: GameTheme.hint(
+                                color: canDiscover
+                                    ? GameTheme.parchment
+                                    : GameTheme.parchmentDim,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-            GameButton(
-              label: '2 tickets → 1 Cinder',
-              style: GameButtonStyle.grey,
-              dense: true,
-              onPressed: md.adTickets >= GameLogic.ticketCostPerCinder
-                  ? director.buyCinderWithTickets
-                  : null,
+          if (state.unlockedRelics.isEmpty) ...[
+            ShellLayout.gap(8),
+            ShellLayout.hint(
+              'No relics yet. Embers from bosses, Ascend, and salvage. '
+              'Cinders from Daily Vault — discover your first relic here.',
+              maxLines: 3,
             ),
           ],
-        ),
-        ShellLayout.gap(12),
-      ],
-    ),
+          if (ownedCount > 0) ...[
+            ShellLayout.gap(8),
+            SizedBox(
+              height: ownedHeight,
+              child: ListView(
+                children: [
+                  for (final id in state.unlockedRelics.reversed)
+                    _OwnedRelic(director: director, relicId: id),
+                ],
+              ),
+            ),
+          ],
+          ShellLayout.gap(8),
+          ShellLayout.secondaryActionRow(
+            children: [
+              GameButton(
+                label:
+                    '4 Cinders → 1 Ember · $trades/${GameLogic.cinderExchangeWeeklyCap} this week',
+                style: GameButtonStyle.grey,
+                dense: true,
+                onPressed:
+                    trades < GameLogic.cinderExchangeWeeklyCap &&
+                        md.cinders >= GameLogic.cinderExchangeCost
+                    ? director.exchangeCinders
+                    : null,
+              ),
+              GameButton(
+                label: '2 tickets → 1 Cinder',
+                style: GameButtonStyle.grey,
+                dense: true,
+                onPressed: md.adTickets >= GameLogic.ticketCostPerCinder
+                    ? director.buyCinderWithTickets
+                    : null,
+              ),
+            ],
+          ),
+          ShellLayout.gap(12),
+        ],
+      ),
     );
   }
 }

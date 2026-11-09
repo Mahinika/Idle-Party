@@ -61,34 +61,37 @@ class _CodexOverlayState extends State<CodexOverlay> {
           style: GameTheme.section(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 4),
-        SizedBox(
-          height: GameTheme.minTouch,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: GameLogic.codexRewardTiers.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 6),
-            itemBuilder: (context, i) {
-              final entry = GameLogic.codexRewardTiers.entries.elementAt(i);
-              final claimed = state.metaDepth.codexClaims.contains(entry.key);
-              final pct = GameLogic.codexCompletionPercent(state);
-              final ready = pct >= entry.value.pct && !claimed;
-              final label = claimed
-                  ? '${entry.value.pct}%'
-                  : ready
-                  ? '${entry.value.pct}% +${formatCount(entry.value.reward)}e'
-                  : '${entry.value.pct}%';
-              return GameButton(
-                label: label,
-                expanded: false,
-                style: ready
-                    ? GameButtonStyle.brown
-                    : GameButtonStyle.grey,
-                onPressed: ready
-                    ? () => widget.director.claimCodexReward(entry.key)
-                    : null,
-              );
-            },
-          ),
+        Column(
+          children: [
+            for (var i = 0; i < GameLogic.codexRewardTiers.length; i++) ...[
+              if (i > 0) const SizedBox(height: 6),
+              Builder(
+                builder: (context) {
+                  final entry =
+                      GameLogic.codexRewardTiers.entries.elementAt(i);
+                  final claimed =
+                      state.metaDepth.codexClaims.contains(entry.key);
+                  final pct = GameLogic.codexCompletionPercent(state);
+                  final ready = pct >= entry.value.pct && !claimed;
+                  final label = claimed
+                      ? '${entry.value.pct}%'
+                      : ready
+                      ? '${entry.value.pct}% +${formatCount(entry.value.reward)}e'
+                      : '${entry.value.pct}%';
+                  return GameButton(
+                    label: label,
+                    expanded: true,
+                    style: ready
+                        ? GameButtonStyle.brown
+                        : GameButtonStyle.grey,
+                    onPressed: ready
+                        ? () => widget.director.claimCodexReward(entry.key)
+                        : null,
+                  );
+                },
+              ),
+            ],
+          ],
         ),
         const SizedBox(height: 6),
         Expanded(

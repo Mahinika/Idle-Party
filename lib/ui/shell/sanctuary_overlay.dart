@@ -9,6 +9,7 @@ import '../../core/gold_income.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/game_state.dart';
 import '../../core/shop_store.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
@@ -131,6 +132,14 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
         child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Row(
+            children: [
+              GameIcon.asset(UiIcon.campfire, size: 48),
+              const SizedBox(width: 10),
+              Text('CAMP', style: GameTheme.title()),
+            ],
+          ),
+          ShellLayout.gap(8),
           CampRatesSection(director: director),
           ShellLayout.gap(8),
           Wrap(

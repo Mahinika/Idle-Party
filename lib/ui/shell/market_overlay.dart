@@ -77,7 +77,12 @@ class _MarketOverlayState extends State<MarketOverlay> {
           padding: const EdgeInsets.symmetric(
             horizontal: ShellLayout.sheetHorizontal,
           ),
-          child: _filterChips(state),
+          child: widget.inlineUnderFight
+              ? SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: _filterChips(state),
+                )
+              : _filterChips(state),
         ),
         ShellLayout.gap(4),
         Expanded(
@@ -93,24 +98,31 @@ class _MarketOverlayState extends State<MarketOverlay> {
                     ShellLayout.hint(
                       _upgradesOnly
                           ? 'No upgrades in stock.'
-                          : 'No upgrades in stock.',
+                          : 'No listings.',
                       maxLines: 2,
                     ),
-                    const SizedBox(height: 8),
-                    GameButton(
-                      label: _upgradesOnly ? 'ALL GEAR' : 'REROLL',
-                      style: GameButtonStyle.grey,
-                      dense: true,
-                      expanded: false,
-                      onPressed: _upgradesOnly
-                          ? () => setState(() => _upgradesOnly = false)
-                          : (state.gold >=
-                                    GameLogic.marketListingsPaidRefreshCost(
-                                      state,
-                                    )
-                                ? director.refreshMarketListings
-                                : null),
-                    ),
+                    if (_upgradesOnly) ...[
+                      const SizedBox(height: 8),
+                      GameButton(
+                        label: 'ALL GEAR',
+                        style: GameButtonStyle.grey,
+                        dense: true,
+                        expanded: false,
+                        onPressed: () => setState(() => _upgradesOnly = false),
+                      ),
+                    ] else ...[
+                      const SizedBox(height: 8),
+                      GameButton(
+                        label: 'REROLL',
+                        style: GameButtonStyle.grey,
+                        dense: true,
+                        expanded: false,
+                        onPressed: state.gold >=
+                                GameLogic.marketListingsPaidRefreshCost(state)
+                            ? director.refreshMarketListings
+                            : null,
+                      ),
+                    ],
                   ]
                 : [
                     for (final listing in listings)
@@ -158,37 +170,47 @@ class _MarketOverlayState extends State<MarketOverlay> {
     final canReroll = state.gold >= refreshCost;
 
     if (compact) {
-      return Wrap(
+      final wrap = Wrap(
         spacing: 6,
         runSpacing: 4,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          MenuChrome.chip(
+          _marketFlaskChip(
             label: canFlask
                 ? 'Flask ${formatGold(flaskCost)}'
                 : 'Flask need ${formatGold(flaskCost)}',
             selected: canFlask,
             onTap: canFlask ? director.buyMarketFlask : null,
           ),
-          MenuChrome.chip(
+          _marketFlaskChip(
             label: 'Buy 3 flasks · ${formatGold(flaskCost * 3)}',
             onTap: state.gold >= flaskCost * 3
                 ? () => director.buyMarketFlasks()
                 : null,
           ),
-          MenuChrome.chip(
+          _marketFlaskChip(
             label: 'Bandage ${formatGold(bandageCost)}',
             onTap: canBandage ? director.buyMarketBandage : null,
           ),
           if (!freeReady)
-            MenuChrome.chip(
+            _marketFlaskChip(
               label: 'Reroll ${formatGold(refreshCost)}',
               onTap: canReroll ? director.refreshMarketListings : null,
             )
           else
-            MenuChrome.chip(label: 'Fresh stock', tone: GameTheme.mossLit),
+            _marketFlaskChip(
+              label: 'Fresh stock',
+              tone: GameTheme.mossLit,
+            ),
         ],
       );
+      if (widget.inlineUnderFight) {
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: wrap,
+        );
+      }
+      return wrap;
     }
 
     return Column(
@@ -305,22 +327,31 @@ class _MarketOverlayState extends State<MarketOverlay> {
                   Text(
                     _upgradesOnly
                         ? 'No upgrades in stock.'
-                        : 'No listings yet.',
+                        : 'No listings.',
                     textAlign: TextAlign.center,
                     style: GameTheme.readable(color: GameTheme.parchmentDim),
                   ),
-                  const SizedBox(height: 8),
-                  GameButton(
-                    label: _upgradesOnly ? 'ALL GEAR' : 'REROLL',
-                    style: GameButtonStyle.grey,
-                    dense: true,
-                    expanded: false,
-                    onPressed: _upgradesOnly
-                        ? () => setState(() => _upgradesOnly = false)
-                        : (state.gold >= refreshCost
-                              ? director.refreshMarketListings
-                              : null),
-                  ),
+                  if (_upgradesOnly) ...[
+                    const SizedBox(height: 8),
+                    GameButton(
+                      label: 'ALL GEAR',
+                      style: GameButtonStyle.grey,
+                      dense: true,
+                      expanded: false,
+                      onPressed: () => setState(() => _upgradesOnly = false),
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 8),
+                    GameButton(
+                      label: 'REROLL',
+                      style: GameButtonStyle.grey,
+                      dense: true,
+                      expanded: false,
+                      onPressed: state.gold >= refreshCost
+                          ? director.refreshMarketListings
+                          : null,
+                    ),
+                  ],
                 ],
               ),
             )
@@ -528,6 +559,23 @@ class _MarketOverlayState extends State<MarketOverlay> {
       return 'i$wornIlvl→${listing.item.effectiveItemLevel}';
     }
     return 'empty→i${listing.item.effectiveItemLevel}';
+  }
+
+  Widget _marketFlaskChip({
+    required String label,
+    bool selected = false,
+    VoidCallback? onTap,
+    Color? tone,
+  }) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+      child: MenuChrome.chip(
+        label: label,
+        selected: selected,
+        onTap: onTap,
+        tone: tone,
+      ),
+    );
   }
 
   static String _marketHealCount(GameState state) {

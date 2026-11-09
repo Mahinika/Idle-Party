@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/ad_boost.dart';
@@ -37,6 +38,28 @@ class ShopDock extends StatefulWidget {
   /// Home sheet: one pick + expand (matches SPLIT forge).
   final bool homeCompact;
 
+  static String conveniencePolicyLead({
+    required bool showEssence,
+    HomeLayout layout = HomeLayout.classic,
+  }) =>
+      NavCopy.playerText(
+        'Free tickets are SCROLLS on the hub.',
+        layout,
+      );
+
+  static String conveniencePolicyBody({
+    required bool showEssence,
+    HomeLayout layout = HomeLayout.classic,
+  }) {
+    final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
+    final raw =
+        'Ad-free, Long Away, and Supporter are here. '
+        'Bag space and pet errands use gold or Cinders in GEAR'
+        '${showEssence ? ' and ESSENCE' : ''} — not real money. '
+        'Gold is under GOLD.$essenceBit';
+    return NavCopy.playerText(raw, layout);
+  }
+
   /// SHOP blurb. ESSENCE is named only when that tab exists.
   static String convenienceLine({
     required bool showEssence,
@@ -57,12 +80,43 @@ class ShopDock extends StatefulWidget {
 
 class _ShopDockState extends State<ShopDock> {
   final Set<String> _productViewsLogged = {};
+  List<String> _pendingProductViewLog = const [];
 
   @override
   void initState() {
     super.initState();
     unawaited(AppAnalytics.storeView());
     unawaited(_refresh());
+    widget.director.addListener(_scheduleProductViewLog);
+  }
+
+  @override
+  void dispose() {
+    widget.director.removeListener(_scheduleProductViewLog);
+    super.dispose();
+  }
+
+  void _scheduleProductViewLog() {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _logProductViewsOnce());
+  }
+
+  void _logProductViewsOnce() {
+    if (!mounted) return;
+    final catalogOk = ShopStore.productsReady;
+    if (!catalogOk) return;
+    final playListed = {
+      for (final item in ShopCatalog.offered)
+        if (ShopStore.storeLists(item.id)) item.id,
+    };
+    final items = RemoteTune.pin(ShopCatalog.shelf(playListed: playListed));
+  final ids = [for (final item in items) item.id];
+    if (listEquals(ids, _pendingProductViewLog)) return;
+    _pendingProductViewLog = ids;
+    for (final id in ids) {
+      if (_productViewsLogged.add(id)) {
+        unawaited(AppAnalytics.storeProductView(id));
+      }
+    }
   }
 
   Future<void> _refresh() async {
@@ -98,11 +152,7 @@ class _ShopDockState extends State<ShopDock> {
               }
             : null;
         final items = RemoteTune.pin(ShopCatalog.shelf(playListed: playListed));
-        for (final item in items) {
-          if (_productViewsLogged.add(item.id)) {
-            unawaited(AppAnalytics.storeProductView(item.id));
-          }
-        }
+        _scheduleProductViewLog();
         final featured = ShopHubOffer.featuredItem(state);
         final showFeatured = featured != null &&
             (_priceReady(featured) || ShopBilling.isOwned(state, featured));
@@ -161,7 +211,27 @@ class _ShopDockState extends State<ShopDock> {
             label: 'Show picks only',
             onTap: onToggleAllPacks,
           ),
-        ShellLayout.hint(hint, maxLines: 5),
+        ShellLayout.hint(
+          ShopDock.conveniencePolicyLead(
+            showEssence: MenuTabs.showCamp(state),
+            layout: state.homeLayout,
+          ),
+          maxLines: 1,
+        ),
+        ShellLayout.gap(4),
+        MenuChrome.fold(
+          title: 'How the shop works',
+          initiallyExpanded: false,
+          children: [
+            ShellLayout.hint(
+              ShopDock.conveniencePolicyBody(
+                showEssence: MenuTabs.showCamp(state),
+                layout: state.homeLayout,
+              ),
+              maxLines: 8,
+            ),
+          ],
+        ),
         if (featured != null) ...[
           ShellLayout.gap(6),
           MenuChrome.sectionLabelScoped('FEATURED', scope: MenuScope.today),
@@ -191,15 +261,32 @@ class _ShopDockState extends State<ShopDock> {
             !(storeLine.startsWith('Waiting for') &&
                 ShopDock.goldenTestPriceLabel.isNotEmpty)) ...[
           ShellLayout.gap(4),
-          if (storeLine.startsWith('Waiting for'))
+          if (storeLine.startsWith('Waiting for')) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (!ShopStore.productsReady && ShopBilling.billingReady) ...[
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: ShellLayout.hint(storeLine, maxLines: 2),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
             GameButton(
               label: 'RETRY',
               style: GameButtonStyle.grey,
               dense: true,
               expanded: false,
               onPressed: _refresh,
-            )
-          else
+            ),
+          ] else
             ShellLayout.hint(storeLine, maxLines: 2),
           const SizedBox(height: 10),
         ],

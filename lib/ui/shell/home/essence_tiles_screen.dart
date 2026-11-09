@@ -26,65 +26,75 @@ class EssenceTilesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     if (router.homeAtSub) return _open(context);
     final state = director.state;
+    final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.45);
+    final aspect = 2.4 / textScale;
     return Column(
       children: [
         Expanded(
-          child: GridView.count(
-            crossAxisCount: 2,
+          child: ListView(
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-            mainAxisSpacing: 6,
-            crossAxisSpacing: 6,
-            childAspectRatio: 2.4,
             children: [
-              _tile(
-                context,
-                'BLESSING',
-                MenuTabs.showKeep(state),
-                'After the first boss or Ascend',
-                () {
-                  router.essencePanel = EssencePanel.keep;
-                  router.pushSub();
-                },
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 6,
+                crossAxisSpacing: 6,
+                childAspectRatio: aspect,
+                children: [
+                  _tile(
+                    context,
+                    'BLESSING',
+                    MenuTabs.showKeep(state),
+                    'After the first boss or Ascend',
+                    () {
+                      router.essencePanel = EssencePanel.keep;
+                      router.pushSub();
+                    },
+                  ),
+                  _tile(
+                    context,
+                    'RELICS',
+                    MenuTabs.showRelics(state),
+                    'After the first boss or Ascend',
+                    () {
+                      router.essencePanel = EssencePanel.relics;
+                      router.pushSub();
+                    },
+                  ),
+                  _tile(
+                    context,
+                    'PETS',
+                    MenuTabs.showBeast(state),
+                    'Ascend or hatch',
+                    () {
+                      router.essencePanel = EssencePanel.pets;
+                      router.pushSub();
+                    },
+                  ),
+                  _tile(
+                    context,
+                    'CODEX',
+                    MenuTabs.showCodex(state),
+                    'Clear a floor',
+                    () {
+                      router.essencePanel = EssencePanel.tracks;
+                      router.pushSub();
+                    },
+                  ),
+                ],
               ),
+              const SizedBox(height: 6),
               _tile(
                 context,
-                'RELICS',
-                MenuTabs.showRelics(state),
-                'After the first boss or Ascend',
-                () {
-                  router.essencePanel = EssencePanel.relics;
-                  router.pushSub();
-                },
-              ),
-              _tile(
-                context,
-                'PETS',
-                MenuTabs.showBeast(state),
-                'Ascend or hatch',
-                () {
-                  router.essencePanel = EssencePanel.pets;
-                  router.pushSub();
-                },
-              ),
-              _tile(
-                context,
-                'CODEX',
-                MenuTabs.showCodex(state),
-                'Clear a floor',
-                () {
-                  router.open(MenuRoute.more, more: MoreSection.info, infoPane: 1);
-                  router.pushSub();
-                },
-              ),
-              _tile(
-                context,
-                'APEX',
+                'CRAFT',
                 MenuTabs.showCraft(state),
                 'After the first boss or Ascend',
                 () {
                   router.open(MenuRoute.more, more: MoreSection.craft);
                   router.pushSub();
                 },
+                fullWidth: true,
               ),
             ],
           ),
@@ -114,9 +124,10 @@ class EssenceTilesScreen extends StatelessWidget {
     String label,
     bool open,
     String lockedHint,
-    VoidCallback onTap,
-  ) {
-    return Semantics(
+    VoidCallback onTap, {
+    bool fullWidth = false,
+  }) {
+    final tile = Semantics(
       button: open,
       label: open ? label : '$label. $lockedHint',
       child: InkWell(
@@ -137,13 +148,15 @@ class EssenceTilesScreen extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.readable(color: open ? GameTheme.parchment : GameTheme.parchmentDim),
+                  style: GameTheme.readable(
+                    color: open ? GameTheme.parchment : GameTheme.parchmentDim,
+                  ),
                 ),
                 if (!open) ...[
                   const SizedBox(height: 2),
                   Text(
                     lockedHint,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
@@ -154,6 +167,13 @@ class EssenceTilesScreen extends StatelessWidget {
         ),
       ),
     );
+    if (fullWidth) {
+      return SizedBox(
+        height: GameTheme.minTouch * 1.15,
+        child: tile,
+      );
+    }
+    return tile;
   }
 
   Widget _summary(BuildContext context, GameState state) {

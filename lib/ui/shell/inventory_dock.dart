@@ -529,6 +529,14 @@ class _InventoryDockState extends State<InventoryDock>
                     compact: true,
                   ),
                 )
+              : filled == 0
+              ? Center(
+                  child: Text(
+                    'Bag empty — farm for loot or try GOLD → MARKET.',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.section(color: GameTheme.parchmentDim),
+                  ),
+                )
               : filteredSlots.isEmpty
               ? Center(
                   child: Text(
@@ -679,22 +687,19 @@ class _InventoryDockState extends State<InventoryDock>
               );
             },
           ),
-        ] else
+        ] else if (!mergeOpen)
           Text(
-            mergeOpen
-                ? 'Tap item to select · long-press for tip · ADD TO MERGE for MERGE tab.'
-                : 'Tap item to select · long-press for tip.',
+            'Tap item to select · long-press for tip.',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: GameTheme.hint(color: GameTheme.parchmentDim),
-          ),
-        if (state.gearStash.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              'Bag empty — clear floors for loot, or open GOLD → MARKET.',
-              style: GameTheme.hint(color: GameTheme.mossLit),
-            ),
+          )
+        else
+          Text(
+            'Tap item to select · long-press for tip · ADD TO MERGE for MERGE tab.',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
       ],
     );
@@ -852,6 +857,8 @@ class _InventoryDockState extends State<InventoryDock>
           Text(
             status,
             textAlign: TextAlign.center,
+            maxLines: 3,
+            overflow: TextOverflow.visible,
             style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 8),

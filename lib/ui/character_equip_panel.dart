@@ -227,35 +227,46 @@ class CharacterEquipPanel extends StatelessWidget {
               itemBuilder: (context, i) {
                 final h = heroes[i];
                 final active = i == index;
-                return InkWell(
-                  onTap: () => onSelectHero(i),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: GameTheme.minTouch,
-                    ),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: compact ? 8 : 10,
-                        vertical: compact ? 4 : 6,
+                final label =
+                    '${h.displayRoleLabel(plainEnglish: GameLogic.plainPlayerChrome(state))} · Lv${h.level}';
+                return Semantics(
+                  button: true,
+                  selected: active,
+                  label: label,
+                  child: InkWell(
+                    onTap: () => onSelectHero(i),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        minHeight: GameTheme.minTouch,
                       ),
-                      alignment: Alignment.center,
-                      decoration: MenuChrome.cardBox(selected: active),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (!compact) ...[
-                            HeroDollSprite(
-                              hero: h,
-                              partyIndex: i,
-                              size: compact ? 22 : 26,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: compact ? 8 : 10,
+                          vertical: compact ? 4 : 6,
+                        ),
+                        alignment: Alignment.center,
+                        decoration: MenuChrome.cardBox(selected: active),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (!compact) ...[
+                              HeroDollSprite(
+                                hero: h,
+                                partyIndex: i,
+                                size: 26,
+                              ),
+                              const SizedBox(width: 6),
+                            ],
+                            Text(
+                              label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GameTheme.readable(
+                                color: GameTheme.torchHot,
+                              ),
                             ),
-                            const SizedBox(width: 6),
                           ],
-                          Text(
-                            '${h.displayRoleLabel(plainEnglish: GameLogic.plainPlayerChrome(state))} · Lv${h.level}',
-                            style: GameTheme.readable(color: GameTheme.torchHot),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -290,6 +301,14 @@ class CharacterEquipPanel extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: GameTheme.title(),
                   ),
+                  if (compact) ...[
+                    const SizedBox(height: 4),
+                    HeroDollSprite(
+                      hero: hero,
+                      partyIndex: index,
+                      size: 28,
+                    ),
+                  ],
                   Text(
                     'L${hero.level}',
                     textAlign: TextAlign.center,
@@ -528,7 +547,17 @@ class CharacterEquipPanel extends StatelessWidget {
             style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         ],
-        SizedBox(height: compact ? 6 : 10),
+        if (stashPiece != null && compact) ...[
+          const SizedBox(height: 8),
+          ItemTooltipCard(
+            item: stashPiece,
+            hero: hero,
+            pairingStash: state.gearStash,
+            gameState: state,
+            compact: true,
+          ),
+        ],
+        SizedBox(height: compact ? 4 : 8),
         if (compact)
           MenuChrome.fold(
             title: 'HERO STATS',
@@ -592,14 +621,15 @@ class CharacterEquipPanel extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 8),
           if (((_avgDisplayItemLevel(hero) ?? 0) >= 100) ||
-              ((_minDisplayItemLevel(hero) ?? 0) >= 100))
+              ((_minDisplayItemLevel(hero) ?? 0) >= 100)) ...[
+            const SizedBox(height: 4),
             Text(
               'iLvl past 100 soft-caps — shown value is the budget size.',
               textAlign: TextAlign.center,
               style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
+          ],
         ],
       ],
     );
