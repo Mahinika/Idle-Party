@@ -15,7 +15,9 @@ import 'power_meta_pillars.dart';
 import 'shop_dock.dart';
 import '../meta/keystone_sheet.dart';
 import 'whats_new_overlay.dart';
+import 'home/essence_tiles_screen.dart';
 import 'home/home_menu_grid.dart';
+import 'home/map_screen.dart';
 
 /// The one menu sheet, shared by hub and dungeon.
 /// All routes fill the stack above the shared [AppBottomBar] (full height).
@@ -178,9 +180,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
       gold: state.gold,
       essence: state.essence,
       showEssence: MenuTabs.showCamp(state),
-      showClose: !widget.home ||
-          questBoard ||
-          router.route == MenuRoute.gold,
+      showClose: true,
       onClose: router.close,
       child: switch (router.route) {
         MenuRoute.gear => _inventoryDock(),
@@ -190,14 +190,18 @@ class _MenuSurfaceState extends State<MenuSurface> {
           onPanelChanged: (panel) => router.goldPanel = panel,
         ),
         MenuRoute.shop => ShopDock(director: d, homeCompact: widget.home),
-        MenuRoute.essence => EssenceDock(
-          director: d,
-          router: router,
-          panel: router.essencePanel,
-          onPanelChanged: (panel) => router.essencePanel = panel,
-        ),
+        MenuRoute.essence => widget.home
+            ? EssenceTilesScreen(director: d, router: router)
+            : EssenceDock(
+                director: d,
+                router: router,
+                panel: router.essencePanel,
+                onPanelChanged: (panel) => router.essencePanel = panel,
+              ),
         MenuRoute.key => KeystoneSheet(director: d),
-        MenuRoute.map => const SizedBox.shrink(),
+        MenuRoute.map => widget.home
+            ? MapScreen(director: d, router: router)
+            : const SizedBox.shrink(),
         MenuRoute.more => questBoard
             ? SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),

@@ -56,6 +56,7 @@ class HomeTopBar extends StatelessWidget {
     EssencePanel essencePanel,
   ) {
     final wide = MediaQuery.sizeOf(context).width >= 400;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
     final chase = NavCopy.playerText(
       _chaseLine(state),
       HomeLayout.home,
@@ -81,6 +82,8 @@ class HomeTopBar extends StatelessWidget {
                   const SizedBox(width: 6),
                   Text(
                     Keystone.formatTimer(state.keystoneTimerMs),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GameTheme.hint(color: GameTheme.torchHot),
                   ),
                 ],
@@ -114,9 +117,9 @@ class HomeTopBar extends StatelessWidget {
                 _tap(
                   label: state.combatPace >= 2 ? 'SPEED 2×' : 'SPEED 1×',
                   onTap: director.cycleCombatPace,
-                  child: Text(
+                  child: _chip(
                     state.combatPace >= 2 ? '2×' : '1×',
-                    style: GameTheme.readable(),
+                    UiIcon.sword,
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -131,9 +134,9 @@ class HomeTopBar extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 chase,
-                maxLines: 2,
+                maxLines: textScale > 1.2 ? 1 : 2,
                 softWrap: true,
-                overflow: TextOverflow.fade,
+                overflow: TextOverflow.ellipsis,
                 style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
             ] else ...[

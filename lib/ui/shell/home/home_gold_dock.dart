@@ -126,12 +126,17 @@ class _HomeGoldSheetState extends State<HomeGoldSheet> {
                         label: 'Close',
                         child: InkWell(
                           onTap: () => Navigator.pop(context),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: GameIcon.glyph(
-                              UiGlyph.close,
-                              size: 18,
-                              color: GameTheme.parchmentDim,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              minWidth: GameTheme.minTouch,
+                              minHeight: GameTheme.minTouch,
+                            ),
+                            child: Center(
+                              child: GameIcon.glyph(
+                                UiGlyph.close,
+                                size: 18,
+                                color: GameTheme.parchmentDim,
+                              ),
                             ),
                           ),
                         ),

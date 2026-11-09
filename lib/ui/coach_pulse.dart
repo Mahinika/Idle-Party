@@ -8,10 +8,14 @@ class CoachPulse extends StatefulWidget {
     super.key,
     required this.active,
     required this.child,
+    this.enabled = true,
   });
 
   final bool active;
   final Widget child;
+
+  /// False when minimal VFX or reduce-motion should skip the pulse ticker.
+  final bool enabled;
 
   @override
   State<CoachPulse> createState() => _CoachPulseState();
@@ -21,6 +25,11 @@ class _CoachPulseState extends State<CoachPulse>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulse;
 
+  bool get _shouldAnimate =>
+      widget.enabled &&
+      widget.active &&
+      !MediaQuery.disableAnimationsOf(context);
+
   @override
   void initState() {
     super.initState();
@@ -28,19 +37,28 @@ class _CoachPulseState extends State<CoachPulse>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    if (widget.active) _pulse.repeat(reverse: true);
+    if (widget.active && widget.enabled) _pulse.repeat(reverse: true);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncPulse();
   }
 
   @override
   void didUpdateWidget(covariant CoachPulse oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.active == oldWidget.active) return;
-    if (widget.active) {
-      _pulse.repeat(reverse: true);
-    } else {
+    _syncPulse();
+  }
+
+  void _syncPulse() {
+    if (!_shouldAnimate) {
       _pulse.stop();
       _pulse.value = 0;
+      return;
     }
+    if (!_pulse.isAnimating) _pulse.repeat(reverse: true);
   }
 
   @override
@@ -51,7 +69,7 @@ class _CoachPulseState extends State<CoachPulse>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.active) return widget.child;
+    if (!_shouldAnimate) return widget.child;
     return AnimatedBuilder(
       animation: _pulse,
       builder: (context, child) {

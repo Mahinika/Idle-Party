@@ -15,14 +15,12 @@ import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import '../menu_surface.dart';
 import 'director_select.dart';
-import 'essence_tiles_screen.dart';
 import 'fight_seam.dart';
 import 'fight_viewport.dart';
 import 'home_gold_dock.dart';
 import 'home_nav_bar.dart';
 import 'home_prompts.dart';
 import 'home_top_bar.dart';
-import 'map_screen.dart';
 import 'town_viewport.dart';
 import 'upgrade_panel.dart';
 
@@ -48,6 +46,7 @@ class _HomeShellState extends State<HomeShell> {
   MenuRouter get router => widget.router;
   HomeGoldPanel _goldFocus = HomeGoldPanel.forge;
   int _goldFocusGen = 0;
+  bool _farmPushSeamAcked = false;
 
   @override
   void initState() {
@@ -99,6 +98,7 @@ class _HomeShellState extends State<HomeShell> {
       state,
       chaseKind: HubChase.forState(state).kind,
     );
+    if (showPanel) _ackFarmPushSeamTip(state);
     return Material(
       color: GameTheme.stoneDeep,
       child: Column(
@@ -183,10 +183,7 @@ class _HomeShellState extends State<HomeShell> {
         (tip == null ? null : FirstSessionTips.displayLine(tip, state));
     // The top bar already paints this chase title. A second copy steals
     // rows from the cave. A real first-climb tip stays, even when it matches.
-    final duplicateCoach =
-        climb == null &&
-        text != null &&
-        text == HubChase.forState(state).title;
+    final duplicateCoach = climb == null && _duplicatesChaseLine(text, state);
     final shown = duplicateCoach ? null : text;
     final showClaim = state.inDungeon && GameLogic.canClaimDailyVault(state);
     if (shown == null && !showClaim) return const SizedBox.shrink();
@@ -218,7 +215,7 @@ class _HomeShellState extends State<HomeShell> {
       onPressed: director.claimDailyVault,
       child: Semantics(
         button: true,
-        label: 'Claim the vault before the day ends',
+        label: 'Claim the daily vault.',
         child: InkWell(
           onTap: director.claimDailyVault,
           child: ConstrainedBox(
@@ -255,11 +252,11 @@ class _HomeShellState extends State<HomeShell> {
     return Material(
       color: GameTheme.panel,
       child: WebClickScope(
-        label: 'Back',
+        label: 'BACK',
         onPressed: router.back,
         child: Semantics(
           button: true,
-          label: 'Back',
+          label: 'BACK',
           child: InkWell(
             onTap: router.back,
             child: ConstrainedBox(
@@ -315,22 +312,31 @@ class _HomeShellState extends State<HomeShell> {
       };
 
   Widget _sheet() {
-    if (router.route == MenuRoute.essence) {
-      return Positioned.fill(
-        child: ColoredBox(
-          color: GameTheme.panel,
-          child: EssenceTilesScreen(director: director, router: router),
-        ),
-      );
-    }
-    if (router.route == MenuRoute.map) {
-      return Positioned.fill(
-        child: ColoredBox(
-          color: GameTheme.panel,
-          child: MapScreen(director: director, router: router),
-        ),
-      );
-    }
     return MenuSurface(director: director, router: router, home: true);
+  }
+
+  void _ackFarmPushSeamTip(GameState state) {
+    if (_farmPushSeamAcked || !state.inDungeon) return;
+    final tip = FirstSessionTips.active(state, inDungeon: true);
+    if (tip?.id != 'farm_push') return;
+    if (state.seenTips.contains('farm_push')) {
+      _farmPushSeamAcked = true;
+      return;
+    }
+    _farmPushSeamAcked = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      director.dismissTip('farm_push');
+    });
+  }
+
+  bool _duplicatesChaseLine(String? text, GameState state) {
+    if (text == null) return false;
+    final chaseTitle = HubChase.forState(state).title;
+    if (text == chaseTitle) return true;
+    if (chaseTitle.isNotEmpty && text.contains(chaseTitle)) return true;
+    final cave = chaseTitle.split(' · ').first.trim();
+    if (cave.isNotEmpty && text.startsWith(cave)) return true;
+    return false;
   }
 }

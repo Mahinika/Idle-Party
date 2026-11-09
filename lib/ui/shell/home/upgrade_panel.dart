@@ -142,6 +142,7 @@ class _UpgradePanelState extends State<UpgradePanel> {
   }
 
   Widget _locked(GameState state) {
+    const lockHint = 'FORGE opens after the first boss (F2).';
     return ListView(
       padding: ShellLayout.listPadding,
       children: [
@@ -151,9 +152,17 @@ class _UpgradePanelState extends State<UpgradePanel> {
             style: GameTheme.section(color: GameTheme.parchment),
           ),
         ShellLayout.gap(8),
-        ShellLayout.hint(
-          'FORGE opens after the first boss (F2).',
-          maxLines: 2,
+        ShellLayout.card(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GameIcon.asset(UiIcon.forge, size: 28, color: GameTheme.parchmentDim),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ShellLayout.hint(lockHint, maxLines: 3),
+              ),
+            ],
+          ),
         ),
       ],
     );

@@ -75,17 +75,20 @@ class RailButton extends StatelessWidget {
         ],
       );
       if (listCard) {
+        final semanticsLabel = badge ? '${entry.label}, ready' : entry.label;
         return WebClickScope(
           label: entry.label,
           onPressed: () => entry.open(context, director, router),
           child: Semantics(
             button: true,
-            label: entry.label,
+            label: semanticsLabel,
             child: InkWell(
               onTap: () => entry.open(context, director, router),
               borderRadius: BorderRadius.circular(GameTheme.radiusSm),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 36),
+                constraints: const BoxConstraints(
+                  minHeight: GameTheme.minTouch,
+                ),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: row,
@@ -121,6 +124,7 @@ class RailButton extends StatelessWidget {
         ),
       );
     }
+    final semanticsLabel = badge ? '${entry.label}, ready' : entry.label;
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: WebClickScope(
@@ -128,7 +132,7 @@ class RailButton extends StatelessWidget {
         onPressed: () => entry.open(context, director, router),
         child: Semantics(
           button: true,
-          label: entry.label,
+          label: semanticsLabel,
           child: InkWell(
             onTap: () => entry.open(context, director, router),
             child: ConstrainedBox(
