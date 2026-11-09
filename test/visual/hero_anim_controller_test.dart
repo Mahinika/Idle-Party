@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/visual/hero_anim_controller.dart';
 import 'package:idle_party/visual/hero_anim_state.dart';
+import 'package:idle_party/visual/rig/rig_sampler.dart';
 
 void main() {
   test('idle when nothing is happening', () {
@@ -49,6 +50,15 @@ void main() {
     );
     expect(pose.kind, HeroAnimKind.death);
     expect(pose.locked, isTrue);
+    expect(pose.progress, 0, reason: 'the fall starts on the first paint');
+    final mid = HeroAnimController.snapshot(
+      const HeroAnimSignals(dead: true, deathProgress: 0.4),
+    );
+    expect(mid.frame, 0);
+    final down = HeroAnimController.snapshot(
+      const HeroAnimSignals(dead: true, deathProgress: 0.8),
+    );
+    expect(down.frame, 1);
   });
 
   test('a named pose plays through while the hero is still moving', () {
@@ -95,5 +105,41 @@ void main() {
       const HeroAnimSignals(moving: true, attackFlash: 0.2, hitFlash: 0.1),
     );
     expect(pose.kind, HeroAnimKind.hit);
+  });
+
+  test('pose time stays put across a flinch', () {
+    final before = HeroAnimController.snapshot(
+      const HeroAnimSignals(
+        abilityName: 'mortalStrike',
+        poseTime: 0.2,
+        poseHold: 0.8,
+      ),
+    );
+    final during = HeroAnimController.snapshot(
+      const HeroAnimSignals(
+        abilityName: 'mortalStrike',
+        poseTime: 0.34,
+        poseHold: 0.8,
+      ),
+      flinchPause: 0.14,
+    );
+    expect(before.progress, closeTo(0.25, 0.02));
+    expect(during.progress, closeTo(before.progress, 0.02));
+  });
+
+  test('2× walks the feet twice as far per paint', () {
+    final slow = HeroAnimController.walkPhase(40, pace: 1);
+    final fast = HeroAnimController.walkPhase(40, pace: 2);
+    expect(fast, closeTo((slow * 2) % 1, 0.0001));
+  });
+
+  test('the hit clip is a flinch, not the walk', () {
+    final pose = HeroAnimController.snapshot(
+      const HeroAnimSignals(hit: true, hitFlash: 0.12),
+    );
+    final sample = RigSampler.sample(pose);
+    expect(sample.clip, 'hit');
+    expect(sample.pose.angles['torso'] ?? 0, isNot(0));
+    expect((sample.pose.angles['thigh_l'] ?? 0).abs(), lessThan(8));
   });
 }

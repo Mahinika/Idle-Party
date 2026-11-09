@@ -635,6 +635,8 @@ abstract final class KitNamedCasts {
         if (away > 0.1) {
           final prefer = math.max(2.2, hero.attackRange * 0.9);
           final step = (away - prefer).clamp(-2.4, 2.4);
+          final fromX = hero.x;
+          final fromY = hero.y;
           final snapped = SpatialCombat.clampAlongWalk(
             world.map,
             world.openGateIds,
@@ -645,6 +647,7 @@ abstract final class KitNamedCasts {
           );
           hero.x = snapped.$1;
           hero.y = snapped.$2;
+          hero.beginPictureRush(fromX, fromY);
         }
         SpatialCombat.announceCast(
           world,
@@ -906,6 +909,8 @@ abstract final class KitNamedCasts {
           );
         var prevX = hero.x;
         var prevY = hero.y;
+        double? rushFromX;
+        double? rushFromY;
         final hops = spree.take(5).toList();
         final hopShare = hops.length <= 2 ? 1.0 : 2 / hops.length;
         for (final e in hops) {
@@ -938,6 +943,8 @@ abstract final class KitNamedCasts {
           final wasAlive = e.hp > 0;
           SpatialCombat.hurtEnemy(world, e, hit);
           SpatialCombat.recordHeroDamage(hero, hit);
+          final fromX = hero.x;
+          final fromY = hero.y;
           final snapped = SpatialCombat.clampAlongWalk(
             world.map,
             world.openGateIds,
@@ -948,6 +955,8 @@ abstract final class KitNamedCasts {
           );
           hero.x = snapped.$1;
           hero.y = snapped.$2;
+          rushFromX = fromX;
+          rushFromY = fromY;
           prevX = e.x;
           prevY = e.y;
           SpatialCombat.spawnSlash(world, from: hero, to: e, isCrit: true);
@@ -969,6 +978,9 @@ abstract final class KitNamedCasts {
             AbilityEffectRunner.goldOut += killed.gold;
             AbilityEffectRunner.stateOut = killed.state;
           }
+        }
+        if (rushFromX != null && rushFromY != null) {
+          hero.beginPictureRush(rushFromX, rushFromY);
         }
         if (!reducedVfx) {
           SpatialCombat.spawnRing(

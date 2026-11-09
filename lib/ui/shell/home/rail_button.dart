@@ -109,7 +109,10 @@ class RailButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(GameTheme.radiusSm),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                constraints: const BoxConstraints(minHeight: 32),
+                constraints: const BoxConstraints(
+                  minWidth: GameTheme.minTouch,
+                  minHeight: GameTheme.minTouch,
+                ),
                 alignment: Alignment.center,
                 child: row,
               ),

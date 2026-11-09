@@ -214,15 +214,18 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
     }
 
     if (showBursts || showPriorityFloaters) {
-      final floaters = world.floaters;
+      _FloaterHold.sync(
+        floaters: world.floaters,
+        frame: visualFrame,
+        show: true,
+      );
       final maxW = tile * 4.4;
-      for (var i = 0; i < floaters.length; i++) {
-        final floater = floaters[i];
+      for (final floater in _FloaterHold.live.values) {
         if (!showBursts && floater.priority < 2) continue;
         if (!_inView(floater.x, floater.y, pad: 0.5)) continue;
-        final speech = floater.kind == SpatialFloaterKind.speech;
-        final fadeFor = speech ? 1.35 : (floater.priority >= 1 ? 1.15 : 0.7);
-        final alpha = (floater.life / fadeFor).clamp(0.0, 1.0);
+        final speech = floater.speech;
+        final age = (visualFrame - floater.born) / floater.span;
+        final alpha = (1 - age).clamp(0.0, 1.0);
         final size =
             tile *
             (speech ? 0.28 : 0.32) *
@@ -262,7 +265,72 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
             : Offset(c.dx + tile * 0.46 - tp.width / 2, c.dy - tile * 0.22);
         tp.paint(canvas, anchor);
       }
+    } else {
+      _FloaterHold.sync(floaters: const [], frame: visualFrame, show: false);
     }
+  }
+}
+
+class _HeldFloater {
+  _HeldFloater({
+    required this.born,
+    required this.span,
+    required this.text,
+    required this.argb,
+    required this.priority,
+    required this.speech,
+    required this.x,
+    required this.y,
+  });
+
+  final int born;
+  final int span;
+  final String text;
+  final int argb;
+  final int priority;
+  final bool speech;
+  double x;
+  double y;
+}
+
+/// Keeps a number on screen for its authored life when 2× eats the sim timer.
+abstract final class _FloaterHold {
+  static final Map<int, _HeldFloater> live = {};
+
+  static void sync({
+    required List<SpatialFloater> floaters,
+    required int frame,
+    required bool show,
+  }) {
+    if (!show) {
+      live.clear();
+      return;
+    }
+    final seen = <int>{};
+    for (final floater in floaters) {
+      final id = identityHashCode(floater);
+      seen.add(id);
+      final held = live[id];
+      if (held == null) {
+        live[id] = _HeldFloater(
+          born: frame,
+          span: math.max(8, (floater.life * 60).round()),
+          text: floater.text,
+          argb: floater.argb,
+          priority: floater.priority,
+          speech: floater.kind == SpatialFloaterKind.speech,
+          x: floater.x,
+          y: floater.y,
+        );
+      } else {
+        held.x = floater.x;
+        held.y = floater.y;
+      }
+    }
+    live.removeWhere((id, held) {
+      if (seen.contains(id)) return false;
+      return frame - held.born >= held.span;
+    });
   }
 }
 

@@ -876,6 +876,8 @@ abstract final class AbilityEffectRunner {
           final len = math.sqrt(dx * dx + dy * dy);
           if (len > 0.2) {
             final stop = math.max(0.7, hero.attackRange * 0.8);
+            final fromX = hero.x;
+            final fromY = hero.y;
             final snapped = SpatialCombat.clampAlongWalk(
               world.map,
               world.openGateIds,
@@ -886,6 +888,7 @@ abstract final class AbilityEffectRunner {
             );
             hero.x = snapped.$1;
             hero.y = snapped.$2;
+            hero.beginPictureRush(fromX, fromY);
           }
         }
         _selfBuff(hero, def);
@@ -1116,6 +1119,8 @@ abstract final class AbilityEffectRunner {
             final awayY = hero.y - foe.y;
             final away = math.sqrt(awayX * awayX + awayY * awayY);
             if (away > 0.1) {
+              final fromX = hero.x;
+              final fromY = hero.y;
               final snapped = SpatialCombat.clampAlongWalk(
                 world.map,
                 world.openGateIds,
@@ -1126,6 +1131,7 @@ abstract final class AbilityEffectRunner {
               );
               hero.x = snapped.$1;
               hero.y = snapped.$2;
+              hero.beginPictureRush(fromX, fromY);
             }
           }
           announce(
@@ -1422,6 +1428,8 @@ abstract final class AbilityEffectRunner {
       final dy = enemy.y - hero.y;
       final len = math.sqrt(dx * dx + dy * dy);
       if (len > 0.2) {
+        final fromX = hero.x;
+        final fromY = hero.y;
         final side = SpatialCombat.clampAlongWalk(
           world.map,
           world.openGateIds,
@@ -1432,6 +1440,7 @@ abstract final class AbilityEffectRunner {
         );
         hero.x = side.$1;
         hero.y = side.$2;
+        hero.beginPictureRush(fromX, fromY);
       }
     }
     final tint = SpatialCombat.burstArgbForStyle(style);

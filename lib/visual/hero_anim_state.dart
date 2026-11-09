@@ -54,6 +54,7 @@ class HeroAnimSignals {
     this.abilityName,
     this.poseTime = 0,
     this.poseHold = 0,
+    this.deathProgress = 0,
   });
 
   final bool moving;
@@ -81,4 +82,7 @@ class HeroAnimSignals {
   /// Seconds into a named pose, and how long it should keep playing.
   final double poseTime;
   final double poseHold;
+
+  /// 0–1 through the fall. The painter advances this; 0 is the first frame.
+  final double deathProgress;
 }

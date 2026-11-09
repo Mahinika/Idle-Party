@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'hero_anim_state.dart';
 import 'rig/rig_ability_clips.dart';
 
@@ -15,8 +17,13 @@ abstract final class HeroAnimController {
 
   /// Phase in 0–1 that only moves forward. World position must not drive
   /// this: `abs(x + y)` runs the clip backward when a hero walks the other way.
-  static double walkPhase(int visualFrame, {double offset = 0}) {
-    final turns = visualFrame * walkCyclesPerFrame + offset;
+  static double walkPhase(
+    int visualFrame, {
+    double offset = 0,
+    double pace = 1,
+  }) {
+    final scale = pace < 1 ? 1.0 : pace;
+    final turns = visualFrame * walkCyclesPerFrame * scale + offset;
     final wrapped = turns % 1.0;
     return wrapped < 0 ? wrapped + 1.0 : wrapped;
   }
@@ -38,14 +45,16 @@ abstract final class HeroAnimController {
   static HeroAnimPose snapshot(
     HeroAnimSignals signals, {
     double walkPhase = 0,
+    double flinchPause = 0,
   }) {
     final blocking = signals.blocking;
     if (signals.dead) {
-      return const HeroAnimPose(
+      final p = signals.deathProgress.clamp(0.0, 1.0);
+      return HeroAnimPose(
         kind: HeroAnimKind.death,
-        frame: 1,
+        frame: p < 0.5 ? 0 : 1,
         locked: true,
-        progress: 1,
+        progress: p,
       );
     }
     if (signals.hit || signals.hitFlash > 0.02) {
@@ -59,7 +68,7 @@ abstract final class HeroAnimController {
         blocking: blocking,
       );
     }
-    final named = _namedPose(signals, blocking);
+    final named = _namedPose(signals, blocking, flinchPause: flinchPause);
     if (named != null) return named;
     if (signals.attacking || signals.attackFlash > 0.02) {
       final progress = signals.attackFlash > 0
@@ -110,14 +119,19 @@ abstract final class HeroAnimController {
   }
 
   /// A kit pose plays for its own length, not the short hit flash.
-  static HeroAnimPose? _namedPose(HeroAnimSignals signals, bool blocking) {
+  static HeroAnimPose? _namedPose(
+    HeroAnimSignals signals,
+    bool blocking, {
+    double flinchPause = 0,
+  }) {
     final name = signals.abilityName;
-    if (name == null || signals.poseHold <= 0 || signals.poseTime >= signals.poseHold) {
+    final poseTime = math.max(0, signals.poseTime - flinchPause);
+    if (name == null || signals.poseHold <= 0 || poseTime >= signals.poseHold) {
       return null;
     }
     final clip = RigAbilityClips.forName(name);
     if (clip == null) return null;
-    final progress = (signals.poseTime / clip.length).clamp(0.0, 1.0);
+    final progress = (poseTime / clip.length).clamp(0.0, 1.0);
     return HeroAnimPose(
       kind: HeroAnimKind.attack,
       frame: _frameFor(HeroAnimKind.attack, progress),

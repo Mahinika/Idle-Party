@@ -18,8 +18,8 @@ abstract final class RigAbilityClips {
     length: 0.7,
     keys: [
       RigKey(0.0),
-      RigKey(0.25, rootX: 6, rootY: 2, bones: {'torso': -14, 'upper_l': -36, 'fore_l': -10, 'upper_r': 22, 'sword': 12, 'thigh_l': 28, 'shin_l': -30, 'thigh_r': -8}),
-      RigKey(0.55, rootX: 16, rootY: 0, bones: {'torso': -8, 'upper_l': -20, 'upper_r': -16, 'sword': -36, 'thigh_l': -6, 'thigh_r': 24, 'shin_r': 18}),
+      RigKey(0.25, rootY: 2, bones: {'torso': -14, 'upper_l': -36, 'fore_l': -10, 'upper_r': 22, 'sword': 12, 'thigh_l': 28, 'shin_l': -30, 'thigh_r': -8}),
+      RigKey(0.55, rootY: 0, bones: {'torso': -8, 'upper_l': -20, 'upper_r': -16, 'sword': -36, 'thigh_l': -6, 'thigh_r': 24, 'shin_r': 18}),
       RigKey(1.0),
     ],
   );

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -114,12 +115,16 @@ class _ScrollBuffPip extends StatelessWidget {
   Widget build(BuildContext context) {
     final on = chip.active;
     final tint = on ? tintFor(chip.id) : GameTheme.parchmentDim;
+    final scale = MediaQuery.textScalerOf(context)
+        .scale(1)
+        .clamp(1.0, GameTheme.typeScaleMax);
+    final width = math.max(GameTheme.minTouch, 56 * scale);
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: Semantics(
         label: on ? '${chip.shortLabel} ${chip.timeLabel}' : '${chip.shortLabel} off',
         child: SizedBox(
-          width: 32,
+          width: width,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -140,12 +145,15 @@ class _ScrollBuffPip extends StatelessWidget {
               ),
               if (on && chip.timeLabel.isNotEmpty) ...[
                 const SizedBox(height: 1),
-                Text(
-                  chip.timeLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.clip,
-                  textAlign: TextAlign.center,
-                  style: GameTheme.combat(color: tint),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    chip.timeLabel,
+                    maxLines: 1,
+                    softWrap: false,
+                    textAlign: TextAlign.center,
+                    style: GameTheme.combat(color: tint),
+                  ),
                 ),
               ],
             ],

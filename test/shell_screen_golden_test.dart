@@ -14,7 +14,9 @@ import 'package:idle_party/ui/shell/home/home_shell.dart';
 import 'package:idle_party/ui/shell/menu_surface.dart';
 import 'package:idle_party/ui/shell/overlay_scaffold.dart';
 import 'package:idle_party/ui/shell/play_shell.dart';
+import 'package:idle_party/ui/spatial_dungeon_view.dart';
 import 'package:idle_party/ui/shell/shop_dock.dart';
+import 'package:idle_party/models/vfx_quality.dart';
 import 'package:idle_party/ui/hero_doll_sprite.dart';
 import 'package:idle_party/ui/theme.dart';
 import 'shell_golden_harness.dart';
@@ -647,6 +649,63 @@ void main() {
     await waitForFightChrome(tester, director);
     expect(tester.takeException(), isNull);
     await expectShellGolden(tester, find.byKey(key), 'fight_a56.png');
+    director.dispose();
+    directorLive = false;
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 20));
+  });
+
+  testWidgets('fight hit golden full VFX A56', (tester) async {
+    debugHoldFloorBake();
+    bindA56View(tester);
+    final director = await fightHitGoldenDirector();
+    var directorLive = true;
+    addTearDown(() {
+      if (directorLive) director.dispose();
+    });
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: key,
+        child: shellGoldenScaffold(
+          HomeShell(director: director, router: router, onLeave: () {}),
+        ),
+      ),
+    );
+    await waitForFightChrome(tester, director);
+    expect(find.text('WELCOME BACK'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await expectShellGolden(tester, find.byKey(key), 'fight_hit_a56.png');
+    director.dispose();
+    directorLive = false;
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 20));
+  });
+
+  testWidgets('fight hit golden minimal VFX A56', (tester) async {
+    debugHoldFloorBake();
+    bindA56View(tester);
+    final director = await fightHitGoldenDirector(vfx: VfxQuality.minimal);
+    var directorLive = true;
+    addTearDown(() {
+      if (directorLive) director.dispose();
+    });
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: key,
+        child: shellGoldenScaffold(
+          HomeShell(director: director, router: router, onLeave: () {}),
+        ),
+      ),
+    );
+    await waitForFightChrome(tester, director);
+    expect(tester.takeException(), isNull);
+    await expectShellGolden(tester, find.byKey(key), 'fight_hit_min_a56.png');
     director.dispose();
     directorLive = false;
     await tester.pumpWidget(const SizedBox.shrink());
