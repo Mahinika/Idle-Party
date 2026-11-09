@@ -140,32 +140,7 @@ sprite tall.
 
 ---
 
-## Sibling PR overlap (do not import those branches)
-
-The town hub itself landed on main as PR 60. This life pass does not
-edit `home_shell.dart`, and it does not cherry-pick, merge, or rewrite
-the branches below.
-
-| PR | Head | Overlap | Resolution |
-|----|------|---------|------------|
-| **57 camera** | `ed5b9024` | **None on `home_shell.dart`.** Camera / combat / `offline_welcome` / `home_prompts` / `play_shell` + fight and Welcome Back goldens. | Leave camera files, `fight_a56`, Welcome Back, and `home_shell_full_a56` alone. `home_shell_split_a56` on this PR is a justified rail-chip update (WATCH/WISP gone via `HomeCatalog.of`, ~1.28%), not a camera retake. |
-| **58 return-week** | `fa0fa46e` | **`home_shell.dart` `_climbRow`** plus `return_week.dart`, chase/guides, `game_logic` check-in line, and hub goldens. | This PR **does not edit `_climbRow`**. Disposable merge of `fa0fa46e` onto **`8fda76d2`** applied their climb-row patch cleanly (import `return_week.dart`; `back = climb == null && ReturnWeek.active(state) ? ReturnWeek.coachLine(state) : null`; tip only when `back == null`; `text = climb ?? back ?? tip`). TownViewport + GOLD intercept stayed. **One conflict:** binary `test/goldens/after/home_shell_split_a56.png` (this PR dropped WATCH/WISP rail chips; PR58 regenerated the same PNG). Combined tree should regenerate that one golden — do not keep either PNG blindly (theirs would restore WATCH/WISP; ours might miss a return-week pixel). `fight_a56` / `home_shell_full_a56` / `welcome_back_a56` / `hub_a56` took PR58 with no conflict. Pending PR58 does not block this town swap. Merge was aborted; this branch does not contain PR58. |
-| **59 workflow** | `752d1c9` | Workflows only. | No overlap. This PR does not touch workflows / APK / tags. |
-
-Exact `_climbRow` region this PR leaves untouched so PR58 still applies:
-
-```
-final climb = FirstClimbCoach.line(state, inDungeon: state.inDungeon);
-if (sheet && climb == null) return const SizedBox.shrink();
-final tip = !state.inDungeon && climb == null
-    ? FirstSessionTips.active(state, inDungeon: false)
-    : null;
-final text = climb ??
-    (tip == null ? null : FirstSessionTips.displayLine(tip, state));
-```
-
-This PR's `home_shell.dart` edits: `CampViewport` → `TownViewport`; GOLD
-intercept only while `inDungeon`; drop out-of-dungeon `HomeGoldDock`.
+PRs 57, 58, 59, and 61 are already in this release candidate.
 
 ---
 

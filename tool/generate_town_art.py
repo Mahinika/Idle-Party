@@ -1179,9 +1179,9 @@ Owned Idle Party pixel art for the out-of-dungeon town.
 | License | Same as the rest of `assets/custom/` — original game art |
 
 Three painted facade tiers (timber / plaster or ashlar / banners). AL10
-pennants and AL20 lanterns are Flutter overlays. Townsfolk frames share
+pennants and AL20 lanterns are owned pixel strips. Townsfolk frames share
 one sheet. `TownFolkSheet` in Dart uses the same 96×112 cells and
-draws them at about half size with nearest-neighbor.
+draws them beside the party with nearest-neighbor.
 
 Deterministic: no RNG. Regenerate:
 
@@ -1241,6 +1241,9 @@ def main() -> int:
         ("thicket.png", life_art.thicket()),
         ("scuff.png", life_art.scuff()),
         ("contact.png", life_art.contact()),
+        ("nameplate.png", life_art.nameplate()),
+        ("pennants.png", life_art.pennants()),
+        ("lanterns.png", life_art.lanterns()),
         ("folk.png", generate_folk()),
         ("well.png", generate_well()),
         ("vault_shut.png", generate_vault(False)),

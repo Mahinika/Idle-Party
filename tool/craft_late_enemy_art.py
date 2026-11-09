@@ -157,20 +157,34 @@ def veil_elite() -> Image.Image:
 
 
 def main() -> None:
-    sprites = {
-        "storm_wraith.png": storm_wraith,
-        "rime_wraith.png": rime_wraith,
-        "ember_elite.png": ember_elite,
-        "ember_brute.png": ember_brute,
-        "tide_brute.png": tide_brute,
-        "grove_elite.png": grove_elite,
-        "grove_brute.png": grove_brute,
-        "fen_elite.png": fen_elite,
-        "brass_elite.png": brass_elite,
-        "veil_elite.png": veil_elite,
-    }
-    for name, fn in sprites.items():
-        _save(fn(), name)
+    # The 96px pass owns these silhouettes.
+    from craft_pixel_enemies import (  # noqa: WPS433
+        brass_elite,
+        ember_brute,
+        ember_elite,
+        fen_elite,
+        grove_brute,
+        grove_elite,
+        rime_wraith,
+        storm_wraith,
+        tide_brute,
+        veil_elite,
+    )
+
+    sprites = [
+        storm_wraith,
+        rime_wraith,
+        ember_elite,
+        ember_brute,
+        tide_brute,
+        grove_elite,
+        grove_brute,
+        fen_elite,
+        brass_elite,
+        veil_elite,
+    ]
+    for fn in sprites:
+        fn()
     print(f"late enemy art: {len(sprites)} sprites")
 
 

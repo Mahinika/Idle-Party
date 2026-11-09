@@ -200,12 +200,14 @@ BOOT = [
     (86, 58, 40),
     (120, 84, 58),
 ]
+# Same ramp as the backdrop grass in generate_town_art.py.
 GRASS = [
-    (42, 86, 46),
-    (54, 104, 52),
-    (68, 122, 58),
-    (86, 140, 68),
-    (112, 160, 82),
+    (36, 78, 40),
+    (48, 98, 48),
+    (62, 118, 54),
+    (78, 138, 62),
+    (104, 158, 74),
+    (138, 176, 92),
 ]
 LEAF = [
     (18, 48, 26),
@@ -410,12 +412,13 @@ def _person(pix: Pix, ox: int, oy: int, frame: int, kind: int) -> None:
 
     # Both boots share the ground line. Only the step changes.
     ground = oy + 96 + bob
+    # Wide enough that a 2:1 shrink still shows a step, not a planted foot.
     steps = {
-        0: (-14, 2),
-        1: (-20, 10),
-        2: (-12, 0),
-        3: (-6, 14),
-        4: (-10, 4),
+        0: (-16, 4),
+        1: (-30, 18),
+        2: (-20, -4),
+        3: (-2, 22),
+        4: (-12, 8),
     }
     trouser = LEATHER if kind == 0 else WOOL
     if kind == 2:
@@ -460,9 +463,43 @@ def folk() -> Image.Image:
 
 
 def ground() -> Image.Image:
-    """Quiet meadow. No tuft stamp and no oval spots. Life sits in the plantings."""
+    """Meadow tile. One grass ramp, not one flat green."""
     pix = Pix(160, 160)
-    pix.rect(0, 0, 160, 160, GRASS[2])
+    base = GRASS[2]
+    for y in range(160):
+        for x in range(160):
+            n = ((x * 13 + y * 7) ^ (x * 3)) & 7
+            tone = 2
+            if n == 0:
+                tone = 1
+            elif n == 1:
+                tone = 3
+            elif n >= 6:
+                tone = 2
+            pix.put(x, y, GRASS[tone] if tone != 2 else base)
+    # Tufts in clumps, so the repeat is a lawn and not a noise field.
+    clumps = (
+        (12, 18), (40, 30), (78, 14), (110, 36), (140, 22),
+        (24, 70), (60, 84), (96, 64), (130, 90), (20, 120),
+        (70, 130), (108, 118), (146, 140), (48, 150), (150, 70),
+    )
+    for cx, cy in clumps:
+        for i, (dx, h) in enumerate(((0, 7), (3, 5), (-2, 6), (5, 4))):
+            col = LEAF[3 + (i % 3)]
+            pix.rect(cx + dx, cy - h, 2, h, col)
+            pix.put(cx + dx, cy - h, LEAF[5])
+    flowers = (
+        (28, 48, (190, 70, 78), (240, 170, 160)),
+        (88, 100, (220, 190, 70), (255, 230, 140)),
+        (132, 56, (200, 90, 150), (245, 180, 200)),
+        (56, 108, (230, 230, 200), (255, 255, 240)),
+        (16, 140, (180, 60, 70), (230, 140, 130)),
+        (118, 148, (210, 160, 50), (250, 210, 110)),
+    )
+    for x, y, col, hi in flowers:
+        _bloom(pix, x, y, col, hi)
+    for x, y in ((70, 48), (150, 110), (36, 88), (100, 20)):
+        _stone(pix, x, y, 6, 4, 2)
     return pix.image()
 
 
@@ -601,29 +638,78 @@ def contact() -> Image.Image:
 
 
 def meadow() -> Image.Image:
-    """One clump for the upper lawn. Not a tile."""
+    """A stand of grass and flowers. The dirt is only under the roots."""
     pix = Pix(112, 64)
-    disc(pix, 58, 46, 40, 12, [
-        GRASS[1],
-        (78, 58, 34),
-        (108, 78, 46),
-        (86, 120, 58),
-        GRASS[3],
-    ])
+    # A narrow soil line, not a brown disc that reads as a scar.
+    for x in range(18, 96):
+        pix.put(x, 52, GRASS[1])
+        if x % 3 != 0:
+            pix.put(x, 53, (96, 72, 44))
     blades = (
-        (16, 18, 28), (24, 8, 36), (34, 22, 20), (44, 12, 30),
-        (70, 6, 34), (80, 16, 24), (92, 10, 32), (52, 20, 18),
+        (14, 16, 36), (22, 8, 44), (30, 18, 32), (38, 10, 40),
+        (48, 6, 46), (56, 14, 36), (66, 4, 48), (74, 12, 38),
+        (84, 8, 42), (92, 16, 34), (100, 10, 40),
     )
-    tones = (LEAF[2], LEAF[3], LEAF[4], LEAF[5], GRASS[4])
+    tones = (LEAF[2], LEAF[3], LEAF[4], LEAF[5], GRASS[4], GRASS[5] if len(GRASS) > 5 else GRASS[4])
     for i, (x, top, h) in enumerate(blades):
         pix.rect(x, top, 2, h, tones[i % len(tones)])
         pix.put(x, top, LEAF[5])
-        pix.put(x - 1, top + 4, LEAF[4])
-    _bloom(pix, 30, 14, (190, 60, 70), (236, 150, 140))
-    _bloom(pix, 74, 8, (230, 200, 90), (255, 236, 160))
-    _bloom(pix, 88, 20, (210, 90, 140), (245, 170, 190))
-    _stone(pix, 46, 40, 12, 7, 3)
+        pix.put(x - 1, top + 6, LEAF[4])
+        pix.put(x + 2, top + 10, GRASS[3])
+    _bloom(pix, 24, 12, (196, 58, 70), (240, 160, 150))
+    _bloom(pix, 46, 6, (230, 200, 80), (255, 236, 160))
+    _bloom(pix, 70, 10, (210, 90, 150), (245, 180, 200))
+    _bloom(pix, 90, 16, (236, 230, 200), (255, 252, 240))
+    _bloom(pix, 58, 20, (180, 70, 60), (230, 140, 120))
     pix.outline()
+    return pix.image()
+
+
+def nameplate() -> Image.Image:
+    """A wood plaque the building name sits on. Not a rounded pill."""
+    pix = Pix(88, 18)
+    pix.rect(0, 0, 88, 18, (72, 48, 28))
+    pix.rect(1, 1, 86, 16, (112, 74, 42))
+    pix.rect(2, 2, 84, 14, (148, 102, 62))
+    pix.rect(2, 2, 84, 1, (196, 150, 96))
+    pix.rect(2, 15, 84, 1, (64, 40, 22))
+    pix.put(4, 4, (210, 170, 110))
+    pix.put(82, 4, (90, 58, 32))
+    return pix.image()
+
+
+def pennants() -> Image.Image:
+    """Swallowtail flags for AL10. Pixels, not theme rectangles."""
+    pix = Pix(320, 24)
+    colors = (
+        (150, 42, 48),
+        (210, 170, 64),
+        (48, 110, 64),
+        (48, 72, 140),
+        (150, 42, 48),
+        (210, 170, 64),
+        (48, 110, 64),
+    )
+    for i, col in enumerate(colors):
+        x = 16 + i * 42
+        pix.rect(x, 0, 2, 22, (48, 36, 24))
+        pix.rect(x + 2, 2, 16, 8, col)
+        pix.rect(x + 6, 10, 8, 6, col)
+        pix.rect(x + 8, 16, 4, 4, col)
+        pix.put(x + 4, 3, (240, 220, 180))
+    return pix.image()
+
+
+def lanterns() -> Image.Image:
+    """Five hanging lanterns for AL20."""
+    pix = Pix(200, 18)
+    for i in range(5):
+        x = 12 + i * 38
+        pix.rect(x + 6, 0, 2, 4, (48, 36, 24))
+        pix.rect(x, 4, 14, 10, (196, 120, 36))
+        pix.rect(x + 2, 6, 10, 6, (255, 196, 72))
+        pix.rect(x + 5, 8, 4, 2, (255, 236, 160))
+        pix.rect(x + 4, 14, 6, 3, (120, 64, 24))
     return pix.image()
 
 

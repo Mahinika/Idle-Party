@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/assets/custom_assets.dart';
+import 'package:idle_party/assets/kenney_assets.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
@@ -55,7 +56,12 @@ void main() {
     await tester.pump();
     await tester.runAsync(() async {
       final ctx = tester.element(find.byType(TownViewport));
-      for (final path in CustomAssets.townAssetPaths) {
+      for (final path in [
+        ...CustomAssets.townAssetPaths,
+        KenneyAssets.townNameplate,
+        KenneyAssets.townPennants,
+        KenneyAssets.townLanterns,
+      ]) {
         await precacheImage(AssetImage(path), ctx);
       }
     });
@@ -264,7 +270,12 @@ Future<void> _pumpTownTier(
   await tester.pump();
   await tester.runAsync(() async {
     final ctx = tester.element(find.byType(TownViewport));
-    for (final path in CustomAssets.townAssetPaths) {
+    for (final path in [
+      ...CustomAssets.townAssetPaths,
+      KenneyAssets.townNameplate,
+      KenneyAssets.townPennants,
+      KenneyAssets.townLanterns,
+    ]) {
       await precacheImage(AssetImage(path), ctx);
     }
   });
@@ -343,7 +354,11 @@ Future<void> _pumpHome({
           backgroundColor: GameTheme.ink,
           body: RepaintBoundary(
             key: key,
-            child: HomeShell(director: director, router: router, onLeave: () {}),
+            child: HomeShell(
+              director: director,
+              router: router,
+              onLeave: () {},
+            ),
           ),
         ),
       ),
@@ -352,7 +367,12 @@ Future<void> _pumpHome({
   await tester.pump();
   await tester.runAsync(() async {
     final ctx = tester.element(find.byType(TownViewport));
-    for (final path in CustomAssets.townAssetPaths) {
+    for (final path in [
+      ...CustomAssets.townAssetPaths,
+      KenneyAssets.townNameplate,
+      KenneyAssets.townPennants,
+      KenneyAssets.townLanterns,
+    ]) {
       await precacheImage(AssetImage(path), ctx);
     }
   });

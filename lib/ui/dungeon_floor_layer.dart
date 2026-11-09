@@ -732,6 +732,42 @@ extension _DungeonFloorLayer on _TileRoomPainter {
           false,
           stroke,
         );
+        paint.color = const Color(0xD0C4A070);
+        canvas.drawRect(
+          Rect.fromLTWH(at(2, 11).dx, at(2, 11).dy, 2 * u, u),
+          paint,
+        );
+        canvas.drawRect(Rect.fromLTWH(at(5, 12).dx, at(5, 12).dy, u, u), paint);
+        canvas.drawRect(
+          Rect.fromLTWH(at(11, 6).dx, at(11, 6).dy, 2 * u, u),
+          paint,
+        );
+        paint.color = const Color(0xD0C8A040);
+        canvas.drawRect(
+          Rect.fromLTWH(at(8, 3).dx, at(8, 3).dy, u, 4 * u),
+          paint,
+        );
+        canvas.drawRect(
+          Rect.fromLTWH(at(10, 4).dx, at(10, 4).dy, u, 3 * u),
+          paint,
+        );
+        paint.color = const Color(0xE0A06030);
+        canvas.drawRect(
+          Rect.fromLTWH(at(12, 9).dx, at(12, 9).dy, 3 * u, 3 * u),
+          paint,
+        );
+        paint.color = const Color(0xE0E8C070);
+        canvas.drawRect(
+          Rect.fromLTWH(at(12, 9).dx, at(12, 9).dy, 3 * u, u),
+          paint,
+        );
+        paint.color = const Color(0xE0E8D8C0);
+        canvas.drawRect(
+          Rect.fromLTWH(at(3, 7).dx, at(3, 7).dy, 4 * u, u),
+          paint,
+        );
+        canvas.drawRect(Rect.fromLTWH(at(3, 6).dx, at(3, 6).dy, u, u), paint);
+        canvas.drawRect(Rect.fromLTWH(at(6, 6).dx, at(6, 6).dy, u, u), paint);
       case FloorDecalKind.gearInlay:
         stroke.color = const Color(0x90C89830);
         final c = r.center;
