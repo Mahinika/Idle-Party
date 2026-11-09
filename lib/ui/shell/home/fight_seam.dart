@@ -40,8 +40,10 @@ class FightSeam extends StatelessWidget {
     final modeHint = plain
         ? 'Repeat loots. Next goes deeper.'
         : 'FARM loops. PUSH climbs.';
-    final textScale = MediaQuery.textScalerOf(context).scale(1);
-    final showModeHint = textScale <= GameTheme.typeScaleMax;
+    final mqScale = MediaQuery.textScalerOf(context).scale(1);
+    final osScale = View.of(context).platformDispatcher.textScaleFactor;
+    final effectiveScale = mqScale > osScale ? mqScale : osScale;
+    final showModeHint = effectiveScale <= GameTheme.typeScaleMax;
     return Material(
       color: GameTheme.panel,
       child: Column(
