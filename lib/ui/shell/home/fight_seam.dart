@@ -40,6 +40,8 @@ class FightSeam extends StatelessWidget {
     final modeHint = plain
         ? 'Repeat loots. Next goes deeper.'
         : 'FARM loops. PUSH climbs.';
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final showModeHint = textScale <= GameTheme.typeScaleMax;
     return Material(
       color: GameTheme.panel,
       child: Column(
@@ -137,15 +139,16 @@ class FightSeam extends StatelessWidget {
                 ],
               ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
-            child: Text(
-              modeHint,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.hint(color: GameTheme.parchmentDim),
+          if (showModeHint)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+              child: Text(
+                modeHint,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              ),
             ),
-          ),
           ShellLayout.divider(),
           PartyCornerHud(
               director: director,
