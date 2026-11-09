@@ -18,6 +18,7 @@ import 'package:idle_party/ui/spatial_dungeon_view.dart';
 import 'package:idle_party/ui/shell/shop_dock.dart';
 import 'package:idle_party/models/vfx_quality.dart';
 import 'package:idle_party/ui/hero_doll_sprite.dart';
+import 'package:idle_party/ui/shell/shell_common.dart';
 import 'package:idle_party/ui/theme.dart';
 import 'shell_golden_harness.dart';
 
@@ -54,6 +55,32 @@ void main() {
 
   setUpAll(() async {
     await ensureShellGoldenFonts();
+  });
+
+  testWidgets('classic hub header tracks wallet gold', (tester) async {
+    bindA56View(tester);
+    final director = hubGoldenDirector();
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    addTearDown(director.dispose);
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        HubScreen(
+          director: director,
+          router: router,
+          onEnterDungeon: (_) {},
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester, ms: 200);
+    final before = director.state.gold;
+    expect(find.textContaining(formatGold(before)), findsWidgets);
+    director.debugSetGold(before + 777);
+    director.notifyListeners();
+    await tester.pump();
+    expect(find.textContaining(formatGold(director.state.gold)), findsWidgets);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 2));
   });
 
   testWidgets('hub screen golden A56', (tester) async {
@@ -455,7 +482,7 @@ void main() {
     await showGauntletDialogGolden(tester, director);
     await expectShellGolden(
       tester,
-      find.text('Gauntlet climb'),
+      find.text('Gauntlet'),
       'gauntlet_dialog_a56.png',
     );
     await tester.tap(find.text('CANCEL'));

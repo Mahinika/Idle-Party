@@ -34,9 +34,9 @@ class ForgeOverlay extends StatefulWidget {
       return 'Run gold power resets when you start over. Buy the row tagged BEST when unsure.';
     }
     if (showCamp) {
-      return 'GOLD → FORGE + bag gold wipe on Ascend. BLESSING stays on ESSENCE.';
+      return 'Forge gold and bag gold reset when you Ascend. Blessing on Essence does not.';
     }
-    return 'GOLD → FORGE + bag gold wipe on Ascend. BLESSING stays.';
+    return 'Forge gold and bag gold reset when you Ascend. Blessing does not.';
   }
 
   /// One-line sheet totals for the FORGE header (fits narrow home panel).
@@ -76,15 +76,28 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   bool get _scrollAllTracks =>
       widget.inlineUnderFight || widget.expandedTrackList;
 
-  Color _forgeAccent(PartyUpgradeType type) => switch (type) {
-    PartyUpgradeType.attack => GameTheme.hudHpDamage,
-    PartyUpgradeType.defense => GameTheme.rarityRare,
-    PartyUpgradeType.vitality => GameTheme.mossLit,
-    PartyUpgradeType.moveSpeed => GameTheme.torchHot,
-    PartyUpgradeType.attackSpeed => GameTheme.torch,
-    PartyUpgradeType.crit => GameTheme.bloodLit,
-    PartyUpgradeType.mastery => GameTheme.tooltipEpic,
-  };
+  Color _forgeAccent(PartyUpgradeType type) {
+    if (director.state.colorblindMode) {
+      return switch (type) {
+        PartyUpgradeType.attack => GameTheme.parchment,
+        PartyUpgradeType.defense => GameTheme.parchmentDim,
+        PartyUpgradeType.vitality => GameTheme.borderLit,
+        PartyUpgradeType.moveSpeed => GameTheme.stoneRaised,
+        PartyUpgradeType.attackSpeed => GameTheme.ink,
+        PartyUpgradeType.crit => GameTheme.panelInset,
+        PartyUpgradeType.mastery => GameTheme.clear,
+      };
+    }
+    return switch (type) {
+      PartyUpgradeType.attack => GameTheme.hudHpDamage,
+      PartyUpgradeType.defense => GameTheme.rarityRare,
+      PartyUpgradeType.vitality => GameTheme.mossLit,
+      PartyUpgradeType.moveSpeed => GameTheme.torchHot,
+      PartyUpgradeType.attackSpeed => GameTheme.torch,
+      PartyUpgradeType.crit => GameTheme.bloodLit,
+      PartyUpgradeType.mastery => GameTheme.tooltipEpic,
+    };
+  }
 
   String _forgeName(PartyUpgradeType type) => switch (type) {
     PartyUpgradeType.attack => 'AP',

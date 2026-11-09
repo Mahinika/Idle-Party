@@ -340,7 +340,9 @@ void main() {
     expect(visible.contains('wisp'), isFalse);
     expect(visible.contains('menu_watch'), isFalse);
     expect(visible.contains('menu_wisp'), isFalse);
-    expect(visible, containsAll(['scrolls', 'menu_scrolls']));
+    expect(visible, contains('scrolls'));
+    expect(visible.contains('menu_scrolls'), isFalse);
+    expect(visible.contains('menu_quests'), isFalse);
     final defined = HomeCatalog.entries.map((e) => e.id).toSet();
     expect(defined, containsAll(['watch', 'wisp', 'menu_watch', 'menu_wisp']));
   });

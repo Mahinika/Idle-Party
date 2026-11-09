@@ -23,7 +23,7 @@ class JobsOverlay extends StatelessWidget {
     return '+${formatGold(gold)} · +$essence essence';
   }
 
-  static String chainClaimLabel() => 'CLAIM · chain +5e';
+  static String chainClaimLabel() => 'Claim · chain +5 essence';
 
   static String rerollButtonLabel({
     required bool adFree,

@@ -557,7 +557,7 @@ void main() {
       JobsOverlay.rewardLine(gold: 40, essence: 3),
       '+40g · +3 essence',
     );
-    expect(JobsOverlay.chainClaimLabel(), 'CLAIM · chain +5e');
+    expect(JobsOverlay.chainClaimLabel(), 'Claim · chain +5 essence');
     expect(
       JobsOverlay.displayTitle(
         const Mission(

@@ -64,14 +64,40 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     _ => 0,
   };
 
-  Color _trackAccent(String track) => switch (track) {
-    'gold' => GameTheme.torch,
-    'power' => GameTheme.hudHpDamage,
-    'vitality' => GameTheme.mossLit,
-    'defense' => GameTheme.rarityRare,
-    'xp' => GameTheme.rarityRare,
-    _ => GameTheme.parchmentDim,
-  };
+  Color _trackAccent(String track) {
+    if (director.state.colorblindMode) {
+      return switch (track) {
+        'gold' => GameTheme.parchment,
+        'power' => GameTheme.parchmentDim,
+        'vitality' => GameTheme.borderLit,
+        'defense' => GameTheme.stoneRaised,
+        'xp' => GameTheme.ink,
+        _ => GameTheme.parchmentDim,
+      };
+    }
+    return switch (track) {
+      'gold' => GameTheme.torch,
+      'power' => GameTheme.hudHpDamage,
+      'vitality' => GameTheme.mossLit,
+      'defense' => GameTheme.rarityRare,
+      'xp' => GameTheme.rarityRare,
+      _ => GameTheme.parchmentDim,
+    };
+  }
+
+  String _essencePriceLabel(int cost) => '$cost essence';
+
+  String _bulkEssenceLabel(int buyN, int bulkCost, String track, GameState state) {
+    if (track == 'gold') {
+      final hubNow = GoldIncome.hubGoldPerMinute(state);
+      final hubAfter = GoldIncome.hubGoldPerMinuteAtGoldLevel(
+        state,
+        _levelOf(state, track) + buyN,
+      );
+      return '+${hubAfter - hubNow}g · $bulkCost essence';
+    }
+    return '$buyN · $bulkCost essence';
+  }
 
   static const _tracks = <String>[
     'gold',
@@ -118,7 +144,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
               ),
               MenuChrome.chip(label: 'Camp tracks', selected: campOpen),
               Text(
-                '${formatCount(state.essence)}e · survive Ascend',
+                '${formatCount(state.essence)} essence · survive Ascend',
                 style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
             ],
@@ -154,7 +180,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       return Padding(
         padding: ShellLayout.listPadding,
         child: ShellLayout.hint(
-          'CAMP tracks unlock on ESSENCE after the first hour.',
+          'CAMP tracks unlock on Essence after the first boss or an Ascend.',
           maxLines: 2,
         ),
       );
@@ -377,16 +403,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     if (_compactPrice) {
       if (buyN > 1 && maxForTrack >= buyN) {
         final bulkCost = GameLogic.sanctuaryBulkCost(state, track, buyN);
-        final label = track == 'gold'
-            ? () {
-                final hubNow = GoldIncome.hubGoldPerMinute(state);
-                final hubAfter = GoldIncome.hubGoldPerMinuteAtGoldLevel(
-                  state,
-                  level + buyN,
-                );
-                return '+${hubAfter - hubNow}g · ${bulkCost}e';
-              }()
-            : '$buyN · ${bulkCost}e';
+        final label = _bulkEssenceLabel(buyN, bulkCost, track, state);
         trailing = PowerUpgradePriceChip(
           label: label,
           primary: recommended,
@@ -397,7 +414,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
         );
       } else {
         trailing = PowerUpgradePriceChip(
-          label: '${cost}e',
+          label: _essencePriceLabel(cost),
           primary: recommended && canAffordOne,
           onPressed: canAffordOne
               ? () {
@@ -415,9 +432,9 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
               final hubNow = GoldIncome.hubGoldPerMinute(state);
               final hubAfter =
                   GoldIncome.hubGoldPerMinuteAtGoldLevel(state, target);
-              return '+${hubAfter - hubNow}g/min · ${bulkCost}e';
+              return '+${hubAfter - hubNow}g/min · ${bulkCost} essence';
             }()
-          : 'Buy $buyN · ${bulkCost}e';
+          : 'Buy $buyN · ${bulkCost} essence';
       trailing = PowerUpgradePriceChip(
         label: label,
         primary: true,
@@ -428,7 +445,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       );
     } else {
       trailing = PowerUpgradePriceChip(
-        label: '${cost}e',
+        label: _essencePriceLabel(cost),
         primary: canAffordOne && recommended,
         onPressed: canAffordOne
             ? () {

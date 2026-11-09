@@ -171,7 +171,7 @@ void main() {
     expect(contract.upNextLine, startsWith('Up next'));
   });
 
-  testWidgets('Welcome Back is wow, highlights, Up next — not a syllabus', (
+  testWidgets('Welcome Back is wow, highlights, one spend line — not a syllabus', (
     tester,
   ) async {
     final director = GameDirector.preview();
@@ -190,7 +190,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('WELCOME BACK'), findsOneWidget);
     expect(find.textContaining('Away for'), findsOneWidget);
-    expect(find.textContaining('Up next:'), findsOneWidget);
+    expect(find.textContaining('Up next:'), findsNothing);
+    expect(find.textContaining('Why:'), findsNothing);
     expect(find.textContaining('AFK'), findsNothing);
     expect(find.textContaining('Sanctuary'), findsNothing);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
@@ -199,7 +200,7 @@ void main() {
     expect(find.textContaining('40 gold'), findsWidgets);
   });
 
-  testWidgets('day-2–7 Welcome Back Up next is one cave today', (tester) async {
+  testWidgets('day-2–7 Welcome Back skips redundant coach rows', (tester) async {
     final now = DateTime.utc(2026, 8, 8);
     final state = GameLogic.createInitialState(
       now: now,
@@ -229,10 +230,8 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('WELCOME BACK'), findsOneWidget);
-    expect(
-      find.textContaining('Up next: Sandy Caverns · CAMP'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Up next:'), findsNothing);
+    expect(find.textContaining('Why:'), findsNothing);
     expect(find.textContaining('Daily Run'), findsNothing);
     expect(find.textContaining('KEY'), findsNothing);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);

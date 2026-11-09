@@ -6,6 +6,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
+import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/enemy.dart';
@@ -132,9 +133,10 @@ void main() {
     };
     expect(caves.length, greaterThan(1));
     expect(caves, isNot(equals({'storm'})));
+    final week = '2026-W38';
     expect(
-      Keystone.weekFightLine('2026-W38'),
-      contains(Keystone.weekTell('2026-W38')),
+      Keystone.weekFightLine(week),
+      contains(DungeonCatalog.byId(Keystone.weekCaveId(week)).name),
     );
   });
 

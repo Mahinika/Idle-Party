@@ -187,15 +187,28 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     return HeroSpecs.def(spec).shortLabel;
   }
 
+  String _duplicateSpecHint(HeroSpecId taken) {
+    final def = HeroSpecs.def(taken);
+    final others = <String>[];
+    for (final id in HeroSpecs.starterUnlocked) {
+      if (id == taken) continue;
+      final idx = _slots.indexOf(id);
+      if (idx >= 0 && idx != _activeSlot) continue;
+      others.add(HeroSpecs.def(id).shortLabel);
+      if (others.length >= 2) break;
+    }
+    if (others.isEmpty) {
+      return '${def.shortLabel} is already picked — choose another starter spec';
+    }
+    return '${def.shortLabel} is already picked — choose ${others.join(' or ')} for the other slots';
+  }
+
   void _pick(HeroSpecId id) {
     if (!HeroSpecs.starterUnlocked.contains(id)) return;
     final takenIndex = _slots.indexWhere((s) => s == id);
     if (takenIndex >= 0 && takenIndex != _activeSlot) {
-      final def = HeroSpecs.def(id);
       setState(() {
-        _pickHint =
-            '${def.shortLabel} is already picked — choose Healer or Fire mage '
-            'for the other slots';
+        _pickHint = _duplicateSpecHint(id);
         _activeSlot = takenIndex;
         _filter = HeroSpecs.def(id).classId;
         _tab = _PartyEditTab.classTab;

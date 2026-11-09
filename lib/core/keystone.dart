@@ -40,9 +40,8 @@ abstract final class Keystone {
 
   static String weekFightLine(String weeklyKey) {
     final id = weekCaveId(weeklyKey);
-    final tell = EnemyFlavor.bossTell(id);
     final name = DungeonCatalog.byId(id).name;
-    return "This week's packs use the $name boss tell ($tell).";
+    return "This week's packs fight in $name with that zone's boss rhythm.";
   }
 
   /// Legacy AL helper only — KEY unlock is [heroLevelGate] / [maxForState].

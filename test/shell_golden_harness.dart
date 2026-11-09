@@ -169,6 +169,9 @@ GameDirector questsGoldenDirector() {
 
 GameDirector settingsGoldenDirector() => hubGoldenDirector();
 
+/// ISO week pinned so KEY sheet goldens do not drift with the calendar.
+const String shellGoldenWeeklyKey = '2026-W46';
+
 GameState endgamePartyGoldenState() {
   final base = _quietHubState().copyWith(
     ascensionLevel: 8,
@@ -179,7 +182,10 @@ GameState endgamePartyGoldenState() {
     heroes: [
       for (final h in base.heroes) h.copyWith(level: GameLogic.maxHeroLevel),
     ],
-    metaDepth: base.metaDepth.copyWith(gauntletBestFloor: 12),
+    metaDepth: base.metaDepth.copyWith(
+      gauntletBestFloor: 12,
+      weeklyKey: shellGoldenWeeklyKey,
+    ),
   );
 }
 

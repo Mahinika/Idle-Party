@@ -76,11 +76,11 @@ class DungeonWipePanel extends StatelessWidget {
                                     : state.inRift
                                     ? 'Farm Rift ends. Best R${state.metaDepth.riftBestTier}.'
                                     : plain
-                                    ? 'They go again in a moment. HUB leaves the cave.'
+                                    ? 'They go again in a moment. Leave returns to town.'
                                     : dailyEcho
-                                    ? 'RETRY this floor. HUB ends the run.'
+                                    ? 'RETRY this floor. Leave ends the run.'
                                     : farm
-                                    ? 'RETRY restarts F${state.currentRoom.floorNumber}. HUB ends the run.'
+                                    ? 'RETRY restarts F${state.currentRoom.floorNumber}. Leave ends the run.'
                                     : () {
                                         final cur = state.currentRoom.floorNumber;
                                         final uncleared =
@@ -97,7 +97,7 @@ class DungeonWipePanel extends StatelessWidget {
                                         if (uncleared) {
                                           return 'Same floor again. A second wipe farms the floor below.';
                                         }
-                                        return 'RETRY restarts F$cur. HUB ends the run.';
+                                        return 'RETRY restarts F$cur. Leave ends the run.';
                                       }(),
                                 maxLines: 4,
                               ),

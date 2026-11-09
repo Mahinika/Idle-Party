@@ -603,12 +603,12 @@ abstract final class GameGuides {
       id: 'income',
       title: 'HUB GOLD RATE',
       body:
-          'ESSENCE → CAMP (hub gold overnight).\n\n'
+          'ESSENCE → CAMP (hub gold while the app is closed).\n\n'
           'Your incremental dashboard: Hub gold/min, Run gold/min (from real '
           'loot in the last couple of minutes), gold % multipliers, and Gold Find '
           '— the keep generator on the Gold Find track below.\n\n'
           'Hub ticks while you sit at the keep (slower than a dungeon run, but '
-          'overnight still buys Gold). Buy one Gold Find level or bulk levels '
+          'time away still buys Gold). Buy one Gold Find level or bulk levels '
           'when you can afford them.',
     ),
     GuideTopic(

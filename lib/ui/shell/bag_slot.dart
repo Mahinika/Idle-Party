@@ -121,8 +121,9 @@ class _BagSlot extends StatelessWidget {
                         child: ExcludeSemantics(
                           child: Text(
                             _slotHint(item!.slot),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                            softWrap: true,
+                            overflow: TextOverflow.clip,
                             style: GameTheme.hint(color: GameTheme.parchmentDim),
                           ),
                         ),
