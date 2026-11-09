@@ -15,6 +15,7 @@ import 'home/home_shell.dart';
 import '../confirm_dialogs.dart';
 import '../feedback_toast.dart';
 import '../first_session_tips.dart';
+import '../../models/vfx_quality.dart';
 import '../../visual/rig/hero_rig_painter.dart';
 import '../hub_screen.dart';
 import '../is2_shell.dart';
@@ -151,6 +152,8 @@ class _PlayShellState extends State<PlayShell> {
   Widget _bottomBar() {
     final state = director.state;
     final (coachRoute, coachLine) = _coachTab();
+    final coachMotion =
+        state.vfxQuality != VfxQuality.minimal;
     if (state.inDungeon) {
       final graph = DestinationGraph.dungeon(state);
       return AppBottomBar(
@@ -161,6 +164,7 @@ class _PlayShellState extends State<PlayShell> {
         suppressReason: _suppressBarReason,
         coachRoute: coachRoute,
         coachLine: coachLine,
+        coachPulseEnabled: coachMotion,
         onSelect: (dest) => _openMenuFeel(() {
           _dismissCoachTab(dest);
           if (dest == MenuRoute.more) {
@@ -228,6 +232,7 @@ class _PlayShellState extends State<PlayShell> {
       suppressReason: _suppressBarReason,
       coachRoute: coachRoute,
       coachLine: coachLine,
+      coachPulseEnabled: coachMotion,
       onSelect: (dest) {
         _dismissCoachTab(dest);
         if (dest == MenuRoute.more) {

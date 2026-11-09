@@ -23,6 +23,7 @@ class AppBottomBar extends StatelessWidget {
     this.suppressReason,
     this.coachRoute,
     this.coachLine,
+    this.coachPulseEnabled = true,
   });
 
   final MenuAlerts alerts;
@@ -38,6 +39,7 @@ class AppBottomBar extends StatelessWidget {
   /// First-session coach: pulse this tab and prefer [coachLine] as the reason.
   final MenuRoute? coachRoute;
   final String? coachLine;
+  final bool coachPulseEnabled;
 
   static String labelFor(MenuRoute r) => switch (r) {
     MenuRoute.gear => 'GEAR',
@@ -82,6 +84,25 @@ class AppBottomBar extends StatelessWidget {
     MenuRoute.map => alerts.more,
     MenuRoute.none => MenuAlert.quiet,
   };
+
+  Widget _coachWrappedDest({required MenuRoute dest, required bool dense}) {
+    final item = AppBottomBarItem(
+      label: labelFor(dest),
+      icon: iconFor(dest, size: dense ? 16 : 18),
+      badge: route == dest ? '' : _alertFor(dest).badge,
+      selected: route == dest,
+      fill: slotColorFor(dest),
+      dense: dense,
+      onTap: () => onSelect(dest),
+    );
+    final pulse = coachRoute == dest && route != dest;
+    if (!pulse) return item;
+    return CoachPulse(
+      active: true,
+      enabled: coachPulseEnabled,
+      child: item,
+    );
+  }
 
   String _reasonLine() {
     final coach = coachLine;
@@ -134,17 +155,9 @@ class AppBottomBar extends StatelessWidget {
           children: [
             for (final dest in destinations)
               Expanded(
-                child: CoachPulse(
-                  active: coachRoute == dest && route != dest,
-                  child: AppBottomBarItem(
-                    label: labelFor(dest),
-                    icon: iconFor(dest, size: dense ? 16 : 18),
-                    badge: route == dest ? '' : _alertFor(dest).badge,
-                    selected: route == dest,
-                    fill: slotColorFor(dest),
-                    dense: dense,
-                    onTap: () => onSelect(dest),
-                  ),
+                child: _coachWrappedDest(
+                  dest: dest,
+                  dense: dense,
                 ),
               ),
             if (onLeave != null)

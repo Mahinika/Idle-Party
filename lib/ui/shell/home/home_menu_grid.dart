@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../core/game_director.dart';
 import '../../../core/menu_router.dart';
 import '../shell_layout.dart';
-import 'home_catalog.dart';
 import 'rail_button.dart';
+import 'home_catalog.dart';
 
 /// MENU grid. List cards match sheet rows ([ShellLayout.card]).
 class HomeMenuGrid extends StatelessWidget {
@@ -29,7 +29,7 @@ class HomeMenuGrid extends StatelessWidget {
         ShellLayout.sectionHeader('MENU'),
         ShellLayout.gap(4),
         ShellLayout.hint(
-          'Quests, codex, settings, and patch notes.',
+          'Settings, guides, and the rest.',
           maxLines: 2,
         ),
         ShellLayout.gap(8),
@@ -55,14 +55,6 @@ class HomeMenuGrid extends StatelessWidget {
             ),
           ),
         ),
-        ShellLayout.blockGapWidget(),
-        ShellLayout.divider(),
-        ShellLayout.gap(8),
-        ShellLayout.sectionHeader('TIP A FRIEND'),
-        ShellLayout.gap(4),
-        ShellLayout.hint('Share your Play link or paste a friend code.', maxLines: 2),
-        ShellLayout.gap(6),
-        HomeFriendTip(director: director),
       ],
     );
   }

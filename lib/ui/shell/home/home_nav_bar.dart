@@ -203,7 +203,9 @@ class HomeNavBar extends StatelessWidget {
         label: semantics,
         child: InkWell(
           onTap: onTap,
-          child: AnimatedContainer(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+            child: AnimatedContainer(
             duration: const Duration(milliseconds: 120),
             decoration: BoxDecoration(
               color: selected
@@ -224,6 +226,7 @@ class HomeNavBar extends StatelessWidget {
                 child: child,
               ),
             ),
+          ),
           ),
         ),
       ),
