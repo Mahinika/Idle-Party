@@ -36,7 +36,7 @@ void main() {
     expect(AwayFightTip.shouldShow(hub, bossStairs: false, now: now), isTrue);
     final empty = AwayFightTip.lineFor(hub, onHub: true).toLowerCase();
     expect(empty, contains('one cave'));
-    expect(empty, contains('keeps fighting'));
+    expect(empty, isNot(contains('keeps fighting')));
     expect(empty, isNot(contains('tomorrow')));
     expect(empty, isNot(contains('on the hub')));
 
@@ -56,7 +56,7 @@ void main() {
     final text = AwayFightTip.lineFor(claimed, onHub: true).toLowerCase();
     expect(text, contains('tomorrow'));
     expect(text, contains('essence'));
-    expect(text, contains('keeps fighting'));
+    expect(text, isNot(contains('keeps fighting')));
     expect(text, isNot(contains('on the hub')));
     expect(
       AwayFightTip.hubCardOwns(
@@ -153,10 +153,9 @@ void main() {
         away: AwayFightTip.line,
         farm: 'Switch',
         firstBoss: true,
-        climb:
-            'Your party keeps fighting if you close the app. Boss on floor 2.',
+        climb: 'Boss on floor 2.',
       ),
-      'Your party keeps fighting if you close the app. Boss on floor 2.',
+      'Boss on floor 2.',
     );
     expect(
       AwayFightTip.caveCoach(
