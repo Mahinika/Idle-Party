@@ -955,7 +955,7 @@ void main() {
     expect(find.byType(HomeShell), findsOneWidget);
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 100));
-      for (final label in ['GOT IT', 'MAYBE LATER', 'NOT NOW']) {
+      for (final label in ['GOT IT', 'MAYBE LATER', 'NOT NOW', 'LATER', 'CLOSE']) {
         final hit = find.text(label);
         if (hit.evaluate().isNotEmpty) {
           await tester.tap(hit.last);

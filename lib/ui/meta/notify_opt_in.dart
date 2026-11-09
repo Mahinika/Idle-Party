@@ -89,7 +89,7 @@ class NotifyOptInOverlay extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         GameButton(
-          label: 'NOT NOW',
+          label: 'LATER',
           style: GameButtonStyle.grey,
           onPressed: () => _no(context),
         ),

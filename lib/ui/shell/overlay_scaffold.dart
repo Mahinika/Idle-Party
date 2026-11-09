@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/vfx_quality.dart';
 import '../cave_atmosphere.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -34,6 +35,7 @@ class OverlayScrim extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final calm = _calmScrim(context);
     return Positioned.fill(
       child: _PlaytestBridgeLayer(
         child: Material(
@@ -46,11 +48,13 @@ class OverlayScrim extends StatelessWidget {
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: onClose,
-                  child: CaveAtmosphere.torchBloom(
-                    intensity: 0.7,
-                    alignment: const Alignment(0, 0.1),
-                    sizeFactor: 0.85,
-                  ),
+                  child: calm
+                      ? const SizedBox.expand(key: Key('scrim-static'))
+                      : CaveAtmosphere.torchBloom(
+                          intensity: 0.7,
+                          alignment: const Alignment(0, 0.1),
+                          sizeFactor: 0.85,
+                        ),
                 ),
               ),
               // Phone product: full-width sheet (never the centered desktop card).
@@ -71,6 +75,29 @@ class OverlayScrim extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Minimal VFX and the OS reduce-motion flag keep the sheet scrim still.
+bool _calmScrim(BuildContext context) {
+  if (MediaQuery.disableAnimationsOf(context)) return true;
+  var minimal = false;
+  context.visitAncestorElements((element) {
+    final name = element.widget.runtimeType.toString();
+    if (name != 'MenuSurface' &&
+        name != 'PlayShell' &&
+        name != 'HomeShell' &&
+        name != 'HubScreen') {
+      return true;
+    }
+    final dynamic host = element.widget;
+    final dynamic quality = host.director?.state?.vfxQuality;
+    if (quality is VfxQuality) {
+      minimal = quality == VfxQuality.minimal;
+      return false;
+    }
+    return true;
+  });
+  return minimal;
 }
 
 class _PlaytestBridgeLayer extends StatefulWidget {

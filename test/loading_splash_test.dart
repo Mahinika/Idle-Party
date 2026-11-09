@@ -24,7 +24,7 @@ void main() {
     expect(find.text('IDLE PARTY'), findsNothing);
     expect(find.text(StoryLore.introTagline), findsNothing);
     expect(find.text('Loading…'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
     final mark = tester.getRect(find.byType(CognifoxStudioMark));
     expect(mark.center.dx, closeTo(180, 24));
     expect(mark.top, greaterThan(80));

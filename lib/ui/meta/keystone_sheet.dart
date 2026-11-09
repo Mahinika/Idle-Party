@@ -31,7 +31,7 @@ class KeystoneSheet extends StatelessWidget {
       HubChaseKind.gauntletMilestone => 'Hub hunt · Gauntlet',
       HubChaseKind.riftMilestone => 'Hub hunt · Farm Rift',
       HubChaseKind.greaterRiftMilestone => 'Hub hunt · Ranked GR',
-      HubChaseKind.doneForToday => 'Rest day — try Gauntlet',
+      HubChaseKind.doneForToday => 'Nothing due. Gauntlet is open.',
       HubChaseKind.ashenCrown => 'Hub hunt · Ashen Crown',
       _ => '',
     };
@@ -66,7 +66,11 @@ class KeystoneSheet extends StatelessWidget {
                   subtitle: 'Dial, then ENTER',
                   initiallyExpanded: hunt == null,
                   children: [
-                    ChallengeToggles(director: d, lockExpanded: true),
+                    ChallengeToggles(
+                      director: d,
+                      lockExpanded: true,
+                      foldEssays: true,
+                    ),
                   ],
                 ),
                 MenuChrome.fold(
@@ -106,7 +110,7 @@ class KeystoneSheet extends StatelessWidget {
                 MenuChrome.fold(
                   title: 'BOARDS',
                   subtitle: "This month's ranks",
-                  initiallyExpanded: chase.kind == HubChaseKind.doneForToday,
+                  initiallyExpanded: false,
                   children: [
                     PlayGamesBoardsSection(director: d),
                   ],

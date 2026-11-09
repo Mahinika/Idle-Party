@@ -205,7 +205,7 @@ class _WispGlowPainter extends CustomPainter {
         Offset(cx, cy),
         size.shortestSide * 0.18,
         Paint()
-          ..color = const Color(0xFFFFF6D0).withValues(alpha: 0.55 * g)
+          ..color = GameTheme.wispGlow.withValues(alpha: 0.55 * g)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
       );
     } else {

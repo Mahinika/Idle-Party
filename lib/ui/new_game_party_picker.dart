@@ -7,12 +7,10 @@ import '../core/party_name_filter.dart';
 import '../core/starter_gear.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
-import '../assets/custom_assets.dart';
 import 'game_theme.dart';
 import 'hero_doll_sprite.dart';
 import 'hero_look_row.dart';
 import 'kenney_button.dart';
-import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
 
 /// Pick exactly [GameLogic.starterPartySize] unique specs for a new run.
@@ -334,9 +332,12 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                         specId: _slots[i],
                         look: _looks[i],
                         selected: _activeSlot == i,
-                        hero: _slots[i] == null
-                            ? null
-                            : _previewHero(_slots[i]!, _looks[i], slot: i),
+                        hero: _previewHero(
+                          _slots[i] ?? HeroSpecId.protection,
+                          _looks[i],
+                          slot: i,
+                        ),
+                        dimmed: _slots[i] == null,
                         onTap: () => _selectSlot(i),
                       ),
                     ),
@@ -531,6 +532,7 @@ class _SlotCard extends StatelessWidget {
     required this.selected,
     required this.onTap,
     required this.hero,
+    this.dimmed = false,
   });
 
   final int index;
@@ -539,6 +541,7 @@ class _SlotCard extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final PartyHero? hero;
+  final bool dimmed;
 
   @override
   Widget build(BuildContext context) {
@@ -554,10 +557,19 @@ class _SlotCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
             child: Column(
               children: [
-                if (hero == null)
-                  KenneySprite(asset: CustomAssets.heroKnight, size: 48)
-                else
-                  HeroDollSprite(hero: hero!, partyIndex: index, size: 48),
+                Opacity(
+                  opacity: dimmed ? 0.38 : 1,
+                  child: HeroDollSprite(
+                    hero: hero ??
+                        PartyHero.starting(
+                          name: 'Open',
+                          specId: HeroSpecId.protection,
+                          race: HeroRace.human,
+                        ),
+                    partyIndex: index,
+                    size: 48,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   def?.shortLabel ?? 'Pick spec',

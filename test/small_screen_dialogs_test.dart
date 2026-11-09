@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/gauntlet_pact.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
@@ -82,10 +83,13 @@ void main() {
     final director = await endgameDirector();
     await open(tester, (context) => confirmGauntletRun(context, director));
     expect(tester.takeException(), isNull);
-    final start = find.textContaining('START ·');
-    expect(start, findsOneWidget);
-    expect(start.hitTestable(), findsOneWidget);
-    await tester.tap(start);
+    expect(find.text('Recommended.'), findsOneWidget);
+    final recommended = GameLogic.recommendedGauntletPact(director.state);
+    final title = GauntletPacts.title(recommended);
+    final start = find.text(title);
+    expect(start, findsWidgets);
+    expect(start.hitTestable(), findsWidgets);
+    await tester.tap(start.first);
     await tester.pump();
     expect(director.state.inGauntlet, isTrue);
     expect(tester.takeException(), isNull);

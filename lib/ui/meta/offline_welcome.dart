@@ -117,6 +117,11 @@ Future<void> showOfflineProgressDialog(
       !gainLine.contains('Open ESSENCE');
   final openGold = canSpend && gainLine.contains('Open GOLD');
   final openEssence = canSpend && gainLine.contains('Open ESSENCE');
+  final shownGain = _welcomeGainVisible(
+    welcome: summary?.welcomeLead ?? '',
+    gainLine: gainLine,
+    goldGained: summary?.goldGained ?? 0,
+  );
   var showWatch = summary?.welcomeBackAdOffer == true;
   var watchBusy = false;
   var adNote = '';
@@ -127,7 +132,55 @@ Future<void> showOfflineProgressDialog(
     context: context,
     barrierDismissible: false,
     barrierColor: MenuChrome.scrim,
-    builder: (ctx) => MenuChrome.dialog(
+    builder: (ctx) {
+      final media = MediaQuery.of(ctx);
+      final crowded =
+          media.textScaler.scale(1) > 1.2 || media.size.height < 700;
+      final greyActions = <Widget>[
+        if (openGold)
+          GameButton(
+            label: 'OPEN GOLD',
+            expanded: false,
+            style: GameButtonStyle.grey,
+            onPressed: () => _openReturnSpend(
+              context,
+              ctx,
+              director,
+              menu,
+              home: home,
+              panel: HomeGoldPanel.forge,
+              route: MenuRoute.gold,
+            ),
+          )
+        else if (openEssence)
+          GameButton(
+            label: 'OPEN ESSENCE',
+            expanded: false,
+            style: GameButtonStyle.grey,
+            onPressed: () => _openReturnSpend(
+              context,
+              ctx,
+              director,
+              menu,
+              home: home,
+              panel: HomeGoldPanel.camp,
+              route: MenuRoute.essence,
+            ),
+          )
+        else if (showChaseCta)
+          GameButton(
+            label: readyLabel,
+            expanded: false,
+            style: GameButtonStyle.grey,
+            onPressed: () {
+              director.claimReturnRewards();
+              director.dismissOfflineSummary();
+              Navigator.pop(ctx);
+              readyAction?.call();
+            },
+          ),
+      ];
+      return MenuChrome.dialog(
       title: 'WELCOME BACK',
       // The dialog scrolls. A fixed 55% cap clipped Check-in on a
       // 1080×1920 phone (360×640 logical).
@@ -144,10 +197,10 @@ Future<void> showOfflineProgressDialog(
               style: GameTheme.readable(color: GameTheme.torchHot),
             ),
           ],
-          if (gainLine.isNotEmpty) ...[
+          if (shownGain.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
-              gainLine,
+              shownGain,
               style: GameTheme.readable(color: GameTheme.parchment),
             ),
           ],
@@ -280,51 +333,15 @@ Future<void> showOfflineProgressDialog(
                 );
               },
             ),
+          if (crowded)
+            for (final button in greyActions) ...[
+              const SizedBox(height: 8),
+              button,
+            ],
         ],
       ),
       actions: [
-        if (openGold)
-          GameButton(
-            label: 'OPEN GOLD',
-            expanded: false,
-            style: GameButtonStyle.grey,
-            onPressed: () => _openReturnSpend(
-              context,
-              ctx,
-              director,
-              menu,
-              home: home,
-              panel: HomeGoldPanel.forge,
-              route: MenuRoute.gold,
-            ),
-          )
-        else if (openEssence)
-          GameButton(
-            label: 'OPEN ESSENCE',
-            expanded: false,
-            style: GameButtonStyle.grey,
-            onPressed: () => _openReturnSpend(
-              context,
-              ctx,
-              director,
-              menu,
-              home: home,
-              panel: HomeGoldPanel.camp,
-              route: MenuRoute.essence,
-            ),
-          )
-        else if (showChaseCta)
-          GameButton(
-            label: readyLabel,
-            expanded: false,
-            style: GameButtonStyle.grey,
-            onPressed: () {
-              director.claimReturnRewards();
-              director.dismissOfflineSummary();
-              Navigator.pop(ctx);
-              readyAction?.call();
-            },
-          ),
+        if (!crowded) ...greyActions,
         GameButton(
           label: returnLabel,
           expanded: false,
@@ -355,8 +372,34 @@ Future<void> showOfflineProgressDialog(
           },
         ),
       ],
-    ),
+    );
+    },
   ).whenComplete(WebClickBridge.popLayer);
+}
+
+/// Drop a gain sentence that only repeats gold [welcome] already named.
+/// Keep a sentence that adds the next forge or CAMP buy.
+String _welcomeGainVisible({
+  required String welcome,
+  required String gainLine,
+  required int goldGained,
+}) {
+  if (gainLine.isEmpty || goldGained <= 0) return gainLine;
+  final grouped = OfflineProgressResult.groupedCount(goldGained);
+  if (!welcome.contains(grouped) || !gainLine.contains(grouped)) {
+    return gainLine;
+  }
+  final sentences = gainLine.split(RegExp(r'(?<=\.)\s+'));
+  final kept = <String>[];
+  for (final sentence in sentences) {
+    final repeatsBroughtGold =
+        sentence.contains(grouped) &&
+        sentence.toLowerCase().contains('brought back') &&
+        sentence.toLowerCase().contains('gold');
+    if (repeatsBroughtGold) continue;
+    kept.add(sentence);
+  }
+  return kept.join(' ').trim();
 }
 
 void _openReturnSpend(
