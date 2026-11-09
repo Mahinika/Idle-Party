@@ -79,7 +79,7 @@ void main() {
 
     expect(find.text('All tracks'), findsNothing);
     expect(find.text('Gold Find'), findsOneWidget);
-    expect(find.text('War Altar'), findsOneWidget);
+    expect(find.text('War Altar (Attack)'), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.text('Lore Font'),

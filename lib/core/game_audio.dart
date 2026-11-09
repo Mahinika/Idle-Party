@@ -1083,11 +1083,26 @@ abstract final class GameAudio {
     }
   }
 
+  /// Headless unit tests grant rewards before a binding exists. Haptics
+  /// need [ServicesBinding]; skip them instead of throwing.
+  static bool get _hapticsReady {
+    var ready = true;
+    assert(() {
+      try {
+        ServicesBinding.instance;
+      } on FlutterError {
+        ready = false;
+      }
+      return true;
+    }());
+    return ready;
+  }
+
   static bool coalesceLightHaptics = false;
   static DateTime? _lastLightHaptic;
 
   static void _haptic(Future<void> Function() pulse, {bool light = false}) {
-    if (!hapticsEnabled) return;
+    if (!hapticsEnabled || !_hapticsReady) return;
     if (light && coalesceLightHaptics) {
       final now = DateTime.now();
       final last = _lastLightHaptic;

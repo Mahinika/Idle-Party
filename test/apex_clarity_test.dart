@@ -424,7 +424,9 @@ void main() {
   testWidgets('opening CRAFT with no goal saves the party default', (
     tester,
   ) async {
-    final director = GameDirector.preview(initialState: _fresh());
+    final director = GameDirector.preview(
+      initialState: _fresh().copyWith(bossVictories: 1),
+    );
     try {
       await director.boot();
       expect(director.state.metaDepth.apexCraftClassId, isEmpty);
@@ -612,6 +614,7 @@ GameState _fresh() => GameLogic.createInitialState(now: DateTime.now());
 
 GameState _goal({int progress = 0, String mat = ''}) {
   return _fresh().copyWith(
+    bossVictories: 1,
     metaDepth: MetaDepthState(
       apexCraftClassId: 'warrior',
       apexCraftRoleTag: 'tank',

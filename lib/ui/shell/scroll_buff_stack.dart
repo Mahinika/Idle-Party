@@ -145,15 +145,13 @@ class _ScrollBuffPip extends StatelessWidget {
               ),
               if (on && chip.timeLabel.isNotEmpty) ...[
                 const SizedBox(height: 1),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    chip.timeLabel,
-                    maxLines: 1,
-                    softWrap: false,
-                    textAlign: TextAlign.center,
-                    style: GameTheme.combat(color: tint),
-                  ),
+                Text(
+                  chip.timeLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: false,
+                  textAlign: TextAlign.center,
+                  style: GameTheme.combat(color: tint),
                 ),
               ],
             ],

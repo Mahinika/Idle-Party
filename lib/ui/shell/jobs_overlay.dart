@@ -100,7 +100,7 @@ class JobsOverlay extends StatelessWidget {
             primary: true,
           ),
         ],
-        ShellLayout.gap(8),
+        ShellLayout.gap(2),
         for (var i = 0; i < state.missions.length; i++)
           Padding(
             padding: const EdgeInsets.only(bottom: 6),

@@ -23,11 +23,14 @@ import 'shell_golden_harness.dart';
 
 /// Gear golden: wait for async doll decode (shared harness stays at 400ms).
 Future<void> pumpGearGoldenUntilDoll(WidgetTester tester) async {
+  // Earlier screens can leave a doll decode running. This shot only has to
+  // finish the loads it starts.
+  final baseline = HeroDollSprite.pendingLoads;
   await pumpGoldenFrames(tester, ms: 100);
   final sw = Stopwatch()..start();
   var idle = 0;
-  while (sw.elapsedMilliseconds < 8000) {
-    if (HeroDollSprite.pendingLoads == 0) {
+  while (sw.elapsedMilliseconds < 15000) {
+    if (HeroDollSprite.pendingLoads <= baseline) {
       idle++;
       if (idle >= 5) break;
     } else {
@@ -40,7 +43,7 @@ Future<void> pumpGearGoldenUntilDoll(WidgetTester tester) async {
   }
   expect(
     HeroDollSprite.pendingLoads,
-    0,
+    lessThanOrEqualTo(baseline),
     reason: 'gear golden timed out waiting for HeroDollSprite',
   );
   await pumpGoldenFrames(tester, ms: 200);

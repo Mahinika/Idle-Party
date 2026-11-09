@@ -56,7 +56,7 @@ class ForgeOverlay extends StatefulWidget {
       if (move > 0) 'MOVE +$move%',
       if (haste > 0) 'HASTE +$haste%',
       if (crit > 0) 'CRIT +$crit%',
-      if (state.forgeMasterySheet > 0) 'MASTERY +${state.forgeMasterySheet}',
+      'MASTERY +${state.forgeMasterySheet}',
     ];
     return 'Bought: ${parts.join(' · ')}';
   }

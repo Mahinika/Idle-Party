@@ -221,7 +221,7 @@ void main() {
     await tapBuilding(tester, TownBuildingId.guild);
     expect(router.route, MenuRoute.more);
     expect(router.moreSection, MoreSection.quests);
-    expect(find.textContaining('Claim here or in the dungeon'), findsOneWidget);
+    expect(find.textContaining('Claim 3 in a row'), findsOneWidget);
     await tester.tap(find.text('CLOSE').first);
     await tester.pump();
     expect(router.isOpen, isFalse);

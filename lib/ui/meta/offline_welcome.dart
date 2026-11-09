@@ -141,6 +141,15 @@ Future<void> showOfflineProgressDialog(
               ' · ${summary.welcomeLead}',
               style: GameTheme.readable(color: GameTheme.torchHot),
             ),
+          ],
+          if (gainLine.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              gainLine,
+              style: GameTheme.readable(color: GameTheme.parchment),
+            ),
+          ],
+          if (summary != null) ...[
             if (summary.materialsLine.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(
@@ -275,6 +284,13 @@ Future<void> showOfflineProgressDialog(
               contract.upNextLine,
               style: GameTheme.readable(color: GameTheme.parchment),
             ),
+          if (contract.whyLine.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              contract.whyLine,
+              style: GameTheme.readable(color: GameTheme.parchment),
+            ),
+          ],
         ],
       ),
       actions: [
