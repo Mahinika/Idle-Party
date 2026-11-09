@@ -302,7 +302,7 @@ Future<void> confirmGauntletRun(
       context: context,
       barrierColor: MenuChrome.scrim,
       builder: (ctx) => MenuChrome.dialog(
-        title: 'Gauntlet climb',
+        title: 'Gauntlet',
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

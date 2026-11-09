@@ -38,7 +38,6 @@ Future<void> showOfflineProgressDialog(
   }
   final contract = ChaseContract.fromState(rewardState);
   final checkInLine = GameLogic.checkInWelcomeLine(rewardState);
-  final showCheckIn = checkInLine.isNotEmpty;
   final chase = contract.chase;
   final rows = summary?.highlightRows ?? const <(String, String)>[];
   // lootLead merged into welcomeLead in the dialog body.
@@ -113,6 +112,9 @@ Future<void> showOfflineProgressDialog(
     canOpenGold: canSpend && MenuTabs.showGold(rewardState),
     canOpenEssence: canSpend && MenuTabs.showCamp(rewardState),
   );
+  final showCheckIn = checkInLine.isNotEmpty &&
+      !gainLine.contains('wallet covers') &&
+      !gainLine.contains('Open ESSENCE');
   final openGold = canSpend && gainLine.contains('Open GOLD');
   final openEssence = canSpend && gainLine.contains('Open ESSENCE');
   var showWatch = summary?.welcomeBackAdOffer == true;
@@ -278,19 +280,6 @@ Future<void> showOfflineProgressDialog(
                 );
               },
             ),
-          const SizedBox(height: 10),
-          if (contract.upNextLine.isNotEmpty)
-            Text(
-              contract.upNextLine,
-              style: GameTheme.readable(color: GameTheme.parchment),
-            ),
-          if (contract.whyLine.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              contract.whyLine,
-              style: GameTheme.readable(color: GameTheme.parchment),
-            ),
-          ],
         ],
       ),
       actions: [

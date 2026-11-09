@@ -329,6 +329,9 @@ abstract final class HomeCatalog {
   static List<HomeEntry> of(HomePlace place) {
     final list = entries.where((e) => e.place == place).toList();
     list.sort((a, b) => a.order.compareTo(b.order));
+    if (place == HomePlace.menuGrid) {
+      return TownNavPolicy.filterMenuGrid(list, (e) => e.id);
+    }
     return TownNavPolicy.filterEntries(list, (e) => e.id);
   }
 }

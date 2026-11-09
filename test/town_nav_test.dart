@@ -8,16 +8,20 @@ void main() {
       final ids = HomeCatalog.entries.map((e) => e.id).toSet();
       expect(ids, containsAll(['watch', 'wisp', 'menu_watch', 'menu_wisp']));
       expect(ids, containsAll(['scrolls', 'menu_scrolls', 'starter_pouch']));
-      final shown = {
+      final rails = {
         ...HomeCatalog.of(HomePlace.leftRail),
         ...HomeCatalog.of(HomePlace.rightRail),
-        ...HomeCatalog.of(HomePlace.menuGrid),
       }.map((e) => e.id).toSet();
-      expect(shown.contains('watch'), isFalse);
-      expect(shown.contains('wisp'), isFalse);
-      expect(shown.contains('menu_watch'), isFalse);
-      expect(shown.contains('menu_wisp'), isFalse);
-      expect(shown, containsAll(['scrolls', 'menu_scrolls', 'starter_pouch']));
+      final menu = HomeCatalog.of(HomePlace.menuGrid).map((e) => e.id).toSet();
+      expect(rails.contains('watch'), isFalse);
+      expect(rails.contains('wisp'), isFalse);
+      expect(menu.contains('menu_watch'), isFalse);
+      expect(menu.contains('menu_wisp'), isFalse);
+      expect(rails, containsAll(['scrolls', 'quests', 'vault', 'daily']));
+      expect(menu.contains('menu_scrolls'), isFalse);
+      expect(menu.contains('menu_quests'), isFalse);
+      expect(menu.contains('menu_vault'), isFalse);
+      expect(menu, containsAll(['menu_patch', 'menu_settings', 'menu_craft']));
     });
 
     test('town filter drops duplicate powerup chips and keeps SCROLLS + POUCH', () {
@@ -28,22 +32,28 @@ void main() {
       expect(ids.contains('wisp'), isFalse);
       expect(ids.contains('menu_watch'), isFalse);
       expect(ids.contains('menu_wisp'), isFalse);
-      expect(ids, containsAll(['scrolls', 'menu_scrolls', 'starter_pouch']));
+      expect(ids, containsAll(['scrolls', 'starter_pouch']));
+      expect(ids.contains('menu_scrolls'), isFalse);
     });
 
-    test('SCROLLS is the one powerups home', () {
-      expect(TownNavPolicy.powerupsHomeIds, {'scrolls', 'menu_scrolls'});
+    test('SCROLLS is the one powerups home on rails', () {
+      expect(TownNavPolicy.powerupsHomeIds, {'scrolls'});
       expect(
         TownNavPolicy.duplicatePowerupIds,
         {'watch', 'wisp', 'menu_watch', 'menu_wisp'},
+      );
+      expect(
+        TownNavPolicy.duplicateMenuRailIds,
+        containsAll(['menu_scrolls', 'menu_quests', 'menu_vault']),
       );
     });
 
     test('WATCH/WISP never stay as town chips; POUCH stays while due', () {
       expect(TownNavPolicy.keepOnTownRails('scrolls'), isTrue);
-      expect(TownNavPolicy.keepOnTownRails('menu_scrolls'), isTrue);
+      expect(TownNavPolicy.keepOnMenuGrid('scrolls'), isFalse);
+      expect(TownNavPolicy.keepOnMenuGrid('menu_scrolls'), isFalse);
       expect(TownNavPolicy.keepOnTownRails('starter_pouch'), isTrue);
-      expect(TownNavPolicy.keepOnTownRails('menu_pouch'), isTrue);
+      expect(TownNavPolicy.keepOnMenuGrid('menu_pouch'), isFalse);
       expect(TownNavPolicy.keepOnTownRails('watch'), isFalse);
       expect(TownNavPolicy.keepOnTownRails('wisp'), isFalse);
       expect(TownNavPolicy.isDuplicatePowerupShortcut('menu_watch'), isTrue);
@@ -57,8 +67,9 @@ void main() {
       expect(watch.label, 'WATCH');
       expect(wisp.label, 'WISP');
       expect(scrolls.label, 'SCROLLS');
-      expect(TownNavPolicy.filterEntries(HomeCatalog.entries, (e) => e.id)
-          .map((e) => e.id),
+      expect(
+        TownNavPolicy.filterEntries(HomeCatalog.entries, (e) => e.id)
+            .map((e) => e.id),
         contains('scrolls'),
       );
     });

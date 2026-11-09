@@ -48,6 +48,7 @@ import 'shell/boost_ad_button.dart';
 import 'shell/scroll_buff_stack.dart';
 import 'hub/hub_today_card.dart';
 import 'hub/hub_world_map.dart';
+import 'shell/home/director_select.dart';
 import 'shell/shell_layout.dart';
 
 /// Idle Party hub: dungeon select / meta / ascend.
@@ -802,32 +803,44 @@ class _HubScreenState extends State<HubScreen>
                             children: [
                               // Torch bloom animates alone above — header must
                               // not rebuild 60×/s (wallet + HubChase.forState).
-                              HubHeader(
-                                ascensionLevel: state.ascensionLevel,
-                                gold: state.gold,
-                                essence: state.essence,
-                                willRank: state.willRankTitle,
-                                collectionScore: state.collectionScore,
-                                displayTitle: state.displayTitle,
-                                onOpenSettings: () => router.open(
-                                  MenuRoute.more,
-                                  more: MoreSection.settings,
-                                ),
-                                onOpenAscend: () =>
-                                    confirmAscend(context, director),
-                                incomeLine: GoldIncome.hubRateLine(state),
-                                hubGoldRate: hubChaseOwnsEndgameRow(chase.kind)
-                                    ? null
-                                    : GoldIncome.hubRateCompact(state),
-                                multiplierLine: GoldIncome.multiplierLine(
-                                  state,
-                                ),
-                                plainChrome: GameLogic.plainPlayerChrome(state),
-                                showEssence: MenuTabs.showCamp(state),
-                                dimIncome: hubChaseOwnsEndgameRow(chase.kind),
-                                huntHint: _shortHuntHint(chase),
-                                blessingStacks: state.metaDepth.ascendBlessings,
-                                showBlessingStacks: MenuTabs.showKeep(state),
+                              DirectorSelect<String>(
+                                director: director,
+                                select: (s) =>
+                                    '${s.gold}|${s.essence}|${s.ascensionLevel}|'
+                                    '${s.willRankTitle}|${s.collectionScore}|'
+                                    '${s.displayTitle}|${s.metaDepth.ascendBlessings}|'
+                                    '${MenuTabs.showCamp(s)}|${_shortHuntHint(HubChase.forState(s))}',
+                                builder: (context, s) {
+                                  final hubChase = HubChase.forState(s);
+                                  return HubHeader(
+                                    ascensionLevel: s.ascensionLevel,
+                                    gold: s.gold,
+                                    essence: s.essence,
+                                    willRank: s.willRankTitle,
+                                    collectionScore: s.collectionScore,
+                                    displayTitle: s.displayTitle,
+                                    onOpenSettings: () => router.open(
+                                      MenuRoute.more,
+                                      more: MoreSection.settings,
+                                    ),
+                                    onOpenAscend: () =>
+                                        confirmAscend(context, director),
+                                    incomeLine: GoldIncome.hubRateLine(s),
+                                    hubGoldRate:
+                                        hubChaseOwnsEndgameRow(hubChase.kind)
+                                        ? null
+                                        : GoldIncome.hubRateCompact(s),
+                                    multiplierLine: GoldIncome.multiplierLine(s),
+                                    plainChrome:
+                                        GameLogic.plainPlayerChrome(s),
+                                    showEssence: MenuTabs.showCamp(s),
+                                    dimIncome:
+                                        hubChaseOwnsEndgameRow(hubChase.kind),
+                                    huntHint: _shortHuntHint(hubChase),
+                                    blessingStacks: s.metaDepth.ascendBlessings,
+                                    showBlessingStacks: MenuTabs.showKeep(s),
+                                  );
+                                },
                               ),
                               const SizedBox(height: 2),
                               _hubAscendTrack(state),

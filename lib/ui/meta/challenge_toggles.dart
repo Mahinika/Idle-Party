@@ -318,7 +318,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 if (vaultReady) ...[
                   const SizedBox(height: 6),
                   GameButton(
-                    label: 'CLAIM VAULT  +${vaultE}e · +1 Cinder',
+                    label:
+                        'CLAIM VAULT · +${OfflineProgressResult.groupedCount(vaultE)} essence · +1 Cinder',
                     onPressed: director.claimDailyVault,
                   ),
                 ],

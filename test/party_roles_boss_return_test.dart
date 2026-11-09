@@ -319,9 +319,8 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    final next = tester.widget<Text>(find.textContaining('Up next:'));
-    expect(next.style?.color, isNot(GameTheme.accentWarn));
-    expect(find.textContaining('Why:'), findsOneWidget);
+    expect(find.textContaining('Up next:'), findsNothing);
+    expect(find.textContaining('Why:'), findsNothing);
     expect(find.textContaining('No gold or essence this time'), findsOneWidget);
     expect(find.text('OPEN GOLD'), findsNothing);
     expect(find.textContaining('missed'), findsNothing);
@@ -410,7 +409,7 @@ void main() {
             await tester.pumpAndSettle();
           }
           expect(tester.takeException(), isNull);
-          expect(find.textContaining('Up next'), findsOneWidget);
+          expect(find.textContaining('Up next'), findsNothing);
           expect(
             tester.getRect(find.text('WELCOME BACK')).top,
             greaterThanOrEqualTo(44),

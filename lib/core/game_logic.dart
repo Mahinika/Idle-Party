@@ -1588,24 +1588,25 @@ class GameLogic {
     final camp = cheapestSanctuaryNextCost(state);
     if (goldGained > 0 && state.gold >= cost) {
       final open = canOpenGold ? ' Open GOLD.' : '';
-      return 'You brought back $goldGained gold. The wallet covers '
+      return 'You brought back ${OfflineProgressResult.groupedCount(goldGained)} gold. The wallet covers '
           '$name ($cost g).$open';
     }
     if (essenceGained > 0 && state.essence >= camp) {
       final brought = goldGained > 0
-          ? 'You brought back $goldGained gold and $essenceGained essence. '
-          : 'You brought back $essenceGained essence. ';
+          ? 'You brought back ${OfflineProgressResult.groupedCount(goldGained)} gold and ${OfflineProgressResult.groupedCount(essenceGained)} essence. '
+          : 'You brought back ${OfflineProgressResult.groupedCount(essenceGained)} essence. ';
       final open = canOpenEssence ? 'Open ESSENCE.' : '';
-      return '${brought}The wallet covers CAMP ($camp). $open'.trim();
+      return '${brought}The wallet covers CAMP (${OfflineProgressResult.groupedCount(camp)} essence). $open'
+          .trim();
     }
     if (goldGained > 0) {
       final short = cost - state.gold;
-      return 'You brought back $goldGained gold. The next $name still '
-          'needs $short g.';
+      return 'You brought back ${OfflineProgressResult.groupedCount(goldGained)} gold. The next $name still '
+          'needs ${OfflineProgressResult.groupedCount(short)} g.';
     }
     final short = camp - state.essence;
-    return 'You brought back $essenceGained essence. The next CAMP buy still '
-        'needs $short. The fight earns the rest.';
+    return 'You brought back ${OfflineProgressResult.groupedCount(essenceGained)} essence. The next CAMP buy still '
+        'needs ${OfflineProgressResult.groupedCount(short)} essence. The fight earns the rest.';
   }
 
   static String _returnForgeName(PartyUpgradeType type) => switch (type) {

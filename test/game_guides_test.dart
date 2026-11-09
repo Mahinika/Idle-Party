@@ -124,6 +124,9 @@ void main() {
         reason: '${t.id} should not call SHOP a convenience-only store',
       );
     }
+    final income = topics.firstWhere((t) => t.id == 'income');
+    expect(income.body.toLowerCase(), contains('while the app is closed'));
+    expect(income.body.toLowerCase(), isNot(contains('overnight')));
     final basics = topics.firstWhere((t) => t.id == 'basics');
     expect(basics.body, contains('GEAR'));
     expect(basics.body, contains('GOLD'));
