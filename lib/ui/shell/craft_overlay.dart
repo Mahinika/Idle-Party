@@ -14,7 +14,11 @@ class CraftOverlay extends StatelessWidget {
     return ListView(
       padding: ShellLayout.scrollBodyPadding,
       children: [
-        ApexHubPanel(director: director),
+        Semantics(
+          container: true,
+          label: 'Craft trial station',
+          child: ApexHubPanel(director: director),
+        ),
         ShellLayout.gap(12),
       ],
     );

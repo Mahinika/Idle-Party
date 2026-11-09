@@ -101,7 +101,8 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
 
     return Padding(
       padding: ShellLayout.listPadding,
-      child: Column(
+      child: SingleChildScrollView(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           CampRatesSection(director: director),
@@ -143,6 +144,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
             ),
           ShellLayout.gap(12),
         ],
+      ),
       ),
     );
   }
@@ -285,13 +287,22 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     );
   }
 
+  static String _trackTitle(String track) => switch (track) {
+    'gold' => 'Gold Find',
+    'power' => 'War Altar (Attack)',
+    'vitality' => 'Life Well (Stamina)',
+    'defense' => 'Aegis (Armor)',
+    'xp' => 'Lore Font',
+    _ => track,
+  };
+
   Widget _bulkChooser(int buyCap, int effectiveBuy) {
     final options = <int>[1];
     if (buyCap >= 3) options.add(3);
     if (buyCap >= 5) options.add(5);
     if (buyCap > 5 && !options.contains(buyCap)) options.add(buyCap);
     final labels = [
-      for (final n in options) n == buyCap && n > 5 ? 'Max ×$n' : '×$n',
+      for (final n in options) n == buyCap && n > 5 ? 'Max $n' : '$n',
     ];
     var selected = options.indexOf(effectiveBuy);
     if (selected < 0) selected = 0;
@@ -314,7 +325,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       children: [
         for (final n in options)
           MenuChrome.chip(
-            label: n == buyCap && n > 5 ? 'Max ×$n' : '×$n',
+            label: n == buyCap && n > 5 ? 'Max $n' : '$n',
             selected: effectiveBuy == n,
             onTap: () => setState(() => _buyLevels = n),
           ),
@@ -435,7 +446,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
 
     return PowerUpgradeRow(
       accent: _trackAccent(track),
-      title: GameLogic.sanctuaryNames[track] ?? track,
+      title: _trackTitle(track),
       tag: recommended ? 'BEST' : null,
       subtitle: subtitle,
       detail: detail,

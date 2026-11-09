@@ -850,7 +850,7 @@ class _MenuSlider extends StatelessWidget {
           onTapDown: (d) => _setFromLocal(d.localPosition.dx, w),
           onHorizontalDragUpdate: (d) => _setFromLocal(d.localPosition.dx, w),
           child: SizedBox(
-            height: 28,
+            height: GameTheme.minTouch,
             child: Stack(
               alignment: Alignment.centerLeft,
               children: [

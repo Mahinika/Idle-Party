@@ -10,7 +10,6 @@ import '../../core/comeback_chest.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/menu_router.dart';
-import '../../core/gold_income.dart';
 import '../../core/home_layout.dart';
 import '../../core/hub_chase.dart';
 import '../../core/menu_alerts.dart';
@@ -39,11 +38,10 @@ Future<void> showOfflineProgressDialog(
   }
   final contract = ChaseContract.fromState(rewardState);
   final checkInLine = GameLogic.checkInWelcomeLine(rewardState);
-  final showCheckIn =
-      checkInLine.isNotEmpty && !contract.detail.contains('Check-in');
+  final showCheckIn = checkInLine.isNotEmpty;
   final chase = contract.chase;
   final rows = summary?.highlightRows ?? const <(String, String)>[];
-  final lead = summary?.lootLead;
+  // lootLead merged into welcomeLead in the dialog body.
   final chestLine = ComebackChest.waitingLine(
     rewardState,
     sanctuaryCost: GameLogic.cheapestSanctuaryNextCost(rewardState),
@@ -136,27 +134,13 @@ Future<void> showOfflineProgressDialog(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (lead != null) ...[
-            Text(lead, style: GameTheme.readable(color: GameTheme.torchHot)),
-            const SizedBox(height: 6),
-          ],
           if (summary != null) ...[
             Text(
-              'Away for ${OfflineProgressResult.formatOfflineDuration(summary.awayForSeconds)} · ${summary.welcomeLead}',
-              style: GameTheme.readable(color: GameTheme.parchment),
+              'Away for '
+              '${OfflineProgressResult.formatOfflineDuration(summary.awayForSeconds)}'
+              ' · ${summary.welcomeLead}',
+              style: GameTheme.readable(color: GameTheme.torchHot),
             ),
-            const SizedBox(height: 6),
-            Text(
-              summary.afkWhereLine,
-              style: GameTheme.section(color: GameTheme.mossLit),
-            ),
-            if (summary.awayReport.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(
-                summary.awayReport,
-                style: GameTheme.section(color: GameTheme.parchment),
-              ),
-            ],
             if (summary.materialsLine.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(
@@ -164,14 +148,13 @@ Future<void> showOfflineProgressDialog(
                 style: GameTheme.section(color: GameTheme.torchHot),
               ),
             ],
-            const SizedBox(height: 6),
-            Text(
-              GoldIncome.awayPromise(
-                summary.state,
-                wasInDungeon: summary.wasInDungeon,
+            if (summary.bestDrop.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                'Best find: ${summary.bestDrop}',
+                style: GameTheme.section(color: GameTheme.parchment),
               ),
-              style: GameTheme.section(color: GameTheme.mossLit),
-            ),
+            ],
           ],
           if (chestLine.isNotEmpty) ...[
             const SizedBox(height: 6),
@@ -193,8 +176,8 @@ Future<void> showOfflineProgressDialog(
           ],
           if (rows.isNotEmpty) ...[
             const SizedBox(height: 10),
-            for (final row in rows)
-              if (lead == null || !_lootAlreadySaid(row.$1))
+            for (final row in rows.take(OfflineProgressResult.maxHighlightRows))
+              if (!_lootAlreadySaid(row.$1))
                 MenuChrome.statRow(label: row.$1, value: row.$2),
           ],
           if (director.state.missions.any((m) => m.canClaim)) ...[
@@ -287,18 +270,11 @@ Future<void> showOfflineProgressDialog(
               },
             ),
           const SizedBox(height: 10),
-          Text(gainLine, style: GameTheme.readable(color: GameTheme.parchment)),
-          const SizedBox(height: 6),
-          Text(
-            contract.upNextLine,
-            style: GameTheme.readable(color: GameTheme.parchment),
-          ),
-          ShellLayout.gap(4),
-          ShellLayout.hint(contract.whyLine, maxLines: 2),
-          if (contract.detail.isNotEmpty) ...[
-            ShellLayout.gap(4),
-            ShellLayout.hint(contract.detail, maxLines: 3),
-          ],
+          if (contract.upNextLine.isNotEmpty)
+            Text(
+              contract.upNextLine,
+              style: GameTheme.readable(color: GameTheme.parchment),
+            ),
         ],
       ),
       actions: [
@@ -316,8 +292,8 @@ Future<void> showOfflineProgressDialog(
               panel: HomeGoldPanel.forge,
               route: MenuRoute.gold,
             ),
-          ),
-        if (openEssence)
+          )
+        else if (openEssence)
           GameButton(
             label: 'OPEN ESSENCE',
             expanded: false,
@@ -331,8 +307,8 @@ Future<void> showOfflineProgressDialog(
               panel: HomeGoldPanel.camp,
               route: MenuRoute.essence,
             ),
-          ),
-        if (showChaseCta)
+          )
+        else if (showChaseCta)
           GameButton(
             label: readyLabel,
             expanded: false,

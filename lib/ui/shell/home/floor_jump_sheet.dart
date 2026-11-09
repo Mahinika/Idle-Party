@@ -5,6 +5,7 @@ import '../../../core/game_logic.dart';
 import '../../game_theme.dart';
 import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
+import '../../web_click_bridge.dart';
 import '../shell_layout.dart';
 
 /// Same floor list the classic HUD menu used. Calls [GameDirector.travelToFloor].
@@ -35,21 +36,37 @@ Future<void> showFloorJumpSheet(
             ShellLayout.hint('Now F$here. Jump keeps the KEY clock running.', maxLines: 2),
             ShellLayout.gap(6),
             for (var f = 1; f <= maxFloor; f++)
-              ListTile(
-                dense: true,
-                title: Text(
-                  f == here
-                      ? 'F$f · here'
-                      : GameLogic.canTravelToFloor(state, f)
-                      ? 'F$f'
-                      : 'F$f · locked',
-                  style: GameTheme.readable(color: f == here
-                        ? GameTheme.torchHot
-                        : GameTheme.parchment),
-                ),
-                onTap: f != here && GameLogic.canTravelToFloor(state, f)
+              WebClickScope(
+                label: 'Floor $f',
+                onPressed: f != here && GameLogic.canTravelToFloor(state, f)
                     ? () => Navigator.pop(ctx, f)
                     : null,
+                child: Semantics(
+                  button: f != here && GameLogic.canTravelToFloor(state, f),
+                  label: f == here
+                      ? 'Floor $f, here'
+                      : GameLogic.canTravelToFloor(state, f)
+                      ? 'Floor $f'
+                      : 'Floor $f, locked',
+                  child: ListTile(
+                    dense: true,
+                    minVerticalPadding: 12,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                    title: Text(
+                      f == here
+                          ? 'F$f · here'
+                          : GameLogic.canTravelToFloor(state, f)
+                          ? 'F$f'
+                          : 'F$f · locked',
+                      style: GameTheme.readable(color: f == here
+                            ? GameTheme.torchHot
+                            : GameTheme.parchment),
+                    ),
+                    onTap: f != here && GameLogic.canTravelToFloor(state, f)
+                        ? () => Navigator.pop(ctx, f)
+                        : null,
+                  ),
+                ),
               ),
           ],
         ),

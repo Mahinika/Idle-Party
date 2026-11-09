@@ -84,8 +84,7 @@ abstract final class HubEndgameAct {
       hunt: HubEndgameHunt.ashen,
       shortLabel: 'ASHEN',
       title: 'Ashen Crown',
-      blurb:
-          'Weekly ticket · a different shipped cave each week · PRACTICE after',
+      blurb: 'Weekly ticket.\nA different shipped cave each week.',
       portraitDungeonId: 'ember',
       enterLabel: 'ASHEN CROWN',
       chaseKind: HubChaseKind.ashenCrown,

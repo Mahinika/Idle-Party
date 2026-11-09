@@ -95,14 +95,24 @@ class SelectedZoneCaption extends StatelessWidget {
             onTap: () => _showDetail(context),
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-              child: Center(
-                child: Text(
-                  _oneLineUnlocked(),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.section(color: GameTheme.parchmentDim),
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  KenneySprite(
+                    asset: KenneyAssets.dungeonIconFor(dungeon.id),
+                    size: 30,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      _oneLineUnlocked(),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.section(color: GameTheme.parchmentDim),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

@@ -7,6 +7,7 @@ import '../../core/build_stamp.dart';
 import '../../core/community_links.dart';
 import '../../core/meta_systems.dart';
 import '../../core/ability_mastery.dart';
+import '../../core/game_audio.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/local_reminders.dart';
@@ -221,6 +222,14 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           label: 'Screen shake',
           value: state.screenShake,
           onChanged: director.setScreenShake,
+        ),
+        const SizedBox(height: 8),
+        GameButton(
+          label: 'PLAY A HIT',
+          tip: 'Sample sound at the current SFX level.',
+          style: GameButtonStyle.grey,
+          dense: true,
+          onPressed: GameAudio.hit,
         ),
       ],
     );

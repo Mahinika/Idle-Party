@@ -156,7 +156,9 @@ class _MapScreenState extends State<MapScreen> {
         onPressed: onTap,
         child: Semantics(
           button: onTap != null,
-          label: title,
+          label: badge != null && badge.isNotEmpty
+              ? '$title. $body. Tickets: $badge.'
+              : '$title. $body',
           child: InkWell(
             onTap: onTap,
             child: DecoratedBox(
@@ -177,11 +179,14 @@ class _MapScreenState extends State<MapScreen> {
                         ],
                       ),
                     ),
-                    if (badge != null && badge.isNotEmpty)
-                      Text(
-                        badge,
-                        style: GameTheme.hint(color: GameTheme.torchHot),
+                    if (badge != null && badge.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      MenuChrome.chip(
+                        label: '$badge tickets',
+                        selected: true,
+                        tone: GameTheme.torchHot,
                       ),
+                    ],
                   ],
                 ),
               ),

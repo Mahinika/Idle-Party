@@ -551,11 +551,11 @@ void main() {
 
     expect(
       JobsOverlay.introLine(chainCount: 0),
-      contains('+5e'),
+      contains('+5 essence'),
     );
     expect(
       JobsOverlay.rewardLine(gold: 40, essence: 3),
-      '+40g +3e',
+      '+40g · +3 essence',
     );
     expect(JobsOverlay.chainClaimLabel(), 'CLAIM · chain +5e');
     expect(

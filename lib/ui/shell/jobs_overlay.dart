@@ -15,12 +15,12 @@ class JobsOverlay extends StatelessWidget {
   /// One line so the last claim is not pushed under the bottom bar.
   /// The 3rd claim always pays +5 essence.
   static String introLine({required int chainCount}) {
-    return 'Claim here or in the dungeon. Chain $chainCount/3 · +5e';
+    return 'Claim 3 in a row for +5 essence. Progress: $chainCount/3.';
   }
 
   static String rewardLine({required int gold, required int essence}) {
     if (essence <= 0) return '+${formatGold(gold)}';
-    return '+${formatGold(gold)} +${formatCount(essence)}e';
+    return '+${formatGold(gold)} · +$essence essence';
   }
 
   static String chainClaimLabel() => 'CLAIM · chain +5e';
@@ -30,7 +30,7 @@ class JobsOverlay extends StatelessWidget {
     required int rerollsLeft,
   }) {
     if (adFree) return 'REROLL · FREE ($rerollsLeft left)';
-    return 'WATCH AD · REROLL';
+    return 'NEW GOAL';
   }
 
   static String rerollAdLine() =>
@@ -63,7 +63,9 @@ class JobsOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: director,
-      builder: (context, _) => _board(context),
+      builder: (context, _) => SingleChildScrollView(
+        child: _board(context),
+      ),
     );
   }
 
@@ -78,7 +80,7 @@ class JobsOverlay extends StatelessWidget {
       children: [
         ShellLayout.hint(
           introLine(chainCount: state.metaDepth.jobChainCount),
-          maxLines: 1,
+          maxLines: 2,
         ),
         if (claimable == 0) ...[
           ShellLayout.gap(4),
