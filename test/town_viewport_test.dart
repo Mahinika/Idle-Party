@@ -8,6 +8,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/core/town_access.dart';
+import 'package:idle_party/models/mission.dart';
 import 'package:idle_party/models/town_building.dart';
 import 'package:idle_party/ui/shell/home/town_viewport.dart';
 
@@ -101,8 +102,9 @@ void main() {
 
   group('CustomAssets town files', () {
     test('every town asset exists on disk', () {
-      expect(CustomAssets.townAssetPaths.length, 33);
+      expect(CustomAssets.townAssetPaths.length, 35);
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townPath));
+      expect(CustomAssets.townAssetPaths, contains(CustomAssets.townApproach));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townFolk));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townTreeRound));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townTreeTall));
@@ -110,6 +112,7 @@ void main() {
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townNameplate));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townPennants));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townLanterns));
+      expect(CustomAssets.townAssetPaths, contains(CustomAssets.townAlert));
       for (final path in CustomAssets.townAssetPaths) {
         expect(File(path).existsSync(), isTrue, reason: path);
       }
@@ -176,6 +179,37 @@ void main() {
       expect(find.text('VAULT'), findsOneWidget);
       expect(find.text('ENTER'), findsOneWidget);
       expect(find.bySemanticsLabel('Party resting in town'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a guild claim marks the building with the pixel spark', (
+      tester,
+    ) async {
+      const mission = Mission(
+        id: 'polish',
+        type: MissionType.defeatEnemies,
+        title: 'Wolves',
+        target: 1,
+        progress: 1,
+        goldReward: 5,
+        essenceReward: 1,
+      );
+      director = GameDirector.preview(
+        initialState: newTown().copyWith(missions: const [mission]),
+      );
+      router = MenuRouter();
+      await pumpTown(tester);
+      final alert = find.byKey(const ValueKey('town-alert-guild'));
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('town-guild')),
+          matching: alert,
+        ),
+        findsOneWidget,
+      );
+      final image = tester.widget<Image>(alert);
+      expect(image.filterQuality, FilterQuality.none);
+      expect((image.image as AssetImage).assetName, CustomAssets.townAlert);
       expect(tester.takeException(), isNull);
     });
 

@@ -13,9 +13,9 @@ Owned Idle Party pixel art for the out-of-dungeon town.
 | License | Same as the rest of `assets/custom/` — original game art |
 
 Three painted facade tiers (timber / plaster or ashlar / banners). AL10
-pennants and AL20 lanterns are Flutter overlays. Townsfolk frames share
+pennants and AL20 lanterns are owned pixel strips. Townsfolk frames share
 one sheet. `TownFolkSheet` in Dart uses the same 96×112 cells and
-draws them at about half size with nearest-neighbor.
+draws them beside the party with nearest-neighbor.
 
 Deterministic: no RNG. Regenerate:
 
@@ -29,20 +29,22 @@ python3 tool/generate_town_art.py
 |------|--------|
 | Ink (32, 22, 18), 1 px contour | Same warm ink as the heroes |
 | Light | Upper-left, in clusters on each stone, tile, and fold |
-| Ground | Quiet meadow, stepping stones, four different plantings |
+| Ground | Soft lawn, 480×960, seamless. Cobbles and flowers sit on the paths |
 | Roofs | Individual tiles. Guild slate, houses terracotta, market a folded awning |
 | Windows | Amber glass, wood mullions |
-| People | Three villagers at hero source size, idle + 4 walk frames |
-| Scale | `FilterQuality.none`. Folk source is 96×112 and draws near 48×56 |
+| People | Smith, courier, and gardener. Idle + 4 walk frames |
+| Scale | `FilterQuality.none`. Folk are authored for the 48×56 yard |
 
 ## Files
 
 | File | Use |
 |------|-----|
 | backdrop.png | Banded sky, clouds, ridge, distant roof |
-| ground.png | Repeating grass tile |
-| path.png | One ragged stepping-stone course, 360×40, transparent gaps |
-| tree_round.png / tree_tall.png | Clumped canopies |
+| ground.png | Soft lawn, 480×960, edges meet |
+| path.png | Cobble street, 360×36, flower beds at the ends |
+| approach.png | Cobble spur, 36×192, mortar meets at the wrap |
+| alert.png | Claim spark on guild and vault |
+| tree_round.png / tree_tall.png | Leaf clumps, blossoms, fruit |
 | flowers.png / shrub.png / wild.png / herbs.png | Four different plantings |
 | meadow.png / thicket.png / scuff.png | Unique lawn clumps, placed once |
 | worn.png | Small worn patch for a doorway |

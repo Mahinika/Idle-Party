@@ -35,6 +35,8 @@ class TownSceneLayout {
     required this.folkScale,
     required this.courtyardPath,
     required this.doorPath,
+    required this.streets,
+    required this.approaches,
     required this.trees,
     required this.plantings,
     required this.thresholds,
@@ -54,6 +56,13 @@ class TownSceneLayout {
   final int folkScale;
   final Rect courtyardPath;
   final Rect doorPath;
+
+  /// Cobble streets. Horizontal, painted from `path.png`.
+  final List<Rect> streets;
+
+  /// Cobble spurs that join the streets. Painted from `approach.png`.
+  final List<Rect> approaches;
+
   final List<Rect> trees;
   final List<TownPlanting> plantings;
 
@@ -174,8 +183,7 @@ class TownSceneLayout {
       math.max(8, w - 8),
       frontTop - 1,
     );
-    // 1 means "draw them". The painter nearest-neighbors the 96×112 cell
-    // down beside the party, and shrinks further when the yard is short.
+    // 1 means "draw them" at the 48×56 yard size. A short yard shrinks them.
     var folkScale = 0;
     if (lane.width >= 48 && lane.height >= 16) {
       folkScale = 1;
@@ -199,8 +207,28 @@ class TownSceneLayout {
       plantings.add(
         TownPlanting(Rect.fromLTWH(w - 52, lane.bottom - 48, 52, 44), 'herbs'),
       );
-      plantings.add(
-        TownPlanting(Rect.fromLTWH(18, lane.top + 2, 72, 36), 'scuff'),
+      // One worn patch in the open lawn, off the cobbles.
+      if (lane.height >= 96) {
+        plantings.add(
+          TownPlanting(Rect.fromLTWH(18, lane.top + 52, 72, 36), 'scuff'),
+        );
+      }
+    }
+    final streets = <Rect>[];
+    final approaches = <Rect>[];
+    final laneH = frontTop - backBottom;
+    if (laneH < 88) {
+      final pathH = math.min(36.0, math.max(12.0, laneH));
+      streets.add(Rect.fromLTWH(0, frontTop - pathH, w, pathH));
+    } else {
+      // A street at the back doors, a street along the shop roofs,
+      // and one spur that joins them. The lawn on either side stays open.
+      streets.add(Rect.fromLTWH(8, backBottom - 4, math.max(0, w - 16), 36));
+      streets.add(Rect.fromLTWH(0, frontTop - 36, w, 36));
+      final spurTop = backBottom + 32;
+      final spurBottom = frontTop - 36;
+      approaches.add(
+        Rect.fromLTWH(well.center.dx - 16, spurTop, 32, spurBottom - spurTop),
       );
     }
     final grass = math.max(0.0, backBottom - gh - 6);
@@ -255,6 +283,8 @@ class TownSceneLayout {
       lane: lane,
       folkScale: folkScale,
       courtyardPath: Rect.fromLTRB(0, backBottom - 8, w, frontTop),
+      streets: streets,
+      approaches: approaches,
       doorPath: Rect.fromLTRB(
         0,
         frontBottom - 16,

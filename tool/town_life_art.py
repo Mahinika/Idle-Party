@@ -1,14 +1,11 @@
 """Ground and townsfolk for the town square.
 
-Buildings stay in generate_town_art.py. This file is the lived-in ground
-and the hero-resolution villagers. Source cells are 96×112. The game draws
-them with nearest-neighbor down to about the party hero's height.
-
-Owned pixels only. Deterministic.
+Buildings stay in generate_town_art.py. This file paints the lawn and the
+villagers. Folk cells are 96×112, authored on a 48×56 grid and doubled so
+a nearest-neighbor draw at 48×56 keeps a solid 1px outline, a face, and
+the clothes. Owned pixels only. Deterministic: no RNG.
 """
 from __future__ import annotations
-
-import math
 
 from PIL import Image
 
@@ -18,9 +15,64 @@ CELL_W = 96
 CELL_H = 112
 FRAMES = 5
 PEOPLE = 3
+LOGICAL_W = CELL_W // 2
+LOGICAL_H = CELL_H // 2
 
 PLANT_W = 64
 PLANT_H = 52
+
+# Spring lawn. Dark to light. Upper-left is the light.
+GRASS = [
+    (22, 78, 34),
+    (34, 112, 40),
+    (46, 142, 46),
+    (62, 168, 54),
+    (86, 186, 64),
+    (118, 204, 78),
+    (158, 214, 96),
+    (198, 220, 118),
+]
+CLOVER = [
+    (28, 96, 62),
+    (42, 128, 78),
+    (64, 158, 96),
+    (96, 184, 120),
+]
+SUN = [
+    (176, 196, 64),
+    (198, 210, 78),
+    (220, 214, 96),
+    (236, 224, 120),
+]
+DIRT = [
+    (96, 62, 36),
+    (128, 84, 48),
+    (162, 112, 64),
+    (196, 146, 90),
+    (224, 182, 124),
+]
+STONE = [
+    (78, 68, 56),
+    (112, 98, 82),
+    (148, 132, 110),
+    (182, 166, 142),
+    (214, 200, 176),
+    (236, 226, 208),
+]
+STONE_GREY = [
+    (72, 78, 82),
+    (104, 112, 116),
+    (140, 148, 152),
+    (176, 184, 186),
+    (210, 216, 214),
+    (232, 236, 232),
+]
+MOSS = [
+    (24, 72, 44),
+    (36, 104, 58),
+    (52, 136, 72),
+    (78, 164, 90),
+]
 
 
 def rgba(rgb: tuple[int, int, int]) -> tuple[int, int, int, int]:
@@ -45,6 +97,9 @@ class Pix:
         if c is None or not (0 <= x < self.w and 0 <= y < self.h):
             return
         self.px[y * self.w + x] = c if len(c) == 4 else (*c, 255)
+
+    def put_wrap(self, x: int, y: int, c: tuple[int, int, int] | tuple[int, int, int, int]) -> None:
+        self.put(x % self.w, y % self.h, c)
 
     def get(self, x: int, y: int) -> tuple[int, int, int, int] | None:
         if not (0 <= x < self.w and 0 <= y < self.h):
@@ -76,551 +131,481 @@ class Pix:
         for x, y in add:
             self.px[y * self.w + x] = ink
 
+    def blit(self, src: Pix, ox: int, oy: int) -> None:
+        for y in range(src.h):
+            for x in range(src.w):
+                c = src.px[y * src.w + x]
+                if c is not None:
+                    self.put(ox + x, oy + y, c)
+
 
 def band(light: float, n: int) -> int:
-    # Hard steps. Upper-left is light.
     t = (light + 1.05) / 2.15
     return clamp(int(t * n), n)
 
 
-def disc(pix: Pix, cx: int, cy: int, rx: int, ry: int, ramp: list[tuple[int, int, int]], y0: int | None = None, y1: int | None = None) -> None:
-    for y in range(cy - ry, cy + ry + 1):
-        if y0 is not None and y < y0:
-            continue
-        if y1 is not None and y >= y1:
-            continue
-        for x in range(cx - rx - 1, cx + rx + 2):
-            nx = (x - cx) / max(1, rx)
-            ny = (y - cy) / max(1, ry)
-            wob = 0.06 * math.sin(x * 0.9 + y * 0.4)
-            if nx * nx + ny * ny > 1.0 + wob:
-                continue
-            tone = band(0.05 - 0.72 * nx - 0.55 * ny, len(ramp))
-            pix.put(x, y, ramp[tone])
+def _hash(x: int, y: int) -> int:
+    n = (x * 374761393 + y * 668265263) & 0xFFFFFFFF
+    n = (n ^ (n >> 13)) * 1274126177 & 0xFFFFFFFF
+    return n
 
 
-def column(pix: Pix, x: int, y: int, w: int, h: int, ramp: list[tuple[int, int, int]]) -> None:
-    for yy in range(y, y + h):
-        for xx in range(x, x + w):
-            nx = (xx - x) / max(1, w - 1) * 2 - 1
-            ny = (yy - y) / max(1, h - 1)
-            pix.put(xx, yy, ramp[band(0.15 - 0.8 * nx - 0.35 * ny, len(ramp))])
+def _noise(x: int, y: int, cell: int, w: int = 480, h: int = 960) -> float:
+    # The lattice only meets itself when the cell divides both sides.
+    if w % cell or h % cell:
+        raise ValueError(f"noise cell {cell} must divide the {w}x{h} tile")
+    x %= w
+    y %= h
+    x0 = (x // cell) * cell
+    y0 = (y // cell) * cell
+    fx = (x - x0) / cell
+    fy = (y - y0) / cell
+    fx = fx * fx * (3 - 2 * fx)
+    fy = fy * fy * (3 - 2 * fy)
+    x1 = (x0 + cell) % w
+    y1 = (y0 + cell) % h
+
+    def hv(px: int, py: int) -> float:
+        return (_hash(px, py) & 1023) / 1023
+
+    v00 = hv(x0, y0)
+    v10 = hv(x1, y0)
+    v01 = hv(x0, y1)
+    v11 = hv(x1, y1)
+    return v00 * (1 - fx) * (1 - fy) + v10 * fx * (1 - fy) + v01 * (1 - fx) * fy + v11 * fx * fy
 
 
-# Ramps, dark to light. Close to the hero paint: warm skin, wool, leather, iron.
-SKIN = [
-    (78, 46, 34),
-    (112, 68, 48),
-    (148, 96, 68),
-    (186, 128, 92),
-    (214, 160, 122),
-    (236, 196, 162),
-    (250, 226, 204),
-]
-HAIR_D = [
-    (22, 12, 10),
-    (42, 24, 16),
-    (68, 38, 24),
-    (98, 58, 34),
-    (132, 82, 48),
-    (168, 112, 68),
-]
-HAIR_L = [
-    (62, 36, 18),
-    (98, 58, 28),
-    (138, 86, 40),
-    (176, 118, 58),
-    (208, 154, 86),
-    (232, 190, 128),
-]
-HAIR_R = [
-    (72, 28, 24),
-    (112, 48, 36),
-    (150, 72, 52),
-    (186, 104, 74),
-    (214, 140, 108),
-    (236, 176, 148),
-]
-MOSS = [
-    (22, 40, 32),
-    (32, 62, 46),
-    (44, 86, 60),
-    (62, 112, 76),
-    (88, 140, 96),
-    (122, 168, 122),
-    (164, 196, 154),
-]
-LEATHER = [
-    (48, 28, 16),
-    (78, 46, 26),
-    (112, 68, 36),
-    (146, 96, 52),
-    (178, 128, 74),
-    (210, 164, 108),
-]
-WOOL = [
-    (28, 40, 68),
-    (40, 58, 96),
-    (56, 80, 124),
-    (78, 106, 150),
-    (108, 136, 176),
-    (146, 170, 200),
-    (186, 206, 220),
-]
-ROSE = [
-    (78, 36, 48),
-    (112, 52, 66),
-    (148, 74, 90),
-    (180, 104, 116),
-    (206, 140, 146),
-    (228, 178, 176),
-    (244, 214, 206),
-]
-CREAM = [
-    (120, 96, 72),
-    (156, 128, 98),
-    (190, 162, 128),
-    (216, 192, 160),
-    (234, 216, 190),
-    (248, 238, 222),
-]
-IRON = [
-    (24, 26, 30),
-    (44, 48, 54),
-    (70, 76, 84),
-    (104, 112, 122),
-    (148, 156, 166),
-    (196, 204, 212),
-    (230, 234, 236),
-]
-BOOT = [
-    (18, 12, 10),
-    (36, 24, 18),
-    (58, 38, 28),
-    (86, 58, 40),
-    (120, 84, 58),
-]
-# Same ramp as the backdrop grass in generate_town_art.py.
-GRASS = [
-    (36, 78, 40),
-    (48, 98, 48),
-    (62, 118, 54),
-    (78, 138, 62),
-    (104, 158, 74),
-    (138, 176, 92),
-]
-LEAF = [
-    (18, 48, 26),
-    (28, 74, 34),
-    (42, 104, 44),
-    (64, 132, 56),
-    (96, 160, 72),
-    (140, 186, 98),
-]
-STONE = [
-    (70, 58, 44),
-    (102, 84, 62),
-    (136, 114, 84),
-    (168, 146, 112),
-    (198, 178, 144),
-    (224, 208, 180),
-]
+def _shade_rect(pix: Pix, x: int, y: int, w: int, h: int, ramp: list[tuple[int, int, int]]) -> None:
+    for yy in range(h):
+        for xx in range(w):
+            nx = xx / max(1, w - 1) * 2 - 1
+            ny = yy / max(1, h - 1)
+            pix.put(x + xx, y + yy, ramp[band(0.2 - 0.85 * nx - 0.45 * ny, len(ramp))])
 
 
-def _eye(pix: Pix, x: int, y: int) -> None:
-    pix.rect(x, y, 5, 3, (250, 244, 236))
-    pix.rect(x + 2, y + 1, 2, 2, (36, 22, 28))
-    pix.put(x + 1, y, (255, 255, 250))
-    pix.put(x, y, SKIN[2])
-    pix.rect(x, y - 1, 5, 1, SKIN[1])
+def _is_grass(c: tuple[int, int, int, int] | None) -> bool:
+    if c is None:
+        return False
+    rgb = c[:3]
+    return rgb in GRASS or rgb in CLOVER or rgb in SUN
 
 
-def _head(pix: Pix, cx: int, top: int, hair: list[tuple[int, int, int]], style: str) -> None:
-    disc(pix, cx, top + 16, 16, 15, SKIN)
-    # Ears.
-    column(pix, cx - 18, top + 14, 4, 6, SKIN)
-    column(pix, cx + 15, top + 14, 4, 6, SKIN)
-    pix.put(cx - 17, top + 16, SKIN[2])
-    pix.put(cx + 17, top + 16, SKIN[1])
-    # Neck shadow under the jaw.
-    pix.rect(cx - 5, top + 28, 11, 3, SKIN[1])
-    _eye(pix, cx - 11, top + 15)
-    _eye(pix, cx + 4, top + 15)
-    # Nose and mouth.
-    pix.put(cx - 1, top + 20, SKIN[2])
-    pix.put(cx, top + 21, SKIN[1])
-    pix.rect(cx - 3, top + 24, 6, 1, (168, 96, 88))
-    pix.put(cx - 2, top + 25, (120, 64, 60))
-    pix.put(cx + 1, top + 25, (120, 64, 60))
-    # Cheek.
-    pix.put(cx - 8, top + 21, SKIN[5])
-    pix.put(cx + 7, top + 21, SKIN[4])
-    if style == "cap":
-        disc(pix, cx, top + 8, 17, 10, hair, y1=top + 14)
-        pix.rect(cx - 18, top + 10, 36, 4, hair[2])
-        pix.rect(cx - 18, top + 10, 36, 1, hair[4])
-        pix.rect(cx - 20, top + 13, 6, 3, hair[1])
-        pix.rect(cx + 14, top + 13, 6, 3, hair[1])
-        # Brim shadow on the brow.
-        pix.rect(cx - 14, top + 13, 28, 2, hair[0])
-    elif style == "bun":
-        disc(pix, cx, top + 8, 16, 9, hair, y1=top + 16)
-        disc(pix, cx + 10, top - 1, 7, 7, hair)
-        pix.put(cx + 8, top - 4, hair[4])
-        pix.put(cx + 12, top + 2, hair[1])
-        # Side locks.
-        column(pix, cx - 16, top + 12, 4, 12, hair)
-        column(pix, cx + 13, top + 14, 3, 8, hair)
-        pix.rect(cx - 8, top + 6, 6, 2, hair[4])
-    else:
-        disc(pix, cx, top + 7, 17, 10, hair, y1=top + 15)
-        column(pix, cx - 17, top + 10, 4, 10, hair)
-        column(pix, cx + 14, top + 11, 4, 8, hair)
-        pix.rect(cx - 10, top + 4, 8, 2, hair[5] if len(hair) > 5 else hair[4])
-        pix.put(cx - 12, top + 8, hair[4])
-        # A couple of strands over the brow.
-        pix.put(cx - 6, top + 13, hair[2])
-        pix.put(cx - 5, top + 14, hair[1])
-        pix.put(cx + 4, top + 13, hair[2])
-
-
-def _boot(pix: Pix, x: int, y: int, w: int = 10) -> None:
-    column(pix, x, y, w, 8, BOOT)
-    pix.rect(x - 1, y + 6, w + 3, 3, BOOT[0])
-    pix.rect(x, y + 6, w, 1, BOOT[3])
-    pix.put(x + 1, y + 1, BOOT[4])
-
-
-def _hand(pix: Pix, x: int, y: int) -> None:
-    disc(pix, x + 2, y + 2, 3, 3, SKIN)
-    pix.put(x + 4, y + 1, SKIN[5])
-    pix.put(x, y + 3, SKIN[2])
-
-
-def _leg(pix: Pix, x: int, hip: int, foot: int, ramp: list[tuple[int, int, int]]) -> None:
-    h = max(6, foot - hip)
-    # Thigh a little wider than the shin.
-    column(pix, x, hip, 8, h // 2, ramp)
-    column(pix, x + 1, hip + h // 2, 6, h - h // 2, ramp)
-    pix.rect(x + 1, hip + h // 2, 6, 1, ramp[1])
-    _boot(pix, x, foot - 2, 8)
-
-
-def _arm(pix: Pix, x: int, y: int, reach: int, ramp: list[tuple[int, int, int]], forward: bool) -> None:
-    # Upper arm, then a forearm that swings.
-    column(pix, x, y, 6, 10, ramp)
-    fx = x + (3 if forward else -2)
-    fy = y + 8
-    column(pix, fx, fy, 5, 8 + (1 if forward else 0), ramp)
-    pix.rect(fx, fy, 5, 1, ramp[min(4, len(ramp) - 1)])
-    _hand(pix, fx, fy + 7)
-
-
-def _hammer(pix: Pix, x: int, y: int) -> None:
-    column(pix, x + 6, y + 8, 4, 20, LEATHER)
-    pix.rect(x + 6, y + 8, 4, 1, LEATHER[4])
-    pix.rect(x, y, 18, 8, IRON[3])
-    pix.rect(x, y, 18, 2, IRON[6])
-    pix.rect(x, y + 6, 18, 2, IRON[1])
-    pix.rect(x + 16, y, 2, 8, IRON[2])
-    pix.put(x + 4, y + 3, IRON[6])
-    pix.put(x + 10, y + 4, IRON[2])
-
-
-def _person(pix: Pix, ox: int, oy: int, frame: int, kind: int) -> None:
-    """One villager inside a 96×112 cell. Frame 0 idle, 1–4 walk, facing right."""
-    if kind == 0:
-        cloth, hair, style = MOSS, HAIR_D, "short"
-    elif kind == 1:
-        cloth, hair, style = WOOL, HAIR_L, "cap"
-    else:
-        cloth, hair, style = ROSE, HAIR_R, "bun"
-
-    bob = {0: 0, 1: 0, 2: -2, 3: 0, 4: -1}[frame]
-    cx = ox + 48
-    top = oy + 10 + bob
-    _head(pix, cx, top, hair, style)
-
-    # Torso.
-    column(pix, cx - 14, top + 30, 28, 28, cloth)
-    # Shoulder light and side shadow already in column. Collar.
-    pix.rect(cx - 8, top + 30, 16, 3, cloth[min(5, len(cloth) - 1)])
-    pix.rect(cx - 3, top + 32, 6, 4, SKIN[3])
-    # A neckerchief. The color break has to survive a 2:1 downsample.
-    scarf = (150, 42, 48) if kind != 1 else (48, 72, 120)
-    pix.rect(cx - 7, top + 29, 14, 4, scarf)
-    pix.rect(cx - 2, top + 32, 4, 5, scarf)
-    pix.put(cx - 5, top + 30, (210, 140, 130))
-    # Sleeve cuffs happen with the arms.
-
-    if kind == 0:
-        # Leather apron, wider at the hem, with a strap and stitching.
-        column(pix, cx - 11, top + 36, 22, 26, LEATHER)
-        pix.rect(cx - 2, top + 32, 4, 8, LEATHER[3])
-        pix.rect(cx - 10, top + 36, 20, 1, LEATHER[5])
-        for sy in range(top + 42, top + 58, 4):
-            pix.put(cx - 8, sy, LEATHER[1])
-            pix.put(cx + 7, sy, LEATHER[0])
-        pix.put(cx - 1, top + 48, LEATHER[1])
-        pix.put(cx, top + 52, LEATHER[0])
-    elif kind == 1:
-        # Coat opening and buttons.
-        for by in (top + 38, top + 44, top + 50):
-            pix.rect(cx - 1, by, 3, 3, IRON[4])
-            pix.put(cx, by, IRON[6])
-        pix.rect(cx - 12, top + 54, 24, 3, LEATHER[2])
-        pix.rect(cx - 3, top + 54, 7, 4, IRON[3])
-        pix.rect(cx - 3, top + 54, 7, 1, IRON[6])
-        pix.put(cx, top + 56, IRON[1])
-        # Satchel.
-        column(pix, cx - 24, top + 40, 12, 16, LEATHER)
-        pix.rect(cx - 24, top + 40, 12, 2, LEATHER[5])
-        pix.rect(cx - 22, top + 46, 6, 4, IRON[3])
-        pix.put(cx - 20, top + 47, IRON[6])
-        pix.rect(cx - 18, top + 34, 2, 8, LEATHER[1])
-    else:
-        # Shawl over the shoulders, skirt starts lower.
-        column(pix, cx - 16, top + 30, 32, 8, CREAM)
-        pix.rect(cx - 16, top + 30, 32, 2, CREAM[5])
-        pix.rect(cx - 16, top + 36, 32, 1, CREAM[1])
-        pix.put(cx - 6, top + 33, CREAM[4])
-
-    # A fold down the lit side, and a pocket. Two pixels wide so the downsample keeps it.
-    pix.rect(cx - 8, top + 36, 2, 16, cloth[1])
-    pix.rect(cx + 6, top + 38, 2, 12, cloth[min(5, len(cloth) - 1)])
-    pix.rect(cx - 4, top + 46, 8, 6, cloth[2])
-    pix.rect(cx - 4, top + 46, 8, 1, cloth[4])
-    pix.put(cx - 2, top + 48, cloth[0])
-
-    # Arms. The leading arm is the one away from the front foot.
-    lead = {0: False, 1: True, 2: False, 3: False, 4: True}[frame]
-    _arm(pix, cx - 20, top + 32, 0, cloth, forward=not lead)
-    _arm(pix, cx + 14, top + 32, 0, cloth, forward=lead)
-
-    if kind == 0:
-        _hammer(pix, cx + 22, top + 40 + (2 if lead else 0))
-    if kind == 2:
-        # Basket on the near side, with two apples.
-        bx, by = cx - 28, top + 46
-        column(pix, bx, by, 16, 12, LEATHER)
-        pix.rect(bx, by, 16, 2, LEATHER[5])
-        pix.rect(bx + 1, by + 4, 14, 1, LEATHER[1])
-        pix.rect(bx + 1, by + 8, 14, 1, LEATHER[1])
-        disc(pix, bx + 5, by - 2, 3, 3, [(140, 32, 36), (176, 52, 48), (210, 84, 72), (232, 120, 100)])
-        pix.put(bx + 4, by - 4, LEAF[5])
-        disc(pix, bx + 11, by - 1, 3, 3, [(150, 40, 40), (190, 64, 56), (220, 100, 80), (240, 140, 110)])
-
-    # Both boots share the ground line. Only the step changes.
-    ground = oy + 96 + bob
-    # Wide enough that a 2:1 shrink still shows a step, not a planted foot.
-    steps = {
-        0: (-16, 4),
-        1: (-30, 18),
-        2: (-20, -4),
-        3: (-2, 22),
-        4: (-12, 8),
-    }
-    trouser = LEATHER if kind == 0 else WOOL
-    if kind == 2:
-        sway = {0: 0, 1: -4, 2: -1, 3: 4, 4: 1}[frame]
-        for y in range(top + 52, ground - 6):
-            flare = (y - (top + 52)) // 5
-            half = 13 + flare
-            for x in range(cx - half + sway, cx + half + sway + 1):
-                nx = (x - cx - sway) / max(1, half)
-                pix.put(x, y, ROSE[band(0.15 - 0.7 * nx - 0.25 * ((y - top) / 40), len(ROSE))])
-        # Hem fold and a lighter overskirt panel.
-        pix.rect(cx - 16 + sway, ground - 8, 32, 2, ROSE[1])
-        pix.rect(cx - 6 + sway, top + 56, 4, 18, ROSE[4])
-        left, right = steps[frame]
-        _boot(pix, cx + left + sway, ground - 8, 10)
-        _boot(pix, cx + right + sway, ground - 8, 10)
-    else:
-        hip = top + 50
-        left, right = steps[frame]
-        _leg(pix, cx + left, hip, ground, trouser)
-        _leg(pix, cx + right, hip, ground, trouser)
-        # Belt over the hips so the legs meet the torso.
-        pix.rect(cx + left, hip - 2, 22, 3, LEATHER[1])
-        pix.rect(cx - 2, hip - 2, 6, 3, IRON[3])
-        pix.rect(cx - 2, hip - 2, 6, 1, IRON[6])
-        column(pix, cx - 16, hip, 8, 9, LEATHER)
-        pix.rect(cx - 16, hip, 8, 2, LEATHER[5])
-        pix.put(cx - 13, hip + 3, IRON[4])
-
-    # One dark pixel under each boot. No floating bars.
-    pix.put(cx + steps[frame][0] + 3, ground + 2, (30, 48, 32))
-    pix.put(cx + steps[frame][1] + 3, ground + 2, (24, 40, 26))
-
-
-def folk() -> Image.Image:
-    pix = Pix(CELL_W * FRAMES, CELL_H * PEOPLE)
-    for person in range(PEOPLE):
-        for frame in range(FRAMES):
-            _person(pix, frame * CELL_W, person * CELL_H, frame, person)
-    pix.outline()
-    return pix.image()
+# --- Lawn -----------------------------------------------------------------
 
 
 def ground() -> Image.Image:
-    """Meadow tile. One grass ramp, not one flat green."""
-    pix = Pix(160, 160)
-    base = GRASS[2]
-    for y in range(160):
-        for x in range(160):
-            n = ((x * 13 + y * 7) ^ (x * 3)) & 7
-            tone = 2
-            if n == 0:
-                tone = 1
-            elif n == 1:
+    """A soft lawn, larger than a phone, with no speckle and no grid.
+
+    480×960 covers the 360-wide goldens without a repeat. Cells divide
+    both sides, so a taller square still meets at the edge. Flowers and
+    stones live on the paths and the beds, not in this tile.
+    """
+    w, h = 480, 960
+    pix = Pix(w, h)
+    for y in range(h):
+        for x in range(w):
+            # Two octaves, both periodic. The phase puts a rounded
+            # light patch in the part of the tile a phone actually shows,
+            # so the shade is a blob and not a vertical split.
+            broad = _noise(x + 180, y + 220, 160, w, h)
+            soft = _noise(x + 180, y + 220, 80, w, h)
+            v = 0.82 * broad + 0.18 * soft
+            if v < 0.46:
                 tone = 3
-            elif n >= 6:
-                tone = 2
-            pix.put(x, y, GRASS[tone] if tone != 2 else base)
-    # Tufts in clumps, so the repeat is a lawn and not a noise field.
-    clumps = (
-        (12, 18), (40, 30), (78, 14), (110, 36), (140, 22),
-        (24, 70), (60, 84), (96, 64), (130, 90), (20, 120),
-        (70, 130), (108, 118), (146, 140), (48, 150), (150, 70),
-    )
-    for cx, cy in clumps:
-        for i, (dx, h) in enumerate(((0, 7), (3, 5), (-2, 6), (5, 4))):
-            col = LEAF[3 + (i % 3)]
-            pix.rect(cx + dx, cy - h, 2, h, col)
-            pix.put(cx + dx, cy - h, LEAF[5])
-    flowers = (
-        (28, 48, (190, 70, 78), (240, 170, 160)),
-        (88, 100, (220, 190, 70), (255, 230, 140)),
-        (132, 56, (200, 90, 150), (245, 180, 200)),
-        (56, 108, (230, 230, 200), (255, 255, 240)),
-        (16, 140, (180, 60, 70), (230, 140, 130)),
-        (118, 148, (210, 160, 50), (250, 210, 110)),
-    )
-    for x, y, col, hi in flowers:
-        _bloom(pix, x, y, col, hi)
-    for x, y in ((70, 48), (150, 110), (36, 88), (100, 20)):
-        _stone(pix, x, y, 6, 4, 2)
+            elif v < 0.78:
+                tone = 4
+            else:
+                tone = 5
+            pix.put(x, y, GRASS[tone])
     return pix.image()
 
 
-def _stone(pix: Pix, x: int, y: int, w: int, h: int, tone: int) -> None:
-    ramp = STONE
-    pix.rect(x, y, w, h, ramp[tone])
-    pix.rect(x, y, max(1, w - 1), 1, ramp[min(tone + 1, 5)])
-    pix.rect(x, y + h - 1, w, 1, ramp[0])
-    pix.put(x + w - 1, y + 1, ramp[1])
-    if w > 6:
-        pix.put(x + 2, y + 1, ramp[min(tone + 2, 5)])
+def edge_gap(img: Image.Image) -> tuple[float, float]:
+    """Mean channel jump across the wrap, and across an interior step.
+
+    A seamless tile keeps those two close. A cut repeat makes the seam
+    several times the interior.
+    """
+    px = img.convert("RGB").load()
+    w, h = img.size
+
+    def dist(a: tuple[int, int, int], b: tuple[int, int, int]) -> float:
+        return (abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])) / 3
+
+    seam = 0.0
+    n = 0
+    for y in range(h):
+        seam += dist(px[0, y], px[w - 1, y])
+        n += 1
+    for x in range(w):
+        seam += dist(px[x, 0], px[x, h - 1])
+        n += 1
+    interior = 0.0
+    m = 0
+    for y in range(8, h - 8, 11):
+        for x in range(8, w - 8, 11):
+            interior += dist(px[x, y], px[x + 1, y])
+            interior += dist(px[x, y], px[x, y + 1])
+            m += 2
+    return seam / n, interior / max(1, m)
+
+
+def _pebble(pix: Pix, cx: int, cy: int, kind: int) -> None:
+    ramp = (STONE, STONE_GREY, STONE)[kind]
+    if kind == 0:
+        cells = ((0, 0, 8, 5), (1, 1, 6, 3))
+    elif kind == 1:
+        cells = ((0, 1, 6, 6), (5, 2, 4, 4))
+    else:
+        cells = ((1, 0, 9, 4), (0, 3, 5, 3))
+    for ox, oy, w, h in cells:
+        for y in range(h):
+            for x in range(w):
+                if (x == 0 or x == w - 1) and (y == 0 or y == h - 1):
+                    continue
+                tone = 4 if y == 0 or x == 0 else 1 if y == h - 1 else 3
+                pix.put_wrap(cx + ox + x, cy + oy + y, ramp[tone])
+    pix.put_wrap(cx + 2, cy + 1, ramp[5])
+    pix.put_wrap(cx + 1, cy + 2, MOSS[2] if kind == 2 else ramp[5])
+    # Contact shadow, south-east, so the stone sits in the grass.
+    pix.put_wrap(cx + 3, cy + 6, GRASS[0])
+    pix.put_wrap(cx + 4, cy + 6, GRASS[1])
+    pix.put_wrap(cx + 5, cy + 7, GRASS[0])
+
+
+def _flower(pix: Pix, x: int, y: int, kind: int) -> None:
+    """A small bloom with a stem. Slides off dirt. Empty pixels are fine."""
+    under = pix.get(x % pix.w, y % pix.h)
+    if under is not None and not _is_grass(under):
+        y -= 14
+        under = pix.get(x % pix.w, y % pix.h)
+        if under is not None and not _is_grass(under):
+            return
+    stems = (
+        ((196, 48, 58), (236, 150, 140), (255, 214, 200)),  # poppy
+        ((230, 186, 48), (255, 230, 140), (255, 248, 210)),  # buttercup
+        ((236, 236, 228), (255, 250, 236), (255, 214, 80)),  # daisy
+        ((132, 72, 186), (196, 150, 220), (236, 210, 246)),  # violet
+        ((64, 112, 196), (140, 176, 230), (220, 232, 255)),  # cornflower
+        ((220, 112, 48), (255, 176, 96), (255, 220, 170)),  # marigold
+    )
+    petal, hi, core = stems[kind % 6]
+    pix.put_wrap(x, y + 3, GRASS[2])
+    pix.put_wrap(x, y + 4, GRASS[1])
+    pix.put_wrap(x - 2, y + 4, GRASS[5])
+    pix.put_wrap(x + 2, y + 5, GRASS[4])
+    for dx, dy in ((0, -2), (-2, 0), (2, 0), (0, 2), (-1, -1), (1, -1), (-1, 1), (1, 1)):
+        pix.put_wrap(x + dx, y + dy, petal)
+    pix.put_wrap(x, y, core)
+    pix.put_wrap(x - 1, y - 1, hi)
+    pix.put_wrap(x, y + 3, GRASS[0])
+
+
+MORTAR = (58, 86, 48)
+
+
+def _mortar(pix: Pix) -> None:
+    for y in range(pix.h):
+        for x in range(pix.w):
+            pix.put(x, y, MORTAR)
+
+
+def _bloom_bed(pix: Pix, x: int, y: int, kinds: tuple[tuple[int, int], ...]) -> None:
+    """A small grass bed, then a few blooms. One cluster, not a sprinkle."""
+    for dy in range(-7, 9):
+        for dx in range(-12, 13):
+            if (dx * dx) / 130 + (dy * dy) / 42 > 1:
+                continue
+            pix.put(x + dx, y + dy, GRASS[4] if dy < 2 else GRASS[3])
+    for dx, kind in kinds:
+        _flower(pix, x + dx, y, kind)
 
 
 def path() -> Image.Image:
-    """Stepping stones that widen through the yard. Gaps stay grass. Not a bar."""
-    pix = Pix(360, 40)
-    stones = (
-        (4, 16, 12, 8, 2), (18, 18, 10, 7, 3), (34, 14, 8, 9, 4),
-        (58, 18, 14, 8, 3), (74, 16, 9, 7, 2),
-        (100, 12, 16, 10, 3), (118, 14, 12, 8, 4), (132, 10, 14, 9, 2),
-        (148, 16, 18, 10, 3), (168, 12, 16, 11, 4), (186, 18, 14, 8, 2),
-        (204, 14, 12, 9, 3),
-        (230, 16, 14, 8, 3), (246, 14, 10, 9, 2), (260, 18, 12, 7, 4),
-        (286, 16, 11, 8, 3), (304, 18, 14, 7, 2), (322, 15, 10, 8, 4),
-        (340, 17, 12, 8, 3),
-        (108, 24, 10, 7, 2), (124, 26, 12, 6, 3), (150, 24, 14, 7, 4),
-        (170, 26, 11, 6, 2), (196, 24, 12, 7, 3),
+    """One cobble street. Two courses, flower beds only at the ends."""
+    pix = Pix(360, 36)
+    _mortar(pix)
+    course = (
+        (4, 3, 30, 15, 0), (36, 4, 26, 14, 1), (64, 2, 32, 16, 2),
+        (98, 4, 28, 14, 0), (128, 3, 32, 15, 1), (162, 2, 30, 16, 2),
+        (194, 4, 32, 14, 0), (228, 3, 30, 15, 1), (260, 2, 30, 16, 2),
+        (292, 4, 30, 14, 0), (324, 3, 32, 15, 1),
+        (16, 18, 28, 15, 2), (46, 19, 32, 14, 0), (80, 18, 26, 15, 1),
+        (108, 17, 32, 16, 2), (142, 19, 28, 14, 0), (172, 18, 32, 15, 1),
+        (206, 17, 30, 16, 2), (238, 19, 28, 14, 0), (268, 18, 32, 15, 1),
+        (302, 17, 26, 16, 2), (330, 18, 26, 14, 0),
     )
-    for x, y, w, h, tone in stones:
-        _stone(pix, x, y, w, h, tone)
-    for x, y in ((48, 20), (90, 22), (220, 20), (278, 22), (352, 20)):
-        pix.put(x, y, STONE[4])
-        pix.put(x + 1, y, STONE[2])
-    for x, y in ((26, 12), (88, 12), (226, 12), (300, 12), (16, 28), (80, 30), (240, 32), (330, 30)):
-        pix.put(x, y, GRASS[4])
-        pix.put(x + 1, y, LEAF[3])
+    for x, y, bw, bh, kind in course:
+        _cobble(pix, x, y, bw, bh, kind)
+    _bloom_bed(pix, 26, 16, ((-4, 0), (4, 1)))
+    _bloom_bed(pix, 334, 16, ((-4, 4), (4, 3)))
     return pix.image()
+
+
+def approach() -> Image.Image:
+    """A cobble spur. Top and bottom are the same mortar, so a repeat has no seam.
+
+    Pitch 24, stone 16, so the 8px joint inside the tile matches the joint
+    across y=0.
+    """
+    w, h = 36, 192
+    pix = Pix(w, h)
+    _mortar(pix)
+    y = 4
+    i = 0
+    while y + 16 <= h - 4:
+        kind = i % 3
+        bw = (26, 22, 28)[kind]
+        x = (w - bw) // 2 + (1 if i % 2 == 0 else -1)
+        _cobble(pix, x, y, bw, 16, kind)
+        y += 24
+        i += 1
+    return pix.image()
+
+
+def _cobble(pix: Pix, x: int, y: int, w: int, h: int, kind: int) -> None:
+    ramp = (STONE, STONE_GREY, DIRT)[kind % 3]
+    # DIRT is shorter; cobbles of kind 2 use the warm dirt ramp as sandstone.
+    if kind % 3 == 2:
+        ramp = (
+            (120, 86, 52),
+            (156, 116, 72),
+            (188, 148, 100),
+            (214, 178, 132),
+            (232, 204, 164),
+            (246, 226, 196),
+        )
+    for yy in range(h):
+        inset = 1 if yy == 0 or yy == h - 1 else 0
+        if kind == 1 and yy < 2:
+            inset = 2
+        for xx in range(inset, w - inset):
+            if (xx < 2 or xx > w - 3) and (yy < 2 or yy > h - 3) and (xx + yy + kind) % 2 == 0:
+                continue
+            tone = 4 if yy < 2 or xx < 2 else 1 if yy > h - 3 else 3
+            if (xx * 3 + yy * 5 + kind) % 17 == 0:
+                tone = 5 if tone >= 3 else 0
+            pix.put(x + xx, y + yy, ramp[min(tone, len(ramp) - 1)])
+    pix.put(x + 2, y + 2, ramp[min(5, len(ramp) - 1)])
+    pix.put(x + w - 3, y + h - 3, ramp[0])
+    if w > 12 and h > 8:
+        pix.put(x + w // 2, y + 3, ramp[1])
+        pix.put(x + w // 2, y + 4, ramp[0])
+        pix.put(x + 4, y + h // 2, MOSS[1])
+        pix.put(x + 5, y + h // 2, MOSS[3])
+    pix.put(x + 2, y + h, GRASS[0])
+    pix.put(x + w // 2, y + h, GRASS[1])
 
 
 def worn() -> Image.Image:
-    """A small worn patch in front of a door. Not a second full-width strip."""
+    """A short cobble step in front of a door. Same stones as the street."""
     pix = Pix(72, 28)
-    stones = ((2, 8, 12, 8), (16, 6, 10, 9), (28, 10, 14, 7), (44, 7, 11, 8), (56, 11, 12, 7))
-    for i, (x, y, w, h) in enumerate(stones):
-        _stone(pix, x, y, w, h, 2 + (i % 3))
-    pix.put(8, 6, GRASS[4])
-    pix.put(9, 6, GRASS[3])
-    pix.put(50, 18, GRASS[3])
-    pix.put(22, 18, (96, 72, 48))
-    pix.put(23, 18, (120, 90, 60))
+    _mortar(pix)
+    stones = (
+        (2, 4, 18, 14, 0),
+        (22, 6, 16, 13, 1),
+        (40, 4, 18, 15, 2),
+        (58, 7, 12, 12, 0),
+    )
+    for x, y, w, h, kind in stones:
+        _cobble(pix, x, y, w, h, kind)
+    _bloom_bed(pix, 18, 10, ((0, 1),))
     return pix.image()
 
 
-def _soil(pix: Pix, cx: int, cy: int) -> None:
-    disc(pix, cx, cy, 22, 7, [
-        GRASS[1],
-        (92, 64, 40),
-        (120, 84, 52),
-        (150, 108, 68),
-        (176, 132, 88),
-    ])
-    pix.put(cx - 16, cy + 2, GRASS[3])
-    pix.put(cx + 14, cy + 1, GRASS[2])
-    pix.put(cx - 4, cy + 3, (70, 48, 32))
-
-
-def _bloom(pix: Pix, x: int, y: int, color: tuple[int, int, int], hi: tuple[int, int, int]) -> None:
-    pix.put(x, y, color)
-    pix.put(x - 1, y + 1, color)
-    pix.put(x + 1, y + 1, color)
-    pix.put(x, y + 1, hi)
-    pix.put(x, y + 2, color)
-    pix.put(x - 1, y, hi)
+def _soil(pix: Pix, cx: int, cy: int, rx: int = 22, ry: int = 7) -> None:
+    ramp = [GRASS[1], DIRT[0], DIRT[1], DIRT[2], DIRT[3], GRASS[3]]
+    for y in range(cy - ry, cy + ry + 1):
+        for x in range(cx - rx, cx + rx + 1):
+            nx = (x - cx) / max(1, rx)
+            ny = (y - cy) / max(1, ry)
+            if nx * nx + ny * ny > 1:
+                continue
+            tone = 4 if ny < -0.2 and nx < 0 else 1 if ny > 0.45 else 3
+            pix.put(x, y, ramp[tone])
+    pix.put(cx - rx + 4, cy + 1, GRASS[4])
+    pix.put(cx + 6, cy + 2, STONE[3])
+    pix.put(cx + 7, cy + 2, STONE[5])
 
 
 def flowers() -> Image.Image:
-    """Rose bed. One of four different plantings."""
+    """Rose bed. Layered blooms, not four dots on a stem."""
     pix = Pix(PLANT_W, PLANT_H)
-    _soil(pix, 32, 40)
-    stems = ((14, 12), (24, 18), (34, 10), (46, 16))
-    colors = ((176, 48, 58), (196, 72, 78), (150, 40, 64), (210, 96, 90))
-    his = ((230, 140, 130), (240, 170, 150), (210, 120, 130), (250, 190, 170))
-    for i, (sx, bloom_y) in enumerate(stems):
-        pix.rect(sx, bloom_y + 6, 2, 28 - bloom_y, LEAF[2])
-        pix.put(sx - 3, bloom_y + 12, LEAF[4])
-        pix.put(sx + 3, bloom_y + 14, LEAF[5])
-        pix.put(sx - 2, bloom_y + 8, LEAF[3])
-        _bloom(pix, sx, bloom_y, colors[i], his[i])
-        _bloom(pix, sx + 3, bloom_y + 4, colors[(i + 1) % 4], his[i])
+    _soil(pix, 32, 42)
+    blooms = (
+        (12, 14, (120, 28, 40), (168, 48, 58), (210, 86, 90), (245, 170, 160)),
+        (28, 8, (150, 36, 52), (196, 70, 80), (230, 120, 120), (255, 200, 186)),
+        (44, 16, (100, 24, 40), (160, 48, 60), (200, 90, 96), (240, 160, 150)),
+    )
+    for sx, top, dark, mid, light, hi in blooms:
+        pix.rect(sx + 2, top + 8, 2, 40 - top, (28, 96, 44))
+        pix.put(sx + 1, top + 8, (20, 72, 36))
+        for lx, ly in ((-4, 12), (-3, 13), (5, 14), (6, 15), (-2, 18), (4, 20)):
+            pix.put(sx + lx, top + ly, GRASS[5] if lx < 0 else GRASS[3])
+            pix.put(sx + lx, top + ly + 1, GRASS[6] if lx < 0 else GRASS[4])
+        for dy in range(-2, 5):
+            for dx in range(-3, 5):
+                if dx * dx + (dy * 2) * (dy * 2) > 18:
+                    continue
+                if abs(dx) + abs(dy) <= 1:
+                    col = hi
+                elif dx < 0 and dy < 1:
+                    col = light
+                elif dy > 2:
+                    col = dark
+                else:
+                    col = mid
+                pix.put(sx + dx, top + dy, col)
+        pix.put(sx, top + 1, (255, 214, 70))
+        pix.put(sx + 1, top + 1, (255, 236, 140))
     pix.outline()
     return pix.image()
 
 
 def shrub() -> Image.Image:
+    """Berry bush. Blue fruit, so it is not a second round tree."""
     pix = Pix(PLANT_W, PLANT_H)
-    _soil(pix, 32, 42)
-    disc(pix, 32, 28, 20, 14, LEAF)
-    disc(pix, 20, 30, 12, 10, LEAF)
-    disc(pix, 44, 32, 10, 8, LEAF)
-    for x, y, t in ((18, 22, 5), (30, 16, 5), (42, 20, 4), (26, 34, 1), (38, 30, 2)):
-        pix.put(x, y, LEAF[t])
-        pix.put(x + 1, y, LEAF[min(t + 1, 5)])
+    _soil(pix, 32, 44, 20, 6)
+    clumps = (
+        (32, 26, 16, 12, 3),
+        (18, 30, 10, 9, 2),
+        (46, 30, 11, 8, 4),
+        (32, 18, 8, 7, 5),
+    )
+    leaf = [
+        (16, 58, 36),
+        (28, 86, 48),
+        (40, 118, 58),
+        (64, 150, 70),
+        (96, 176, 88),
+        (140, 200, 112),
+        (186, 214, 140),
+    ]
+    for cx, cy, rx, ry, bias in clumps:
+        for y in range(cy - ry, cy + ry + 1):
+            for x in range(cx - rx, cx + rx + 1):
+                nx = (x - cx) / max(1, rx)
+                ny = (y - cy) / max(1, ry)
+                if nx * nx + ny * ny > 1:
+                    continue
+                tone = clamp(bias + (1 if nx < -0.2 and ny < 0 else 0) - (1 if ny > 0.4 else 0), len(leaf))
+                if (x * 5 + y * 3) % 11 == 0:
+                    continue
+                pix.put(x, y, leaf[tone])
+    berries = ((22, 24), (30, 18), (38, 22), (44, 28), (26, 32), (36, 30))
+    for bx, by in berries:
+        pix.put(bx, by, (180, 200, 240))
+        pix.put(bx + 1, by, (70, 96, 190))
+        pix.put(bx, by + 1, (36, 52, 140))
+        pix.put(bx + 1, by + 1, (24, 36, 100))
     pix.outline()
     return pix.image()
 
 
 def wild() -> Image.Image:
+    """Mixed wildflowers. Tall stems, no shared soil disc."""
     pix = Pix(PLANT_W, PLANT_H)
-    _soil(pix, 32, 40)
     specs = (
-        (14, (230, 220, 190), (255, 248, 230)),
-        (24, (220, 180, 70), (255, 220, 120)),
-        (34, (200, 90, 140), (236, 160, 180)),
-        (44, (236, 230, 210), (255, 250, 240)),
-        (52, (190, 70, 70), (230, 130, 110)),
+        (10, 30, 0), (20, 22, 1), (30, 28, 2), (40, 18, 4), (50, 26, 3),
     )
-    for sx, col, hi in specs:
-        pix.rect(sx, 24, 1, 14, LEAF[3])
-        pix.put(sx - 2, 30, LEAF[4])
-        pix.put(sx + 2, 28, LEAF[2])
-        _bloom(pix, sx, 18, col, hi)
+    for sx, top, kind in specs:
+        pix.rect(sx, top + 6, 1, 44 - top, GRASS[3])
+        pix.put(sx - 2, top + 12, GRASS[6])
+        pix.put(sx + 2, top + 14, GRASS[5])
+        _flower(pix, sx, top, kind)
+    pix.outline()
+    return pix.image()
+
+
+def herbs() -> Image.Image:
+    """Lavender wands beside one stone."""
+    pix = Pix(PLANT_W, PLANT_H)
+    _soil(pix, 28, 42, 16, 6)
+    for sx, h in ((16, 22), (22, 26), (28, 18), (34, 24)):
+        for i in range(h):
+            col = (120, 90, 170) if i < 8 else (150, 120, 196) if i < 14 else GRASS[3]
+            pix.put(sx, 40 - i, col)
+            if i < 8 and i % 2 == 0:
+                pix.put(sx - 1, 40 - i, (186, 160, 214))
+                pix.put(sx + 1, 40 - i, (96, 70, 150))
+        pix.put(sx, 40 - h, (210, 190, 230))
+    _pebble(pix, 46, 36, 1)
+    pix.outline()
+    return pix.image()
+
+
+def meadow() -> Image.Image:
+    """A stand of grass and mixed blooms. Dirt is only a root line."""
+    pix = Pix(112, 64)
+    for x in range(16, 100):
+        pix.put(x, 54, GRASS[1])
+        if x % 4 == 0:
+            pix.put(x, 55, DIRT[1])
+    blades = (
+        (14, 18, 34), (22, 8, 44), (30, 16, 36), (38, 6, 46),
+        (48, 12, 40), (56, 4, 48), (66, 14, 38), (76, 8, 44),
+        (86, 16, 36), (96, 10, 42),
+    )
+    tones = (GRASS[2], GRASS[4], GRASS[5], GRASS[6], CLOVER[2], GRASS[7])
+    for i, (x, top, bh) in enumerate(blades):
+        pix.rect(x, top, 2, bh, tones[i % len(tones)])
+        pix.put(x, top, GRASS[7])
+        pix.put(x - 1, top + 4, tones[(i + 2) % len(tones)])
+        pix.put(x + 2, top + 8, GRASS[3])
+    for fx, fy, kind in ((24, 10, 0), (46, 6, 1), (68, 12, 3), (88, 16, 2), (58, 20, 5)):
+        _flower(pix, fx, fy, kind)
+    pix.outline()
+    return pix.image()
+
+
+def thicket() -> Image.Image:
+    """Bramble, red berries, and one stone. Not a second shrub ball."""
+    pix = Pix(88, 56)
+    leaf = [
+        (40, 24, 28),
+        (72, 36, 32),
+        (96, 56, 40),
+        (64, 110, 52),
+        (96, 146, 64),
+        (140, 176, 90),
+    ]
+    for cx, cy, rx, ry in ((36, 34, 18, 12), (54, 38, 12, 8), (22, 40, 10, 7)):
+        for y in range(cy - ry, cy + ry):
+            for x in range(cx - rx, cx + rx):
+                if ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 > 1:
+                    continue
+                pix.put(x, y, leaf[2 + (x + y) % 3])
+    for x, y in ((24, 28), (34, 24), (48, 30), (58, 36), (30, 36)):
+        pix.put(x, y, (160, 32, 40))
+        pix.put(x + 1, y, (200, 64, 64))
+        pix.put(x, y + 1, (110, 24, 32))
+    for x, bh in ((8, 24), (12, 32), (16, 18)):
+        pix.rect(x, 48 - bh, 2, bh, GRASS[5])
+        pix.put(x, 48 - bh, GRASS[7])
+    _pebble(pix, 64, 40, 0)
+    pix.outline()
+    return pix.image()
+
+
+def scuff() -> Image.Image:
+    """A boot-scuffed patch. Two stones, not a brown oval."""
+    pix = Pix(72, 36)
+    for y in range(10, 30):
+        for x in range(8, 64):
+            nx = (x - 36) / 28
+            ny = (y - 20) / 12
+            if nx * nx + ny * ny > 1:
+                continue
+            pix.put(x, y, DIRT[1 + (x + y) % 3])
+    # Two boot prints.
+    for bx in (22, 40):
+        pix.rect(bx, 16, 8, 4, DIRT[0])
+        pix.rect(bx + 1, 20, 6, 6, DIRT[0])
+        pix.put(bx + 2, 17, DIRT[3])
+    _pebble(pix, 12, 18, 1)
+    _pebble(pix, 52, 20, 0)
+    pix.put(18, 12, GRASS[5])
+    pix.put(48, 12, GRASS[6])
     pix.outline()
     return pix.image()
 
@@ -629,39 +614,11 @@ def contact() -> Image.Image:
     """A short darker grass shadow. Buildings sit on it."""
     pix = Pix(96, 12)
     runs = ((6, 22, 4), (30, 28, 3), (62, 24, 5), (18, 14, 6), (48, 16, 5))
-    for x, w, y in runs:
-        for i in range(w):
+    for x, bw, y in runs:
+        for i in range(bw):
             pix.put(x + i, y, (28, 58, 32, 170))
             if i % 3 != 0:
                 pix.put(x + i, y + 1, (40, 74, 42, 120))
-    return pix.image()
-
-
-def meadow() -> Image.Image:
-    """A stand of grass and flowers. The dirt is only under the roots."""
-    pix = Pix(112, 64)
-    # A narrow soil line, not a brown disc that reads as a scar.
-    for x in range(18, 96):
-        pix.put(x, 52, GRASS[1])
-        if x % 3 != 0:
-            pix.put(x, 53, (96, 72, 44))
-    blades = (
-        (14, 16, 36), (22, 8, 44), (30, 18, 32), (38, 10, 40),
-        (48, 6, 46), (56, 14, 36), (66, 4, 48), (74, 12, 38),
-        (84, 8, 42), (92, 16, 34), (100, 10, 40),
-    )
-    tones = (LEAF[2], LEAF[3], LEAF[4], LEAF[5], GRASS[4], GRASS[5] if len(GRASS) > 5 else GRASS[4])
-    for i, (x, top, h) in enumerate(blades):
-        pix.rect(x, top, 2, h, tones[i % len(tones)])
-        pix.put(x, top, LEAF[5])
-        pix.put(x - 1, top + 6, LEAF[4])
-        pix.put(x + 2, top + 10, GRASS[3])
-    _bloom(pix, 24, 12, (196, 58, 70), (240, 160, 150))
-    _bloom(pix, 46, 6, (230, 200, 80), (255, 236, 160))
-    _bloom(pix, 70, 10, (210, 90, 150), (245, 180, 200))
-    _bloom(pix, 90, 16, (236, 230, 200), (255, 252, 240))
-    _bloom(pix, 58, 20, (180, 70, 60), (230, 140, 120))
-    pix.outline()
     return pix.image()
 
 
@@ -713,48 +670,405 @@ def lanterns() -> Image.Image:
     return pix.image()
 
 
-def thicket() -> Image.Image:
-    pix = Pix(88, 56)
-    disc(pix, 40, 36, 28, 14, LEAF)
-    disc(pix, 58, 40, 16, 10, LEAF)
-    for x, y, t in ((22, 24, 5), (36, 16, 5), (50, 22, 4), (64, 30, 5), (30, 34, 1)):
-        pix.put(x, y, LEAF[t])
-        pix.put(x + 1, y, LEAF[min(t + 1, 5)])
-    # Tall grass on one side only, so it is not a second shrub ball.
-    for x, h in ((8, 22), (12, 30), (16, 16)):
-        pix.rect(x, 40 - h, 2, h, GRASS[4])
-        pix.put(x, 40 - h, LEAF[5])
-    _stone(pix, 62, 42, 10, 6, 2)
-    pix.outline()
+def alert() -> Image.Image:
+    """A claim spark for guild and vault. A flame, not a UI circle."""
+    pix = Pix(16, 16)
+    rows = (
+        "......ii......",
+        ".....igyi.....",
+        "....igywi.....",
+        "...igyywyi....",
+        "..igywwwwyi...",
+        "..igywowygi...",
+        "...igyyygi....",
+        "....iooogi....",
+        ".....irri.....",
+        "....irrrri....",
+        ".....irri.....",
+        "......bb......",
+        "......bb......",
+        ".....bbbb.....",
+        "......bb......",
+        "..............",
+    )
+    cmap = {
+        "i": (32, 22, 18),
+        "g": (176, 96, 28),
+        "y": (244, 176, 48),
+        "w": (255, 236, 170),
+        "o": (214, 84, 28),
+        "r": (168, 40, 32),
+        "b": (92, 58, 32),
+    }
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch in cmap:
+                pix.put(x, y, cmap[ch])
     return pix.image()
 
 
-def scuff() -> Image.Image:
-    """Bare earth and two loose stones. A worn spot, not a path."""
-    pix = Pix(72, 36)
-    disc(pix, 34, 20, 26, 10, [
-        GRASS[2],
-        (96, 72, 44),
-        (128, 96, 60),
-        (160, 122, 78),
-        GRASS[3],
-    ])
-    _stone(pix, 14, 14, 10, 7, 3)
-    _stone(pix, 44, 18, 14, 8, 4)
-    pix.put(22, 12, GRASS[4])
-    pix.put(40, 10, LEAF[3])
-    pix.outline()
-    return pix.image()
+# --- Villagers ------------------------------------------------------------
+
+# Ramps, dark to light. Enough steps that a sleeve is not one flat color.
+SKIN_TAN = [(92, 56, 36), (128, 80, 52), (166, 110, 72), (198, 142, 100), (226, 176, 136), (248, 214, 180)]
+SKIN_LIGHT = [(120, 86, 64), (160, 116, 88), (196, 150, 118), (222, 180, 148), (240, 206, 178), (255, 230, 210)]
+SKIN_WARM = [(104, 62, 48), (146, 90, 68), (180, 118, 90), (210, 150, 118), (232, 180, 150), (250, 214, 186)]
+HAIR_D = [(28, 16, 12), (52, 30, 20), (78, 46, 30), (108, 68, 42), (142, 96, 60), (176, 128, 84)]
+HAIR_GOLD = [(92, 58, 24), (132, 88, 36), (176, 124, 48), (208, 160, 72), (232, 196, 112), (250, 224, 160)]
+HAIR_RED = [(78, 28, 24), (120, 48, 36), (160, 72, 52), (196, 110, 78), (220, 150, 112), (240, 190, 156)]
+MOSS_CLOTH = [(22, 64, 48), (32, 96, 64), (44, 128, 78), (64, 156, 96), (96, 180, 118), (140, 204, 148), (186, 220, 176)]
+WOOL = [(28, 48, 96), (40, 68, 132), (56, 92, 164), (78, 118, 188), (108, 148, 206), (150, 180, 220), (196, 214, 232)]
+ROSE = [(96, 36, 56), (140, 52, 76), (176, 78, 102), (204, 112, 132), (224, 150, 164), (240, 190, 196), (252, 220, 216)]
+CREAM = [(120, 96, 72), (160, 132, 100), (196, 168, 132), (220, 196, 164), (238, 220, 196), (250, 240, 224)]
+LEATHER = [(48, 28, 16), (78, 46, 26), (112, 68, 36), (148, 96, 52), (184, 132, 78), (214, 168, 112), (236, 200, 150)]
+BOOT = [(18, 12, 10), (36, 24, 18), (58, 40, 28), (92, 64, 44), (132, 96, 68)]
+IRON = [(28, 30, 34), (52, 56, 62), (86, 92, 100), (128, 136, 146), (176, 184, 192), (220, 226, 230)]
+APRON = [(72, 44, 28), (104, 64, 40), (140, 92, 58), (176, 124, 82), (206, 160, 114)]
 
 
-def herbs() -> Image.Image:
-    pix = Pix(PLANT_W, PLANT_H)
-    _soil(pix, 30, 40)
-    for sx, h in ((18, 16), (26, 20), (34, 14), (42, 18)):
-        pix.rect(sx, 36 - h, 2, h, LEAF[3])
-        pix.put(sx - 1, 36 - h + 2, LEAF[5])
-        pix.put(sx + 2, 36 - h + 4, LEAF[4])
-        pix.put(sx, 36 - h, LEAF[5])
-    _stone(pix, 46, 36, 10, 7, 3)
+def _stamp(pix: Pix, x: int, y: int, rows: tuple[str, ...], cmap: dict[str, tuple[int, int, int]]) -> None:
+    for yy, row in enumerate(rows):
+        for xx, ch in enumerate(row):
+            if ch in cmap:
+                pix.put(x + xx, y + yy, cmap[ch])
+
+
+def _limb(pix: Pix, x0: int, y0: int, x1: int, y1: int, ramp: list[tuple[int, int, int]], thick: int = 3) -> None:
+    steps = max(abs(x1 - x0), abs(y1 - y0), 1)
+    for i in range(steps + 1):
+        x = x0 + (x1 - x0) * i // steps
+        y = y0 + (y1 - y0) * i // steps
+        for k in range(thick):
+            tone = 5 if k == 0 else 1 if k == thick - 1 else 3
+            pix.put(x, y + k - 1, ramp[min(tone, len(ramp) - 1)])
+
+
+def _hand(pix: Pix, x: int, y: int, skin: list[tuple[int, int, int]]) -> None:
+    pix.rect(x, y, 3, 3, skin[3])
+    pix.put(x, y, skin[5])
+    pix.put(x + 2, y + 2, skin[1])
+    pix.put(x + 1, y + 1, skin[4])
+
+
+def _boot(pix: Pix, x: int, y: int) -> None:
+    _shade_rect(pix, x, y, 5, 4, BOOT)
+    pix.rect(x - 1, y + 3, 7, 1, BOOT[0])
+    pix.put(x + 1, y, BOOT[4])
+    pix.put(x, y + 1, BOOT[3])
+
+
+def _torso(pix: Pix, x: int, y: int, w: int, h: int, ramp: list[tuple[int, int, int]]) -> None:
+    _shade_rect(pix, x, y, w, h, ramp)
+    # Center fold and a side shadow, two pixels so they survive as shape.
+    pix.rect(x + w // 2 - 1, y + 2, 1, h - 3, ramp[1])
+    pix.rect(x + w - 2, y + 2, 1, h - 2, ramp[0])
+    pix.rect(x, y, w, 1, ramp[min(5, len(ramp) - 1)])
+
+
+def _head_pixels(style: str) -> tuple[tuple[str, ...], dict[str, tuple[int, int, int]]]:
+    skin = {"smith": SKIN_TAN, "courier": SKIN_LIGHT, "gardener": SKIN_WARM}[style]
+    hair = {"smith": HAIR_D, "courier": HAIR_GOLD, "gardener": HAIR_RED}[style]
+    cmap = {
+        "h": hair[3],
+        "H": hair[5],
+        "d": hair[1],
+        "s": skin[3],
+        "S": skin[5],
+        "a": skin[1],
+        "w": (250, 246, 240),
+        "k": (28, 18, 16),
+        "n": skin[2],
+        "m": (168, 72, 72),
+        "b": hair[2],
+        "B": hair[0],
+        "c": (36, 64, 120),
+        "C": (120, 160, 210),
+        "p": (255, 176, 176),
+        "e": hair[4],
+    }
+    if style == "smith":
+        rows = (
+            "..ddhhhhhhdd.",
+            ".dhhHHHHHHhd.",
+            "dhhsssssssshd",
+            "hssSwksswkSsh",
+            "hssaksssakssh",
+            "hhsssnnnssshh",
+            "hhsssmmmssshh",
+            "hssbbbbbbbbss",
+            ".hsBBBBBBBBsh",
+            "..sBBBBBBBBs.",
+            "...BBBBBBB...",
+        )
+    elif style == "courier":
+        rows = (
+            "...ccccccc...",
+            "..ccCCCCCcc..",
+            ".cccchhhhccc.",
+            "ccccssssssccc",
+            "hhssSwksswkss",
+            "hsssakkssaksh",
+            "hhsssnnnssshh",
+            "hhssmmmmmsshh",
+            ".hhssssssshh.",
+            "..hssssssssh.",
+        )
+    else:
+        rows = (
+            "....eeeee....",
+            "..ddhhhhhdd..",
+            ".dhhHHHHHHhd.",
+            "dhhsssssssshd",
+            "hssSwksswkSsh",
+            "hssaksssakssh",
+            "hhsssnnnssshh",
+            "hhsspmmmmpshh",
+            ".hhssssssshh.",
+            "..hssssssssh.",
+            ".....eee.....",
+        )
+    return rows, cmap
+
+
+def _draw_head(pix: Pix, x: int, y: int, style: str) -> None:
+    rows, cmap = _head_pixels(style)
+    _stamp(pix, x, y, rows, cmap)
+    skin = {"smith": SKIN_TAN, "courier": SKIN_LIGHT, "gardener": SKIN_WARM}[style]
+    # Ears.
+    pix.rect(x - 1, y + 4, 2, 3, skin[2])
+    pix.rect(x + len(rows[0]) - 1, y + 4, 2, 3, skin[3])
+    pix.put(x - 1, y + 5, skin[4])
+    pix.put(x + len(rows[0]), y + 5, skin[5])
+    if style == "gardener":
+        # Bun on the crown, a different silhouette from the cap and the beard.
+        pix.rect(x + 8, y - 3, 5, 4, HAIR_RED[2])
+        pix.rect(x + 9, y - 4, 3, 2, HAIR_RED[4])
+        pix.put(x + 10, y - 4, HAIR_RED[5])
+        pix.put(x + 8, y - 2, HAIR_RED[0])
+
+
+def _shadow_feet(pix: Pix, xs: list[int]) -> None:
+    for x in xs:
+        pix.put(x + 1, 53, (24, 56, 30))
+        pix.put(x + 2, 53, (20, 44, 26))
+        pix.put(x + 3, 53, (24, 56, 30))
+
+
+def _up2(src: Pix) -> Pix:
+    dst = Pix(src.w * 2, src.h * 2)
+    for y in range(src.h):
+        row = y * src.w
+        for x in range(src.w):
+            c = src.px[row + x]
+            if c is None:
+                continue
+            dx, dy = x * 2, y * 2
+            dst.put(dx, dy, c)
+            dst.put(dx + 1, dy, c)
+            dst.put(dx, dy + 1, c)
+            dst.put(dx + 1, dy + 1, c)
+    return dst
+
+
+def _person(kind: int, frame: int) -> Pix:
+    """One villager on the yard grid. Frame 0 idle, 1–4 a walk, facing right."""
+    pix = Pix(LOGICAL_W, LOGICAL_H)
+    bob = (0, 0, -1, 0, -1)[frame]
+    # (left foot dx, right foot dx) from the body center. Facing right.
+    steps = {
+        0: (-3, 4),
+        1: (-8, 8),
+        2: (-2, 2),
+        3: (7, -8),
+        4: (2, -2),
+    }[frame]
+    # Hand offsets from each shoulder. Opposite the front foot.
+    hands = {
+        0: ((-1, 11), (2, 11)),
+        1: ((-2, 6), (5, 13)),
+        2: ((0, 8), (3, 9)),
+        3: ((3, 13), (0, 5)),
+        4: ((1, 9), (2, 8)),
+    }[frame]
+    sway = (0, -2, -1, 2, 1)[frame]
+
+    if kind == 0:
+        _smith(pix, bob, steps, hands)
+    elif kind == 1:
+        _courier(pix, bob, steps, hands, sway)
+    else:
+        _gardener(pix, bob, steps, sway)
     pix.outline()
-    return pix.image()
+    _shadow_feet(pix, [20 + steps[0], 22 + steps[1]] if kind != 2 else [18 + sway, 26 + sway])
+    return _up2(pix)
+
+
+def _smith(
+    pix: Pix,
+    bob: int,
+    steps: tuple[int, int],
+    hands: tuple[tuple[int, int], tuple[int, int]],
+) -> None:
+    cx = 20
+    hy = 30 + bob
+    sy = 18 + bob
+    # Far arm, then legs, torso, near arm, head, hammer.
+    _limb(pix, cx - 6, sy, cx - 6 + hands[0][0], sy + hands[0][1], MOSS_CLOTH, 3)
+    _hand(pix, cx - 7 + hands[0][0], sy + hands[0][1], SKIN_TAN)
+    _limb(pix, cx - 4, hy, cx + steps[0], 48 + bob, LEATHER, 4)
+    _limb(pix, cx + 2, hy, cx + steps[1], 48 + bob, LEATHER, 4)
+    _boot(pix, cx + steps[0], 48 + bob)
+    _boot(pix, cx + steps[1] - 1, 48 + bob)
+    _torso(pix, cx - 7, 17 + bob, 15, 14, MOSS_CLOTH)
+    # Apron over the tunic, with a strap and stitches.
+    _shade_rect(pix, cx - 5, 22 + bob, 11, 12, APRON)
+    pix.rect(cx - 1, 17 + bob, 3, 6, APRON[2])
+    pix.rect(cx - 5, 22 + bob, 11, 1, APRON[4])
+    for syy in range(24 + bob, 32 + bob, 3):
+        pix.put(cx - 4, syy, APRON[0])
+        pix.put(cx + 4, syy, APRON[1])
+    pix.rect(cx - 2, 28 + bob, 4, 3, APRON[1])
+    pix.put(cx - 1, 29 + bob, APRON[4])
+    # Belt.
+    pix.rect(cx - 6, hy - 1, 13, 2, LEATHER[1])
+    pix.rect(cx - 1, hy - 1, 3, 2, IRON[3])
+    pix.put(cx, hy - 1, IRON[5])
+    # Neckerchief.
+    pix.rect(cx - 3, 16 + bob, 7, 2, (164, 36, 44))
+    pix.put(cx - 2, 16 + bob, (220, 140, 130))
+    _limb(pix, cx + 6, sy, cx + 6 + hands[1][0], sy + hands[1][1], MOSS_CLOTH, 3)
+    hx = cx + 6 + hands[1][0]
+    hyh = sy + hands[1][1]
+    _hand(pix, hx, hyh, SKIN_TAN)
+    # Hammer in the near hand. Head is iron, handle is wood.
+    _limb(pix, hx + 2, hyh + 2, hx + 3, hyh + 10, LEATHER, 2)
+    pix.rect(hx - 1, hyh - 2, 10, 5, IRON[2])
+    pix.rect(hx - 1, hyh - 2, 10, 1, IRON[5])
+    pix.rect(hx - 1, hyh + 2, 10, 1, IRON[0])
+    pix.put(hx + 1, hyh - 1, IRON[5])
+    pix.put(hx + 6, hyh, IRON[1])
+    _draw_head(pix, cx - 6, 4 + bob, "smith")
+
+
+def _courier(
+    pix: Pix,
+    bob: int,
+    steps: tuple[int, int],
+    hands: tuple[tuple[int, int], tuple[int, int]],
+    sway: int,
+) -> None:
+    cx = 22
+    hy = 31 + bob
+    sy = 18 + bob
+    _limb(pix, cx - 5, sy, cx - 5 + hands[0][0], sy + hands[0][1], WOOL, 3)
+    _hand(pix, cx - 6 + hands[0][0], sy + hands[0][1], SKIN_LIGHT)
+    _limb(pix, cx - 3, hy, cx + steps[0], 48 + bob, WOOL, 3)
+    _limb(pix, cx + 2, hy, cx + steps[1], 48 + bob, WOOL, 3)
+    _boot(pix, cx + steps[0], 48 + bob)
+    _boot(pix, cx + steps[1] - 1, 48 + bob)
+    _torso(pix, cx - 6, 17 + bob, 12, 15, WOOL)
+    # Shirt and a row of buttons. The coat opening is a light wedge.
+    pix.rect(cx - 2, 18 + bob, 4, 6, CREAM[4])
+    pix.put(cx - 1, 19 + bob, CREAM[5])
+    for by in (24, 27, 30):
+        pix.rect(cx - 1, by + bob, 2, 2, (212, 168, 48))
+        pix.put(cx - 1, by + bob, (255, 220, 120))
+    pix.rect(cx - 6, hy - 1, 12, 2, LEATHER[2])
+    pix.rect(cx - 1, hy - 1, 3, 2, IRON[4])
+    # Satchel on the trailing hip. It sways against the stride.
+    sx = cx - 12 + sway
+    _shade_rect(pix, sx, 24 + bob, 7, 9, LEATHER)
+    pix.rect(sx, 24 + bob, 7, 1, LEATHER[5])
+    pix.rect(sx + 2, 27 + bob, 3, 3, IRON[3])
+    pix.put(sx + 3, 28 + bob, IRON[5])
+    pix.rect(sx + 5, 20 + bob, 1, 6, LEATHER[1])
+    _limb(pix, cx + 5, sy, cx + 5 + hands[1][0], sy + hands[1][1], WOOL, 3)
+    _hand(pix, cx + 5 + hands[1][0], sy + hands[1][1], SKIN_LIGHT)
+    # A folded letter in the near hand on the passing frames.
+    if frame_letter(hands):
+        hx = cx + 5 + hands[1][0]
+        hyh = sy + hands[1][1] + 2
+        pix.rect(hx, hyh, 5, 4, CREAM[5])
+        pix.rect(hx, hyh + 3, 5, 1, CREAM[2])
+        pix.put(hx + 1, hyh, (180, 60, 60))
+    _draw_head(pix, cx - 6, 5 + bob, "courier")
+
+
+def frame_letter(hands: tuple[tuple[int, int], tuple[int, int]]) -> bool:
+    return hands[1][1] < 11
+
+
+def _gardener(pix: Pix, bob: int, steps: tuple[int, int], sway: int) -> None:
+    cx = 24
+    sy = 18 + bob
+    # Basket arm (far / screen left) and the near arm, then the skirt hides the legs.
+    _limb(pix, cx - 6, sy, cx - 10 + sway, sy + 12, ROSE, 3)
+    _hand(pix, cx - 12 + sway, sy + 12, SKIN_WARM)
+    _basket(pix, cx - 16 + sway, sy + 14)
+    _torso(pix, cx - 6, 17 + bob, 12, 10, ROSE)
+    # Shawl over the shoulders.
+    _shade_rect(pix, cx - 8, 17 + bob, 16, 5, CREAM)
+    pix.rect(cx - 8, 17 + bob, 16, 1, CREAM[5])
+    pix.rect(cx - 8, 21 + bob, 16, 1, CREAM[1])
+    pix.put(cx - 4, 19 + bob, CREAM[4])
+    # Skirt flares, and it sways with the step.
+    top = 26 + bob
+    hem = 49 + bob
+    for y in range(top, hem):
+        t = (y - top) / max(1, hem - top)
+        half = 5 + int(t * 7)
+        shift = int(sway * t)
+        for x in range(cx - half + shift, cx + half + shift + 1):
+            nx = (x - cx - shift) / max(1, half)
+            tone = 5 if nx < -0.4 and t < 0.3 else 1 if nx > 0.55 else 3
+            if abs(x - (cx + shift)) <= 1:
+                tone = min(6, tone + 2)
+            pix.put(x, y, ROSE[tone])
+    pix.rect(cx - 10 + sway, hem - 2, 20, 2, ROSE[0])
+    pix.put(cx - 8 + sway, hem - 1, ROSE[4])
+    # Shoes under the hem.
+    _boot(pix, cx + steps[0] - 2, 48 + bob)
+    _boot(pix, cx + steps[1] - 1, 48 + bob)
+    _limb(pix, cx + 5, sy, cx + 8, sy + 11, ROSE, 3)
+    _hand(pix, cx + 7, sy + 11, SKIN_WARM)
+    _draw_head(pix, cx - 6, 4 + bob, "gardener")
+
+
+def _basket(pix: Pix, x: int, y: int) -> None:
+    _shade_rect(pix, x, y, 10, 7, LEATHER)
+    pix.rect(x, y, 10, 1, LEATHER[5])
+    pix.rect(x + 1, y + 3, 8, 1, LEATHER[1])
+    pix.rect(x, y + 6, 10, 1, LEATHER[0])
+    # Three different blooms, so the basket is not a brown box.
+    pix.put(x + 2, y - 1, (196, 48, 58))
+    pix.put(x + 3, y - 2, (236, 150, 140))
+    pix.put(x + 3, y - 1, (255, 210, 90))
+    pix.put(x + 5, y - 2, (230, 190, 48))
+    pix.put(x + 6, y - 1, (255, 236, 160))
+    pix.put(x + 7, y - 2, (236, 236, 228))
+    pix.put(x + 8, y - 1, (255, 214, 80))
+    pix.put(x + 4, y - 3, GRASS[5])
+    pix.put(x + 6, y - 3, GRASS[6])
+
+
+def folk() -> Image.Image:
+    sheet = Pix(CELL_W * FRAMES, CELL_H * PEOPLE)
+    for person in range(PEOPLE):
+        for frame in range(FRAMES):
+            sheet.blit(_person(person, frame), frame * CELL_W, person * CELL_H)
+    return sheet.image()
+
+
+def opaque_stats(im: Image.Image) -> tuple[int, float]:
+    """Unique opaque colors, and the share of the most common one."""
+    counts: dict[tuple[int, int, int], int] = {}
+    total = 0
+    for px in im.getdata():
+        if px[3] == 0:
+            continue
+        total += 1
+        key = (px[0], px[1], px[2])
+        counts[key] = counts.get(key, 0) + 1
+    if total == 0:
+        return 0, 0.0
+    return len(counts), max(counts.values()) / total

@@ -8,8 +8,8 @@ import '../../../models/vfx_quality.dart';
 
 /// Folk sheet from `tool/town_life_art.py` (96×112 cells).
 ///
-/// The source is hero-sized. [displayW] and [displayH] are the on-screen
-/// size beside the 42px party, a clean 2:1 nearest downsample.
+/// Each cell is a 48×56 drawing doubled, so [displayW] and [displayH]
+/// keep a face, clothes, and a solid outline beside the 42px party.
 abstract final class TownFolkSheet {
   static const cellW = 96;
   static const cellH = 112;
@@ -18,7 +18,7 @@ abstract final class TownFolkSheet {
   static const frames = 5;
   static const people = 3;
   static const loop = Duration(milliseconds: 4800);
-  static const step = Duration(milliseconds: 180);
+  static const step = Duration(milliseconds: 140);
 }
 
 /// One posed townsfolk. [u] runs along the yard, 0 to 1.
@@ -29,6 +29,7 @@ class TownFolkFrame {
     required this.column,
     required this.flip,
     required this.bob,
+    required this.lift,
   });
 
   final int person;
@@ -36,6 +37,9 @@ class TownFolkFrame {
   final int column;
   final bool flip;
   final int bob;
+
+  /// 0 stands on the near edge of the yard. 1 stands farther up the lane.
+  final double lift;
 }
 
 /// Daylight town motion. Minimal VFX and the system reduce-motion flag hold
@@ -51,34 +55,51 @@ double _ping(double t) {
   return (1 - x) * 2;
 }
 
+int _walkColumn(double t) {
+  final wrapped = t - t.floorToDouble();
+  final step = math.max(1, TownFolkSheet.step.inMilliseconds);
+  return 1 + ((wrapped * TownFolkSheet.loop.inMilliseconds) ~/ step) % 4;
+}
+
+int _hop(int column) => column.isEven ? 2 : 0;
+
 List<TownFolkFrame> townFolkFrames(double t, {required bool moving}) {
   if (!moving) {
     return const [
-      TownFolkFrame(person: 0, u: 0.12, column: 0, flip: false, bob: 0),
-      TownFolkFrame(person: 1, u: 0.84, column: 0, flip: false, bob: 0),
-      TownFolkFrame(person: 2, u: 0.48, column: 0, flip: false, bob: 0),
+      TownFolkFrame(person: 0, u: 0.12, column: 0, flip: false, bob: 0, lift: 0.82),
+      TownFolkFrame(person: 1, u: 0.84, column: 0, flip: false, bob: 0, lift: 0.08),
+      TownFolkFrame(person: 2, u: 0.48, column: 0, flip: false, bob: 0, lift: 0.42),
     ];
   }
   final loopMs = TownFolkSheet.loop.inMilliseconds;
-  final step = math.max(1, TownFolkSheet.step.inMilliseconds);
-  final column = 1 + ((t * loopMs) ~/ step) % 4;
-  final bob = ((t * loopMs) ~/ 420) % 2;
+  final lead = _walkColumn(t);
+  final follow = _walkColumn(t + 0.18);
+  final idleBob = ((t * loopMs) ~/ 420) % 2 == 0 ? 0 : 2;
   return [
     TownFolkFrame(
       person: 0,
       u: _ping(t),
-      column: column,
+      column: lead,
       flip: (t - t.floorToDouble()) >= 0.5,
-      bob: 0,
+      bob: _hop(lead),
+      lift: 0.82,
     ),
     TownFolkFrame(
       person: 1,
       u: _ping(t + 0.37),
-      column: column,
+      column: follow,
       flip: ((t + 0.37) - (t + 0.37).floorToDouble()) >= 0.5,
-      bob: 0,
+      bob: _hop(follow),
+      lift: 0.08,
     ),
-    TownFolkFrame(person: 2, u: 0.56, column: 0, flip: false, bob: bob),
+    TownFolkFrame(
+      person: 2,
+      u: 0.56,
+      column: 0,
+      flip: false,
+      bob: idleBob,
+      lift: 0.42,
+    ),
   ];
 }
 
@@ -228,9 +249,12 @@ class _FolkPainter extends CustomPainter {
     final travel = lane.width - spriteW;
     if (travel < 4 || spriteH < 8 || spriteW < 6) return;
     final paint = Paint()..filterQuality = FilterQuality.none;
-    for (final frame in frames) {
+    final spare = math.max(0.0, lane.height - spriteH - 1);
+    final ordered = [...frames]..sort((a, b) => b.lift.compareTo(a.lift));
+    for (final frame in ordered) {
       final x = lane.left + frame.u * travel;
-      final y = math.max(lane.top, lane.bottom - spriteH - frame.bob);
+      final lift = frame.lift * math.max(0.0, spare - frame.bob);
+      final y = math.max(lane.top, lane.bottom - spriteH - frame.bob - lift);
       final src = Rect.fromLTWH(
         frame.column * TownFolkSheet.cellW.toDouble(),
         frame.person * TownFolkSheet.cellH.toDouble(),
