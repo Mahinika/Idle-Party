@@ -477,7 +477,8 @@ class _GameHomePageState extends State<GameHomePage>
   /// [CaveAtmosphere.fullBleedScene] or the warm-up lands in a different
   /// cache entry and buys nothing.
   /// Warms owned town PNGs after the first paint so ENTER town does not decode
-  /// ~20 files on the critical path (see [CustomAssets.townAssetPaths]).
+  /// the set on the critical path, including nameplates, pennants, and lanterns
+  /// (see [CustomAssets.townAssetPaths]).
   Future<void> _precacheTownAssets() async {
     BootClock.mark('townArtWarmupStart');
     try {

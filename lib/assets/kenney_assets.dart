@@ -207,9 +207,9 @@ abstract final class KenneyAssets {
   static const String enemyVeilSupport =
       'assets/custom/enemies/veil_support.png';
 
-  static const String townNameplate = 'assets/custom/town/nameplate.png';
-  static const String townPennants = 'assets/custom/town/pennants.png';
-  static const String townLanterns = 'assets/custom/town/lanterns.png';
+  static String get townNameplate => CustomAssets.townNameplate;
+  static String get townPennants => CustomAssets.townPennants;
+  static String get townLanterns => CustomAssets.townLanterns;
   static String get enemyBossTide => CustomAssets.enemyBossTide;
   static String get enemyTideMite => CustomAssets.enemyTideMite;
   static String get enemyBossEmber => CustomAssets.enemyBossEmber;

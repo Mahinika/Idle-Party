@@ -320,6 +320,9 @@ abstract final class CustomAssets {
   static const String townScuff = '$_townRoot/scuff.png';
   static const String townContact = '$_townRoot/contact.png';
   static const String townFolk = '$_townRoot/folk.png';
+  static const String townNameplate = '$_townRoot/nameplate.png';
+  static const String townPennants = '$_townRoot/pennants.png';
+  static const String townLanterns = '$_townRoot/lanterns.png';
   static const String townWell = '$_townRoot/well.png';
   static const String townVaultShut = '$_townRoot/vault_shut.png';
   static const String townVaultOpen = '$_townRoot/vault_open.png';
@@ -349,6 +352,9 @@ abstract final class CustomAssets {
     townScuff,
     townContact,
     townFolk,
+    townNameplate,
+    townPennants,
+    townLanterns,
     townWell,
     townVaultShut,
     townVaultOpen,
