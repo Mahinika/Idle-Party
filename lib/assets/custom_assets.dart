@@ -308,6 +308,7 @@ abstract final class CustomAssets {
   static const String townBackdrop = '$_townRoot/backdrop.png';
   static const String townGround = '$_townRoot/ground.png';
   static const String townPath = '$_townRoot/path.png';
+  static const String townApproach = '$_townRoot/approach.png';
   static const String townTreeRound = '$_townRoot/tree_round.png';
   static const String townTreeTall = '$_townRoot/tree_tall.png';
   static const String townFlowers = '$_townRoot/flowers.png';
@@ -341,6 +342,7 @@ abstract final class CustomAssets {
     townBackdrop,
     townGround,
     townPath,
+    townApproach,
     townTreeRound,
     townTreeTall,
     townFlowers,

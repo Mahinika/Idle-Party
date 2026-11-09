@@ -1210,33 +1210,12 @@ def generate_backdrop() -> Image.Image:
         pix.put(bx - 2, by - 1, STONE[1])
         pix.put(bx + 3, by, STONE[1])
         pix.put(bx - 3, by, STONE[1])
-    # The horizon is the same lawn as the tile, not one flat green band.
-    horizon = (
-        (28, 96, 40),
-        (48, 140, 48),
-        (72, 168, 58),
-        (110, 190, 78),
-        (36, 118, 64),
-        (150, 200, 96),
-    )
+    # A calm lawn under the ridge. Wide bands, the same greens as the tile.
+    # 120 divides 360, so the band edges are not a one-pixel speckle.
     for y in range(176, 200):
         for x in range(360):
-            n = (x * 13 + y * 7) % 17
-            tone = 2
-            if n < 3:
-                tone = 0
-            elif n < 6:
-                tone = 1
-            elif n < 10:
-                tone = 3
-            elif n > 14:
-                tone = 5
-            if (x + y) % 29 == 0:
-                tone = 4
-            pix.put(x, y, horizon[tone])
-            if n == 8 and y < 196:
-                pix.put(x, y - 2, (220, 90, 80))
-                pix.put(x, y - 3, (255, 200, 120))
+            band = (x // 120 + (0 if y < 188 else 1)) % 2
+            pix.put(x, y, (62, 168, 54) if band == 0 else (86, 186, 64))
     return pix.image()
 
 
@@ -1288,7 +1267,7 @@ python3 tool/generate_town_art.py
 |------|--------|
 | Ink (32, 22, 18), 1 px contour | Same warm ink as the heroes |
 | Light | Upper-left, in clusters on each stone, tile, and fold |
-| Ground | Varied lawn, worn track, cobbles, flowers, shade |
+| Ground | Soft lawn, 480×960, seamless. Cobbles and flowers sit on the paths |
 | Roofs | Individual tiles. Guild slate, houses terracotta, market a folded awning |
 | Windows | Amber glass, wood mullions |
 | People | Smith, courier, and gardener. Idle + 4 walk frames |
@@ -1299,8 +1278,9 @@ python3 tool/generate_town_art.py
 | File | Use |
 |------|-----|
 | backdrop.png | Banded sky, clouds, ridge, distant roof |
-| ground.png | Repeating lawn, 240×240, wraps |
-| path.png | Cobble course, 360×52, transparent gaps |
+| ground.png | Soft lawn, 480×960, edges meet |
+| path.png | Cobble street, 360×36, flower beds at the ends |
+| approach.png | Cobble spur, 36×192, mortar meets at the wrap |
 | alert.png | Claim spark on guild and vault |
 | tree_round.png / tree_tall.png | Leaf clumps, blossoms, fruit |
 | flowers.png / shrub.png / wild.png / herbs.png | Four different plantings |
@@ -1324,6 +1304,7 @@ def main() -> int:
         ("backdrop.png", generate_backdrop()),
         ("ground.png", generate_ground()),
         ("path.png", generate_path()),
+        ("approach.png", life_art.approach()),
         ("tree_round.png", generate_tree_round()),
         ("tree_tall.png", generate_tree_tall()),
         ("flowers.png", generate_flowers()),
@@ -1398,15 +1379,21 @@ def main() -> int:
         return life_art.opaque_stats(by_name[name])
 
     ground_n, ground_top = stats("ground.png")
+    seam, interior = life_art.edge_gap(by_name["ground.png"])
     round_n, _ = stats("tree_round.png")
     tall_n, _ = stats("tree_tall.png")
     folk_n, _ = stats("folk.png")
     print(
         f"colors ground={ground_n} top={ground_top:.3f} "
+        f"seam={seam:.2f} interior={interior:.2f} "
         f"tree_round={round_n} tree_tall={tall_n} folk={folk_n}"
     )
-    if ground_top > 0.40 or ground_n < 36:
+    # A calm lawn is mostly one mid green. The old slab was ~73% of a
+    # single color, and a cut tile jumps several times the interior step.
+    if ground_top > 0.68 or ground_n < 3:
         raise SystemExit("ground.png is still a flat lawn")
+    if seam > max(6.0, interior * 1.75 + 2):
+        raise SystemExit("ground.png still has a hard tile seam")
     if round_n < 24 or tall_n < 20:
         raise SystemExit("trees need more than a dozen colors")
     if folk_n < 70:

@@ -7,8 +7,6 @@ the clothes. Owned pixels only. Deterministic: no RNG.
 """
 from __future__ import annotations
 
-import math
-
 from PIL import Image
 
 INK = (32, 22, 18, 255)
@@ -152,7 +150,10 @@ def _hash(x: int, y: int) -> int:
     return n
 
 
-def _noise(x: int, y: int, cell: int, w: int = 240, h: int = 240) -> float:
+def _noise(x: int, y: int, cell: int, w: int = 480, h: int = 960) -> float:
+    # The lattice only meets itself when the cell divides both sides.
+    if w % cell or h % cell:
+        raise ValueError(f"noise cell {cell} must divide the {w}x{h} tile")
     x %= w
     y %= h
     x0 = (x // cell) * cell
@@ -193,142 +194,60 @@ def _is_grass(c: tuple[int, int, int, int] | None) -> bool:
 
 
 def ground() -> Image.Image:
-    """A tiled lawn: mounds, a worn track, stones, and flowers.
+    """A soft lawn, larger than a phone, with no speckle and no grid.
 
-    One green must not own the tile. Edges wrap so the repeat is a place.
+    480×960 covers the 360-wide goldens without a repeat. Cells divide
+    both sides, so a taller square still meets at the edge. Flowers and
+    stones live on the paths and the beds, not in this tile.
     """
-    w = h = 240
+    w, h = 480, 960
     pix = Pix(w, h)
     for y in range(h):
         for x in range(w):
-            n = 0.62 * _noise(x, y, 48, w, h) + 0.38 * _noise(x, y, 18, w, h)
-            # Bell-shaped noise piles up in the middle. Split that middle
-            # across several greens with a second octave.
-            split = _noise(x + 90, y + 40, 24, w, h)
-            if n < 0.28:
-                tone = 1
-            elif n < 0.42:
-                tone = 2 if split < 0.5 else 4
-            elif n < 0.58:
-                tone = 3 if split < 0.45 else 5
-            elif n < 0.74:
-                tone = 4 if split < 0.55 else 6
+            # Two octaves, both periodic. The phase puts a rounded
+            # light patch in the part of the tile a phone actually shows,
+            # so the shade is a blob and not a vertical split.
+            broad = _noise(x + 180, y + 220, 160, w, h)
+            soft = _noise(x + 180, y + 220, 80, w, h)
+            v = 0.82 * broad + 0.18 * soft
+            if v < 0.46:
+                tone = 3
+            elif v < 0.78:
+                tone = 4
             else:
-                tone = 6 if split < 0.6 else 7
-            north = _noise(x, y - 5, 48, w, h)
-            west = _noise(x - 5, y, 48, w, h)
-            if n + 0.08 < north and n + 0.05 < west:
-                tone = max(0, tone - 2)
-            elif n > north + 0.1:
-                tone = min(7, tone + 1)
+                tone = 5
             pix.put(x, y, GRASS[tone])
-
-    # Clover patches. A different green, not another grass recolor blob.
-    for cy in range(0, h, 40):
-        for cx in range(20, w, 40):
-            jx = _hash(cx, cy) % 14 - 7
-            jy = _hash(cy, cx) % 10 - 5
-            if _hash(cx, cy + 3) % 3 == 0:
-                continue
-            _clover_patch(pix, cx + jx, cy + jy)
-
-    # Sunlit mounds. A yellow-green, so the lawn is not one green family.
-    for cx, cy, rx, ry in (
-        (36, 28, 22, 14),
-        (128, 18, 18, 12),
-        (200, 48, 26, 16),
-        (70, 100, 20, 12),
-        (168, 130, 24, 14),
-        (24, 188, 18, 12),
-        (210, 200, 22, 14),
-        (110, 210, 16, 10),
-    ):
-        _soft_blob(pix, cx, cy, rx, ry, SUN, rim=(48, 110, 40))
-
-    # Dirt clearings. Separate patches, not a line that reads as a fence.
-    for cx, cy, rx, ry in (
-        (58, 64, 16, 9),
-        (150, 78, 14, 8),
-        (230, 150, 18, 10),
-        (40, 150, 12, 8),
-        (96, 168, 15, 8),
-    ):
-        _soft_blob(pix, cx, cy, rx, ry, DIRT, rim=GRASS[1])
-
-    # Flagstones on the track and a few in the grass. Different shapes.
-    stones = (
-        (18, 150, 0), (46, 176, 1), (78, 158, 2), (112, 188, 0),
-        (148, 164, 1), (186, 196, 2), (214, 170, 0), (8, 196, 1),
-        (64, 40, 2), (132, 28, 0), (200, 70, 1), (36, 96, 2),
-        (170, 100, 0), (230, 40, 1), (100, 120, 2),
-    )
-    for sx, sy, kind in stones:
-        _pebble(pix, sx, sy, kind)
-
-    flowers = (
-        (16, 18, 0), (48, 36, 1), (84, 14, 2), (120, 44, 3),
-        (156, 22, 4), (196, 48, 5), (228, 16, 0), (28, 72, 2),
-        (70, 88, 4), (108, 64, 1), (154, 80, 5), (188, 96, 3),
-        (220, 78, 1), (12, 118, 4), (52, 132, 0), (96, 108, 5),
-        (140, 128, 2), (176, 112, 0), (214, 136, 4), (40, 210, 3),
-        (88, 220, 1), (130, 206, 5), (168, 224, 2), (208, 208, 0),
-        (232, 228, 4), (24, 160, 5), (200, 150, 3),
-    )
-    for fx, fy, kind in flowers:
-        if _hash(fx, fy) % 5 == 0:
-            continue
-        _flower(pix, fx, fy, kind)
-
-    # Blades in clumps, on grass only, so the lawn has a nap.
-    for cy in range(6, h, 14):
-        for cx in range(4, w, 11):
-            if _hash(cx, cy) % 4 != 0:
-                continue
-            for i, dx in enumerate((-2, 0, 3)):
-                if not _is_grass(pix.get(cx + dx, cy)):
-                    continue
-                height = 3 + (i + _hash(cx, cy) % 2)
-                tip = GRASS[7] if i != 1 else GRASS[6]
-                for k in range(height):
-                    yy = cy - k
-                    if _is_grass(pix.get((cx + dx) % w, yy % h)):
-                        pix.put_wrap(cx + dx, yy, tip if k == height - 1 else GRASS[5])
     return pix.image()
 
 
-def _soft_blob(
-    pix: Pix,
-    cx: int,
-    cy: int,
-    rx: int,
-    ry: int,
-    ramp: tuple[tuple[int, int, int], ...] | list[tuple[int, int, int]],
-    rim: tuple[int, int, int],
-) -> None:
-    for y in range(-ry, ry + 1):
-        for x in range(-rx, rx + 1):
-            nx = x / max(1, rx)
-            ny = y / max(1, ry)
-            wob = 0.18 * math.sin((cx + x) * 0.9 + (cy + y) * 0.4)
-            if nx * nx + ny * ny > 1.0 + wob:
-                continue
-            if ny > 0.55:
-                pix.put_wrap(cx + x, cy + y, rim)
-            else:
-                tone = 0 if nx > 0.35 or ny > 0.2 else len(ramp) - 1 if nx < -0.25 and ny < -0.2 else len(ramp) // 2
-                pix.put_wrap(cx + x, cy + y, ramp[tone])
+def edge_gap(img: Image.Image) -> tuple[float, float]:
+    """Mean channel jump across the wrap, and across an interior step.
 
+    A seamless tile keeps those two close. A cut repeat makes the seam
+    several times the interior.
+    """
+    px = img.convert("RGB").load()
+    w, h = img.size
 
-def _clover_patch(pix: Pix, cx: int, cy: int) -> None:
-    for y in range(-6, 7):
-        for x in range(-7, 8):
-            if x * x + y * y > 36:
-                continue
-            pix.put_wrap(cx + x, cy + y, CLOVER[1 + (x + y) % 3])
-    for dx, dy in ((-3, -1), (0, -3), (3, 0), (-1, 2)):
-        pix.put_wrap(cx + dx, cy + dy, CLOVER[3])
-        pix.put_wrap(cx + dx + 1, cy + dy, CLOVER[2])
-        pix.put_wrap(cx + dx, cy + dy + 1, CLOVER[0])
+    def dist(a: tuple[int, int, int], b: tuple[int, int, int]) -> float:
+        return (abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])) / 3
+
+    seam = 0.0
+    n = 0
+    for y in range(h):
+        seam += dist(px[0, y], px[w - 1, y])
+        n += 1
+    for x in range(w):
+        seam += dist(px[x, 0], px[x, h - 1])
+        n += 1
+    interior = 0.0
+    m = 0
+    for y in range(8, h - 8, 11):
+        for x in range(8, w - 8, 11):
+            interior += dist(px[x, y], px[x + 1, y])
+            interior += dist(px[x, y], px[x, y + 1])
+            m += 2
+    return seam / n, interior / max(1, m)
 
 
 def _pebble(pix: Pix, cx: int, cy: int, kind: int) -> None:
@@ -382,28 +301,65 @@ def _flower(pix: Pix, x: int, y: int, kind: int) -> None:
     pix.put_wrap(x, y + 3, GRASS[0])
 
 
+MORTAR = (58, 86, 48)
+
+
+def _mortar(pix: Pix) -> None:
+    for y in range(pix.h):
+        for x in range(pix.w):
+            pix.put(x, y, MORTAR)
+
+
+def _bloom_bed(pix: Pix, x: int, y: int, kinds: tuple[tuple[int, int], ...]) -> None:
+    """A small grass bed, then a few blooms. One cluster, not a sprinkle."""
+    for dy in range(-7, 9):
+        for dx in range(-12, 13):
+            if (dx * dx) / 130 + (dy * dy) / 42 > 1:
+                continue
+            pix.put(x + dx, y + dy, GRASS[4] if dy < 2 else GRASS[3])
+    for dx, kind in kinds:
+        _flower(pix, x + dx, y, kind)
+
+
 def path() -> Image.Image:
-    """Cobbles under the yard. Gaps stay transparent so the lawn shows."""
-    pix = Pix(360, 52)
+    """One cobble street. Two courses, flower beds only at the ends."""
+    pix = Pix(360, 36)
+    _mortar(pix)
     course = (
-        (2, 16, 18, 12, 0), (22, 20, 16, 11, 1), (40, 14, 20, 14, 2),
-        (62, 22, 14, 10, 0), (78, 16, 18, 13, 1),
-        (100, 18, 22, 14, 2), (124, 14, 16, 12, 0), (142, 20, 20, 13, 1),
-        (164, 16, 18, 14, 2), (184, 22, 16, 11, 0), (202, 15, 22, 15, 1),
-        (226, 20, 18, 12, 2), (246, 14, 16, 13, 0), (264, 18, 20, 14, 1),
-        (286, 22, 14, 11, 2), (302, 16, 18, 13, 0), (322, 20, 20, 14, 1),
-        (344, 15, 14, 12, 2),
-        (14, 32, 12, 8, 1), (48, 34, 14, 9, 0), (110, 34, 16, 10, 2),
-        (168, 36, 12, 8, 1), (230, 34, 14, 9, 0), (300, 36, 16, 8, 2),
+        (4, 3, 30, 15, 0), (36, 4, 26, 14, 1), (64, 2, 32, 16, 2),
+        (98, 4, 28, 14, 0), (128, 3, 32, 15, 1), (162, 2, 30, 16, 2),
+        (194, 4, 32, 14, 0), (228, 3, 30, 15, 1), (260, 2, 30, 16, 2),
+        (292, 4, 30, 14, 0), (324, 3, 32, 15, 1),
+        (16, 18, 28, 15, 2), (46, 19, 32, 14, 0), (80, 18, 26, 15, 1),
+        (108, 17, 32, 16, 2), (142, 19, 28, 14, 0), (172, 18, 32, 15, 1),
+        (206, 17, 30, 16, 2), (238, 19, 28, 14, 0), (268, 18, 32, 15, 1),
+        (302, 17, 26, 16, 2), (330, 18, 26, 14, 0),
     )
     for x, y, bw, bh, kind in course:
         _cobble(pix, x, y, bw, bh, kind)
-    # Grass and a few blooms in the joints.
-    for x, y, kind in (
-        (36, 8, 1), (96, 6, 0), (160, 8, 4), (250, 6, 3), (330, 8, 5),
-        (70, 42, 2), (200, 44, 1), (280, 42, 0),
-    ):
-        _flower(pix, x, y, kind)
+    _bloom_bed(pix, 26, 16, ((-4, 0), (4, 1)))
+    _bloom_bed(pix, 334, 16, ((-4, 4), (4, 3)))
+    return pix.image()
+
+
+def approach() -> Image.Image:
+    """A cobble spur. Top and bottom are the same mortar, so a repeat has no seam.
+
+    Pitch 24, stone 16, so the 8px joint inside the tile matches the joint
+    across y=0.
+    """
+    w, h = 36, 192
+    pix = Pix(w, h)
+    _mortar(pix)
+    y = 4
+    i = 0
+    while y + 16 <= h - 4:
+        kind = i % 3
+        bw = (26, 22, 28)[kind]
+        x = (w - bw) // 2 + (1 if i % 2 == 0 else -1)
+        _cobble(pix, x, y, bw, 16, kind)
+        y += 24
+        i += 1
     return pix.image()
 
 
@@ -442,16 +398,18 @@ def _cobble(pix: Pix, x: int, y: int, w: int, h: int, kind: int) -> None:
 
 
 def worn() -> Image.Image:
-    """Flagstones in front of a door. Not a second full-width strip."""
+    """A short cobble step in front of a door. Same stones as the street."""
     pix = Pix(72, 28)
-    stones = ((1, 8, 14, 10, 0), (16, 6, 12, 11, 1), (30, 10, 16, 10, 2), (48, 7, 12, 11, 0), (60, 12, 10, 8, 1))
+    _mortar(pix)
+    stones = (
+        (2, 4, 18, 14, 0),
+        (22, 6, 16, 13, 1),
+        (40, 4, 18, 15, 2),
+        (58, 7, 12, 12, 0),
+    )
     for x, y, w, h, kind in stones:
         _cobble(pix, x, y, w, h, kind)
-    pix.put(8, 4, GRASS[5])
-    pix.put(9, 5, GRASS[6])
-    pix.put(40, 20, GRASS[4])
-    pix.put(22, 18, (150, 48, 52))
-    pix.put(23, 18, (220, 160, 150))
+    _bloom_bed(pix, 18, 10, ((0, 1),))
     return pix.image()
 
 

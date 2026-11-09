@@ -317,13 +317,17 @@ class _TownSquare extends StatelessWidget {
           bottom: 0,
           child: Image.asset(
             CustomAssets.townGround,
+            // Native pixels. scaleDown would shrink a tile that is larger
+            // than the lawn and bring the repeat back.
+            fit: BoxFit.none,
             repeat: ImageRepeat.repeat,
             alignment: Alignment.topLeft,
             filterQuality: FilterQuality.none,
             excludeFromSemantics: true,
           ),
         ),
-        _yardPath(layout.courtyardPath),
+        for (final spur in layout.approaches) _approach(spur),
+        for (final street in layout.streets) _street(street),
         for (final shade in layout.contacts)
           _sprite(
             shade,
@@ -407,24 +411,36 @@ class _TownSquare extends StatelessWidget {
     return false;
   }
 
-  /// One authored cobble course. It is not repeated into a ruled strip.
-  Widget _yardPath(Rect rect) {
-    const nativeW = 360.0;
-    const nativeH = 52.0;
-    final scale = rect.width / nativeW;
-    final scaled = nativeH * scale;
-    final height = rect.height < scaled ? rect.height : scaled;
-    return Positioned(
-      left: rect.left,
-      width: rect.width,
-      top: rect.bottom - height,
-      height: height,
+  /// One authored cobble street, fitted to the rect the layout measured.
+  Widget _street(Rect rect) {
+    return Positioned.fromRect(
+      rect: rect,
       child: IgnorePointer(
         child: Image.asset(
           CustomAssets.townPath,
           fit: BoxFit.fill,
           filterQuality: FilterQuality.none,
           excludeFromSemantics: true,
+        ),
+      ),
+    );
+  }
+
+  /// A cobble spur. Native pixels, repeated only when the yard is taller
+  /// than the sprite. The sprite's mortar joins, so the repeat is not a line.
+  Widget _approach(Rect rect) {
+    return Positioned.fromRect(
+      rect: rect,
+      child: IgnorePointer(
+        child: ClipRect(
+          child: Image.asset(
+            CustomAssets.townApproach,
+            fit: BoxFit.none,
+            repeat: ImageRepeat.repeatY,
+            alignment: Alignment.topCenter,
+            filterQuality: FilterQuality.none,
+            excludeFromSemantics: true,
+          ),
         ),
       ),
     );

@@ -29,7 +29,7 @@ python3 tool/generate_town_art.py
 |------|--------|
 | Ink (32, 22, 18), 1 px contour | Same warm ink as the heroes |
 | Light | Upper-left, in clusters on each stone, tile, and fold |
-| Ground | Varied lawn, worn track, cobbles, flowers, shade |
+| Ground | Soft lawn, 480×960, seamless. Cobbles and flowers sit on the paths |
 | Roofs | Individual tiles. Guild slate, houses terracotta, market a folded awning |
 | Windows | Amber glass, wood mullions |
 | People | Smith, courier, and gardener. Idle + 4 walk frames |
@@ -40,8 +40,9 @@ python3 tool/generate_town_art.py
 | File | Use |
 |------|-----|
 | backdrop.png | Banded sky, clouds, ridge, distant roof |
-| ground.png | Repeating lawn, 240×240, wraps |
-| path.png | Cobble course, 360×52, transparent gaps |
+| ground.png | Soft lawn, 480×960, edges meet |
+| path.png | Cobble street, 360×36, flower beds at the ends |
+| approach.png | Cobble spur, 36×192, mortar meets at the wrap |
 | alert.png | Claim spark on guild and vault |
 | tree_round.png / tree_tall.png | Leaf clumps, blossoms, fruit |
 | flowers.png / shrub.png / wild.png / herbs.png | Four different plantings |

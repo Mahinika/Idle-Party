@@ -102,14 +102,16 @@ Source: `tool/generate_town_art.py`. License: owned, same as
 `assets/custom/`. No paid packs. Deterministic (no RNG).
 `FilterQuality.none`.
 
-The stone-and-tile buildings stay. The lawn is a varied meadow: several
-greens, clover, a worn track, cobbles, and mixed flowers, with shade on
-the south edge of each mound. Trees are leaf clumps with blossoms and
-fruit. Villagers are a smith, a courier, and a gardener, painted on the
-48×56 yard grid so a face, clothes, and a solid outline sit beside the
-party. Warm ink `(32, 22, 18)` and upper-left light still match the
-heroes. Dungeon art is unchanged. A guild or vault claim is a pixel
-spark on the building, not a round UI dot.
+The stone-and-tile buildings stay. The lawn is a soft meadow: a few close
+greens in large patches, on a tile bigger than the phone, with edges that
+meet so a repeat is not a line. Cobble streets join the back doors to the
+shop roofs, and flowers and stones sit in beds beside those paths and the
+buildings. Trees are leaf clumps with blossoms and fruit. Villagers are a
+smith, a courier, and a gardener, painted on the 48×56 yard grid so a
+face, clothes, and a solid outline sit beside the party. Warm ink
+`(32, 22, 18)` and upper-left light still match the heroes. Dungeon art
+is unchanged. A guild or vault claim is a pixel spark on the building,
+not a round UI dot.
 
 Guild is a pale stone hall. Forge, Market, and Inn keep their jobs
 (chimney and anvil, stall, jetty). Name chips paint last, on the
