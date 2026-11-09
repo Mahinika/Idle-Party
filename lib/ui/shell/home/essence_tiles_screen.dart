@@ -40,7 +40,7 @@ class EssenceTilesScreen extends StatelessWidget {
                 context,
                 'BLESSING',
                 MenuTabs.showKeep(state),
-                'After first hour',
+                'After the first boss or Ascend',
                 () {
                   router.essencePanel = EssencePanel.keep;
                   router.pushSub();
@@ -50,7 +50,7 @@ class EssenceTilesScreen extends StatelessWidget {
                 context,
                 'RELICS',
                 MenuTabs.showRelics(state),
-                'After first hour',
+                'After the first boss or Ascend',
                 () {
                   router.essencePanel = EssencePanel.relics;
                   router.pushSub();

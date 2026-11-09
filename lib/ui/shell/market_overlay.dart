@@ -93,8 +93,23 @@ class _MarketOverlayState extends State<MarketOverlay> {
                     ShellLayout.hint(
                       _upgradesOnly
                           ? 'No upgrades in stock.'
-                          : 'No listings yet.',
+                          : 'No upgrades in stock.',
                       maxLines: 2,
+                    ),
+                    const SizedBox(height: 8),
+                    GameButton(
+                      label: _upgradesOnly ? 'ALL GEAR' : 'REROLL',
+                      style: GameButtonStyle.grey,
+                      dense: true,
+                      expanded: false,
+                      onPressed: _upgradesOnly
+                          ? () => setState(() => _upgradesOnly = false)
+                          : (state.gold >=
+                                    GameLogic.marketListingsPaidRefreshCost(
+                                      state,
+                                    )
+                                ? director.refreshMarketListings
+                                : null),
                     ),
                   ]
                 : [
@@ -156,7 +171,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
             onTap: canFlask ? director.buyMarketFlask : null,
           ),
           MenuChrome.chip(
-            label: '×3 ${formatGold(flaskCost * 3)}',
+            label: 'Buy 3 flasks · ${formatGold(flaskCost * 3)}',
             onTap: state.gold >= flaskCost * 3
                 ? () => director.buyMarketFlasks()
                 : null,
@@ -278,7 +293,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
           ),
           ShellLayout.gap(8),
           ShellLayout.hint(
-            'GAP FILL = empty slot piece (not a budget upgrade). UPGRADE = stronger than worn.',
+            'Fills an empty slot. UPGRADE is stronger than what is worn.',
             maxLines: 2,
           ),
           ShellLayout.gap(6),
@@ -357,7 +372,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
               ? '$upgradeHero · $wornCompare'
               : '$upgradeHero · upgrade')
         : isGapFill
-        ? 'GAP FILL · ${_slotLabel(listing.slot)} · iLvl ${item.effectiveItemLevel}'
+        ? 'Fills empty slot · ${_slotLabel(listing.slot)} · iLvl ${item.effectiveItemLevel}'
         : '${_slotLabel(listing.slot)} · iLvl ${item.effectiveItemLevel}';
 
     return Padding(
@@ -399,7 +414,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
                             const SizedBox(width: 6),
                           ] else if (isGapFill) ...[
                             Text(
-                              'GAP FILL',
+                              'EMPTY SLOT',
                               style: GameTheme.hint(color: GameTheme.torchHot),
                             ),
                             const SizedBox(width: 6),

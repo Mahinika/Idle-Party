@@ -3539,7 +3539,8 @@ class OfflineProgressResult {
     }
     if (wasInDungeon) {
       if (goldGained > 0) {
-        return 'Your party kept fighting the dungeon and earned $goldGained gold while you were away.';
+        return 'Your party kept fighting the dungeon and earned '
+            '${groupedCount(goldGained)} gold while you were away.';
       }
       if (essenceGained > 0) {
         return 'Your party kept fighting the dungeon while you were away.';
@@ -3554,12 +3555,13 @@ class OfflineProgressResult {
     if (goldGained > 0) {
       if (hubChestStopped) {
         return 'Gold filled for $hubChestHours hours and then stopped. '
-            'Your party earned $goldGained gold.';
+            'Your party earned ${groupedCount(goldGained)} gold.';
       }
-      return 'Your party earned $goldGained gold while you were away.';
+      return 'Your party earned ${groupedCount(goldGained)} gold while you were away.';
     }
     if (essenceGained > 0) {
-      return 'Gold kept coming in while you were away.';
+      return 'Your party earned ${groupedCount(essenceGained)} essence '
+          'while you were away.';
     }
     return 'Welcome back.';
   }
@@ -3625,8 +3627,8 @@ class OfflineProgressResult {
     }
     if (goldGained > 0) {
       final goldValue = hubChestStopped
-          ? '+${goldGained}g · full'
-          : '+${goldGained}g';
+          ? '+${groupedCount(goldGained)}g · full'
+          : '+${groupedCount(goldGained)}g';
       ranked.add((6, wasInDungeon ? 'Combat gold' : 'Gold', goldValue));
     }
     ranked.sort((a, b) => a.$1.compareTo(b.$1));

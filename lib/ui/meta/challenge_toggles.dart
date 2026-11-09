@@ -294,12 +294,19 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 Text(
                   md.seasonKey.isEmpty
                       ? 'Season: rotating…'
-                      : 'Season: ${month.name} · '
-                            '+${GameLogic.seasonWeeklyBonusEssence}e '
-                            'first vault claim',
+                      : 'Season: ${month.name}',
                   textAlign: TextAlign.center,
                   style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
+                if (md.seasonKey.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '+${GameLogic.seasonWeeklyBonusEssence} essence on the '
+                    'first vault claim this month',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.hint(color: GameTheme.mossLit),
+                  ),
+                ],
                 if (GameLogic.checkInActive(state)) ...[
                   const SizedBox(height: 2),
                   Text(

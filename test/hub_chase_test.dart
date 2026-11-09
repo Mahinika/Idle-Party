@@ -986,7 +986,7 @@ void main() {
     );
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.keystone);
-    expect(chase.detail, startsWith("Tonight's KEY +5:"));
+    expect(chase.detail, startsWith("Today's KEY +5:"));
     expect(chase.detail, contains('clock'));
     expect(chase.detail, endsWith('.'));
     expect(chase.detail, isNot(contains('iLvl')));
@@ -1009,7 +1009,7 @@ void main() {
     expect(chase.kind, HubChaseKind.keystone);
     expect(
       chase.detail,
-      "Tonight's KEY +2: denser packs — more bodies per room, clock ${Keystone.formatTimer(Keystone.parTimeMs(bossFloor: GameLogic.bossFloorFor(state), key: 2))}.",
+      "Today's KEY +2: denser packs — more bodies per room, clock ${Keystone.formatTimer(Keystone.parTimeMs(bossFloor: GameLogic.bossFloorFor(state), key: 2))}.",
     );
     expect(chase.detail, isNot(contains('Shield')));
   });

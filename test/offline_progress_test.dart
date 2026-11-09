@@ -113,6 +113,12 @@ void main() {
     expect(r.highlightRows.map((e) => e.$1), isNot(contains('Combat gold')));
   });
 
+  test('essence-only welcomeLead names essence, not gold', () {
+    final r = result(essence: 6, gold: 0);
+    expect(r.welcomeLead.toLowerCase(), contains('essence'));
+    expect(r.welcomeLead.toLowerCase(), isNot(contains('gold kept')));
+  });
+
   test('sanctuary AFK uses calm lead and gold/essence rows', () {
     final r = result(gold: 80, essence: 5);
     expect(r.wasInDungeon, isFalse);
@@ -183,8 +189,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('WELCOME BACK'), findsOneWidget);
-    expect(find.textContaining('While you are away'), findsOneWidget);
-    expect(find.textContaining('keep fighting'), findsOneWidget);
+    expect(find.textContaining('Away for'), findsOneWidget);
     expect(find.textContaining('Up next:'), findsOneWidget);
     expect(find.textContaining('AFK'), findsNothing);
     expect(find.textContaining('Sanctuary'), findsNothing);
@@ -226,10 +231,6 @@ void main() {
     expect(find.text('WELCOME BACK'), findsOneWidget);
     expect(
       find.textContaining('Up next: Sandy Caverns · CAMP'),
-      findsOneWidget,
-    );
-    expect(
-      find.textContaining('While you are away the hub pays'),
       findsOneWidget,
     );
     expect(find.textContaining('Daily Run'), findsNothing);
@@ -277,7 +278,7 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('kept fighting in the cave'), findsOneWidget);
+    expect(find.textContaining('dungeon'), findsOneWidget);
     expect(
       find.textContaining('While you are away the hub pays'),
       findsNothing,

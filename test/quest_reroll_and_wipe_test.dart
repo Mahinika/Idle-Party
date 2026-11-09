@@ -39,7 +39,7 @@ void main() {
   test('quest reroll button names rewarded ad like other placements', () {
     expect(
       JobsOverlay.rerollButtonLabel(adFree: false, rerollsLeft: 2),
-      'WATCH AD · REROLL',
+      'NEW GOAL',
     );
     expect(
       JobsOverlay.rerollButtonLabel(adFree: true, rerollsLeft: 1),

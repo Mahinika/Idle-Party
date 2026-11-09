@@ -46,14 +46,17 @@ class ForgeOverlay extends StatefulWidget {
           'Armor +${state.forgeDefenseSheet} · '
           'STA +${state.forgeVitalitySheet}';
     }
+    final move = GameState.softForgePercent(state.moveSpeedBonus).round();
+    final haste = GameState.softForgePercent(state.attackSpeedBonus).round();
+    final crit = GameState.softForgePercent(state.critBonus, softAt: 25).round();
     final parts = <String>[
       'AP +${state.forgeAttackSheet}',
       'Armor +${state.forgeDefenseSheet}',
       'STA +${state.forgeVitalitySheet}',
-      'MOVE +${GameState.softForgePercent(state.moveSpeedBonus).round()}%',
-      'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%',
-      'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%',
-      'MASTERY +${state.forgeMasterySheet}',
+      if (move > 0) 'MOVE +$move%',
+      if (haste > 0) 'HASTE +$haste%',
+      if (crit > 0) 'CRIT +$crit%',
+      if (state.forgeMasterySheet > 0) 'MASTERY +${state.forgeMasterySheet}',
     ];
     return 'Bought: ${parts.join(' · ')}';
   }
@@ -494,9 +497,8 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
           padding: ShellLayout.listPadding.copyWith(bottom: homeFight ? 2 : 6),
           child: Text(
             ForgeOverlay.boughtSummary(state, plain: plain),
-            maxLines: 1,
-            softWrap: false,
-            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+            softWrap: true,
             style: GameTheme.readable(color: homeFight
                   ? GameTheme.parchmentDim
                   : GameTheme.parchment),

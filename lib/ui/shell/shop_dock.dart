@@ -191,7 +191,16 @@ class _ShopDockState extends State<ShopDock> {
             !(storeLine.startsWith('Waiting for') &&
                 ShopDock.goldenTestPriceLabel.isNotEmpty)) ...[
           ShellLayout.gap(4),
-          ShellLayout.hint(storeLine, maxLines: 1),
+          if (storeLine.startsWith('Waiting for'))
+            GameButton(
+              label: 'RETRY',
+              style: GameButtonStyle.grey,
+              dense: true,
+              expanded: false,
+              onPressed: _refresh,
+            )
+          else
+            ShellLayout.hint(storeLine, maxLines: 2),
           const SizedBox(height: 10),
         ],
         ...() {
@@ -335,7 +344,14 @@ class _ShopRow extends StatelessWidget {
         : available
         ? (featuredPrimary ? 'BUY NOW' : 'BUY')
         : 'UNAVAILABLE';
-    return Container(
+    final cardTitle = titleOverride ?? shortTitle(item);
+    final semanticsLabel = owned
+        ? '$cardTitle · owned'
+        : '$cardTitle · $priceLabel · ${NavCopy.playerText(item.description, layout)}';
+    return Semantics(
+      button: canBuy || owned,
+      label: semanticsLabel,
+      child: Container(
       padding: EdgeInsets.all(compact ? 8 : 10),
       decoration: MenuChrome.listCard(selected: owned || highlighted),
       child: Column(
@@ -384,8 +400,6 @@ class _ShopRow extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               NavCopy.playerText(item.description, layout),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
               style: GameTheme.section(color: GameTheme.parchmentDim),
             ),
           ],
@@ -415,6 +429,7 @@ class _ShopRow extends StatelessWidget {
             ),
         ],
       ),
+    ),
     );
   }
 }
