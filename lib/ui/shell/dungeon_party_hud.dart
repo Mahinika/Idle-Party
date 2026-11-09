@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
@@ -23,6 +25,13 @@ import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 import 'kit_hud_chips.dart';
 import 'shell_common.dart';
+
+/// Gold flash for the first beat after any cast, not only signature kits.
+bool _chipJustFired(ClassAbilityDef ability, double cdLeft) {
+  if (ability.justFiredHud(cdLeft)) return true;
+  if (ability.cooldown <= 0.4) return false;
+  return cdLeft > 0.05 && cdLeft >= ability.cooldown - 0.42;
+}
 
 /// The person on the crawl strip. An empty name falls back to the role.
 String partyStripName(PartyHero hero, {required bool plainEnglish}) {
@@ -99,6 +108,7 @@ class PartyHudSpecLine extends StatelessWidget {
     required this.level,
     required this.color,
     this.extra = '',
+    this.role = '',
   });
 
   final String spec;
@@ -106,10 +116,22 @@ class PartyHudSpecLine extends StatelessWidget {
   final Color color;
   final String extra;
 
+  /// Tank / Healer / DPS. Stays whole while the name ellipsizes.
+  final String role;
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
+        if (role.isNotEmpty) ...[
+          Text(
+            role,
+            maxLines: 1,
+            softWrap: false,
+            style: GameTheme.combat(color: GameTheme.torchHot),
+          ),
+          const SizedBox(width: 4),
+        ],
         Flexible(
           child: Text(
             spec,
@@ -168,7 +190,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   static const _fullOpacity = 1.0;
   static const _dimOpacity = 0.72;
   static const _dimOpacityPhone = 0.72;
-  static const _homePartyRowHeight = 32.0;
+  static const _homePartyRowHeight = 36.0;
 
   Timer? _fadeTimer;
   double _opacity = _fullOpacity;
@@ -307,7 +329,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
           selected: widget.selectedHeroIndex == i,
           label:
               '${hero.name} '
-              '${hero.displayRoleLabel(plainEnglish: plainEnglish)} — tap for abilities, '
+              '${hero.spec.roleTag.plainLabel} — tap for abilities, '
               'long-press for gear',
           onTap: () => _onHeroTap(i),
           onLongPress: _onLongPressGear,
@@ -519,7 +541,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                           selected: widget.selectedHeroIndex == i,
                           label:
                               '${party[i].name} '
-                              '${party[i].displayRoleLabel(plainEnglish: plainEnglish)} — tap for abilities, '
+                              '${party[i].spec.roleTag.plainLabel} — tap for abilities, '
                               'long-press for gear',
                           onTap: () => _onHeroTap(i),
                           onLongPress: _onLongPressGear,
@@ -878,7 +900,13 @@ class _HomeKitStrip extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
         child: SizedBox(
-          height: 34,
+          height: math.max(
+            GameTheme.minTouch,
+            GameTheme.minTouch *
+                MediaQuery.textScalerOf(context)
+                    .scale(1)
+                    .clamp(1.0, GameTheme.typeScaleMax),
+          ),
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: visible.length,
@@ -920,7 +948,7 @@ class _KitSidePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final roleShort = hero.displayRoleLabel(plainEnglish: plainEnglish);
+    final roleShort = hero.spec.roleTag.plainLabel;
     final isRunic = HeroSpecs.def(hero.specId).resource == SpecResource.runic;
     final resource = spatial.rage.clamp(0.0, 100.0).toDouble();
     final off = hero.itemIn(EquipmentSlot.offHand);
@@ -1051,9 +1079,9 @@ class _HomePartyChip extends StatelessWidget {
     final hpColor = hp <= 0
         ? GameTheme.blood
         : (frac <= 0.35 ? GameTheme.bloodLit : GameTheme.clear);
-    final who = name.trim().isEmpty
-        ? hero.displayRoleLabel(plainEnglish: false)
-        : name.trim();
+    final role = hero.spec.roleTag.plainLabel;
+    final named = name.trim().isNotEmpty;
+    final who = named ? name.trim() : role;
     final doll = dense ? 18.0 : 20.0;
     return Container(
       alignment: Alignment.centerLeft,
@@ -1104,9 +1132,19 @@ class _HomePartyChip extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Row(
                   children: [
+                    if (named) ...[
+                      Text(
+                        role,
+                        maxLines: 1,
+                        softWrap: false,
+                        textScaler: TextScaler.noScaling,
+                        style: GameTheme.combat(color: GameTheme.torchHot),
+                      ),
+                      const SizedBox(width: 3),
+                    ],
                     Expanded(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(1),
@@ -1317,6 +1355,9 @@ class _PartyRow extends StatelessWidget {
                 children: [
                   PartyHudSpecLine(
                     spec: who,
+                    role: who == hero.spec.roleTag.plainLabel
+                        ? ''
+                        : hero.spec.roleTag.plainLabel,
                     level: hero.level,
                     color: GameTheme.parchment,
                     extra: _companionLine(spatial, world, hero.specId) ?? '',
@@ -1622,7 +1663,7 @@ class _InlineAbilityChip extends StatelessWidget {
     final isCast = ability.resolvedFireMode == AbilityFireMode.cast;
     final isSwingRider =
         ability.resolvedFireMode == AbilityFireMode.swingRider;
-    final justFired = ability.justFiredHud(cdLeft);
+    final justFired = _chipJustFired(ability, cdLeft);
     final execFrac = ability.gate.executeHpFrac;
     final execWaiting = execFrac != null && focusHpFrac > execFrac;
     final bombWaiting = ability.gate.livingBombRefresh && bombUp;

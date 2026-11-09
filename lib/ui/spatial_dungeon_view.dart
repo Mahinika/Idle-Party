@@ -142,6 +142,14 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
   /// Held until the fade controller actually starts, so a tick cannot clear it.
   bool _armFade = false;
 
+  /// Columns locked for the current fight so a death does not step the zoom.
+  double? _fightCols;
+
+  /// Last frame's in-card aim. One death just outside the card keeps it.
+  bool _goalWasClear = false;
+
+  bool _fightReadReset = false;
+
   /// Zone floor/enemy decode finished (partial OK — never block forever).
   bool _zoneArtReady = false;
   int _loadGen = 0;
@@ -696,6 +704,24 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                             builder: (context, _) {
                               final world = widget.director.spatial;
                               final room = widget.director.state.currentRoom;
+                              final epoch = widget.director.floorEpoch;
+                              final newFloor = epoch != _floorEpoch;
+                              if (newFloor) {
+                                _fightCols = null;
+                                _goalWasClear = false;
+                              }
+                              final inFight =
+                                  world?.enemies.any(
+                                    (e) => e.hp > 0 && !e.dormant,
+                                  ) ??
+                                  false;
+                              if (!_fightReadReset) {
+                                _fightReadReset = true;
+                                FightReadPace.reset();
+                              }
+                              FightReadPace.pace = widget.director.state.combatPace
+                                  .clamp(1, 2)
+                                  .toInt();
                               final target = _TileCamera.forWorld(
                                 world,
                                 constraints,
@@ -706,9 +732,15 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                 cameraTopInset: widget.cameraTopInset,
                                 cameraBottomInset: widget.cameraBottomInset,
                                 lockCols: _pinchCols.value != null,
+                                heldFightCols: inFight ? _fightCols : null,
+                                goalWasClear: _goalWasClear,
                               );
-                              final epoch = widget.director.floorEpoch;
-                              final newFloor = epoch != _floorEpoch;
+                              _goalWasClear = target.goalClear;
+                              if (inFight) {
+                                _fightCols ??= target.visibleCols;
+                              } else {
+                                _fightCols = null;
+                              }
                               if (newFloor) {
                                 _floorEpoch = epoch;
                                 final minimal =
@@ -1213,6 +1245,7 @@ class _TileCamera {
     required this.tileSize,
     required this.visibleCols,
     required this.visibleRows,
+    this.goalClear = false,
   });
 
   final double camX;
@@ -1220,6 +1253,7 @@ class _TileCamera {
   final double tileSize;
   final double visibleCols;
   final double visibleRows;
+  final bool goalClear;
 
   factory _TileCamera.forWorld(
     SpatialWorld? world,
@@ -1231,6 +1265,8 @@ class _TileCamera {
     double cameraTopInset = 0,
     double cameraBottomInset = 0,
     bool lockCols = false,
+    double? heldFightCols,
+    bool goalWasClear = false,
   }) {
     if (world == null) {
       return const _TileCamera(
@@ -1300,9 +1336,11 @@ class _TileCamera {
     final visibleGoal = awakePack ?? chest;
     final approach = farPack ?? chest;
     var cols = math.min(targetCols, world.cols.toDouble());
-    // Widen a little when an awake pack or a chest almost fits. A pinch
-    // keeps the columns the fingers set. Tiles stay at least ~14px.
-    if (!lockCols &&
+    // A fight keeps the columns it opened on. A death or a chest must not
+    // step the zoom by two while bodies are still on screen.
+    if (!lockCols && heldFightCols != null && heldFightCols > 1) {
+      cols = math.min(world.cols.toDouble(), heldFightCols);
+    } else if (!lockCols &&
         !world.awaitingExit &&
         visibleGoal != null &&
         constraints.maxWidth > 1 &&
@@ -1344,7 +1382,8 @@ class _TileCamera {
     final marginBottom = math.max(4.5, bottomTiles + 0.9);
     final clear =
         visibleGoal != null &&
-        dungeonPackInClearView(
+        dungeonGoalHoldsClear(
+          wasClear: goalWasClear,
           partyX: party.x,
           partyY: party.y,
           packX: visibleGoal.x,
@@ -1439,6 +1478,7 @@ class _TileCamera {
       tileSize: tileSize,
       visibleCols: cols,
       visibleRows: visibleRows,
+      goalClear: clear,
     );
   }
 }

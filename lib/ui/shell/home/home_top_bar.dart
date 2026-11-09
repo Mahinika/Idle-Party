@@ -247,7 +247,10 @@ class HomeTopBar extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+            constraints: const BoxConstraints(
+              minWidth: GameTheme.minTouch,
+              minHeight: GameTheme.minTouch,
+            ),
             child: Center(child: child),
           ),
         ),

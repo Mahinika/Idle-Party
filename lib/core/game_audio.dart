@@ -33,7 +33,8 @@ abstract final class GameAudio {
   static double musicVolume = 0.22;
 
   /// Per play-id floor so the same weapon does not hammer.
-  static const combatFeelMinGap = Duration(milliseconds: 750);
+  /// Short enough that a kill and a crit still speak after a swing.
+  static const combatFeelMinGap = Duration(milliseconds: 280);
 
   /// Sliding window for total combat feel *events* (not layers).
   static const combatWindow = Duration(milliseconds: 200);
@@ -152,6 +153,16 @@ abstract final class GameAudio {
   @visibleForTesting
   static int debugPlayCount = 0;
 
+  /// Test clock so a gap can be measured without sleeping.
+  @visibleForTesting
+  static DateTime? debugNow;
+
+  /// Ids that reached [_hapticFor], including ones with no pulse.
+  @visibleForTesting
+  static final List<String> debugHapticIds = <String>[];
+
+  static DateTime _clock() => debugNow ?? DateTime.now();
+
   /// Test hook: how many times ambience/music were actually (re)started.
   @visibleForTesting
   static int debugBackgroundStartCount = 0;
@@ -160,6 +171,8 @@ abstract final class GameAudio {
   static void debugReset() {
     debugPlayCount = 0;
     debugBackgroundStartCount = 0;
+    debugHapticIds.clear();
+    debugNow = null;
     _lastPlayAt.clear();
     _lastFamilyAt.clear();
     _combatWindowAt.clear();
@@ -355,7 +368,7 @@ abstract final class GameAudio {
   static void play(String id) {
     if (muted) return;
     if (id == 'ui') id = 'ui_tap';
-    final now = DateTime.now();
+    final now = _clock();
 
     if (id.startsWith('ui_')) {
       final last = _lastUiAt ?? _epoch;
@@ -394,7 +407,7 @@ abstract final class GameAudio {
   /// Hero hurt, tells, and deaths. Separate from the weapon hammer.
   static void playCue(String id) {
     if (muted || !AudioAssets.bodyCueIds.contains(id)) return;
-    final now = DateTime.now();
+    final now = _clock();
     final gap = switch (id) {
       'enemy_hit' => const Duration(milliseconds: 420),
       'heal' || 'shield' => const Duration(milliseconds: 650),
@@ -412,7 +425,7 @@ abstract final class GameAudio {
   /// Arrow string or spell cast. Separate limiter so shots do not eat hits.
   static void playLaunch(String id) {
     if (muted || !AudioAssets.launchIds.contains(id)) return;
-    final now = DateTime.now();
+    final now = _clock();
     if (!_admitLaunch(now)) return;
     debugPlayCount++;
     _hapticFor(id.startsWith('cast_') ? 'spell_fire' : 'hit_bow');
@@ -462,7 +475,7 @@ abstract final class GameAudio {
   /// Layered combat hit: optional swish → impact → soft material chirp.
   static void playCombatHit(CombatFeelHit hit) {
     if (muted) return;
-    final now = DateTime.now();
+    final now = _clock();
     final id = hit.impactId;
     if (!_admitCombatFeel(id, now)) {
       if (id.startsWith('hit') || id.startsWith('spell_')) {
@@ -564,7 +577,8 @@ abstract final class GameAudio {
       _CombatFamily.melee => const Duration(milliseconds: 140),
       _CombatFamily.bow => const Duration(milliseconds: 160),
       _CombatFamily.spell => const Duration(milliseconds: 150),
-      _CombatFamily.priority => const Duration(milliseconds: 280),
+      // A kill and a crit both speak even when a swing just filled the window.
+      _CombatFamily.priority => Duration.zero,
     };
     final lastFamily = _lastFamilyAt[family] ?? _epoch;
     if (now.difference(lastFamily) < familyGap) return false;
@@ -1014,6 +1028,7 @@ abstract final class GameAudio {
   }
 
   static void _hapticFor(String id) {
+    debugHapticIds.add(id);
     switch (id) {
       case 'hit_blade':
       case 'hit_axe':
@@ -1038,8 +1053,19 @@ abstract final class GameAudio {
       case 'clear':
         _haptic(HapticFeedback.mediumImpact);
       case 'loot':
+      case 'loot_rare':
       case 'unlock':
         _haptic(HapticFeedback.lightImpact, light: true);
+      case 'loot_epic':
+        _haptic(HapticFeedback.mediumImpact);
+      case 'loot_legendary':
+        _haptic(HapticFeedback.heavyImpact);
+      case 'ui_tap':
+      case 'ui_tab':
+      case 'ui_confirm':
+      case 'ui_back':
+      case 'ui_deny':
+        _haptic(HapticFeedback.selectionClick, light: true);
       case 'enemy_hit':
       case 'shield':
       case 'heal':

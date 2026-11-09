@@ -149,7 +149,7 @@ class FightSeam extends StatelessWidget {
                 child: _tap(
                   label: 'HOLD',
                   onTap: director.startExitHold,
-                  minHeight: 34,
+                  minHeight: GameTheme.minTouch,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,

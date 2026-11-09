@@ -129,7 +129,7 @@ const double dungeonCamShakeOmegaY = 38;
 }) {
   if (pinIndex != null) {
     for (final h in heroes) {
-      if (h.index == pinIndex) return (x: h.x, y: h.y);
+      if (h.index == pinIndex && h.alive) return (x: h.x, y: h.y);
     }
   }
   final living = heroes.where((h) => h.alive).toList();
@@ -392,6 +392,49 @@ bool dungeonSharesFrame({
   final spanX = math.max(0.0, visibleCols - marginX * 2);
   final spanY = math.max(0.0, visibleRows - marginY * 2);
   return (partyX - packX).abs() <= spanX && (partyY - packY).abs() <= spanY;
+}
+
+/// Keeps an in-frame fight on the party when one death leaves the next
+/// survivor a couple of tiles outside the card. A pack that is actually
+/// off the phone still falls through so the gate can take the aim.
+bool dungeonGoalHoldsClear({
+  required bool wasClear,
+  required double partyX,
+  required double partyY,
+  required double packX,
+  required double packY,
+  required double visibleCols,
+  required double visibleRows,
+  double cardRows = 12,
+  double marginX = 2,
+  double topMargin = 5,
+  double slackTiles = 3,
+}) {
+  if (dungeonPackInClearView(
+    partyX: partyX,
+    partyY: partyY,
+    packX: packX,
+    packY: packY,
+    visibleCols: visibleCols,
+    visibleRows: visibleRows,
+    cardRows: cardRows,
+    marginX: marginX,
+    topMargin: topMargin,
+  )) {
+    return true;
+  }
+  if (!wasClear || slackTiles <= 0) return false;
+  return dungeonPackInClearView(
+    partyX: partyX,
+    partyY: partyY,
+    packX: packX,
+    packY: packY,
+    visibleCols: visibleCols,
+    visibleRows: visibleRows,
+    cardRows: math.max(0, cardRows - slackTiles),
+    marginX: math.max(0, marginX - 0.75),
+    topMargin: math.max(0, topMargin - slackTiles),
+  );
 }
 
 /// The pack or chest sits in the picture above the party card.

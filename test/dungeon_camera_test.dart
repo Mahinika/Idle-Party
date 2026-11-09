@@ -464,7 +464,11 @@ void main() {
       mapCenterY: 10,
       pinIndex: 0,
     );
-    expect(corpseStillPinned.x, 4, reason: 'a chosen hero stays the aim');
+    expect(
+      corpseStillPinned.x,
+      6.5,
+      reason: 'a pinned corpse releases to a living hero',
+    );
     final living = dungeonPartyFocus(
       heroes: [
         (x: 4.0, y: 8.0, alive: false, index: 0),
@@ -475,6 +479,45 @@ void main() {
       pinIndex: null,
     );
     expect(living.x, 6.5);
+
+    expect(
+      dungeonGoalHoldsClear(
+        wasClear: true,
+        partyX: 8,
+        partyY: 10,
+        packX: 8,
+        packY: 16,
+        visibleCols: 18,
+        visibleRows: 32,
+      ),
+      isTrue,
+      reason: 'one death a couple of tiles outside the card stays on the party',
+    );
+    expect(
+      dungeonGoalHoldsClear(
+        wasClear: false,
+        partyX: 8,
+        partyY: 10,
+        packX: 8,
+        packY: 16,
+        visibleCols: 18,
+        visibleRows: 32,
+      ),
+      isFalse,
+    );
+    expect(
+      dungeonGoalHoldsClear(
+        wasClear: true,
+        partyX: 8,
+        partyY: 10,
+        packX: 8,
+        packY: 40,
+        visibleCols: 18,
+        visibleRows: 32,
+      ),
+      isFalse,
+      reason: 'a pack off the phone still uses the gate',
+    );
 
     void glide({
       required double from,
@@ -1002,5 +1045,29 @@ void main() {
     );
     final halfY = 11.0;
     expect(20 - framed.y, lessThanOrEqualTo(halfY - 4.5));
+  });
+
+  test('a blink picture slides while the landed tile stays put', () {
+    final hero = SpatialActor(
+      id: 'blink',
+      name: 'Blink',
+      team: SpatialTeam.hero,
+      x: 10,
+      y: 4,
+      hp: 20,
+      maxHp: 20,
+      attack: 4,
+      defense: 2,
+      moveSpeed: 3,
+      attackRange: 1.2,
+      attackCooldown: 1,
+    );
+    hero.beginPictureRush(4, 4);
+    expect(hero.x, 10);
+    expect(hero.y, 4);
+    expect(hero.picturePoint().x, inInclusiveRange(4, 10));
+    hero.tickPictureRush(hero.pictureRushSpan);
+    expect(hero.picturePoint().x, closeTo(10, 0.01));
+    expect(hero.x, 10);
   });
 }

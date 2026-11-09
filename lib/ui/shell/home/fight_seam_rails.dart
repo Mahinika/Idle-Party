@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
@@ -35,6 +37,10 @@ class FightSeamRails extends StatelessWidget {
     final state = director.state;
     final entries = visibleEntries(state, director);
     if (entries.isEmpty) return const SizedBox.shrink();
+    final scale = MediaQuery.textScalerOf(context)
+        .scale(1)
+        .clamp(1.0, GameTheme.typeScaleMax);
+    final slot = math.max(GameTheme.minTouch, GameTheme.minTouch * scale);
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border(
@@ -42,10 +48,10 @@ class FightSeamRails extends StatelessWidget {
         ),
       ),
       child: SizedBox(
-        height: 38,
+        height: slot,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           itemCount: entries.length,
           separatorBuilder: (context, index) => const SizedBox(width: 6),
           itemBuilder: (context, i) => RailButton(

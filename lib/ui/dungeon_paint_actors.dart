@@ -1,5 +1,91 @@
 part of 'spatial_dungeon_view.dart';
 
+/// Combat pace for walk feet and on-screen flash length. The view sets this
+/// before the painter runs. 2× still paints once per refresh.
+abstract final class FightReadPace {
+  static int pace = 1;
+
+  /// A new fight view must not inherit the last test's flashes or numbers.
+  static void reset() {
+    pace = 1;
+    _DeathClip._start.clear();
+    _PoseContinuity._paused.clear();
+    _PoseContinuity._last.clear();
+    _HitPose._until.clear();
+    _HitPose._was.clear();
+    _FloaterHold.live.clear();
+  }
+}
+
+/// Death clip plays from 0 across paint frames. The sim marks the body dead
+/// at the end of the fall, so the painter owns the 0.6s.
+abstract final class _DeathClip {
+  static final Map<String, int> _start = {};
+
+  static double progress({
+    required String id,
+    required bool dead,
+    required int frame,
+  }) {
+    if (!dead) {
+      _start.remove(id);
+      return 0;
+    }
+    final born = _start.putIfAbsent(id, () => frame);
+    const frames = 0.6 * 60;
+    return ((frame - born) / frames).clamp(0.0, 1.0);
+  }
+}
+
+/// A flinch outranks a named pose. The sim clock keeps running, so the
+/// painter gives those seconds back when the pose returns.
+abstract final class _PoseContinuity {
+  static final Map<String, double> _paused = {};
+  static final Map<String, double> _last = {};
+
+  static double shown(String id, double poseTime, bool hit) {
+    final prev = _last[id];
+    if (prev != null && poseTime + 0.02 < prev) {
+      _paused[id] = 0;
+    }
+    var extra = _paused[id] ?? 0;
+    if (hit && prev != null && poseTime > prev) {
+      extra += poseTime - prev;
+      _paused[id] = extra;
+    }
+    _last[id] = poseTime;
+    return math.max(0, poseTime - extra);
+  }
+}
+
+/// Hold the authored 0.14s flinch in paint frames. 2× eats the sim timer.
+abstract final class _HitPose {
+  static final Map<String, int> _until = {};
+  static final Map<String, bool> _was = {};
+
+  static bool hold({
+    required String id,
+    required bool simHit,
+    required int frame,
+    required int pace,
+  }) {
+    final rising = simHit && _was[id] != true;
+    _was[id] = simHit;
+    if (rising) {
+      // The sim flash is 0.14s and ticks inside step, so 2× halves the
+      // paints. Hold the authored wall length (sim length scaled by pace).
+      final simPaints = (0.14 * 60 / pace.clamp(1, 2)).round();
+      final wallPaints = (0.14 * 60).round();
+      _until[id] = frame + math.max(simPaints, wallPaints);
+    }
+    final end = _until[id];
+    if (end == null) return simHit;
+    if (frame <= end) return true;
+    _until.remove(id);
+    return simHit;
+  }
+}
+
 final Paint _actorBarPaint = Paint()..isAntiAlias = false;
 
 extension _DungeonPaintActors on _TileRoomPainter {
@@ -86,6 +172,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
         final phase = HeroAnimController.walkPhase(
           visualFrame,
           offset: (enemy.id.hashCode.abs() % 100) / 100,
+          pace: FightReadPace.pace.toDouble(),
         );
         c += CharacterVisualPainter.clipMotion(
           HeroAnimKind.walk,
@@ -302,23 +389,37 @@ extension _DungeonPaintActors on _TileRoomPainter {
       if (partyHero != null) {
         paintStanceBodyMark(canvas, c, tile, partyHero.specId);
         final moving = hero.vx.abs() > 0.05 || hero.vy.abs() > 0.05;
+        final dead = !hero.isAlive;
+        final showHit = !dead &&
+            _HitPose.hold(
+              id: hero.id,
+              simHit: hero.hitFlash > 0.02,
+              frame: visualFrame,
+              pace: FightReadPace.pace,
+            );
         final signals = HeroAnimSignals(
           moving: moving,
           attacking: flash > 0.02,
           casting: hero.castFlash > 0.02 || hero.castingTimer > 0.05,
-          hit: hero.hitFlash > 0.02,
-          dead: !hero.isAlive,
+          hit: showHit,
+          dead: dead,
           blocking: hero.shieldBlockTimer > 0,
           attackFlash: flash,
           castFlash: hero.castFlash,
           hitFlash: hero.hitFlash,
           abilityName: hero.animAbility?.name,
-          poseTime: hero.poseTime,
+          poseTime: _PoseContinuity.shown(hero.id, hero.poseTime, showHit),
           poseHold: hero.poseHold,
+          deathProgress: _DeathClip.progress(
+            id: hero.id,
+            dead: dead,
+            frame: visualFrame,
+          ),
         );
         final walkPhase = HeroAnimController.walkPhase(
           visualFrame,
           offset: (hero.partyIndex ?? idx) * 0.37,
+          pace: FightReadPace.pace.toDouble(),
         );
         final anim = HeroAnimController.snapshot(signals, walkPhase: walkPhase);
         // Unique form PNG (Druid forms) → owned paper-doll → class PNG.

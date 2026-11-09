@@ -162,6 +162,44 @@ void main() {
     expect(GameAudio.debugPlayCount, 1);
   });
 
+  test('a kill and a crit still speak after a swing', () {
+    GameAudio.debugReset();
+    GameAudio.muted = false;
+    final t = DateTime.utc(2026, 11, 9, 12);
+    GameAudio.debugNow = t;
+    GameAudio.play('hit_blade');
+    GameAudio.play('kill');
+    GameAudio.play('crit');
+    expect(GameAudio.debugPlayCount, 3);
+  });
+
+  test('two hits 200ms apart both play and a third inside the window does not', () {
+    GameAudio.debugReset();
+    GameAudio.muted = false;
+    final t = DateTime.utc(2026, 11, 9, 12);
+    GameAudio.debugNow = t;
+    GameAudio.play('hit_blade');
+    GameAudio.debugNow = t.add(const Duration(milliseconds: 200));
+    GameAudio.play('hit_bow');
+    expect(GameAudio.debugPlayCount, 2);
+
+    GameAudio.debugReset();
+    GameAudio.debugNow = t;
+    GameAudio.play('hit_blade');
+    GameAudio.play('spell_fire');
+    GameAudio.play('hit_bow');
+    expect(GameAudio.debugPlayCount, 2);
+  });
+
+  test('ui and rare loot ask for a haptic', () {
+    GameAudio.debugReset();
+    GameAudio.muted = false;
+    GameAudio.hapticsEnabled = false;
+    GameAudio.play('ui_confirm');
+    GameAudio.play('loot_legendary');
+    expect(GameAudio.debugHapticIds, containsAll(['ui_confirm', 'loot_legendary']));
+  });
+
   test('loot SFX is rate-limited (~1.2s)', () {
     GameAudio.debugReset();
     GameAudio.muted = false;

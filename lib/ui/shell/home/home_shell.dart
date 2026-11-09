@@ -181,23 +181,30 @@ class _HomeShellState extends State<HomeShell> {
     final text = climb ??
         back ??
         (tip == null ? null : FirstSessionTips.displayLine(tip, state));
+    // The top bar already paints this chase title. A second copy steals
+    // rows from the cave. A real first-climb tip stays, even when it matches.
+    final duplicateCoach =
+        climb == null &&
+        text != null &&
+        text == HubChase.forState(state).title;
+    final shown = duplicateCoach ? null : text;
     final showClaim = state.inDungeon && GameLogic.canClaimDailyVault(state);
-    if (text == null && !showClaim) return const SizedBox.shrink();
+    if (shown == null && !showClaim) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
       child: Row(
         children: [
-          if (text != null)
+          if (shown != null)
             Expanded(
               child: Text(
-                text,
+                shown,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.hint(color: GameTheme.torchHot),
               ),
             ),
           if (showClaim) ...[
-            if (text != null) const SizedBox(width: 6),
+            if (shown != null) const SizedBox(width: 6),
             _claimChip(),
           ],
         ],
@@ -217,7 +224,7 @@ class _HomeShellState extends State<HomeShell> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(
               minWidth: GameTheme.minTouch,
-              minHeight: 28,
+              minHeight: GameTheme.minTouch,
             ),
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -255,8 +262,11 @@ class _HomeShellState extends State<HomeShell> {
           label: 'Back',
           child: InkWell(
             onTap: router.back,
-            child: SizedBox(
-              height: 40,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minWidth: GameTheme.minTouch,
+                minHeight: GameTheme.minTouch,
+              ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(

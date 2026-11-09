@@ -121,6 +121,7 @@ class DungeonTopHud extends StatelessWidget {
     this.onOpenKey,
     this.onOpenForge,
     this.onOpenParty,
+    this.placeLineOnly = false,
   });
 
   final GameState state;
@@ -131,6 +132,9 @@ class DungeonTopHud extends StatelessWidget {
   final VoidCallback? onOpenKey;
   final VoidCallback? onOpenForge;
   final VoidCallback? onOpenParty;
+
+  /// Home fight already has FARM / PUSH. This paints only the floor line.
+  final bool placeLineOnly;
 
   List<PopupMenuEntry<String>> _floorMenuItems({
     required int floor,
@@ -429,6 +433,18 @@ class DungeonTopHud extends StatelessWidget {
         : state.inWorldBoss
         ? AshenCrown.kitByDungeonId(state.dungeonId).roomLine
         : '$zoneShort · F$floor$keyBit$fightBit';
+    if (placeLineOnly) {
+      return Text(
+        placeLine,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: GameTheme.hint(
+          color: awaitingExit || state.isPartyDefeated
+              ? GameTheme.clear
+              : GameTheme.parchment,
+        ),
+      );
+    }
     void setMode(DungeonMode mode) {
       final fighting = (world?.enemies.any((e) => e.isAlive) ?? false);
       if (fighting && state.dungeonMode != mode) {
