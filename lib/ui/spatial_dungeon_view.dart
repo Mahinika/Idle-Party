@@ -865,7 +865,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                 children: [
                                   ready == null || !_canPaintFloor
                                       ? ColoredBox(
-                                          color: GameTheme.stoneDeep,
+                                          color: Color(
+                                            ZoneFloorStyle.byId(state.dungeonId)
+                                                .accentArgb,
+                                          ),
                                           child: Center(
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
@@ -875,6 +878,18 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                                   size: 28,
                                                 ),
                                                 const SizedBox(height: 8),
+                                                Text(
+                                                  GameLogic.dungeonNames[
+                                                          state.dungeonId] ??
+                                                      state.dungeonId,
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  textAlign: TextAlign.center,
+                                                  style: GameTheme.combat(
+                                                    color: GameTheme.parchment,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
                                                 Text(
                                                   'Loading floor…',
                                                   style: GameTheme.readable(

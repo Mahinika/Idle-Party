@@ -125,6 +125,9 @@ abstract final class KitHudChips {
     };
   }
 
+  /// Extra semantics word while an ability is on cooldown.
+  static bool onCooldown(double cdLeft) => cdLeft > 0.05;
+
   /// Prefer ready / identity chips so a capped HUD still reads as the kit.
   static List<ClassAbilityDef> prioritize(
     List<ClassAbilityDef> abilities, {

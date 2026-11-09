@@ -190,7 +190,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   static const _fullOpacity = 1.0;
   static const _dimOpacity = 0.72;
   static const _dimOpacityPhone = 0.72;
-  static const _homePartyRowHeight = 36.0;
+  static const _homePartyRowHeight = 40.0;
 
   Timer? _fadeTimer;
   double _opacity = _fullOpacity;
@@ -373,8 +373,9 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     required SpatialActor? kitActor,
     required bool showFlask,
   }) {
-    final textScale = MediaQuery.textScalerOf(context).scale(1);
-    final lineHeight = _homePartyRowHeight * (textScale < 1 ? 1 : textScale);
+    final textScale =
+        MediaQuery.textScalerOf(context).scale(1).clamp(1.0, GameTheme.typeScaleMax);
+    final lineHeight = _homePartyRowHeight * textScale;
     final denseParty = heroCount >= 5;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -754,7 +755,12 @@ class DungeonFlaskButton extends StatelessWidget {
               child: InkWell(
                 onTap: onTap,
                 borderRadius: BorderRadius.circular(3),
-                child: Container(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minWidth: GameTheme.minTouch,
+                    minHeight: GameTheme.minTouch,
+                  ),
+                  child: Container(
                   width: 44,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
@@ -781,6 +787,7 @@ class DungeonFlaskButton extends StatelessWidget {
                 ),
               ),
             ),
+          ),
           ),
         ),
       );
@@ -1124,9 +1131,18 @@ class _HomePartyChip extends StatelessWidget {
                         maxLines: 1,
                         softWrap: false,
                         overflow: TextOverflow.ellipsis,
-                        style: GameTheme.readable(color: GameTheme.parchment),
+                        style: GameTheme.combat(color: GameTheme.parchment),
                       ),
                     ),
+                    if (selected)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 2),
+                        child: GameIcon.glyph(
+                          UiGlyph.next,
+                          size: 8,
+                          color: GameTheme.torchHot,
+                        ),
+                      ),
                     Text(
                       ' L$level',
                       maxLines: 1,
@@ -1717,9 +1733,23 @@ class _InlineAbilityChip extends StatelessWidget {
             width: justFired || activeBuff || ready ? 1.4 : 1,
           ),
         ),
-        child: Text(
-          label,
-          style: GameTheme.readable(color: gated
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (onCd)
+              Padding(
+                padding: const EdgeInsets.only(right: 2),
+                child: Text(
+                  'wait',
+                  style: GameTheme.readable(color: GameTheme.parchmentDim),
+                ),
+              ),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.readable(color: gated
                 ? GameTheme.bloodLit
                 : softGated
                 ? GameTheme.parchmentDim
@@ -1730,42 +1760,71 @@ class _InlineAbilityChip extends StatelessWidget {
                 : isHealer
                 ? GameTheme.hudSpiritText
                 : GameTheme.parchment),
+              ),
+            ),
+          ],
         ),
       ),
     );
     final tip = gated
         ? '${ability.tooltipMessage} — equip a shield'
         : ability.tooltipMessage;
+  final semanticsLabel = onCd
+        ? '${ability.name}, wait $cdText'
+        : ready
+        ? ability.name
+        : '${ability.name}, wait';
     return Semantics(
-      label: ability.name,
-      child: Tooltip(
-      message: tip,
-      waitDuration: const Duration(milliseconds: 350),
-      child: GestureDetector(
-        onLongPress: () {
-          showDialog<void>(
-            context: context,
-            barrierColor: MenuChrome.scrim,
-            builder: (ctx) => MenuChrome.dialog(
-              title: ability.name,
-              content: Text(
-                tip,
-                style: GameTheme.readable(color: GameTheme.parchment),
-              ),
-              actions: [
-                GameButton(
-                  label: 'OK',
-                  style: GameButtonStyle.brown,
-                  expanded: false,
-                  onPressed: () => Navigator.pop(ctx),
-                ),
-              ],
+      label: semanticsLabel,
+      onLongPress: () {
+        showDialog<void>(
+          context: context,
+          barrierColor: MenuChrome.scrim,
+          builder: (ctx) => MenuChrome.dialog(
+            title: ability.name,
+            content: Text(
+              tip,
+              style: GameTheme.readable(color: GameTheme.parchment),
             ),
-          );
-        },
-        child: chip,
+            actions: [
+              GameButton(
+                label: 'CLOSE',
+                style: GameButtonStyle.brown,
+                expanded: false,
+                onPressed: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        );
+      },
+      child: Tooltip(
+        message: tip,
+        waitDuration: const Duration(milliseconds: 350),
+        child: GestureDetector(
+          onLongPress: () {
+            showDialog<void>(
+              context: context,
+              barrierColor: MenuChrome.scrim,
+              builder: (ctx) => MenuChrome.dialog(
+                title: ability.name,
+                content: Text(
+                  tip,
+                  style: GameTheme.readable(color: GameTheme.parchment),
+                ),
+                actions: [
+                  GameButton(
+                    label: 'CLOSE',
+                    style: GameButtonStyle.brown,
+                    expanded: false,
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+            );
+          },
+          child: chip,
+        ),
       ),
-    ),
     );
   }
 }

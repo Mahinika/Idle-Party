@@ -10,9 +10,16 @@ import '../wisp_gift_overlay.dart';
 /// Fight readouts the classic top HUD owned. They sit on the cave picture.
 /// The seam, dock, and nav stay where they are.
 class HomeFightTools extends StatelessWidget {
-  const HomeFightTools({super.key, required this.director});
+  const HomeFightTools({
+    super.key,
+    required this.director,
+    this.seamClearance = 96,
+  });
 
   final GameDirector director;
+
+  /// Bottom inset so the loot log sits above the fight seam.
+  final double seamClearance;
 
   @override
   Widget build(BuildContext context) {
@@ -57,18 +64,22 @@ class HomeFightTools extends StatelessWidget {
             Positioned(
               left: 8,
               right: 72,
-              bottom: 4,
+              bottom: seamClearance,
               child: DungeonLootLog(lines: director.lootLog),
             ),
             Positioned(
               right: 6,
-              bottom: 4,
+              bottom: seamClearance,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   BoostAdButton(director: director),
-                  ScrollBuffStack(meta: state.metaDepth, maxHeight: 120),
+                  ScrollBuffStack(
+                    meta: state.metaDepth,
+                    maxRows: 3,
+                    maxHeight: 120,
+                  ),
                 ],
               ),
             ),
