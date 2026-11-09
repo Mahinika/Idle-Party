@@ -259,7 +259,11 @@ class _BeastOverlayState extends State<BeastOverlay> {
                                   Text(
                                     '${pet.name}  |  ${pet.rarity.name}'
                                     '${pet.frame != PetFrame.none ? '  [${pet.frame.name}]' : ''}',
-                                    style: GameTheme.readable(color: GameTheme.parchment),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GameTheme.readable(
+                                      color: GameTheme.parchment,
+                                    ),
                                   ),
                                   Text(
                                     '${pet.hasNickname ? '${pet.speciesName}  ' : ''}'
@@ -267,7 +271,11 @@ class _BeastOverlayState extends State<BeastOverlay> {
                                     '${passive.isEmpty ? '' : '  $passive'}'
                                     '  · ${_affinityLabel(pet.affinityDungeonId)} +25%'
                                     '${pet.bondLevel > 0 ? '  bond${pet.bondLevel}' : ''}',
-                                    style: GameTheme.section(color: GameTheme.parchmentDim),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GameTheme.section(
+                                      color: GameTheme.parchmentDim,
+                                    ),
                                   ),
                                 ],
                               );
@@ -515,12 +523,8 @@ class _RenamePetDialogState extends State<_RenamePetDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: GameTheme.sheet,
-      title: Text(
-        'RENAME',
-        style: GameTheme.readable(color: GameTheme.parchment),
-      ),
+    return MenuChrome.dialog(
+      title: 'RENAME',
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -546,7 +550,7 @@ class _RenamePetDialogState extends State<_RenamePetDialog> {
             onSubmitted: (_) => _submit(),
             decoration: InputDecoration(
               counterText: '',
-              hintText: 'Grubby',
+              hintText: 'Name',
               hintStyle: GameTheme.readable(color: GameTheme.parchmentDim),
               filled: true,
               fillColor: GameTheme.panelInset,
@@ -577,7 +581,7 @@ class _RenamePetDialogState extends State<_RenamePetDialog> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         GameButton(
-          label: 'NAME',
+          label: 'SAVE',
           style: GameButtonStyle.brown,
           expanded: false,
           onPressed: _submit,

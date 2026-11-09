@@ -100,8 +100,13 @@ class AchievementsOverlay extends StatelessWidget {
                         child: Row(
                           children: [
                             GameIcon.asset(
-                              done ? UiIcon.trophy : UiIcon.skull,
+                              done ? UiIcon.trophy : UiIcon.trophy,
                               size: 22,
+                              color: hide
+                                  ? GameTheme.parchmentDim.withValues(
+                                      alpha: 0.45,
+                                    )
+                                  : null,
                             ),
                             const SizedBox(width: 10),
                             Expanded(
@@ -109,7 +114,9 @@ class AchievementsOverlay extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    hide ? 'Hidden' : def.title,
+                                    hide
+                                        ? 'Secret trophy'
+                                        : def.title,
                                     style: GameTheme.readable(color: done
                                           ? GameTheme.torchHot
                                           : GameTheme.parchment),
@@ -117,7 +124,7 @@ class AchievementsOverlay extends StatelessWidget {
                                   const SizedBox(height: 3),
                                   Text(
                                     hide
-                                        ? 'Hidden achievement'
+                                        ? 'Unlock to reveal.'
                                         : def.description,
                                     style: GameTheme.readable(color: GameTheme.parchmentDim),
                                   ),
@@ -126,7 +133,7 @@ class AchievementsOverlay extends StatelessWidget {
                             ),
                             Text(
                               hide
-                                  ? '---'
+                                  ? ''
                                   : done
                                   ? 'AWARDED'
                                   : '+${def.essenceReward}e',

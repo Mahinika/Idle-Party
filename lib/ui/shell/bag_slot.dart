@@ -95,7 +95,21 @@ class _BagSlot extends StatelessWidget {
             ),
             clipBehavior: Clip.hardEdge,
             child: item == null
-                ? const SizedBox.shrink()
+                ? DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: GameTheme.border,
+                        width: 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: GameIcon.asset(
+                        UiIcon.chest,
+                        size: 18,
+                        color: GameTheme.parchmentDim.withValues(alpha: 0.35),
+                      ),
+                    ),
+                  )
                 : Stack(
                     fit: StackFit.expand,
                     children: [
@@ -118,13 +132,25 @@ class _BagSlot extends StatelessWidget {
                       Positioned(
                         top: 2,
                         left: 6,
+                        right: 4,
                         child: ExcludeSemantics(
-                          child: Text(
-                            _slotHint(item!.slot),
-                            maxLines: 2,
-                            softWrap: true,
-                            overflow: TextOverflow.clip,
-                            style: GameTheme.hint(color: GameTheme.parchmentDim),
+                          child: Builder(
+                            builder: (context) {
+                              final scale = MediaQuery.textScalerOf(
+                                context,
+                              ).scale(1);
+                              if (scale >= 1.2) {
+                                return const SizedBox.shrink();
+                              }
+                              return Text(
+                                _slotHint(item!.slot),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GameTheme.hint(
+                                  color: GameTheme.parchmentDim,
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),

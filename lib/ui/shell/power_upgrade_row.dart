@@ -186,7 +186,7 @@ class PowerUpgradePriceChip extends StatelessWidget {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
                   minWidth: GameTheme.minTouch,
-                  minHeight: 32,
+                  minHeight: GameTheme.minTouch,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),

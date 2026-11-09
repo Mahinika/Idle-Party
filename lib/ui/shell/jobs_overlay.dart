@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
+import '../../core/game_state.dart';
 import '../../core/mission_board.dart';
 import '../../models/mission.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
+import 'home/director_select.dart';
 import 'shell_common.dart';
 import 'shell_layout.dart';
 
@@ -59,55 +61,74 @@ class JobsOverlay extends StatelessWidget {
     };
   }
 
+  static String _missionDigest(GameState state) {
+    final b = StringBuffer();
+    for (final m in state.missions) {
+      b
+        ..write(m.id)
+        ..write(':')
+        ..write(m.progress)
+        ..write('/')
+        ..write(m.target)
+        ..write(':')
+        ..write(m.claimed)
+        ..write(';');
+    }
+    return b.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: director,
-      builder: (context, _) => SingleChildScrollView(
-        child: _board(context),
+    return DirectorSelect<String>(
+      director: director,
+      select: (s) => _missionDigest(s),
+      builder: (context, state) => SingleChildScrollView(
+        child: _board(context, state),
       ),
     );
   }
 
-  Widget _board(BuildContext context) {
-    final state = director.state;
+  Widget _board(BuildContext context, GameState state) {
     final claimable = state.missions.where((m) => m.canClaim).length;
     return Padding(
       padding: ShellLayout.listPadding,
       child: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ShellLayout.hint(
-          introLine(chainCount: state.metaDepth.jobChainCount),
-          maxLines: 2,
-        ),
-        if (claimable == 0) ...[
-          ShellLayout.gap(4),
-          ShellLayout.hint(
-            'Clear floors to fill these. Progress survives wipes.',
-            maxLines: 2,
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ShellLayout.card(
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+            child: ShellLayout.hint(
+              introLine(chainCount: state.metaDepth.jobChainCount),
+              maxLines: 2,
+            ),
           ),
+          if (claimable == 0) ...[
+            ShellLayout.gap(4),
+            ShellLayout.hint(
+              'Clear floors to fill these. Progress survives wipes.',
+              maxLines: 2,
+            ),
+          ],
+          if (claimable > 0) ...[
+            ShellLayout.gap(8),
+            GameButton(
+              label: claimable == 1
+                  ? 'CLAIM QUESTS'
+                  : 'CLAIM QUESTS ($claimable)',
+              onPressed: () => director.claimAllReadyMissions(),
+              style: GameButtonStyle.brown,
+              primary: true,
+            ),
+          ],
+          ShellLayout.gap(2),
+          for (var i = 0; i < state.missions.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: _questCard(director, state.missions[i], i),
+            ),
         ],
-        if (claimable > 0) ...[
-          ShellLayout.gap(8),
-          GameButton(
-            label: claimable == 1
-                ? 'CLAIM QUESTS'
-                : 'CLAIM QUESTS ($claimable)',
-            onPressed: () => director.claimAllReadyMissions(),
-            style: GameButtonStyle.brown,
-            primary: true,
-          ),
-        ],
-        ShellLayout.gap(2),
-        for (var i = 0; i < state.missions.length; i++)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: _questCard(director, state.missions[i], i),
-          ),
-      ],
-    ),
+      ),
     );
   }
 
@@ -160,11 +181,19 @@ class JobsOverlay extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Progress ${mission.progress}/${mission.target}'
-            ' · ${rewardLine(gold: mission.goldReward, essence: mission.essenceReward)}',
+            'Progress ${mission.progress}/${mission.target}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: GameTheme.section(),
+          ),
+          Text(
+            rewardLine(
+              gold: mission.goldReward,
+              essence: mission.essenceReward,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.hint(color: GameTheme.torchHot),
           ),
           const SizedBox(height: 4),
           ClipRRect(
@@ -173,7 +202,7 @@ class JobsOverlay extends StatelessWidget {
               value: mission.target <= 0
                   ? 0
                   : (mission.progress / mission.target).clamp(0.0, 1.0),
-              minHeight: 8,
+              minHeight: 10,
               backgroundColor: GameTheme.panelInset,
               color: mission.canClaim || mission.claimed
                   ? GameTheme.mossLit

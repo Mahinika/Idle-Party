@@ -283,22 +283,35 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   }
 
   Widget _spendAllButton(GameState state) {
-    return GameButton(
-      label: GameLogic.canForgeGoldSpendEven(state)
-          ? 'SPEND ALL · EVEN'
-          : 'SPEND ALL · EVEN · Need gold',
-      tip:
-          'Splits wallet gold round-robin across every track. '
-          'AP, Armor, STA, and MASTERY soften past 40 buys. '
-          'MOVE and HASTE soften past 40. CRIT softens past 25.',
-      style: GameButtonStyle.grey,
-      dense: true,
-      onPressed: GameLogic.canForgeGoldSpendEven(state)
-          ? () {
-              director.upgradeSpendAllEvenly();
-              setState(() {});
-            }
-          : null,
+  return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        GameButton(
+          label: GameLogic.canForgeGoldSpendEven(state)
+              ? 'SPEND ALL · EVEN'
+              : 'SPEND ALL · EVEN · Need gold',
+          tip:
+              'Splits wallet gold round-robin across every track. '
+              'AP, Armor, STA, and MASTERY soften past 40 buys. '
+              'MOVE and HASTE soften past 40. CRIT softens past 25.',
+          style: GameButtonStyle.grey,
+          dense: true,
+          onPressed: GameLogic.canForgeGoldSpendEven(state)
+              ? () {
+                  director.upgradeSpendAllEvenly();
+                  setState(() {});
+                }
+              : null,
+        ),
+        const SizedBox(height: 2),
+        Text(
+          'Buys the cheapest track.',
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
+        ),
+      ],
     );
   }
 
@@ -406,10 +419,11 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
           ),
       ],
     );
+    final inline = _scrollAllTracks;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _farmIntensityRow(state),
+        if (!inline) _farmIntensityRow(state),
         Expanded(child: body),
       ],
     );
@@ -446,15 +460,23 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     // The home fight gives this panel whatever height is left. A short
     // phone at text scale 1.45 can be shorter than the spend row, so the
     // row scrolls with the tracks instead of painting a stripe.
+    final farmInline = FarmIntensity.applies(state) ? _farmIntensityRow(state) : null;
     return ListView(
       primary: false,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
       children: [
-        if (canBuyAny)
+        if (farmInline != null || canBuyAny)
           Padding(
             padding: ShellLayout.seamPadding.copyWith(bottom: 2),
-            child: _spendModeSegmented(dense: true),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (farmInline != null) Expanded(child: farmInline),
+                if (farmInline != null && canBuyAny) const SizedBox(width: 6),
+                if (canBuyAny) Expanded(child: _spendModeSegmented(dense: true)),
+              ],
+            ),
           )
         else
           Padding(
