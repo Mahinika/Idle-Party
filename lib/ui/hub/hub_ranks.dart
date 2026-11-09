@@ -43,7 +43,9 @@ class HubRanksFab extends StatelessWidget {
                       width: GameTheme.primaryTouch,
                       height: GameTheme.primaryTouch,
                       child: DecoratedBox(
-                        decoration: MenuChrome.hubPanel(selected: true),
+                        decoration: MenuChrome.hudWell(
+                          borderColor: GameTheme.borderLit,
+                        ),
                         child: const Center(
                           child: GameIcon.asset(UiIcon.trophy, size: 26),
                         ),
