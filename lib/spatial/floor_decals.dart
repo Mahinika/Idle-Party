@@ -96,7 +96,13 @@ class FloorDecalPlan {
       int w,
       int h,
     ) {
-      for (final o in const <(int, int)>[(0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)]) {
+      for (final o in const <(int, int)>[
+        (0, 0),
+        (1, 0),
+        (-1, 0),
+        (0, 1),
+        (0, -1),
+      ]) {
         final x = cx - w ~/ 2 + o.$1;
         final y = cy - h ~/ 2 + o.$2;
         if (rectFree(x, y, w, h)) {
@@ -154,7 +160,11 @@ class FloorDecalPlan {
             clump(style.setpieceDecal, c.cx + 3, c.cy - 1, 8);
           }
         case FloorBeatKind.boss:
-          final a = placeDais(c, w: 5, carpet: style.setpieceDecal == FloorDecalKind.carpet);
+          final a = placeDais(
+            c,
+            w: 5,
+            carpet: style.setpieceDecal == FloorDecalKind.carpet,
+          );
           if (a != null) anchors[c.index] = a;
         default:
           break;
@@ -167,7 +177,12 @@ class FloorDecalPlan {
           if (paintable(x, y)) floorCells++;
         }
       }
-      final budget = (floorCells * 0.07).round();
+      // Sandy's first decal is sandDrift. A slightly denser budget there
+      // only. Other themes stay at the shared 7%.
+      final sandy =
+          theme.decals.isNotEmpty &&
+          theme.decals.first == FloorDecalKind.sandDrift;
+      final budget = (floorCells * (sandy ? 0.12 : 0.07)).round();
       var spent = 0;
       for (var tries = 0; spent < budget && tries < 12; tries++) {
         final size = 3 + rng.nextInt(5);
@@ -186,7 +201,8 @@ class FloorDecalPlan {
       FloorTheme.gilded || FloorTheme.clockwork => FloorDecalKind.grate,
       _ => theme.decals.first,
     };
-    bool inAnyChamber(int x, int y) => chambers.any((c) => c.containsTile(x, y));
+    bool inAnyChamber(int x, int y) =>
+        chambers.any((c) => c.containsTile(x, y));
     for (var y = 1; y < rows - 1; y++) {
       for (var x = 1; x < cols - 1; x++) {
         if (tiles[y * cols + x] != TileKind.floor) continue;

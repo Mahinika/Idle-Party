@@ -14,23 +14,19 @@ import 'package:idle_party/ui/shell/home/town_viewport.dart';
 void main() {
   final now = DateTime(2026, 11, 8);
 
-  GameState newTown() => GameLogic.createInitialState(now: now)
-      .copyWith(inDungeon: false);
+  GameState newTown() =>
+      GameLogic.createInitialState(now: now).copyWith(inDungeon: false);
 
-  GameState afterBoss() => newTown().copyWith(
-        bossVictories: 1,
-        highestFloorCleared: 2,
-      );
+  GameState afterBoss() =>
+      newTown().copyWith(bossVictories: 1, highestFloorCleared: 2);
 
   GameState afterAscend() => afterBoss().copyWith(ascensionLevel: 1);
 
   GameState vaultReady() {
     final stamp = DateTime.now().toUtc();
-    var state = GameLogic.createInitialState(now: stamp).copyWith(
-      inDungeon: false,
-      bossVictories: 1,
-      highestFloorCleared: 2,
-    );
+    var state = GameLogic.createInitialState(
+      now: stamp,
+    ).copyWith(inDungeon: false, bossVictories: 1, highestFloorCleared: 2);
     state = GameLogic.ensureWeeklyContract(state, now: stamp);
     return state.copyWith(
       metaDepth: state.metaDepth.copyWith(
@@ -39,6 +35,20 @@ void main() {
       ),
     );
   }
+
+  group('Town paint token', () {
+    test('a gold tick does not change what the square paints', () {
+      final s = newTown();
+      expect(
+        TownPaintToken.of(s.copyWith(gold: s.gold + 40)),
+        TownPaintToken.of(s),
+      );
+      expect(
+        TownPaintToken.of(s.copyWith(ascensionLevel: 3)),
+        isNot(TownPaintToken.of(s)),
+      );
+    });
+  });
 
   group('TownBuilding catalog', () {
     test('five distinct jobs with distinct art', () {
@@ -49,10 +59,7 @@ void main() {
         TownBuildingId.inn,
         TownBuildingId.vault,
       });
-      expect(
-        TownBuilding.all.map((b) => b.assetPath(0)).toSet().length,
-        5,
-      );
+      expect(TownBuilding.all.map((b) => b.assetPath(0)).toSet().length, 5);
     });
 
     test('painted tiers from Ascend, no save field', () {
@@ -104,7 +111,10 @@ void main() {
         expect(File(path).existsSync(), isTrue, reason: path);
       }
       expect(File('assets/custom/town/preview_a56.png').existsSync(), isTrue);
-      expect(File('assets/custom/town/buildings_sheet.png').existsSync(), isTrue);
+      expect(
+        File('assets/custom/town/buildings_sheet.png').existsSync(),
+        isTrue,
+      );
     });
   });
 
@@ -150,8 +160,9 @@ void main() {
       router.dispose();
     });
 
-    testWidgets('renders guild, forge, market, inn, vault, party, ENTER',
-        (tester) async {
+    testWidgets('renders guild, forge, market, inn, vault, party, ENTER', (
+      tester,
+    ) async {
       director = GameDirector.preview(initialState: newTown());
       router = MenuRouter();
       await pumpTown(tester);
@@ -232,16 +243,19 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('locked INN does not pretend GEAR is composition',
-        (tester) async {
+    testWidgets('locked INN does not pretend GEAR is composition', (
+      tester,
+    ) async {
       director = GameDirector.preview(initialState: newTown());
       router = MenuRouter();
       await pumpTown(tester);
       await tapBuilding(tester, TownBuildingId.inn);
       expect(router.isOpen, isFalse);
       expect(router.route, MenuRoute.none);
-      expect(find.textContaining('Party swaps unlock at first Ascend'),
-          findsOneWidget);
+      expect(
+        find.textContaining('Party swaps unlock at first Ascend'),
+        findsOneWidget,
+      );
       expect(find.text('GEAR'), findsNothing);
       expect(tester.takeException(), isNull);
     });
@@ -272,14 +286,19 @@ void main() {
       expect(router.route, MenuRoute.more);
       expect(router.moreSection, MoreSection.quests);
       expect(find.text('QUESTS'), findsWidgets);
-      expect(find.textContaining('Claim here or in the dungeon'), findsOneWidget);
+      expect(
+        find.textContaining('Claim here or in the dungeon'),
+        findsOneWidget,
+      );
       await tester.tap(find.text('CLOSE').first);
       await tester.pump();
       expect(router.isOpen, isFalse);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('VAULT claim uses existing daily vault command', (tester) async {
+    testWidgets('VAULT claim uses existing daily vault command', (
+      tester,
+    ) async {
       director = GameDirector.preview(initialState: vaultReady());
       director.debugHoldSave(director.state);
       router = MenuRouter();
@@ -319,6 +338,56 @@ void main() {
       router = MenuRouter();
       await pumpTown(tester, textScale: 2.0);
       expect(find.text('ENTER'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a gold tick keeps the town images', (tester) async {
+      director = GameDirector.preview(initialState: newTown());
+      router = MenuRouter();
+      late void Function() rebuild;
+      tester.view.physicalSize = TownPreview.phoneSize;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      holdDirector = true;
+      await tester.pumpWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = () => setState(() {});
+            return MaterialApp(
+              home: TownPreview(director: director, router: router),
+            );
+          },
+        ),
+      );
+      await tester.pump();
+      final scope = find.byKey(const ValueKey('town-paint'));
+      List<Element> images() => tester
+          .elementList(find.descendant(of: scope, matching: find.byType(Image)))
+          .toList();
+      bool tier2(Element element) {
+        final widget = element.widget;
+        return widget is Image &&
+            widget.image is AssetImage &&
+            (widget.image as AssetImage).assetName.contains('_t2');
+      }
+
+      final before = images();
+      expect(before, isNotEmpty);
+      expect(before.any(tier2), isFalse);
+      director.debugSetGold(director.state.gold + 50);
+      rebuild();
+      await tester.pump();
+      final after = images();
+      expect(after.length, before.length);
+      for (var i = 0; i < before.length; i++) {
+        expect(identical(before[i], after[i]), isTrue);
+        expect(identical(before[i].widget, after[i].widget), isTrue);
+      }
+      director.debugHoldSave(director.state.copyWith(ascensionLevel: 5));
+      rebuild();
+      await tester.pump();
+      expect(images().any(tier2), isTrue);
       expect(tester.takeException(), isNull);
     });
 

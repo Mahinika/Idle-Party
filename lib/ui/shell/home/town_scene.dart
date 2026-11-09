@@ -84,8 +84,10 @@ class TownSceneLayout {
     var guildW = math.min(136.0, w * 0.38);
     if (frontW < 8) frontW = 8;
     if (guildW < 8) guildW = 8;
-    final fullInn = frontW * TownSpriteSize.inn.height / TownSpriteSize.inn.width;
-    final fullGuild = guildW * TownSpriteSize.guild.height / TownSpriteSize.guild.width;
+    final fullInn =
+        frontW * TownSpriteSize.inn.height / TownSpriteSize.inn.width;
+    final fullGuild =
+        guildW * TownSpriteSize.guild.height / TownSpriteSize.guild.width;
     final room = math.max(40.0, h - partyH - skyMin - minYard);
     final scale = math.min(1.0, room / (fullInn + fullGuild));
     var yard = minYard;
@@ -94,33 +96,55 @@ class TownSceneLayout {
     yard += math.max(0.0, skyRoom - sky);
 
     final fw = frontW * scale;
-    final forgeH = fw * TownSpriteSize.forge.height / TownSpriteSize.forge.width;
-    final marketH = fw * TownSpriteSize.market.height / TownSpriteSize.market.width;
+    final forgeH =
+        fw * TownSpriteSize.forge.height / TownSpriteSize.forge.width;
+    final marketH =
+        fw * TownSpriteSize.market.height / TownSpriteSize.market.width;
     final innHeight = fw * TownSpriteSize.inn.height / TownSpriteSize.inn.width;
-    final gh = guildW * scale * TownSpriteSize.guild.height / TownSpriteSize.guild.width;
+    final gh =
+        guildW *
+        scale *
+        TownSpriteSize.guild.height /
+        TownSpriteSize.guild.width;
     final gw = guildW * scale;
 
     final partyTop = math.max(0.0, h - partyH);
-    final party = Rect.fromLTWH(8, partyTop, math.max(0, w - 16), math.min(partyH, h));
+    final party = Rect.fromLTWH(
+      8,
+      partyTop,
+      math.max(0, w - 16),
+      math.min(partyH, h),
+    );
     final frontBottom = partyTop;
     const gap = 8.0;
     final total = fw * 3 + gap * 2;
     final start = (w - total) / 2;
     Rect frontAt(int i, double height) =>
         Rect.fromLTWH(start + i * (fw + gap), frontBottom - height, fw, height);
-    final front = [frontAt(0, forgeH), frontAt(1, marketH), frontAt(2, innHeight)];
+    final front = [
+      frontAt(0, forgeH),
+      frontAt(1, marketH),
+      frontAt(2, innHeight),
+    ];
     final frontTop = front.map((r) => r.top).reduce(math.min);
 
     final backBottom = frontTop - yard;
     final guild = Rect.fromLTWH(6, backBottom - gh, gw, gh);
 
     var vaultW = math.min(84.0, w * 0.24) * math.max(0.7, scale);
-    var vaultH = vaultW * TownSpriteSize.vault.height / TownSpriteSize.vault.width;
+    var vaultH =
+        vaultW * TownSpriteSize.vault.height / TownSpriteSize.vault.width;
     if (vaultH > gh) {
       vaultH = gh;
-      vaultW = vaultH * TownSpriteSize.vault.width / TownSpriteSize.vault.height;
+      vaultW =
+          vaultH * TownSpriteSize.vault.width / TownSpriteSize.vault.height;
     }
-    final vault = Rect.fromLTWH(w - 6 - vaultW, backBottom - vaultH, vaultW, vaultH);
+    final vault = Rect.fromLTWH(
+      w - 6 - vaultW,
+      backBottom - vaultH,
+      vaultW,
+      vaultH,
+    );
 
     var wellW = (h < 380 ? 34.0 : 44.0) * math.max(0.75, scale);
     var wellH = wellW * TownSpriteSize.well.height / TownSpriteSize.well.width;
@@ -129,7 +153,12 @@ class TownSceneLayout {
       wellW = math.max(24.0, gapW - 8);
       wellH = wellW * TownSpriteSize.well.height / TownSpriteSize.well.width;
     }
-    final well = Rect.fromLTWH((w - wellW) / 2, backBottom - wellH, wellW, wellH);
+    final well = Rect.fromLTWH(
+      (w - wellW) / 2,
+      backBottom - wellH,
+      wellW,
+      wellH,
+    );
 
     Rect labelOn(Rect b) {
       final lw = math.min(math.max(28.0, b.width - 8), 88.0);
@@ -139,7 +168,12 @@ class TownSceneLayout {
       return Rect.fromLTWH(b.center.dx - lw / 2, top, lw, height);
     }
 
-    final lane = Rect.fromLTRB(8, backBottom + 1, math.max(8, w - 8), frontTop - 1);
+    final lane = Rect.fromLTRB(
+      8,
+      backBottom + 1,
+      math.max(8, w - 8),
+      frontTop - 1,
+    );
     // 1 means "draw them". The painter nearest-neighbors the 96×112 cell
     // down beside the party, and shrinks further when the yard is short.
     var folkScale = 0;
@@ -148,10 +182,10 @@ class TownSceneLayout {
     }
 
     final canopy = math.max(0.0, (backBottom - gh) - 48);
+    // Two canopies, both fully on the phone. The left one used to start at x=-6.
     final trees = <Rect>[
-      Rect.fromLTWH(-6, canopy, 72, 94),
-      Rect.fromLTWH(w - 52, canopy - 6, 56, 108),
-      Rect.fromLTWH(guild.right - 8, math.max(0, canopy + 10), 40, 52),
+      Rect.fromLTWH(0, canopy, 78, 102),
+      Rect.fromLTWH(w - 58, math.max(0.0, canopy - 8), 58, 112),
     ];
 
     final plantings = <TownPlanting>[
@@ -177,7 +211,12 @@ class TownSceneLayout {
     if (rightGap >= 36) {
       plantings.add(
         TownPlanting(
-          Rect.fromLTWH(well.right + 6, well.center.dy - 8, math.min(rightGap, 88), 48),
+          Rect.fromLTWH(
+            well.right + 6,
+            well.center.dy - 8,
+            math.min(rightGap, 88),
+            48,
+          ),
           'thicket',
         ),
       );
@@ -188,7 +227,12 @@ class TownSceneLayout {
     ];
     Rect shade(Rect body) {
       final width = math.min(math.max(28.0, body.width * 0.62), 96.0);
-      return Rect.fromLTWH(body.center.dx - width / 2, body.bottom - 8, width, 12);
+      return Rect.fromLTWH(
+        body.center.dx - width / 2,
+        body.bottom - 8,
+        width,
+        12,
+      );
     }
 
     final contacts = <Rect>[
@@ -211,7 +255,12 @@ class TownSceneLayout {
       lane: lane,
       folkScale: folkScale,
       courtyardPath: Rect.fromLTRB(0, backBottom - 8, w, frontTop),
-      doorPath: Rect.fromLTRB(0, frontBottom - 16, w, math.min(h, frontBottom + 10)),
+      doorPath: Rect.fromLTRB(
+        0,
+        frontBottom - 16,
+        w,
+        math.min(h, frontBottom + 10),
+      ),
       trees: trees,
       plantings: plantings,
       thresholds: thresholds,

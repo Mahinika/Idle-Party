@@ -12,8 +12,16 @@ void main() {
     expect(hits, hasLength(5));
     for (var i = 0; i < hits.length; i++) {
       final hit = hits[i];
-      expect(hit.width, greaterThanOrEqualTo(GameTheme.minTouch), reason: '$size $hit');
-      expect(hit.height, greaterThanOrEqualTo(GameTheme.minTouch), reason: '$size $hit');
+      expect(
+        hit.width,
+        greaterThanOrEqualTo(GameTheme.minTouch),
+        reason: '$size $hit',
+      );
+      expect(
+        hit.height,
+        greaterThanOrEqualTo(GameTheme.minTouch),
+        reason: '$size $hit',
+      );
       expect(hit.left, greaterThanOrEqualTo(-1), reason: '$hit');
       expect(hit.top, greaterThanOrEqualTo(-1), reason: '$hit');
       expect(hit.right, lessThanOrEqualTo(size.width + 1));
@@ -41,18 +49,39 @@ void main() {
         isTrue,
         reason: 'label off the facade ${labels[i]} ${buildings[i]}',
       );
-      expect(layout.lane.overlaps(labels[i]), isFalse, reason: 'label in the yard');
+      expect(
+        layout.lane.overlaps(labels[i]),
+        isFalse,
+        reason: 'label in the yard',
+      );
       for (var j = i + 1; j < labels.length; j++) {
         expect(labels[i].overlaps(labels[j]), isFalse);
       }
     }
     expect(layout.party.overlaps(layout.lane), isFalse);
     for (final hit in hits) {
-      expect(layout.party.overlaps(hit), isFalse, reason: 'party on a building');
+      expect(
+        layout.party.overlaps(hit),
+        isFalse,
+        reason: 'party on a building',
+      );
     }
     if (wantFolk) {
       expect(layout.folkScale, greaterThan(0), reason: '$size');
       expect(layout.lane.width, greaterThan(70));
+    }
+    expect(layout.trees, hasLength(2));
+    for (final tree in layout.trees) {
+      expect(
+        tree.left,
+        greaterThanOrEqualTo(0),
+        reason: 'tree off the left $tree',
+      );
+      expect(
+        tree.right,
+        lessThanOrEqualTo(size.width + 0.5),
+        reason: 'tree off the right $tree',
+      );
     }
   }
 
@@ -75,9 +104,15 @@ void main() {
     final b = townFolkFrames(0.22, moving: true);
     expect(a.first.u, isNot(closeTo(b.first.u, 0.05)));
     expect(a.first.column, inInclusiveRange(1, 4));
-    expect(townFolkFrames(0, moving: true).first.u, townFolkFrames(0, moving: true).first.u);
     expect(
-      townFolkMotionEnabled(quality: VfxQuality.minimal, disableAnimations: false),
+      townFolkFrames(0, moving: true).first.u,
+      townFolkFrames(0, moving: true).first.u,
+    );
+    expect(
+      townFolkMotionEnabled(
+        quality: VfxQuality.minimal,
+        disableAnimations: false,
+      ),
       isFalse,
     );
     expect(
