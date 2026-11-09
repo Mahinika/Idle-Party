@@ -110,6 +110,14 @@ String _keyAffixBit(GameState state) {
   return ' · $names';
 }
 
+/// Drop a one-glyph prefix (`↻ FARM` → `FARM`) so the classic row fits.
+/// Longer labels, including gauntlet chips, stay whole.
+String _modeChipWord(String label) {
+  final space = label.indexOf(' ');
+  if (space > 0 && space <= 2) return label.substring(space + 1);
+  return label;
+}
+
 class DungeonTopHud extends StatelessWidget {
   const DungeonTopHud({
     super.key,
@@ -432,6 +440,8 @@ class DungeonTopHud extends StatelessWidget {
         ? GreaterRift.roomLine(state.grTier)
         : state.inWorldBoss
         ? AshenCrown.kitByDungeonId(state.dungeonId).roomLine
+        : placeLineOnly
+        ? 'F$floor$keyBit$fightBit'
         : '$zoneShort · F$floor$keyBit$fightBit';
     if (placeLineOnly) {
       return Text(
@@ -543,7 +553,9 @@ class DungeonTopHud extends StatelessWidget {
           child: CoachPulse(
             active: coachFarm != null,
             child: DungeonModeChip(
-              label: GameLogic.dungeonModeChipLabel(DungeonMode.farm, state),
+              label: _modeChipWord(
+                GameLogic.dungeonModeChipLabel(DungeonMode.farm, state),
+              ),
               selected: farm,
               expand: true,
               tip:
@@ -561,7 +573,9 @@ class DungeonTopHud extends StatelessWidget {
           child: CoachPulse(
             active: coachFarm != null,
             child: DungeonModeChip(
-              label: GameLogic.dungeonModeChipLabel(DungeonMode.push, state),
+              label: _modeChipWord(
+                GameLogic.dungeonModeChipLabel(DungeonMode.push, state),
+              ),
               selected: !farm,
               expand: true,
               tip:
@@ -712,7 +726,7 @@ class DungeonTopHud extends StatelessWidget {
                   ],
                 Expanded(
                   child: DungeonModeChip(
-                    label: state.combatPace >= 2 ? 'SPEED 2×' : 'SPEED 1×',
+                    label: state.combatPace >= 2 ? '2×' : '1×',
                     selected: state.combatPace >= 2,
                     prominent: true,
                     expand: true,

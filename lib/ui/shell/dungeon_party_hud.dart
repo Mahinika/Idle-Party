@@ -322,13 +322,13 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
       height: rowHeight,
       child: ClipRect(
         child: WebClickScope(
-        label: hero.name,
+        label: partyStripName(hero, plainEnglish: plainEnglish),
         onPressed: () => _onHeroTap(i),
         child: Semantics(
           button: true,
           selected: widget.selectedHeroIndex == i,
           label:
-              '${hero.name} '
+              '${partyStripName(hero, plainEnglish: plainEnglish)} '
               '${hero.spec.roleTag.plainLabel} — tap for abilities, '
               'long-press for gear',
           onTap: () => _onHeroTap(i),
@@ -534,13 +534,16 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                     height: rowHeight,
                     child: ClipRect(
                       child: WebClickScope(
-                        label: party[i].name,
+                        label: partyStripName(
+                          party[i],
+                          plainEnglish: plainEnglish,
+                        ),
                         onPressed: () => _onHeroTap(i),
                         child: Semantics(
                           button: true,
                           selected: widget.selectedHeroIndex == i,
                           label:
-                              '${party[i].name} '
+                              '${partyStripName(party[i], plainEnglish: plainEnglish)} '
                               '${party[i].spec.roleTag.plainLabel} — tap for abilities, '
                               'long-press for gear',
                           onTap: () => _onHeroTap(i),
@@ -1355,9 +1358,6 @@ class _PartyRow extends StatelessWidget {
                 children: [
                   PartyHudSpecLine(
                     spec: who,
-                    role: who == hero.spec.roleTag.plainLabel
-                        ? ''
-                        : hero.spec.roleTag.plainLabel,
                     level: hero.level,
                     color: GameTheme.parchment,
                     extra: _companionLine(spatial, world, hero.specId) ?? '',
@@ -1684,19 +1684,20 @@ class _InlineAbilityChip extends StatelessWidget {
         ? GameTheme.blood
         : GameTheme.border;
     final cdText = formatCombatSeconds(cdLeft);
+    final word = ability.name;
     final String label;
     if (gated) {
-      label = '${ability.shortLabel}! (shield)';
+      label = '$word! (shield)';
     } else if (onCd) {
-      label = '${ability.shortLabel} $cdText';
+      label = '$word $cdText';
     } else if (execWaiting) {
-      label = '${ability.shortLabel} ${(execFrac * 100).round()}%';
+      label = '$word ${(execFrac * 100).round()}%';
     } else if (bombWaiting) {
-      label = '${ability.shortLabel}·up';
+      label = '$word·up';
     } else {
       label = isRunic && ability.resourceCost > 0
-          ? '${ability.shortLabel}·${ability.resourceCost}'
-          : ability.shortLabel;
+          ? '$word·${ability.resourceCost}'
+          : word;
     }
     final chip = Opacity(
       opacity: gated || softGated
@@ -1735,7 +1736,9 @@ class _InlineAbilityChip extends StatelessWidget {
     final tip = gated
         ? '${ability.tooltipMessage} — equip a shield'
         : ability.tooltipMessage;
-    return Tooltip(
+    return Semantics(
+      label: ability.name,
+      child: Tooltip(
       message: tip,
       waitDuration: const Duration(milliseconds: 350),
       child: GestureDetector(
@@ -1762,6 +1765,7 @@ class _InlineAbilityChip extends StatelessWidget {
         },
         child: chip,
       ),
+    ),
     );
   }
 }
@@ -1798,6 +1802,7 @@ class _DpsMeterState extends State<DpsMeter> {
       elapsed: world.combatElapsed,
     );
     if (snap.isEmpty) {
+      if (world.combatElapsed <= 0) return const SizedBox.shrink();
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
         decoration: MenuChrome.hudWell(),

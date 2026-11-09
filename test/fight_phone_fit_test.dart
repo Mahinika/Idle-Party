@@ -92,7 +92,7 @@ void main() {
         (w) => w is DungeonModeChip && w.label.contains('PUSH'),
       );
       final speed = find.byWidgetPredicate(
-        (w) => w is DungeonModeChip && w.label.startsWith('SPEED'),
+        (w) => w is DungeonModeChip && w.prominent,
       );
       expect(farm, findsOneWidget);
       expect(push, findsOneWidget);

@@ -17,7 +17,9 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1] / "assets" / "custom" / "enemies"
 S = 96
-INK = (16, 10, 12, 255)
+# Warm ink, the same family as sandy_mite's contour. Two pixels, not a wire.
+INK = (36, 18, 12, 255)
+INK_OUTER = (52, 26, 16, 255)
 
 
 def clamp_i(i: int, n: int) -> int:
@@ -135,20 +137,152 @@ class Pix:
                 ny = (y - cy) / span
                 self.put(x, y, ramp[self.tone(nx * 1.4, ny * 1.1, n, x, y)])
 
-    def outline(self, ink: tuple[int, int, int, int] = INK) -> None:
-        add: list[tuple[int, int]] = []
-        for y in range(self.h):
-            row = y * self.w
-            for x in range(self.w):
-                if self.px[row + x] is not None:
+    def _filled(self) -> list[bool]:
+        return [p is not None for p in self.px]
+
+    def outline(self, passes: int = 2) -> None:
+        """Two-pixel warm contour. Inner pass is darker so the line has weight."""
+        for step in range(passes):
+            ink = INK if step == 0 else INK_OUTER
+            filled = self._filled()
+            add: list[tuple[int, int]] = []
+            for y in range(self.h):
+                row = y * self.w
+                for x in range(self.w):
+                    if filled[row + x]:
+                        continue
+                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < self.w and 0 <= ny < self.h and filled[ny * self.w + nx]:
+                            add.append((x, y))
+                            break
+            for x, y in add:
+                self.px[y * self.w + x] = ink
+
+    def enrich(self) -> None:
+        """Upper-left light, plate seams, and a few interior marks.
+
+        Flat ramps stay in the creature's own colors. Eyes and gems are
+        left alone: a pixel that already disagrees with its neighbors is a
+        feature, not a plate.
+        """
+        w, h = self.w, self.h
+        src = list(self.px)
+        mask = [p is not None for p in src]
+        dist = [99] * (w * h)
+        for y in range(h):
+            row = y * w
+            for x in range(w):
+                i = row + x
+                if not mask[i]:
+                    dist[i] = 0
                     continue
+                edge = False
                 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                     nx, ny = x + dx, y + dy
-                    if 0 <= nx < self.w and 0 <= ny < self.h and self.px[ny * self.w + nx] is not None:
-                        add.append((x, y))
+                    if not (0 <= nx < w and 0 <= ny < h) or not mask[ny * w + nx]:
+                        edge = True
                         break
-        for x, y in add:
-            self.px[y * self.w + x] = ink
+                dist[i] = 1 if edge else 99
+        for _ in range(6):
+            nxt = list(dist)
+            for y in range(h):
+                row = y * w
+                for x in range(w):
+                    i = row + x
+                    if not mask[i] or dist[i] <= 1:
+                        continue
+                    best = dist[i]
+                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < w and 0 <= ny < h:
+                            best = min(best, dist[ny * w + nx] + 1)
+                    nxt[i] = best
+            dist = nxt
+
+        def feature(x: int, y: int) -> bool:
+            c = src[y * w + x]
+            if c is None:
+                return False
+            disagree = 0
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    if dx == 0 and dy == 0:
+                        continue
+                    nx, ny = x + dx, y + dy
+                    if not (0 <= nx < w and 0 <= ny < h):
+                        continue
+                    o = src[ny * w + nx]
+                    if o is None:
+                        continue
+                    if abs(c[0] - o[0]) + abs(c[1] - o[1]) + abs(c[2] - o[2]) > 150:
+                        disagree += 1
+            return disagree >= 2
+
+        def shade(rgb: tuple[int, int, int, int], t: float) -> tuple[int, int, int, int]:
+            r, g, b = rgb[0], rgb[1], rgb[2]
+            if t >= 0:
+                r = r + (248 - r) * t * 0.62
+                g = g + (228 - g) * t * 0.5
+                b = b + (186 - b) * t * 0.32
+            else:
+                k = -t
+                r *= 1 - 0.78 * k
+                g *= 1 - 0.8 * k
+                b *= 1 - 0.74 * k
+            return (
+                clamp_i(int(r), 256),
+                clamp_i(int(g), 256),
+                clamp_i(int(b), 256),
+                255,
+            )
+
+        cx = cy = n = 0
+        for y in range(h):
+            for x in range(w):
+                if mask[y * w + x]:
+                    cx += x
+                    cy += y
+                    n += 1
+        if n == 0:
+            return
+        cx /= n
+        cy /= n
+        span = max(12.0, (n ** 0.5) * 0.55)
+
+        for y in range(h):
+            for x in range(w):
+                i = y * w + x
+                c = src[i]
+                if c is None or feature(x, y):
+                    continue
+                d = dist[i]
+                nx = (x - cx) / span
+                ny = (y - cy) / span
+                light = 0.2 - 0.9 * nx - 0.65 * ny
+                light = max(-1.0, min(1.0, light))
+                ao = min(1.0, d / 5.0)
+                # Shell cuts, not a brick wall. A seam only crosses a wide
+                # run, and it breaks so a leg stays a leg.
+                seam = False
+                if d > 2 and y % 8 == 3:
+                    run = 0
+                    for dx in range(-8, 9):
+                        nx2 = x + dx
+                        if 0 <= nx2 < w and mask[y * w + nx2]:
+                            run += 1
+                    if run >= 12 and ((x // 4) % 3) != 2:
+                        seam = True
+                # A short keel on the body's midline.
+                if d > 3 and abs(x - cx) <= 1.2 and (y // 5) % 2 == 0:
+                    seam = True
+                bump = 0.18 if (not seam and d > 3 and (x + y * 3) % 17 == 0) else 0.0
+                if seam:
+                    self.px[i] = shade(c, -0.78)
+                    continue
+                t = max(-0.8, min(0.85, light * (0.4 + 0.6 * ao) + bump))
+                t = round(t * 6) / 6
+                self.px[i] = shade(c, t)
 
     def image(self) -> Image.Image:
         im = Image.new("RGBA", (self.w, self.h), (0, 0, 0, 0))
@@ -174,6 +308,7 @@ def save(img: Image.Image, name: str) -> None:
 
 
 def finish(p: Pix, name: str) -> None:
+    p.enrich()
     p.outline()
     save(p.image(), name)
 
@@ -206,32 +341,38 @@ SILK = [(90, 70, 100), (150, 120, 160), (200, 170, 200), (236, 214, 226)]
 
 
 def sandy_tank() -> Image.Image:
-    """Shellback: a wide beetle, not a circle. Mandibles and six legs."""
+    """Shellback: a wide beetle, the mite's cousin. Plates, not a flat oval."""
     p = Pix()
-    # Six jointed legs, tucked under a shell that is wider than it is tall.
-    for i, x in enumerate((12, 22, 32, 58, 68, 78)):
-        p.box(x, 60, 5, 8, SHELL)
-        p.box(x + (2 if i < 3 else -2), 68, 5, 10, SAND)
-        p.box(x - 1, 76, 8, 3, SHELL)
+    # Six jointed legs, thicker than a wire, tucked under the shell.
+    for i, x in enumerate((10, 20, 30, 58, 68, 78)):
+        p.box(x, 58, 6, 8, SHELL)
+        p.box(x + (3 if i < 3 else -3), 66, 6, 12, SAND)
+        p.box(x - 1, 76, 10, 4, SHELL)
+        p.put(x + 2, 70, (40, 22, 12))
+        p.put(x + 3, 70, (40, 22, 12))
     p.disc(48, 50, 36, 20, SAND)
-    p.disc(48, 46, 28, 12, SHELL)
-    # Plates and a gold keel so the back is not one oval.
-    for y in (36, 44, 52):
-        p.box(22, y, 52, 2, SHELL)
-    p.box(46, 28, 4, 32, GOLD)
-    for sx in (30, 40, 56, 66):
-        p.disc(sx, 42, 3, 2, GOLD)
-        p.disc(sx, 52, 2, 2, SHELL)
-    p.disc(48, 26, 13, 10, SAND)
-    p.poly([(34, 28), (22, 14), (30, 24), (26, 32)], SAND)
-    p.poly([(62, 28), (74, 14), (66, 24), (70, 32)], SAND)
-    p.box(24, 18, 3, 3, (40, 22, 12))
-    p.box(70, 18, 3, 3, (40, 22, 12))
+    p.disc(48, 46, 28, 13, SHELL)
+    # Segment seams and a gold keel, the same job as the mite's shell cuts.
+    for y in (34, 42, 50, 58):
+        p.box(20, y, 56, 2, (48, 28, 14))
+    p.box(46, 28, 4, 34, GOLD)
+    for sx in (28, 38, 58, 68):
+        p.disc(sx, 40, 3.2, 2.4, GOLD)
+        p.disc(sx, 50, 2.4, 2.2, SHELL)
+        p.put(sx, 46, (255, 236, 180))
+    # Head, mandibles, antennae.
+    p.disc(48, 26, 14, 11, SAND)
+    p.poly([(34, 28), (18, 12), (30, 22), (24, 34)], SAND)
+    p.poly([(62, 28), (78, 12), (66, 22), (72, 34)], SAND)
+    p.box(22, 16, 3, 4, (40, 22, 12))
+    p.box(72, 16, 3, 4, (40, 22, 12))
+    p.box(40, 12, 2, 8, SHELL)
+    p.box(54, 12, 2, 8, SHELL)
     eye(p, 42, 24, 3, (240, 220, 140), (40, 24, 12))
     eye(p, 54, 24, 3, (240, 220, 140), (40, 24, 12))
-    p.box(44, 30, 8, 2, (60, 32, 16))
-    p.put(46, 32, (240, 220, 160))
-    p.put(50, 32, (240, 220, 160))
+    p.box(44, 30, 8, 3, (60, 32, 16))
+    p.put(46, 33, (240, 220, 160))
+    p.put(50, 33, (240, 220, 160))
     finish(p, "sandy_tank.png")
     return p.image()
 
@@ -358,19 +499,34 @@ def king_guard() -> Image.Image:
 
 
 def king_tank() -> Image.Image:
+    """Gate knight. A kite shield and a helm, not a bottle with a cap."""
     p = Pix()
-    leg(p, 46, 72, 9, 16, STEEL)
-    leg(p, 60, 72, 9, 16, STEEL)
-    p.box(44, 40, 28, 34, NAVY)
-    # Tower shield, a rectangle that owns the left half.
-    p.box(8, 22, 34, 62, STEEL)
-    p.box(12, 26, 26, 50, NAVY)
-    p.box(20, 36, 10, 28, GOLD)
-    p.disc(64, 26, 12, 11, STEEL)
-    p.box(56, 16, 16, 8, GOLD)
-    p.box(60, 10, 8, 8, (170, 36, 40))
-    # Visor slit, not two friendly eyes.
-    p.box(58, 28, 14, 3, (12, 14, 20))
+    # Greaves and sabatons.
+    leg(p, 50, 68, 8, 16, STEEL)
+    leg(p, 64, 68, 8, 16, STEEL)
+    p.box(48, 82, 12, 5, GOLD)
+    p.box(62, 82, 12, 5, GOLD)
+    # Breastplate and a pauldron, beside the shield.
+    p.box(48, 36, 22, 34, NAVY)
+    p.box(54, 40, 6, 26, GOLD)
+    p.disc(68, 38, 8, 6, STEEL)
+    # Kite shield owns the left. Rivets and a crowned boss, not a flat panel.
+    p.poly([(10, 28), (42, 24), (44, 58), (28, 86), (8, 60)], STEEL)
+    p.poly([(16, 34), (36, 32), (36, 56), (26, 74), (14, 56)], NAVY)
+    p.box(22, 40, 8, 18, GOLD)
+    for sx, sy in ((16, 36), (34, 34), (18, 58), (32, 56)):
+        p.disc(sx, sy, 1.6, 1.6, GOLD)
+    p.disc(26, 48, 3, 3, [(170, 36, 40), (220, 70, 60)])
+    # Greathelm with a cross slit and a red crest. A head, not a bottle cap.
+    p.disc(62, 22, 12, 11, STEEL)
+    p.box(52, 12, 20, 6, GOLD)
+    p.poly([(58, 14), (62, 4), (66, 14)], [(140, 24, 28), (200, 48, 48)])
+    p.box(54, 22, 16, 3, (12, 14, 20))
+    p.box(61, 18, 3, 12, (12, 14, 20))
+    # Sword hilt over the right shoulder.
+    p.box(74, 30, 4, 28, LEATHER)
+    p.box(70, 28, 12, 4, GOLD)
+    p.poly([(72, 30), (80, 30), (76, 16)], STEEL)
     finish(p, "king_tank.png")
     return p.image()
 
@@ -498,7 +654,9 @@ def hell_brute() -> Image.Image:
     p = Pix()
     leg(p, 22, 72, 14, 16, ASH)
     leg(p, 60, 72, 14, 16, ASH)
-    p.box(18, 40, 60, 36, FIRE)
+    # Barrel chest, not a brick slab.
+    p.disc(48, 56, 30, 18, FIRE)
+    p.poly([(34, 44), (48, 68), (62, 44), (48, 52)], ASH)
     p.disc(48, 28, 18, 14, ASH)
     p.poly([(30, 24), (22, 4), (40, 24)], FIRE)
     p.poly([(66, 24), (76, 4), (56, 24)], FIRE)
@@ -709,7 +867,8 @@ def storm_brute() -> Image.Image:
     p = Pix()
     leg(p, 22, 72, 12, 16, STORM)
     leg(p, 62, 72, 12, 16, STORM)
-    p.box(16, 40, 64, 34, STORM)
+    p.disc(48, 56, 32, 18, STORM)
+    p.poly([(28, 46), (48, 64), (40, 48), (62, 70)], BOLT)
     p.disc(36, 30, 14, 12, STORM)
     p.poly([(24, 26), (8, 8), (30, 28)], BOLT)
     p.poly([(48, 24), (58, 6), (40, 28)], BONE)
@@ -1102,6 +1261,75 @@ def boss_veil() -> Image.Image:
     return p.image()
 
 
+def boss_brass() -> Image.Image:
+    """The Mainspring. A boiler, a gear, and a cannon. Not the golem's outline."""
+    p = Pix()
+    # Thin piston legs and anvil feet. A golem's legs are thick columns.
+    p.box(26, 68, 7, 16, STEEL)
+    p.box(58, 68, 7, 16, STEEL)
+    p.box(20, 82, 18, 6, BRASS)
+    p.box(52, 82, 18, 6, BRASS)
+    p.box(24, 84, 4, 4, (40, 24, 12))
+    p.box(64, 84, 4, 4, (40, 24, 12))
+    # Rectangular boiler. Shoulders do not round into arms.
+    p.box(22, 30, 44, 40, BRASS)
+    p.box(28, 36, 32, 28, ASH)
+    p.box(38, 42, 12, 16, (40, 22, 14))
+    p.box(42, 46, 4, 8, GOLD)
+    for y in (34, 48, 62):
+        for x in (26, 36, 56, 62):
+            p.disc(x, y, 1.5, 1.5, GOLD)
+    # Chimney stack, offset, with a lip.
+    p.box(26, 8, 12, 24, STEEL)
+    p.box(24, 6, 16, 5, BRASS)
+    p.box(30, 12, 4, 6, (20, 16, 12))
+    # Gear for a head, left of the stack, with teeth. Not a rocky skull.
+    p.disc(18, 28, 11, 11, GOLD)
+    p.disc(18, 28, 4, 4, ASH)
+    for ang in range(0, 360, 45):
+        rad = math.radians(ang)
+        p.box(int(18 + math.cos(rad) * 12) - 1, int(28 + math.sin(rad) * 12) - 1, 3, 3, STEEL)
+    # Cannon barrel sticks out to the right. A golem has a fist here.
+    p.box(66, 42, 24, 9, STEEL)
+    p.box(66, 44, 24, 2, GOLD)
+    p.disc(90, 46, 5, 6, BRASS)
+    p.disc(90, 46, 2, 2, [(20, 12, 8), (80, 40, 20)])
+    # Gear saw on the left hip, below the head gear.
+    p.disc(12, 56, 9, 9, STEEL)
+    p.disc(12, 56, 3, 3, GOLD)
+    finish(p, "boss_brass.png")
+    return p.image()
+
+
+def boss_rime() -> Image.Image:
+    """Rime colossus. A crowned ice spire. No ape arms, no golem legs."""
+    p = Pix()
+    # Icicle roots for a base, wide and jagged.
+    p.poly([(48, 64), (6, 90), (22, 74)], ICE)
+    p.poly([(48, 64), (90, 88), (72, 72)], RIME)
+    p.poly([(48, 70), (34, 92), (62, 92)], ICE)
+    p.poly([(30, 78), (18, 92), (36, 84)], RIME)
+    p.poly([(66, 76), (80, 92), (60, 84)], ICE)
+    # The spire itself. A triangle, not a torso.
+    p.poly([(48, 8), (74, 72), (22, 72)], ICE)
+    p.poly([(48, 16), (64, 68), (32, 68)], RIME)
+    # Hanging icicles. They point down. They are not elbows.
+    p.poly([(24, 36), (4, 68), (20, 46)], ICE)
+    p.poly([(72, 32), (92, 62), (76, 42)], RIME)
+    p.poly([(18, 48), (8, 78), (22, 54)], RIME)
+    # Crown of three shards.
+    p.poly([(48, 4), (40, 18), (56, 18)], [(200, 236, 248), (255, 255, 255)])
+    p.poly([(30, 18), (22, 4), (38, 20)], ICE)
+    p.poly([(66, 18), (76, 2), (58, 20)], ICE)
+    # A vertical face crack with a cold light. Not two golem eyes.
+    p.box(45, 28, 6, 22, (18, 48, 78))
+    p.box(47, 32, 2, 8, (220, 244, 255))
+    p.box(36, 40, 1, 22, (16, 40, 64))
+    p.box(58, 36, 1, 26, (16, 40, 64))
+    finish(p, "boss_rime.png")
+    return p.image()
+
+
 def snake() -> Image.Image:
     p = Pix()
     # Coils.
@@ -1181,6 +1409,8 @@ def main() -> None:
         veil_support,
         veil_mite_sprite,
         boss_veil,
+        boss_brass,
+        boss_rime,
         snake,
     ]
     for fn in painters:

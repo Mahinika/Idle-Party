@@ -34,7 +34,7 @@ class BodyFamilyDef {
       HeroAnimKind.attack => attackAsset,
       HeroAnimKind.cast => castAsset ?? attackAsset,
       // No hit PNG: stay on idle. The walk stride read as a phantom step.
-      // The cutout skeleton plays [RigClips.hit] instead.
+      // The cutout skeleton plays the family flinch (warrior stays [RigClips.hit]).
       HeroAnimKind.hit => hitAsset ?? idleAsset,
       HeroAnimKind.death => deathAsset ?? idleAsset,
       HeroAnimKind.victory => idleAsset,

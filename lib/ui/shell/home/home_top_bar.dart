@@ -84,17 +84,6 @@ class HomeTopBar extends StatelessWidget {
                     style: GameTheme.hint(color: GameTheme.torchHot),
                   ),
                 ],
-                if (compactTop) ...[
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      chase,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.hint(color: GameTheme.parchmentDim),
-                    ),
-                  ),
-                ],
                 const SizedBox(width: 6),
                 if (compactTop)
                   _tap(
@@ -138,7 +127,16 @@ class HomeTopBar extends StatelessWidget {
                 ),
               ],
             ),
-            if (!compactTop) ...[
+            if (compactTop) ...[
+              const SizedBox(height: 2),
+              Text(
+                chase,
+                maxLines: 2,
+                softWrap: true,
+                overflow: TextOverflow.fade,
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              ),
+            ] else ...[
               const SizedBox(height: 2),
               Row(
                 children: [

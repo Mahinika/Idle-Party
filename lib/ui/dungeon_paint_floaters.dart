@@ -213,7 +213,8 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
       }
     }
 
-    if (showBursts || showPriorityFloaters) {
+    final rareLoot = world.floaters.any((f) => f.priority >= 3);
+    if (showBursts || showPriorityFloaters || rareLoot) {
       _FloaterHold.sync(
         floaters: world.floaters,
         frame: visualFrame,
@@ -221,6 +222,8 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
       );
       final maxW = tile * 4.4;
       for (final floater in _FloaterHold.live.values) {
+        final rare = floater.priority >= 3;
+        if (!showBursts && !showPriorityFloaters && !rare) continue;
         if (!showBursts && floater.priority < 2) continue;
         if (!_inView(floater.x, floater.y, pad: 0.5)) continue;
         final speech = floater.speech;
@@ -238,7 +241,8 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
           color: color,
           maxWidth: maxW,
         );
-        final c = center(floater.x, floater.y - (speech ? 0.55 : 0));
+        final lift = rare ? 1.35 : 0.0;
+        final c = center(floater.x, floater.y - (speech ? 0.55 : 0) - lift);
         if (speech) {
           final padX = tile * 0.12;
           final padY = tile * 0.06;
