@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../assets/custom_assets.dart';
@@ -17,6 +19,7 @@ import 'town_life.dart';
 import 'town_scene.dart';
 import '../../chase_bind.dart';
 import '../../confirm_dialogs.dart';
+import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../hero_doll_sprite.dart';
 import '../../kenney_button.dart';
@@ -208,7 +211,7 @@ class _TownViewportState extends State<TownViewport> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  TownTier.progressLine(al),
+                  townProgressLine(ascensionLevel: al, cave: cave),
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -332,7 +335,7 @@ class _TownSquare extends StatelessWidget {
           _sprite(
             shade,
             CustomAssets.townContact,
-            fit: BoxFit.fill,
+            fit: BoxFit.contain,
             align: Alignment.bottomCenter,
           ),
         for (final tree in layout.trees)
@@ -357,9 +360,11 @@ class _TownSquare extends StatelessWidget {
         _sprite(layout.well, CustomAssets.townWell),
         Positioned.fill(
           child: TownFolkLayer(
-            motion: motion,
-            lane: layout.lane,
-            scale: layout.folkScale,
+            motion: motion && layout.folkScale > 0,
+            lane: layout.folkScale > 0
+                ? layout.lane
+                : Rect.fromLTWH(8, math.max(0, size.height - 52), 120, 36),
+            scale: layout.folkScale > 0 ? layout.folkScale : 1,
           ),
         ),
         for (var i = 0; i < TownBuilding.frontRow.length; i++)
@@ -389,7 +394,12 @@ class _TownSquare extends StatelessWidget {
           right: size.width - layout.party.right,
           bottom: 0,
           height: layout.party.height,
-          child: _PartyRow(heroes: state.heroes, compact: size.height < 380),
+          child: _PartyRow(
+            heroes: state.heroes,
+            doll: layout.lane.height >= 48 && size.width >= 360
+                ? 40
+                : (size.height < 380 ? 34 : 42),
+          ),
         ),
         if (TownTier.showPennants(state.ascensionLevel) && layout.grassTop > 26)
           const Positioned(
@@ -411,16 +421,53 @@ class _TownSquare extends StatelessWidget {
     return false;
   }
 
-  /// One authored cobble street, fitted to the rect the layout measured.
+  /// Two cobble courses. The join is the shared mortar column in both tiles.
   Widget _street(Rect rect) {
+    final scale = rect.height / 36.0;
+    final joint = 180.0 * scale;
+    final leftW = math.min(joint, rect.width);
     return Positioned.fromRect(
       rect: rect,
       child: IgnorePointer(
-        child: Image.asset(
-          CustomAssets.townPath,
-          fit: BoxFit.fill,
-          filterQuality: FilterQuality.none,
-          excludeFromSemantics: true,
+        child: ClipRect(
+          child: Row(
+            children: [
+              SizedBox(
+                width: leftW,
+                height: rect.height,
+                child: ClipRect(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Image.asset(
+                      CustomAssets.townPath,
+                      height: rect.height,
+                      fit: BoxFit.fitHeight,
+                      filterQuality: FilterQuality.none,
+                      excludeFromSemantics: true,
+                    ),
+                  ),
+                ),
+              ),
+              if (rect.width > leftW + 1)
+                Expanded(
+                  child: ClipRect(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Transform.translate(
+                        offset: Offset(-joint, 0),
+                        child: Image.asset(
+                          CustomAssets.townPathAlt,
+                          height: rect.height,
+                          fit: BoxFit.fitHeight,
+                          filterQuality: FilterQuality.none,
+                          excludeFromSemantics: true,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -566,38 +613,45 @@ class _TownArcade extends StatelessWidget {
 }
 
 class _PartyRow extends StatelessWidget {
-  const _PartyRow({required this.heroes, required this.compact});
+  const _PartyRow({required this.heroes, required this.doll});
 
   final List<PartyHero> heroes;
-  final bool compact;
+  final double doll;
 
   @override
   Widget build(BuildContext context) {
-    final size = compact ? 34.0 : (heroes.length > 4 ? 36.0 : 42.0);
+    final standW = doll * heroes.length;
     return Semantics(
       label: 'Party resting in town',
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
         children: [
-          for (var i = 0; i < heroes.length; i++)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  HeroDollSprite(hero: heroes[i], partyIndex: i, size: size),
-                  Image.asset(
-                    CustomAssets.townContact,
-                    width: size * 0.9,
-                    height: 6,
-                    fit: BoxFit.fill,
-                    filterQuality: FilterQuality.none,
-                    excludeFromSemantics: true,
+          Image.asset(
+            CustomAssets.townContact,
+            width: standW,
+            height: 14,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.none,
+            excludeFromSemantics: true,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (var i = 0; i < heroes.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: HeroDollSprite(
+                      hero: heroes[i],
+                      partyIndex: i,
+                      size: doll,
+                    ),
                   ),
-                ],
-              ),
+              ],
             ),
+          ),
         ],
       ),
     );
@@ -648,8 +702,8 @@ class _TownBuildingButton extends StatelessWidget {
                     child: Image.asset(
                       CustomAssets.townAlert,
                       key: ValueKey('town-alert-${building.id.name}'),
-                      width: 16,
-                      height: 16,
+                      width: 22,
+                      height: 22,
                       filterQuality: FilterQuality.none,
                       excludeFromSemantics: true,
                     ),
@@ -696,10 +750,24 @@ class _TownLockedNote extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          title,
-                          textAlign: TextAlign.center,
-                          style: GameTheme.section(),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                title,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GameTheme.section(),
+                              ),
+                            ),
+                            GameIconButton(
+                              key: const ValueKey('town-locked-close'),
+                              label: 'CLOSE',
+                              glyph: UiGlyph.close,
+                              onPressed: onClose,
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -724,6 +792,16 @@ class _TownLockedNote extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Below the pennant tier the line names the town and the cave.
+/// At the tier it keeps [TownTier.progressLine], which says banners.
+String townProgressLine({required int ascensionLevel, required String cave}) {
+  if (TownTier.showPennants(ascensionLevel)) {
+    return TownTier.progressLine(ascensionLevel);
+  }
+  final look = ascensionLevel >= 1 ? 'Stone town' : 'Timber town';
+  return '$look · $cave';
 }
 
 /// What the town square paints. Gold is not in here, so a wallet tick

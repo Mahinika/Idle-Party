@@ -170,7 +170,8 @@ class TownSceneLayout {
     );
 
     Rect labelOn(Rect b) {
-      final lw = math.min(math.max(28.0, b.width - 8), 88.0);
+      final base = math.min(math.max(28.0, b.width - 8), 88.0);
+      final lw = math.min(b.width - 4, base * math.max(1.0, textScale));
       final lh = math.min(labelH, math.max(10.0, b.height - 4));
       final top = math.max(b.top, b.bottom - lh - 2);
       final height = math.min(lh, b.bottom - top);
@@ -193,7 +194,8 @@ class TownSceneLayout {
     // Two canopies, both fully on the phone. The left one used to start at x=-6.
     final trees = <Rect>[
       Rect.fromLTWH(0, canopy, 78, 102),
-      Rect.fromLTWH(w - 58, math.max(0.0, canopy - 8), 58, 112),
+      // Pine sits a row lower so the crown clears the top bar.
+      Rect.fromLTWH(w - 58, math.max(12.0, canopy + 20), 58, 96),
     ];
 
     final plantings = <TownPlanting>[
@@ -249,26 +251,57 @@ class TownSceneLayout {
         ),
       );
     }
+    // Hedge along the ridge. Spaced shrubs, not a wall.
+    for (var x = 72.0; x < w - 70; x += 54) {
+      plantings.add(TownPlanting(Rect.fromLTWH(x, grass - 6, 32, 26), 'shrub'));
+    }
+    // Clusters at the lawn edges and beside the spur. Not on the doors.
+    plantings.add(TownPlanting(Rect.fromLTWH(4, grass + 16, 40, 32), 'flowers'));
+    plantings.add(TownPlanting(Rect.fromLTWH(34, grass + 30, 34, 28), 'herbs'));
+    plantings.add(TownPlanting(Rect.fromLTWH(w - 42, grass + 18, 38, 30), 'wild'));
+    if (lane.height >= 70) {
+      plantings.add(TownPlanting(Rect.fromLTWH(6, lane.top + 6, 40, 32), 'shrub'));
+      plantings.add(TownPlanting(Rect.fromLTWH(w - 46, lane.top + 14, 40, 32), 'flowers'));
+      if (approaches.isNotEmpty) {
+        final spur = approaches.first;
+        plantings.add(
+          TownPlanting(Rect.fromLTWH(spur.left - 34, spur.top + 6, 30, 26), 'wild'),
+        );
+        plantings.add(
+          TownPlanting(Rect.fromLTWH(spur.right + 4, spur.top + 16, 30, 26), 'herbs'),
+        );
+      }
+    }
+    if (rightGap >= 16) {
+      plantings.add(
+        TownPlanting(
+          Rect.fromLTWH(
+            well.right + 2,
+            well.bottom - 26,
+            math.min(34, rightGap + 6),
+            28,
+          ),
+          'flowers',
+        ),
+      );
+    }
     final thresholds = <Rect>[
       for (final building in front)
         Rect.fromLTWH(building.center.dx - 28, building.bottom + 1, 56, 22),
     ];
-    Rect shade(Rect body) {
-      final width = math.min(math.max(28.0, body.width * 0.62), 96.0);
-      return Rect.fromLTWH(
-        body.center.dx - width / 2,
-        body.bottom - 8,
-        width,
-        12,
-      );
+    List<Rect> feet(Rect body) {
+      final y = body.bottom - 10;
+      return [
+        Rect.fromLTWH(body.left + body.width * 0.18, y, 26, 14),
+        Rect.fromLTWH(body.right - body.width * 0.42, y + 1, 26, 14),
+      ];
     }
 
     final contacts = <Rect>[
-      shade(guild),
-      shade(vault),
-      shade(well),
-      for (final building in front) shade(building),
-      for (final tree in trees) shade(tree),
+      ...feet(guild),
+      ...feet(vault),
+      ...feet(well),
+      for (final building in front) ...feet(building),
     ];
 
     return TownSceneLayout(
