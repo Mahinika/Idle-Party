@@ -407,10 +407,10 @@ class _TownSquare extends StatelessWidget {
     return false;
   }
 
-  /// One authored course. It is not repeated into a ruled strip.
+  /// One authored cobble course. It is not repeated into a ruled strip.
   Widget _yardPath(Rect rect) {
     const nativeW = 360.0;
-    const nativeH = 40.0;
+    const nativeH = 52.0;
     final scale = rect.width / nativeW;
     final scaled = nativeH * scale;
     final height = rect.height < scaled ? rect.height : scaled;
@@ -626,15 +626,16 @@ class _TownBuildingButton extends StatelessWidget {
               ),
               if (badge)
                 Positioned(
-                  right: 4,
-                  top: 4,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: GameTheme.torchHot,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: GameTheme.stone, width: 2),
+                  right: 2,
+                  top: 2,
+                  child: IgnorePointer(
+                    child: Image.asset(
+                      CustomAssets.townAlert,
+                      key: ValueKey('town-alert-${building.id.name}'),
+                      width: 16,
+                      height: 16,
+                      filterQuality: FilterQuality.none,
+                      excludeFromSemantics: true,
                     ),
                   ),
                 ),

@@ -174,8 +174,7 @@ class TownSceneLayout {
       math.max(8, w - 8),
       frontTop - 1,
     );
-    // 1 means "draw them". The painter nearest-neighbors the 96×112 cell
-    // down beside the party, and shrinks further when the yard is short.
+    // 1 means "draw them" at the 48×56 yard size. A short yard shrinks them.
     var folkScale = 0;
     if (lane.width >= 48 && lane.height >= 16) {
       folkScale = 1;
@@ -192,6 +191,14 @@ class TownSceneLayout {
       TownPlanting(Rect.fromLTWH(0, backBottom - 36, 56, 44), 'flowers'),
       TownPlanting(Rect.fromLTWH(w - 56, backBottom - 40, 56, 44), 'shrub'),
     ];
+    if (lane.height >= 72) {
+      plantings.add(
+        TownPlanting(
+          Rect.fromLTWH(lane.center.dx - 26, lane.top + 2, 52, 28),
+          'flowers',
+        ),
+      );
+    }
     if (lane.height >= 40) {
       plantings.add(
         TownPlanting(Rect.fromLTWH(0, lane.bottom - 44, 52, 44), 'wild'),

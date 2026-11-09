@@ -8,8 +8,8 @@ Nothing here is a foreign sprite. Deterministic: no RNG.
 
     python3 tool/generate_town_art.py
 
-Folk cells are 96×112. Dart `TownFolkSheet` must match. The painter
-nearest-neighbors them down beside the party.
+Folk cells are 96×112, painted on a 48×56 grid so the yard draw keeps
+every pixel. Dart `TownFolkSheet` must match.
 """
 from __future__ import annotations
 
@@ -1005,70 +1005,137 @@ def trunk(pix: Pix, x: int, y: int, w: int, h: int) -> None:
     pix.put(x + w + 3, y + h - 2, TIMBER[0])
 
 
+# Extra canopy colors. The shared LEAF ramp stays for building moss.
+CANOPY = [
+    (14, 42, 24),
+    (22, 64, 32),
+    (32, 92, 40),
+    (46, 122, 48),
+    (68, 152, 58),
+    (98, 176, 72),
+    (138, 198, 92),
+    (176, 214, 118),
+    (206, 220, 140),
+    (168, 196, 86),
+    (86, 140, 92),
+    (48, 100, 78),
+]
+BLOSSOM = [
+    (120, 48, 72),
+    (176, 86, 112),
+    (214, 130, 150),
+    (240, 180, 186),
+    (255, 220, 214),
+]
+APPLE = [(120, 24, 28), (168, 36, 36), (206, 64, 52), (236, 120, 96)]
+BIRD = [(36, 36, 48), (72, 78, 96), (186, 150, 64), (240, 210, 120)]
+
+
+def _leaf_clump(pix: Pix, cx: int, cy: int, rx: int, ry: int, bias: int) -> None:
+    for y in range(cy - ry - 1, cy + ry + 2):
+        for x in range(cx - rx - 1, cx + rx + 2):
+            nx = (x - cx) / max(1, rx)
+            ny = (y - cy) / max(1, ry)
+            wob = 0.16 * math.sin(x * 1.7 + y * 0.6) + 0.1 * math.sin(x * 0.45 - y * 1.1)
+            if nx * nx + ny * ny > 1.0 + wob:
+                continue
+            # Sky holes so the crown is leaves, not a filled ellipse.
+            if (x * 3 + y * 5 + bias) % 17 == 0 and nx * nx + ny * ny < 0.45:
+                continue
+            light = bias / 6 - 0.7 * nx - 0.45 * ny
+            tone = clamp_i(int((light + 0.8) * 4.2), len(CANOPY))
+            if (x + y + bias) % 9 == 0:
+                tone = min(len(CANOPY) - 1, tone + 2)
+            if (x * 2 + bias) % 13 == 0:
+                tone = max(0, tone - 2)
+            pix.put(x, y, CANOPY[tone])
+
+
+def _blossom(pix: Pix, x: int, y: int) -> None:
+    pix.put(x, y, BLOSSOM[2])
+    pix.put(x - 1, y, BLOSSOM[1])
+    pix.put(x + 1, y, BLOSSOM[3])
+    pix.put(x, y - 1, BLOSSOM[4])
+    pix.put(x, y + 1, BLOSSOM[0])
+    pix.put(x + 1, y + 1, (255, 210, 80))
+
+
+def _apple(pix: Pix, x: int, y: int) -> None:
+    pix.put(x, y, APPLE[2])
+    pix.put(x + 1, y, APPLE[3])
+    pix.put(x, y + 1, APPLE[1])
+    pix.put(x + 1, y + 1, APPLE[0])
+    pix.put(x, y - 1, CANOPY[4])
+    pix.put(x + 1, y - 1, CANOPY[6])
+
+
 def generate_tree_round() -> Image.Image:
     pix = Pix(80, 100)
-    trunk(pix, 36, 62, 8, 30)
-    # Back masses first, then a lit front mass. Irregular, not one disc.
+    trunk(pix, 34, 64, 10, 28)
+    # Moss and a second bark tone so the trunk is not one brown bar.
+    pix.rect(36, 70, 2, 16, (86, 110, 64))
+    pix.put(38, 78, (140, 168, 96))
+    pix.put(35, 86, (160, 120, 72))
+    pix.put(41, 74, TIMBER[5])
     specs = (
-        (40, 40, 26, 20, 2),
-        (24, 46, 16, 14, 2),
-        (58, 44, 16, 13, 3),
-        (32, 28, 14, 12, 4),
-        (50, 26, 15, 12, 4),
-        (40, 48, 18, 12, 3),
-        (18, 36, 10, 9, 3),
-        (64, 38, 9, 8, 2),
+        (40, 42, 24, 18, 3),
+        (22, 48, 14, 12, 2),
+        (58, 46, 14, 12, 4),
+        (30, 28, 12, 11, 5),
+        (50, 26, 13, 11, 4),
+        (40, 50, 16, 10, 2),
+        (16, 36, 8, 8, 3),
+        (66, 38, 8, 7, 5),
+        (40, 18, 8, 7, 6),
     )
     for cx, cy, rx, ry, bias in specs:
-        canopy_cluster(pix, cx, cy, rx, ry, LEAF, bias)
-    # Break the ellipse bands into leaf clumps, and sink a few pockets.
-    chips = (
-        (22, 34, 5), (26, 32, 6), (34, 22, 5), (46, 20, 6),
-        (58, 28, 5), (62, 40, 4), (18, 48, 3), (50, 50, 2),
-        (40, 36, 4), (30, 44, 2), (54, 36, 3), (36, 30, 6),
-    )
-    for hx, hy, tone in chips:
-        pix.put(hx, hy, LEAF[tone])
-        pix.put(hx + 1, hy, LEAF[min(tone + 1, 6)])
-        pix.put(hx, hy + 1, LEAF[max(tone - 1, 1)])
-    for hx, hy in ((30, 38), (48, 44), (38, 26), (56, 32), (24, 28)):
-        pix.put(hx, hy, LEAF[0])
-        pix.put(hx + 1, hy, LEAF[1])
-        pix.put(hx, hy + 1, LEAF[0])
-        pix.put(hx + 1, hy + 1, LEAF[1])
-    # A few leaves that break the silhouette.
-    for lx, ly, tone in (
-        (8, 40, 4),
-        (6, 34, 3),
-        (72, 36, 5),
-        (74, 44, 3),
-        (40, 8, 5),
-        (28, 12, 4),
-        (54, 10, 4),
-        (16, 22, 5),
-    ):
-        pix.put(lx, ly, LEAF[tone])
+        _leaf_clump(pix, cx, cy, rx, ry, bias)
+    for bx, by in ((24, 30), (34, 20), (48, 18), (58, 28), (28, 44), (52, 40)):
+        _blossom(pix, bx, by)
+    for ax, ay in ((22, 50), (60, 46), (40, 34)):
+        _apple(pix, ax, ay)
+    # A bird on the lit side. Different shape from the fruit.
+    pix.rect(62, 22, 6, 3, BIRD[0])
+    pix.put(67, 22, BIRD[2])
+    pix.put(68, 21, BIRD[3])
+    pix.put(63, 21, BIRD[1])
+    pix.put(64, 23, BIRD[2])
+    pix.put(61, 23, BIRD[0])
+    for lx, ly in ((8, 40), (6, 32), (74, 34), (76, 44), (40, 6), (26, 10), (56, 8)):
+        pix.put(lx, ly, CANOPY[7])
+        pix.put(lx, ly + 1, CANOPY[4])
     pix.outline()
     return pix.image()
 
 
 def generate_tree_tall() -> Image.Image:
     pix = Pix(48, 112)
-    trunk(pix, 21, 78, 6, 26)
-    # Layered conifer masses with broken edges.
+    trunk(pix, 20, 78, 8, 26)
+    pix.rect(22, 84, 2, 12, (78, 108, 62))
+    pix.put(23, 90, (150, 176, 110))
+    pix.put(21, 96, TIMBER[0])
     layers = (
-        (24, 86, 16, 8, 2),
-        (24, 74, 14, 8, 3),
-        (24, 62, 12, 8, 3),
-        (24, 50, 10, 7, 4),
-        (24, 38, 8, 7, 4),
-        (24, 26, 6, 6, 5),
-        (24, 16, 3, 5, 5),
+        (24, 86, 16, 7, 2),
+        (24, 74, 14, 7, 3),
+        (24, 62, 12, 7, 3),
+        (24, 50, 11, 6, 4),
+        (24, 38, 9, 6, 5),
+        (24, 26, 7, 6, 5),
+        (24, 16, 4, 5, 6),
     )
     for cx, cy, rx, ry, bias in layers:
-        canopy_cluster(pix, cx, cy, rx, ry, LEAF, bias)
-    for lx, ly in ((8, 70), (40, 64), (10, 48), (38, 40), (24, 8), (16, 20)):
-        pix.put(lx, ly, LEAF[5])
+        _leaf_clump(pix, cx, cy, rx, ry, bias)
+        # Needle tips along the lit edge of each tier.
+        for k in range(-rx, rx, 3):
+            pix.put(cx + k, cy - ry, CANOPY[8])
+            pix.put(cx + k, cy - ry + 1, CANOPY[6])
+    for cx, cy in ((16, 70), (32, 58), (20, 44), (30, 30)):
+        pix.put(cx, cy, (120, 64, 36))
+        pix.put(cx + 1, cy, (168, 96, 48))
+        pix.put(cx, cy + 1, (90, 48, 28))
+    pix.put(24, 8, CANOPY[8])
+    pix.put(23, 9, CANOPY[7])
+    pix.put(25, 9, CANOPY[5])
     pix.outline()
     return pix.image()
 
@@ -1143,7 +1210,33 @@ def generate_backdrop() -> Image.Image:
         pix.put(bx - 2, by - 1, STONE[1])
         pix.put(bx + 3, by, STONE[1])
         pix.put(bx - 3, by, STONE[1])
-    pix.rect(0, 176, 360, 24, GRASS[2])
+    # The horizon is the same lawn as the tile, not one flat green band.
+    horizon = (
+        (28, 96, 40),
+        (48, 140, 48),
+        (72, 168, 58),
+        (110, 190, 78),
+        (36, 118, 64),
+        (150, 200, 96),
+    )
+    for y in range(176, 200):
+        for x in range(360):
+            n = (x * 13 + y * 7) % 17
+            tone = 2
+            if n < 3:
+                tone = 0
+            elif n < 6:
+                tone = 1
+            elif n < 10:
+                tone = 3
+            elif n > 14:
+                tone = 5
+            if (x + y) % 29 == 0:
+                tone = 4
+            pix.put(x, y, horizon[tone])
+            if n == 8 and y < 196:
+                pix.put(x, y - 2, (220, 90, 80))
+                pix.put(x, y - 3, (255, 200, 120))
     return pix.image()
 
 
@@ -1195,20 +1288,21 @@ python3 tool/generate_town_art.py
 |------|--------|
 | Ink (32, 22, 18), 1 px contour | Same warm ink as the heroes |
 | Light | Upper-left, in clusters on each stone, tile, and fold |
-| Ground | Quiet meadow, stepping stones, four different plantings |
+| Ground | Varied lawn, worn track, cobbles, flowers, shade |
 | Roofs | Individual tiles. Guild slate, houses terracotta, market a folded awning |
 | Windows | Amber glass, wood mullions |
-| People | Three villagers at hero source size, idle + 4 walk frames |
-| Scale | `FilterQuality.none`. Folk source is 96×112 and draws near 48×56 |
+| People | Smith, courier, and gardener. Idle + 4 walk frames |
+| Scale | `FilterQuality.none`. Folk are authored for the 48×56 yard |
 
 ## Files
 
 | File | Use |
 |------|-----|
 | backdrop.png | Banded sky, clouds, ridge, distant roof |
-| ground.png | Repeating grass tile |
-| path.png | One ragged stepping-stone course, 360×40, transparent gaps |
-| tree_round.png / tree_tall.png | Clumped canopies |
+| ground.png | Repeating lawn, 240×240, wraps |
+| path.png | Cobble course, 360×52, transparent gaps |
+| alert.png | Claim spark on guild and vault |
+| tree_round.png / tree_tall.png | Leaf clumps, blossoms, fruit |
 | flowers.png / shrub.png / wild.png / herbs.png | Four different plantings |
 | meadow.png / thicket.png / scuff.png | Unique lawn clumps, placed once |
 | worn.png | Small worn patch for a doorway |
@@ -1245,6 +1339,7 @@ def main() -> int:
         ("pennants.png", life_art.pennants()),
         ("lanterns.png", life_art.lanterns()),
         ("folk.png", generate_folk()),
+        ("alert.png", life_art.alert()),
         ("well.png", generate_well()),
         ("vault_shut.png", generate_vault(False)),
         ("vault_open.png", generate_vault(True)),
@@ -1299,8 +1394,30 @@ def main() -> int:
         paste(preview, shown, (fx, 340))
     assets.append(("preview_a56.png", preview))
 
+    def stats(name: str) -> tuple[int, float]:
+        return life_art.opaque_stats(by_name[name])
+
+    ground_n, ground_top = stats("ground.png")
+    round_n, _ = stats("tree_round.png")
+    tall_n, _ = stats("tree_tall.png")
+    folk_n, _ = stats("folk.png")
+    print(
+        f"colors ground={ground_n} top={ground_top:.3f} "
+        f"tree_round={round_n} tree_tall={tall_n} folk={folk_n}"
+    )
+    if ground_top > 0.40 or ground_n < 36:
+        raise SystemExit("ground.png is still a flat lawn")
+    if round_n < 24 or tall_n < 20:
+        raise SystemExit("trees need more than a dozen colors")
+    if folk_n < 70:
+        raise SystemExit("folk.png is too thin")
+
     for name, img in assets:
         path_out = ASSETS_DIR / name
+        if path_out.exists():
+            old = Image.open(path_out).convert("RGBA")
+            if old.size == img.size and old.tobytes() == img.convert("RGBA").tobytes():
+                continue
         img.save(path_out)
         print(f"Wrote {path_out} {img.size}")
     (ASSETS_DIR / "README.md").write_text(README)

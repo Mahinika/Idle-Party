@@ -102,12 +102,14 @@ Source: `tool/generate_town_art.py`. License: owned, same as
 `assets/custom/`. No paid packs. Deterministic (no RNG).
 `FilterQuality.none`.
 
-The first daylight pass was too flat (checker grass, stick villagers,
-hatched awnings). The stone-and-tile buildings stay. This pass replaces
-the lawn and the people: a quiet meadow, one ragged stepping-stone
-course, four different plantings, and villagers painted at hero source
-size. Warm ink `(32, 22, 18)` and upper-left light still match the
-heroes. Dungeon art is unchanged.
+The stone-and-tile buildings stay. The lawn is a varied meadow: several
+greens, clover, a worn track, cobbles, and mixed flowers, with shade on
+the south edge of each mound. Trees are leaf clumps with blossoms and
+fruit. Villagers are a smith, a courier, and a gardener, painted on the
+48×56 yard grid so a face, clothes, and a solid outline sit beside the
+party. Warm ink `(32, 22, 18)` and upper-left light still match the
+heroes. Dungeon art is unchanged. A guild or vault claim is a pixel
+spark on the building, not a round UI dot.
 
 Guild is a pale stone hall. Forge, Market, and Inn keep their jobs
 (chimney and anvil, stall, jetty). Name chips paint last, on the
@@ -117,13 +119,15 @@ Three painted tiers per facade (timber / plaster / banners). AL10
 pennants and AL20 lanterns stay Flutter overlays, drawn as pixel blocks.
 
 Townsfolk live on `folk.png` (3 people × idle + 4 walk frames, 96×112
-cells). `TownFolkLayer` nearest-neighbors them to 48×56, beside the
-42px party, and shrinks further when the yard is short. It walks two of
-them through the yard and idles the third. The clock runs only while
-motion is on, the route's `TickerMode` is enabled, and the app is
-resumed. Minimal VFX and the system reduce-motion flag hold the idle
-pose. Goldens stay deterministic: Minimal VFX does not tick, and a
-full-VFX capture is a fixed pump duration.
+cells). The drawing is 48×56, stored doubled, so nearest-neighbor at
+yard size keeps the outline. `TownFolkLayer` walks two of them through
+the yard on different beats and idles the third, and it lifts them
+apart when the yard is tall. It shrinks them when the yard is short.
+The clock runs only while motion is on, the route's `TickerMode` is
+enabled, and the app is resumed. Minimal VFX and the system
+reduce-motion flag hold the idle pose. Goldens stay deterministic:
+Minimal VFX does not tick, and a full-VFX capture is a fixed pump
+duration.
 
 ---
 
