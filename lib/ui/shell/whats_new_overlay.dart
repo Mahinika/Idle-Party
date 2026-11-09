@@ -170,7 +170,7 @@ class WhatsNewOverlay extends StatelessWidget {
         ),
         ShellLayout.gap(8),
         GameButton(
-          label: 'GOT IT',
+          label: 'CLOSE',
           primary: true,
           onPressed: () {
             director.markChangelogSeen();

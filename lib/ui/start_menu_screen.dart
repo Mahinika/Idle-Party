@@ -187,15 +187,19 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                               style: GameTheme.readable(color: GameTheme.parchment),
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          Opacity(
-                            opacity: copyOpacity,
-                            child: Text(
-                              StoryLore.introSubline,
-                              textAlign: TextAlign.center,
-                              style: GameTheme.section(color: GameTheme.parchmentDim),
+                          if (!tight) ...[
+                            const SizedBox(height: 6),
+                            Opacity(
+                              opacity: copyOpacity,
+                              child: Text(
+                                StoryLore.introSubline,
+                                textAlign: TextAlign.center,
+                                style: GameTheme.section(
+                                  color: GameTheme.parchmentDim,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                           if (!widget.canContinue &&
                               widget.playGamesCloudFound == true) ...[
                             const SizedBox(height: 6),

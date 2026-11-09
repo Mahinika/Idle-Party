@@ -394,7 +394,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(LocalReminders.optInTitle), findsOneWidget);
     expect(find.textContaining('KEY'), findsNothing);
-    await tester.tap(find.text('NOT NOW'));
+    await tester.tap(find.text('LATER'));
     await tester.pumpAndSettle();
     expect(director.state.metaDepth.notifyPrompted, isTrue);
     expect(director.state.metaDepth.notifyOptIn, isFalse);
