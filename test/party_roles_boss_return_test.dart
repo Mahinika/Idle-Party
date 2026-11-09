@@ -321,7 +321,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Up next:'), findsNothing);
     expect(find.textContaining('Why:'), findsNothing);
-    expect(find.textContaining('No gold or essence this time'), findsOneWidget);
+    final line = tester.widget<Text>(
+      find.textContaining('No gold or essence this time'),
+    );
+    expect(line.data, contains('next fight'));
+    expect(line.style?.color, isNot(GameTheme.accentWarn));
     expect(find.text('OPEN GOLD'), findsNothing);
     expect(find.textContaining('missed'), findsNothing);
     expect(find.textContaining('hurry'), findsNothing);

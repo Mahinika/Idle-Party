@@ -443,8 +443,13 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   }) {
     final state = director.state;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    // The home fight gives this panel whatever height is left. A short
+    // phone at text scale 1.45 can be shorter than the spend row, so the
+    // row scrolls with the tracks instead of painting a stripe.
+    return ListView(
+      primary: false,
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
       children: [
         if (canBuyAny)
           Padding(
@@ -461,22 +466,22 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
               maxLines: 1,
             ),
           ),
-        Expanded(
-          child: ListView(
-            primary: false,
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(
-              ShellLayout.sheetHorizontal,
-              4,
-              ShellLayout.sheetHorizontal,
-              8,
-            ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            ShellLayout.sheetHorizontal,
+            4,
+            ShellLayout.sheetHorizontal,
+            8,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final type in PartyUpgradeType.values)
                 _upgradeRow(
                   state: state,
                   type: type,
-                  onPressed: GameLogic.canForgeGoldSpend(state, type, _spendMode)
+                  onPressed:
+                      GameLogic.canForgeGoldSpend(state, type, _spendMode)
                       ? () {
                           director.upgradePartyTrack(type, mode: _spendMode);
                           setState(() {});

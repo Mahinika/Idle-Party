@@ -432,9 +432,9 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
               final hubNow = GoldIncome.hubGoldPerMinute(state);
               final hubAfter =
                   GoldIncome.hubGoldPerMinuteAtGoldLevel(state, target);
-              return '+${hubAfter - hubNow}g/min · ${bulkCost} essence';
+              return '+${hubAfter - hubNow}g/min · $bulkCost essence';
             }()
-          : 'Buy $buyN · ${bulkCost} essence';
+          : 'Buy $buyN · $bulkCost essence';
       trailing = PowerUpgradePriceChip(
         label: label,
         primary: true,

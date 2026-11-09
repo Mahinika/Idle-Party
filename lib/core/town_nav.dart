@@ -39,10 +39,12 @@ abstract final class TownNavPolicy {
 
   static bool isDuplicateMenuRail(String id) => duplicateMenuRailIds.contains(id);
 
-  static bool keepOnTownRails(String id) => !isDuplicatePowerupShortcut(id);
-
-  static bool keepOnMenuGrid(String id) =>
+  static bool keepOnTownRails(String id) =>
       !isDuplicatePowerupShortcut(id) && !isDuplicateMenuRail(id);
+
+  /// Rail homes stay off the MENU grid. [powerupsHomeIds] is SCROLLS.
+  static bool keepOnMenuGrid(String id) =>
+      keepOnTownRails(id) && !powerupsHomeIds.contains(id);
 
   static List<T> filterEntries<T>(
     Iterable<T> entries,

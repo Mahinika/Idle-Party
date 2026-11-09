@@ -87,7 +87,7 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Lore Font'), findsOneWidget);
-    expect(find.text('15e'), findsWidgets);
+    expect(find.text('15 essence'), findsWidgets);
   });
 
   testWidgets('inline SPLIT market scrolls listings and shows flask chips', (
