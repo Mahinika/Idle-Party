@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
+import '../../core/home_layout.dart';
 import '../game_theme.dart';
 import '../meta/offline_welcome.dart';
 
@@ -29,14 +30,20 @@ class _DungeonOfflineChromeState extends State<DungeonOfflineChrome> {
         widget.director.offlineSummary == null) {
       return;
     }
+    if (widget.director.state.homeLayout == HomeLayout.home) {
+      return;
+    }
     _dialogShown = true;
     await showOfflineProgressDialog(context, widget.director);
   }
 
   @override
   Widget build(BuildContext context) {
-    final summary = widget.director.offlineSummary;
+  final summary = widget.director.offlineSummary;
     if (summary == null) return const SizedBox.shrink();
+    if (widget.director.state.homeLayout == HomeLayout.home) {
+      return const SizedBox.shrink();
+    }
     return Align(
       alignment: const Alignment(0, -0.55),
       child: GestureDetector(

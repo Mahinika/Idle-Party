@@ -15,11 +15,15 @@ class ScrollBuffStack extends StatefulWidget {
     required this.meta,
     this.nowMs,
     this.maxHeight,
+    this.maxRows = 6,
   });
 
   final MetaDepthState meta;
   final int? nowMs;
   final double? maxHeight;
+
+  /// Home fight caps visible rows; extra scrolls fold to +N.
+  final int maxRows;
 
   @override
   State<ScrollBuffStack> createState() => _ScrollBuffStackState();
@@ -64,11 +68,19 @@ class _ScrollBuffStackState extends State<ScrollBuffStack> {
         .where((c) => c.active)
         .toList();
     if (chips.isEmpty) return const SizedBox.shrink();
+    final visible = chips.take(widget.maxRows).toList();
+    final hidden = chips.length - visible.length;
+    final names = chips.map((c) => c.shortLabel).join(', ');
     Widget column = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        for (final chip in chips) _ScrollBuffPip(chip: chip),
+        for (final chip in visible) _ScrollBuffPip(chip: chip),
+        if (hidden > 0)
+          Text(
+            '+$hidden',
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
+          ),
       ],
     );
     final cap = widget.maxHeight;
@@ -80,7 +92,10 @@ class _ScrollBuffStackState extends State<ScrollBuffStack> {
         ),
       );
     }
-    return column;
+    return Semantics(
+      label: 'Active scrolls: $names',
+      child: column,
+    );
   }
 }
 

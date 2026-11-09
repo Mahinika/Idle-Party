@@ -23,6 +23,10 @@ Future<void> showFloorJumpSheet(
   }
   final here = state.currentRoom.floorNumber;
   final maxFloor = state.maxReachableFloor;
+  final clearedFloors = <int>[
+    for (var f = 1; f <= maxFloor; f++)
+      if (f != here && GameLogic.canTravelToFloor(state, f)) f,
+  ];
   final picked = await showDialog<int>(
     context: context,
     barrierColor: MenuChrome.scrim,
@@ -35,39 +39,88 @@ Future<void> showFloorJumpSheet(
           children: [
             ShellLayout.hint('Now F$here. Jump keeps the KEY clock running.', maxLines: 2),
             ShellLayout.gap(6),
-            for (var f = 1; f <= maxFloor; f++)
-              WebClickScope(
-                label: 'Floor $f',
-                onPressed: f != here && GameLogic.canTravelToFloor(state, f)
-                    ? () => Navigator.pop(ctx, f)
-                    : null,
-                child: Semantics(
-                  button: f != here && GameLogic.canTravelToFloor(state, f),
-                  label: f == here
-                      ? 'Floor $f, here'
-                      : GameLogic.canTravelToFloor(state, f)
-                      ? 'Floor $f'
-                      : 'Floor $f, locked',
-                  child: ListTile(
-                    dense: true,
-                    minVerticalPadding: 12,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                    title: Text(
-                      f == here
-                          ? 'F$f · here'
-                          : GameLogic.canTravelToFloor(state, f)
-                          ? 'F$f'
-                          : 'F$f · locked',
-                      style: GameTheme.readable(color: f == here
-                            ? GameTheme.torchHot
-                            : GameTheme.parchment),
-                    ),
-                    onTap: f != here && GameLogic.canTravelToFloor(state, f)
-                        ? () => Navigator.pop(ctx, f)
-                        : null,
+            WebClickScope(
+              label: 'This floor',
+              onPressed: null,
+              child: Semantics(
+                label: 'This floor · F$here',
+                child: ListTile(
+                  dense: true,
+                  minVerticalPadding: 12,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                  title: Text(
+                    'This floor · F$here',
+                    style: GameTheme.readable(color: GameTheme.torchHot),
                   ),
                 ),
               ),
+            ),
+            if (clearedFloors.isNotEmpty) ...[
+              ShellLayout.gap(4),
+              Text(
+                'Cleared',
+                style: GameTheme.section(color: GameTheme.parchmentDim),
+              ),
+              ShellLayout.gap(2),
+              for (final f in clearedFloors)
+                WebClickScope(
+                  label: 'Floor $f',
+                  onPressed: () => Navigator.pop(ctx, f),
+                  child: Semantics(
+                    button: true,
+                    label: 'Floor $f',
+                    child: ListTile(
+                      dense: true,
+                      minVerticalPadding: 12,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                      title: Text(
+                        'F$f',
+                        style: GameTheme.readable(color: GameTheme.parchment),
+                      ),
+                      onTap: () => Navigator.pop(ctx, f),
+                    ),
+                  ),
+                ),
+            ],
+            if (maxFloor > here) ...[
+              ShellLayout.gap(4),
+              Text(
+                'Higher',
+                style: GameTheme.section(color: GameTheme.parchmentDim),
+              ),
+              ShellLayout.gap(2),
+              for (var f = here + 1; f <= maxFloor; f++)
+                WebClickScope(
+                  label: 'Floor $f',
+                  onPressed: GameLogic.canTravelToFloor(state, f)
+                      ? () => Navigator.pop(ctx, f)
+                      : null,
+                  child: Semantics(
+                    button: GameLogic.canTravelToFloor(state, f),
+                    label: GameLogic.canTravelToFloor(state, f)
+                        ? 'Floor $f'
+                        : 'Floor $f, locked',
+                    child: ListTile(
+                      dense: true,
+                      minVerticalPadding: 12,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                      title: Text(
+                        GameLogic.canTravelToFloor(state, f)
+                            ? 'F$f'
+                            : 'F$f · locked',
+                        style: GameTheme.readable(
+                          color: GameLogic.canTravelToFloor(state, f)
+                              ? GameTheme.parchment
+                              : GameTheme.parchmentDim,
+                        ),
+                      ),
+                      onTap: GameLogic.canTravelToFloor(state, f)
+                          ? () => Navigator.pop(ctx, f)
+                          : null,
+                    ),
+                  ),
+                ),
+            ],
           ],
         ),
       ),

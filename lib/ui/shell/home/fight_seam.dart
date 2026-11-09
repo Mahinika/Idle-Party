@@ -37,6 +37,12 @@ class FightSeam extends StatelessWidget {
     final world = director.spatial;
     final farmLabel = plain ? 'Repeat' : 'FARM';
     final pushLabel = plain ? 'Next' : 'PUSH';
+    final modeHint = plain
+        ? 'Repeat loots. Next goes deeper.'
+        : 'FARM loops. PUSH climbs.';
+    final osScale =
+        WidgetsBinding.instance.platformDispatcher.textScaleFactor;
+    final seamFitsExtras = osScale <= GameTheme.typeScaleMax;
     return Material(
       color: GameTheme.panel,
       child: Column(
@@ -63,14 +69,23 @@ class FightSeam extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   if (world != null)
-                    SizedBox(
-                      width: GameTheme.minTouch,
-                      height: GameTheme.minTouch,
-                      child: GodHandRing(
-                        cooldown: world.godHandCooldown,
-                        maxCooldown: state.godHandCooldownSeconds,
-                        dense: true,
-                        onTap: director.godHandAtFocus,
+                    Semantics(
+                      button: true,
+                      label: plain
+                          ? 'Long-press the fight, or tap the fist'
+                          : 'God Hand — long-press the fight or tap the fist',
+                      child: SizedBox(
+                        width: GameTheme.minTouch,
+                        height: GameTheme.minTouch,
+                        child: GodHandRing(
+                          cooldown: world.godHandCooldown,
+                          maxCooldown: state.godHandCooldownSeconds,
+                          dense: true,
+                          readyLabel: plain
+                              ? 'Long-press the fight, or tap the fist'
+                              : null,
+                          onTap: director.godHandAtFocus,
+                        ),
                       ),
                     ),
                   const Spacer(),
@@ -97,11 +112,21 @@ class FightSeam extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (hideRails && seamFitsExtras) ...[
+                    const SizedBox(width: 4),
+                    _tap(
+                      label: 'MORE menu',
+                      onTap: () => router.open(MenuRoute.more),
+                      minHeight: GameTheme.minTouch,
+                      child: Text(
+                        'MORE',
+                        style: GameTheme.readable(color: GameTheme.torchHot),
+                      ),
+                    ),
+                  ],
                   const SizedBox(width: 4),
                   _tap(
-                    label: state.homePanelFull
-                        ? 'Split forge under fight'
-                        : 'Full fight height',
+                    label: state.homePanelFull ? 'TALL' : 'FORGE',
                     onTap: () =>
                         director.setHomePanelFull(!state.homePanelFull),
                     minHeight: GameTheme.minTouch,
@@ -119,7 +144,7 @@ class FightSeam extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        state.homePanelFull ? 'SPLIT' : 'FULL',
+                        state.homePanelFull ? 'TALL' : 'FORGE',
                         style: GameTheme.readable(color: GameTheme.parchmentDim),
                       ),
                     ),
@@ -127,6 +152,16 @@ class FightSeam extends StatelessWidget {
                 ],
               ),
           ),
+          if (seamFitsExtras)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+              child: Text(
+                modeHint,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              ),
+            ),
           ShellLayout.divider(),
           PartyCornerHud(
               director: director,

@@ -76,30 +76,23 @@ class RiftProgressHud extends StatelessWidget {
             Expanded(
               child: SizedBox(
                 height: 18,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.center,
-                  children: [
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: RiftProgressBarPainter(
-                          progress01: fill,
-                          timeSpent01: needle,
-                          showNeedle: !farm && !guardianActive && parMs > 0,
-                          guardianActive: guardianActive,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      pct,
-                      maxLines: 1,
-                      style: GameTheme.combat(color: guardianActive
-                            ? GameTheme.torchHot
-                            : GameTheme.parchment),
-                    ),
-                  ],
+                child: CustomPaint(
+                  painter: RiftProgressBarPainter(
+                    progress01: fill,
+                    timeSpent01: needle,
+                    showNeedle: !farm && !guardianActive && parMs > 0,
+                    guardianActive: guardianActive,
+                  ),
                 ),
               ),
+            ),
+            Text(
+              pct,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.combat(color: guardianActive
+                    ? GameTheme.torchHot
+                    : GameTheme.parchment),
             ),
             const SizedBox(width: 4),
             GameIcon.asset(

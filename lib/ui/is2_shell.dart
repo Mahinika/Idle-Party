@@ -441,7 +441,9 @@ class _Is2CombatCornerChromeState extends State<_Is2CombatCornerChrome> {
             ),
           Positioned(
             right: hudSide,
-            top: widget.homeChrome ? 4 : 22,
+            top: widget.homeChrome
+                ? (state.inRift || state.inGreaterRift ? 38 : 4)
+                : 22,
             child: TargetCornerHud(director: d),
           ),
           Positioned(

@@ -235,10 +235,17 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
             SpatialCombat.floaterReadScale(floater.priority);
         final snapped = (alpha * 10).round() / 10.0;
         final color = Color(floater.argb).withValues(alpha: snapped);
+        final outline = GameTheme.lootInkShadow.withValues(alpha: snapped * 0.9);
         final tp = _FloaterLabels.of(
           text: floater.text,
           size: math.max(GameTheme.hudPixel, size),
           color: color,
+          maxWidth: maxW,
+        );
+        final tpOutline = _FloaterLabels.of(
+          text: floater.text,
+          size: math.max(GameTheme.hudPixel, size),
+          color: outline,
           maxWidth: maxW,
         );
         final lift = rare ? 1.35 : 0.0;
@@ -267,6 +274,14 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
         final anchor = speech
             ? Offset(c.dx - tp.width / 2, c.dy - tp.height / 2)
             : Offset(c.dx + tile * 0.46 - tp.width / 2, c.dy - tile * 0.22);
+        for (final off in const [
+          Offset(-1, 0),
+          Offset(1, 0),
+          Offset(0, -1),
+          Offset(0, 1),
+        ]) {
+          tpOutline.paint(canvas, anchor + off);
+        }
         tp.paint(canvas, anchor);
       }
     } else {

@@ -36,7 +36,7 @@ class BossIntroBanner extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xEE3A1810),
+              color: GameTheme.toastDangerBottom,
               borderRadius: BorderRadius.circular(4),
               border: Border.all(color: GameTheme.torchHot),
             ),
@@ -176,6 +176,15 @@ class TargetCornerHud extends StatelessWidget {
     final hpFrac = enemy == null || enemy.maxHp <= 0
         ? 0.0
         : (enemy.hp / enemy.maxHp).clamp(0.0, 1.0);
+    final swarmPack = enemy != null &&
+        enemy.archetype == EnemyArchetype.swarm &&
+        world != null;
+    final foeCount = swarmPack
+        ? world.enemies
+            .where((e) => e.hp > 0 && !e.dormant && e.isAlive)
+            .length
+        : 0;
+    final atFullHp = hpFrac >= 0.999;
     final titleColor = role == 'BOSS'
         ? GameTheme.bloodLit
         : (role == 'ELITE' ? GameTheme.torch : GameTheme.parchment);
@@ -239,16 +248,19 @@ class TargetCornerHud extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              SpatialCombat.compactNumbers
-                                  ? SpatialCombat.compactCount(enemy.hp)
-                                  : '${enemy.hp}',
+                              swarmPack
+                                  ? '$foeCount foes'
+                                  : (SpatialCombat.compactNumbers
+                                        ? SpatialCombat.compactCount(enemy.hp)
+                                        : '${enemy.hp}'),
                               style: GameTheme.hint(color: GameTheme.parchmentDim),
                             ),
                             const Spacer(),
-                            Text(
-                              '${(hpFrac * 100).round()}%',
-                              style: GameTheme.hint(color: GameTheme.parchmentDim),
-                            ),
+                            if (!atFullHp)
+                              Text(
+                                '${(hpFrac * 100).round()}%',
+                                style: GameTheme.hint(color: GameTheme.parchmentDim),
+                              ),
                           ],
                         ),
                       ],
