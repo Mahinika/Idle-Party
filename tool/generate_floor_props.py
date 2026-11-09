@@ -9,6 +9,7 @@ below — handcrafted zone art stays as it is.
 
 from __future__ import annotations
 
+import random
 import sys
 from pathlib import Path
 
@@ -437,7 +438,337 @@ class Props(base.Generator):
         return written
 
 
+# Floor tiles and the six Sandy props a new player actually sees.
+# Pixel clusters only — no full-tile noise, no soft gradients. A and B share
+# a 1 px border so mixed cells do not seam. Run: py tool/generate_floor_props.py --floors
+
+_FLOOR_ZONES = (
+    "sandy",
+    "goblin",
+    "king",
+    "underworld",
+    "dead",
+    "hell",
+    "crystal",
+    "tide",
+    "ember",
+    "grove",
+    "storm",
+    "rime",
+    "fen",
+    "brass",
+    "veil",
+)
+
+# base, lit, shade, accent, spark. Accents stay in clusters, not a wash.
+_FLOOR_PALETTE = {
+    "sandy": ((214, 176, 112), (236, 214, 168), (168, 124, 72), (236, 196, 72), (120, 92, 64)),
+    "goblin": ((118, 96, 52), (150, 124, 68), (78, 62, 32), (72, 156, 48), (176, 132, 64)),
+    "king": ((108, 112, 132), (156, 160, 176), (72, 74, 92), (212, 176, 72), (88, 96, 128)),
+    "underworld": ((64, 44, 88), (104, 72, 132), (36, 24, 56), (176, 88, 232), (96, 48, 150)),
+    "dead": ((96, 104, 96), (140, 144, 128), (58, 64, 58), (210, 204, 176), (72, 84, 74)),
+    "hell": ((48, 18, 16), (72, 28, 22), (28, 12, 12), (255, 92, 28), (255, 196, 64)),
+    "crystal": ((56, 78, 112), (104, 140, 176), (32, 48, 76), (176, 228, 255), (96, 168, 220)),
+    "tide": ((36, 84, 90), (64, 128, 128), (20, 52, 60), (72, 210, 184), (40, 100, 112)),
+    "ember": ((56, 32, 18), (88, 52, 28), (32, 18, 12), (255, 132, 32), (255, 204, 80)),
+    "grove": ((56, 84, 40), (96, 132, 56), (32, 56, 24), (156, 208, 64), (104, 72, 36)),
+    "storm": ((56, 52, 84), (92, 88, 124), (32, 30, 56), (188, 168, 255), (96, 84, 148)),
+    "rime": ((80, 116, 128), (156, 196, 204), (44, 78, 92), (214, 244, 255), (96, 156, 172)),
+    "fen": ((72, 80, 32), (112, 120, 48), (40, 48, 16), (188, 196, 48), (48, 80, 40)),
+    "brass": ((112, 80, 36), (164, 120, 48), (68, 48, 20), (228, 184, 56), (132, 96, 40)),
+    "veil": ((84, 56, 96), (128, 92, 140), (48, 32, 58), (236, 196, 244), (150, 96, 170)),
+}
+
+
+def _px(img: Image.Image, x: int, y: int, c: tuple[int, int, int]) -> None:
+    if 0 <= x < img.width and 0 <= y < img.height:
+        img.putpixel((x, y), c)
+
+
+def _blob(
+    img: Image.Image,
+    cx: int,
+    cy: int,
+    radius: int,
+    colors: tuple[tuple[int, int, int], ...],
+    rng: random.Random,
+) -> None:
+    """One organic patch inside the tile. Stays off the 1 px rim."""
+    for y in range(cy - radius, cy + radius + 1):
+        for x in range(cx - radius, cx + radius + 1):
+            if x < 2 or y < 2 or x > 13 or y > 13:
+                continue
+            if abs(x - cx) + abs(y - cy) > radius:
+                continue
+            if rng.random() < 0.18:
+                continue
+            _px(img, x, y, colors[rng.randrange(len(colors))])
+    _px(img, cx, cy, colors[-1])
+
+
+def _floor_pair(zone: str) -> tuple[Image.Image, Image.Image]:
+    base, lit, shade, accent, spark = _FLOOR_PALETTE[zone]
+    a = Image.new("RGB", (16, 16), base)
+    b = Image.new("RGB", (16, 16), base)
+    # Two patches each, different corners, so A and B read apart.
+    # Colours stay inside the patch — not a sprinkle across the tile.
+    _blob(a, 6, 9, 4, (shade, base, shade), random.Random(f"{zone}-a1"))
+    _blob(a, 11, 5, 3, (accent, spark, lit), random.Random(f"{zone}-a2"))
+    _blob(b, 5, 5, 3, (accent, lit, spark), random.Random(f"{zone}-b1"))
+    _blob(b, 11, 10, 4, (shade, base, spark), random.Random(f"{zone}-b2"))
+    if zone == "sandy":
+        # One pebble clump on the north edge, the same pixels on A and B.
+        pebbles = (120, 92, 64)
+        deep = (92, 68, 44)
+        for img in (a, b):
+            for x, c in ((6, pebbles), (7, deep), (8, pebbles)):
+                _px(img, x, 0, c)
+            _px(img, 7, 1, deep)
+            _px(img, 6, 1, pebbles)
+    for img in (a, b):
+        for i in range(16):
+            if not (zone == "sandy" and i in (6, 7, 8)):
+                _px(img, i, 0, base)
+            _px(img, i, 15, base)
+            _px(img, 0, i, base)
+            _px(img, 15, i, base)
+        for x, y in ((0, 0), (15, 0), (0, 15), (15, 15)):
+            _px(img, x, y, base)
+    if zone == "sandy":
+        pebbles = (120, 92, 64)
+        deep = (92, 68, 44)
+        for img in (a, b):
+            for x, c in ((6, pebbles), (7, deep), (8, pebbles)):
+                _px(img, x, 0, c)
+            _px(img, 7, 1, deep)
+            _px(img, 6, 1, pebbles)
+    return a, b
+
+
+def _darken(c: tuple[int, int, int], f: float) -> tuple[int, int, int]:
+    return tuple(max(0, min(255, int(c[i] * f))) for i in range(3))
+
+
+def _wall_pair(zone: str) -> tuple[Image.Image, Image.Image]:
+    base = _FLOOR_PALETTE[zone][0]
+    # Darker than the floor, same hue. Sandy stays warm (R > B).
+    body = _darken(base, 0.46)
+    mortar = _darken(base, 0.32)
+    lit = _darken(base, 0.62)
+    if zone == "sandy":
+        body = (92, 58, 40)
+        mortar = (62, 38, 26)
+        lit = (128, 84, 56)
+    a = Image.new("RGB", (16, 16), body)
+    b = Image.new("RGB", (16, 16), body)
+    for img, shift in ((a, 0), (b, 4)):
+        for y in range(16):
+            for x in range(16):
+                course = (y // 4)
+                brick = ((x + shift + course * 5) // 5) % 2 == 0
+                _px(img, x, y, body if brick else lit)
+            if y % 4 == 0:
+                for x in range(16):
+                    _px(img, x, y, mortar)
+        for x in range(16):
+            _px(img, x, 0, lit)
+            _px(img, x, 15, mortar)
+    return a, b
+
+
+def _median(img: Image.Image) -> tuple[int, int, int]:
+    pix = list(img.getdata())
+    chans = []
+    for i in range(3):
+        col = sorted(p[i] for p in pix)
+        chans.append(col[len(col) // 2])
+    return tuple(chans)
+
+
+def _prop_canvas() -> Image.Image:
+    return Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+
+
+def _blit(img: Image.Image, x: int, y: int, c: tuple[int, int, int, int]) -> None:
+    if 0 <= x < img.width and 0 <= y < img.height:
+        img.putpixel((x, y), c)
+
+
+def _rect(img, x0, y0, x1, y1, c):
+    for y in range(y0, y1 + 1):
+        for x in range(x0, x1 + 1):
+            _blit(img, x, y, c)
+
+
+def _outline_rect(img, x0, y0, x1, y1, fill, edge):
+    _rect(img, x0, y0, x1, y1, fill)
+    for x in range(x0, x1 + 1):
+        _blit(img, x, y0, edge)
+        _blit(img, x, y1, edge)
+    for y in range(y0, y1 + 1):
+        _blit(img, x0, y, edge)
+        _blit(img, x1, y, edge)
+
+
+def _prop_crate() -> Image.Image:
+    img = _prop_canvas()
+    edge = (48, 28, 16, 255)
+    wood = (176, 112, 56, 255)
+    wood_d = (128, 76, 36, 255)
+    wood_l = (220, 164, 88, 255)
+    band = (92, 64, 40, 255)
+    _outline_rect(img, 6, 10, 25, 27, wood, edge)
+    for y in (14, 20):
+        for x in range(7, 25):
+            _blit(img, x, y, band)
+    for x in (12, 18):
+        for y in range(11, 27):
+            _blit(img, x, y, wood_d)
+    _rect(img, 8, 12, 11, 13, wood_l)  # 1 px-plus highlight
+    _blit(img, 9, 12, (255, 220, 150, 255))
+    return img
+
+
+def _prop_barrel() -> Image.Image:
+    img = _prop_canvas()
+    edge = (48, 28, 16, 255)
+    wood = (168, 104, 52, 255)
+    wood_l = (214, 156, 84, 255)
+    band = (72, 78, 86, 255)
+    band_l = (180, 188, 196, 255)
+    _outline_rect(img, 9, 6, 22, 27, wood, edge)
+    for y in (10, 18, 24):
+        for x in range(9, 23):
+            _blit(img, x, y, band)
+        _blit(img, 11, y, band_l)
+    for y in range(7, 27):
+        _blit(img, 14, y, wood_l)
+    _blit(img, 15, 8, (255, 220, 160, 255))
+    return img
+
+
+def _prop_bones() -> Image.Image:
+    img = _prop_canvas()
+    bone = (236, 224, 196, 255)
+    shade = (176, 156, 124, 255)
+    hi = (255, 250, 236, 255)
+    edge = (88, 72, 52, 255)
+    for i in range(16):
+        _blit(img, 6 + i, 8 + i // 2, bone)
+        _blit(img, 7 + i, 9 + i // 2, shade)
+        _blit(img, 22 - i, 8 + i // 2, bone)
+        _blit(img, 21 - i, 9 + i // 2, shade)
+    for cx, cy in ((6, 14), (20, 14), (8, 22), (22, 22)):
+        _outline_rect(img, cx, cy, cx + 4, cy + 3, bone, edge)
+        _blit(img, cx + 1, cy + 1, hi)
+    _blit(img, 14, 16, hi)
+    return img
+
+
+def _prop_torch() -> Image.Image:
+    img = _prop_canvas()
+    edge = (40, 24, 12, 255)
+    wood = (120, 72, 36, 255)
+    wood_l = (176, 116, 60, 255)
+    _outline_rect(img, 14, 14, 17, 28, wood, edge)
+    _blit(img, 15, 16, wood_l)
+    flame = (255, 120, 32, 255)
+    core = (255, 220, 80, 255)
+    hot = (255, 250, 210, 255)
+    for x, y in (
+        (15, 4), (14, 5), (15, 5), (16, 5),
+        (13, 6), (14, 6), (15, 6), (16, 6), (17, 6),
+        (13, 7), (14, 7), (15, 7), (16, 7), (17, 7), (18, 7),
+        (14, 8), (15, 8), (16, 8), (17, 8),
+        (14, 9), (15, 9), (16, 9),
+        (15, 10), (16, 10),
+        (15, 11), (15, 12),
+    ):
+        _blit(img, x, y, flame)
+    for x, y in ((15, 7), (15, 8), (16, 8), (15, 9)):
+        _blit(img, x, y, core)
+    _blit(img, 15, 7, hot)
+    return img
+
+
+def _prop_pot() -> Image.Image:
+    img = _prop_canvas()
+    edge = (64, 32, 28, 255)
+    clay = (176, 84, 56, 255)
+    clay_d = (128, 56, 40, 255)
+    clay_l = (220, 124, 80, 255)
+    hi = (255, 196, 150, 255)
+    _outline_rect(img, 10, 8, 21, 11, clay_l, edge)
+    _outline_rect(img, 8, 12, 23, 26, clay, edge)
+    for y in range(13, 26):
+        _blit(img, 20, y, clay_d)
+        _blit(img, 11, y, clay_l)
+    _blit(img, 12, 14, hi)
+    _rect(img, 12, 18, 19, 19, (96, 40, 36, 255))
+    return img
+
+
+def _prop_rubble() -> Image.Image:
+    img = _prop_canvas()
+    edge = (48, 40, 36, 255)
+    rock = (148, 132, 116, 255)
+    rock_d = (96, 84, 72, 255)
+    rock_l = (196, 180, 156, 255)
+    hi = (255, 236, 210, 255)
+    _outline_rect(img, 6, 18, 16, 27, rock, edge)
+    _outline_rect(img, 14, 14, 26, 26, rock_d, edge)
+    _outline_rect(img, 10, 16, 20, 22, rock_l, edge)
+    _blit(img, 12, 17, hi)
+    _blit(img, 18, 16, hi)
+    for x, y in ((8, 20), (15, 24), (22, 20)):
+        _blit(img, x, y, rock_d)
+    return img
+
+
+def write_floor_tiles() -> None:
+    root = base.ROOT
+    print("floor medians (floor_a):")
+    for zone in _FLOOR_ZONES:
+        fa, fb = _floor_pair(zone)
+        wa, wb = _wall_pair(zone)
+        tiles = root / zone / "tiles"
+        tiles.mkdir(parents=True, exist_ok=True)
+        fa.save(tiles / "floor_a.png")
+        fb.save(tiles / "floor_b.png")
+        wa.save(tiles / "wall_a.png")
+        wb.save(tiles / "wall_b.png")
+        # Seam: shared rim, A != B.
+        assert list(fa.getdata()) != list(fb.getdata()), zone
+        for i in range(16):
+            assert fa.getpixel((0, i)) == fb.getpixel((0, i)), zone
+            assert fa.getpixel((15, i)) == fb.getpixel((15, i)), zone
+            assert fa.getpixel((i, 15)) == fb.getpixel((i, 15)), zone
+            if zone != "sandy":
+                assert fa.getpixel((i, 0)) == fb.getpixel((i, 0)), zone
+        if zone == "sandy":
+            for x in (6, 7, 8):
+                assert fa.getpixel((x, 0)) == fb.getpixel((x, 0))
+                assert fa.getpixel((x, 0)) != _FLOOR_PALETTE[zone][0]
+        med = _median(fa)
+        print(f"  {zone}: 0xFF{med[0]:02X}{med[1]:02X}{med[2]:02X}")
+    props = root / "fallback" / "props"
+    props.mkdir(parents=True, exist_ok=True)
+    for name, fn in (
+        ("crate", _prop_crate),
+        ("barrel", _prop_barrel),
+        ("bones", _prop_bones),
+        ("torch", _prop_torch),
+        ("pot", _prop_pot),
+        ("rubble", _prop_rubble),
+    ):
+        fn().save(props / f"{name}.png")
+    print("wrote floor tiles + six sandy fallback props")
+
+
 def main() -> None:
+    if "--floors" in sys.argv:
+        write_floor_tiles()
+        return
     force = "--force" in sys.argv
     total = 0
     for zone in ZONES:
