@@ -58,6 +58,7 @@ void main() {
       final ctx = tester.element(find.byType(TownViewport));
       for (final path in [
         ...CustomAssets.townAssetPaths,
+        CustomAssets.townPathAlt,
         KenneyAssets.townNameplate,
         KenneyAssets.townPennants,
         KenneyAssets.townLanterns,
@@ -272,6 +273,7 @@ Future<void> _pumpTownTier(
     final ctx = tester.element(find.byType(TownViewport));
     for (final path in [
       ...CustomAssets.townAssetPaths,
+      CustomAssets.townPathAlt,
       KenneyAssets.townNameplate,
       KenneyAssets.townPennants,
       KenneyAssets.townLanterns,
@@ -369,6 +371,7 @@ Future<void> _pumpHome({
     final ctx = tester.element(find.byType(TownViewport));
     for (final path in [
       ...CustomAssets.townAssetPaths,
+      CustomAssets.townPathAlt,
       KenneyAssets.townNameplate,
       KenneyAssets.townPennants,
       KenneyAssets.townLanterns,

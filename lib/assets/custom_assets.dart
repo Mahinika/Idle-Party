@@ -308,6 +308,10 @@ abstract final class CustomAssets {
   static const String townBackdrop = '$_townRoot/backdrop.png';
   static const String townGround = '$_townRoot/ground.png';
   static const String townPath = '$_townRoot/path.png';
+
+  /// Second cobble course. Same size as [townPath]. Not in [townAssetPaths]
+  /// so the shipped path count stays put; the folder is already bundled.
+  static const String townPathAlt = '$_townRoot/path_b.png';
   static const String townApproach = '$_townRoot/approach.png';
   static const String townTreeRound = '$_townRoot/tree_round.png';
   static const String townTreeTall = '$_townRoot/tree_tall.png';

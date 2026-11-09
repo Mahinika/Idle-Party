@@ -193,31 +193,82 @@ def _is_grass(c: tuple[int, int, int, int] | None) -> bool:
 # --- Lawn -----------------------------------------------------------------
 
 
-def ground() -> Image.Image:
-    """A soft lawn, larger than a phone, with no speckle and no grid.
+# A short period of similar tufts reads as grass. A landmark shape
+# would show the repeat. 64 keeps a phone on several periods.
+GROUND_TILE = 64
 
-    480×960 covers the 360-wide goldens without a repeat. Cells divide
-    both sides, so a taller square still meets at the edge. Flowers and
-    stones live on the paths and the beds, not in this tile.
+
+def _tuft(pix: Pix, x: int, y: int, blades: tuple[tuple[int, int, int], ...]) -> None:
+    """A handful of blades. (dx, height, lean). Tips are yellow-green."""
+    for dx, height, lean in blades:
+        for i in range(height):
+            xx = x + dx + (lean if i > height // 2 else 0)
+            if i == 0:
+                col = GRASS[7]
+            elif i < 2:
+                col = GRASS[6]
+            elif i < height - 1:
+                col = GRASS[5]
+            else:
+                col = GRASS[2]
+            pix.put_wrap(xx, y + i, col)
+        pix.put_wrap(x + dx, y + height - 1, GRASS[1])
+
+
+def ground() -> Image.Image:
+    """Seamless pixel grass. A bright base, a few tufts, dirt, one pebble.
+
+    No flowers: those live on the planting sprites. No soft ramp and no
+    per-pixel noise. Marks use wrapped coordinates so each edge continues
+    the opposite edge. Detail stays in clusters inside the period, so a
+    repeat cannot paint a band wider than the tile.
     """
-    w, h = 480, 960
+    w = h = GROUND_TILE
     pix = Pix(w, h)
+    # Two close greens in 4px clumps. 4 divides 64, so a clump never
+    # straddles the wrap as a cut rectangle. About half the tile steps
+    # lighter so one green cannot own it.
     for y in range(h):
         for x in range(w):
-            # Two octaves, both periodic. The phase puts a rounded
-            # light patch in the part of the tile a phone actually shows,
-            # so the shade is a blob and not a vertical split.
-            broad = _noise(x + 180, y + 220, 160, w, h)
-            soft = _noise(x + 180, y + 220, 80, w, h)
-            v = 0.82 * broad + 0.18 * soft
-            if v < 0.46:
-                tone = 3
-            elif v < 0.78:
-                tone = 4
-            else:
-                tone = 5
-            pix.put(x, y, GRASS[tone])
+            pix.put(x, y, GRASS[4])
+    # A few lighter clumps so the base is not one flat fill.
+    for cx, cy in ((8, 4), (28, 12), (48, 20), (16, 36), (40, 44)):
+        for dy in range(4):
+            for dx in range(5):
+                pix.put(cx + dx, cy + dy, GRASS[5] if (dx + dy) % 2 == 0 else GRASS[6])
+    _tuft(pix, 10, 8, ((0, 6, 0), (2, 8, 1), (4, 5, -1)))
+    _tuft(pix, 30, 18, ((0, 5, -1), (2, 7, 0), (5, 4, 1)))
+    _tuft(pix, 48, 12, ((0, 7, 1), (2, 5, 0), (4, 6, -1)))
+    _tuft(pix, 18, 40, ((0, 6, 0), (3, 8, 1), (5, 4, -1)))
+    _tuft(pix, 42, 46, ((0, 5, 1), (2, 7, 0)))
+    for dx, dy in ((0, 0), (1, 0), (0, 1)):
+        pix.put(24 + dx, 34 + dy, DIRT[1 + dy])
+        pix.put(52 + dx, 28 + dy, DIRT[2])
+    # Copy the opposite edge so the repeat meets on the same pixels.
+    for y in range(h):
+        pix.put(w - 1, y, pix.get(0, y))
+    for x in range(w):
+        pix.put(x, h - 1, pix.get(x, 0))
     return pix.image()
+
+
+def assert_ground(img: Image.Image) -> None:
+    """Low seam, no flat row, and no color owns the tile.
+
+    Same bar `generate_town_art.py` uses, plus a row check so the repeat
+    cannot form a screen-wide band.
+    """
+    n, top = opaque_stats(img)
+    seam, interior = edge_gap(img)
+    # A bright base may own most of the tile. Reject a single-color lawn.
+    if n < 4 or top > 0.97:
+        raise SystemExit(f"ground.png is still a flat lawn colors={n} top={top:.3f}")
+    if seam > max(6.0, interior * 1.75 + 2):
+        raise SystemExit(f"ground.png still has a hard tile seam seam={seam:.2f} interior={interior:.2f}")
+    # A crop one tile lower is the same picture. A band cannot outgrow the period.
+    w, h = img.size
+    if w != GROUND_TILE or h != GROUND_TILE:
+        raise SystemExit(f"ground tile must be {GROUND_TILE} square, got {w}x{h}")
 
 
 def edge_gap(img: Image.Image) -> tuple[float, float]:
@@ -340,6 +391,73 @@ def path() -> Image.Image:
     _bloom_bed(pix, 26, 16, ((-4, 0), (4, 1)))
     _bloom_bed(pix, 334, 16, ((-4, 4), (4, 3)))
     return pix.image()
+
+
+def path_alt() -> Image.Image:
+    """Second street, same size and the same joint as [path].
+
+    Two stones in the right half are cracked. The column where the
+    viewport switches tiles is mortar on both pictures, and the outer
+    columns match, so the pair does not add a seam.
+    """
+    src = path()
+    pix = Pix(src.width, src.height)
+    px = src.convert("RGBA").load()
+    for y in range(src.height):
+        for x in range(src.width):
+            pix.px[y * pix.w + x] = px[x, y]
+    # Cracks sit in the half the viewport shows from this tile.
+    for x, y, bw, bh in ((214, 5, 16, 10), (252, 17, 18, 9), (296, 6, 14, 8)):
+        for yy in range(y, y + bh):
+            for xx in range(x, x + bw):
+                if (xx + yy) % 3 == 0:
+                    pix.put(xx, yy, MORTAR)
+                elif (xx * 2 + yy) % 5 == 0:
+                    pix.put(xx, yy, STONE[1])
+                elif (xx + yy) % 7 == 0:
+                    pix.put(xx, yy, DIRT[2])
+    # The viewport switches tiles on column 178. Leave that column, and
+    # the outer edges, identical to path() so the join is not a new seam.
+    _copy_columns(pix, src, range(172, 186))
+    _match_outer_columns(pix, src)
+    return pix.image()
+
+
+def _copy_columns(pix: Pix, src: Image.Image, cols: range) -> None:
+    px = src.convert("RGBA").load()
+    for y in range(pix.h):
+        for x in cols:
+            pix.px[y * pix.w + x] = px[x, y]
+
+
+def _match_outer_columns(pix: Pix, src: Image.Image, n: int = 6) -> None:
+    px = src.convert("RGBA").load()
+    for y in range(pix.h):
+        for i in range(n):
+            pix.px[y * pix.w + i] = px[i, y]
+            pix.px[y * pix.w + (pix.w - 1 - i)] = px[src.width - 1 - i, y]
+
+
+def assert_path_seam(img: Image.Image) -> None:
+    """Left column and right column stay in the same mortar family."""
+    px = img.convert("RGB").load()
+    w, h = img.size
+    total = 0.0
+    for y in range(h):
+        a = px[0, y]
+        b = px[w - 1, y]
+        total += (abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])) / 3
+    mean = total / h
+    if mean > 18:
+        raise SystemExit(f"path tile horizontal seam is {mean:.1f}")
+
+
+def assert_same_joint(a: Image.Image, b: Image.Image, x: int = 178) -> None:
+    pa = a.convert("RGB").load()
+    pb = b.convert("RGB").load()
+    for y in range(a.height):
+        if pa[x, y] != pb[x, y] or pa[x + 1, y] != pb[x + 1, y]:
+            raise SystemExit(f"street joint differs at y={y}")
 
 
 def approach() -> Image.Image:
@@ -611,14 +729,46 @@ def scuff() -> Image.Image:
 
 
 def contact() -> Image.Image:
-    """A short darker grass shadow. Buildings sit on it."""
-    pix = Pix(96, 12)
-    runs = ((6, 22, 4), (30, 28, 3), (62, 24, 5), (18, 14, 6), (48, 16, 5))
-    for x, bw, y in runs:
+    """A broken grass edge: short blades over a gapped shadow.
+
+    Not a blurred ellipse. Empty pixels stay empty so the lawn shows
+    through. Three clumps sit where feet would, plus one pebble.
+    """
+    pix = Pix(64, 16)
+    # Shadow runs with gaps. Dark grass, one pixel tall, then a deeper crumb.
+    runs = ((2, 10), (16, 12), (32, 8), (46, 14))
+    for x, bw in runs:
         for i in range(bw):
-            pix.put(x + i, y, (28, 58, 32, 170))
-            if i % 3 != 0:
-                pix.put(x + i, y + 1, (40, 74, 42, 120))
+            if i % 5 == 3:
+                continue
+            pix.put(x + i, 12, GRASS[1])
+            if i % 2 == 0:
+                pix.put(x + i, 13, GRASS[0])
+        pix.put(x + 2, 13, DIRT[1])
+        pix.put(x + bw - 2, 12, GRASS[3])
+    # Short blades, clustered, not a wall.
+    sprouts = (
+        (4, 5), (6, 7), (8, 4),
+        (20, 6), (22, 8), (25, 5),
+        (36, 4), (38, 7),
+        (50, 6), (53, 8), (56, 5),
+    )
+    for x, height in sprouts:
+        for t in range(height):
+            if t == 0:
+                col = GRASS[7]
+            elif t < 2:
+                col = GRASS[6]
+            else:
+                col = GRASS[4]
+            pix.put(x, 11 - t, col)
+        pix.put(x, 12, GRASS[2])
+    pix.put(30, 10, STONE[5])
+    pix.put(31, 10, STONE[4])
+    pix.put(30, 11, STONE[2])
+    pix.put(31, 11, STONE[1])
+    pix.put(32, 11, DIRT[2])
+    pix.put(32, 12, DIRT[0])
     return pix.image()
 
 
@@ -1059,6 +1209,40 @@ def folk() -> Image.Image:
     return sheet.image()
 
 
+def write_ground_and_streets(folder: str) -> None:
+    """Write the tiles this module owns. Buildings stay in generate_town_art."""
+    from pathlib import Path
+
+    out = Path(folder)
+    grass = ground()
+    assert_ground(grass)
+    street = path()
+    alt = path_alt()
+    assert_path_seam(street)
+    assert_path_seam(alt)
+    assert_same_joint(street, alt)
+    feet = contact()
+    grass.save(out / "ground.png")
+    street.save(out / "path.png")
+    alt.save(out / "path_b.png")
+    feet.save(out / "contact.png")
+    sheet = Image.new("RGBA", (360, 180), (0, 0, 0, 0))
+    for y in range(0, 180, grass.height):
+        for x in range(0, 360, grass.width):
+            sheet.paste(grass, (x, y))
+    preview = Path("/tmp/town_grass_preview.png")
+    sheet.save(preview)
+    band = Image.new("RGBA", (360, 36), (0, 0, 0, 0))
+    band.paste(street.crop((0, 0, 180, 36)), (0, 0))
+    band.paste(alt.crop((178, 0, 358, 36)), (180, 0))
+    band.save("/tmp/town_path_preview.png")
+    feet.resize((48 * 4, 18 * 4), Image.Resampling.NEAREST).save("/tmp/town_contact_preview.png")
+    print(
+        f"wrote ground {grass.size} path {street.size} "
+        f"path_b {alt.size} contact {feet.size} preview {preview}"
+    )
+
+
 def opaque_stats(im: Image.Image) -> tuple[int, float]:
     """Unique opaque colors, and the share of the most common one."""
     counts: dict[tuple[int, int, int], int] = {}
@@ -1072,3 +1256,10 @@ def opaque_stats(im: Image.Image) -> tuple[int, float]:
     if total == 0:
         return 0, 0.0
     return len(counts), max(counts.values()) / total
+
+
+if __name__ == "__main__":
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "assets" / "custom" / "town"
+    write_ground_and_streets(str(root))
