@@ -12,10 +12,10 @@ import 'shell_common.dart';
 /// Top inset for the short boss callout, under the corner frames.
 ///
 /// The boss frame is title + 28px portrait + bomb line. This grows with
-/// [textScale] so max UI scale (1.40) does not paint the callout on top
+/// [textScale] so max UI scale (1.45) does not paint the callout on top
 /// of that frame or the DPS chip.
 double bossIntroBannerTop(double textScale) {
-  final scale = textScale.clamp(1.0, 1.40);
+  final scale = textScale.clamp(1.0, 1.45);
   const line = 9 * 1.4;
   return 2 + line * scale + 2 + 28 + line * scale + 10;
 }
@@ -209,8 +209,12 @@ class TargetCornerHud extends StatelessWidget {
               Row(
                 children: [
                   KenneySprite(
-                    asset: KenneyAssets.enemySpriteCatalog[enemy.assetIndex
-                        .clamp(0, KenneyAssets.enemySpriteCatalog.length - 1)],
+                    asset: KenneyAssets.enemyFightSprite(
+                      role: enemy.role,
+                      archetype: enemy.archetype,
+                      assetIndex: enemy.assetIndex,
+                      dungeonId: director.state.dungeonId,
+                    ),
                     size: role == 'BOSS'
                         ? 28
                         : (role == 'ELITE' ? 22 : 16),

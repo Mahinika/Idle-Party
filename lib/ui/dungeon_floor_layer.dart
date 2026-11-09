@@ -456,8 +456,11 @@ extension _DungeonFloorLayer on _TileRoomPainter {
           tile + 0.5,
         );
         if (kind == TileKind.wall) {
-          if (wallVariants.isEmpty ||
-              !DungeonEnvironment.wallTouchesCarved(map, x, y)) {
+          final touches = DungeonEnvironment.wallTouchesCarved(map, x, y);
+          // Sandy fills the rock past the carved edge so the fight is a
+          // cavern. Other caves keep the open void.
+          final sandyRock = dungeonId == 'sandy' && !touches;
+          if (wallVariants.isEmpty || (!touches && !sandyRock)) {
             continue;
           }
           final img =
@@ -470,6 +473,12 @@ extension _DungeonFloorLayer on _TileRoomPainter {
           _drawWallCaps(canvas, x, y, dst, tile, img);
           if (DungeonEnvironment.isCarved(map.at(x, y + 1))) {
             _drawWallFace(canvas, dst, tile, img);
+          }
+          if (sandyRock) {
+            _TileRoomPainter._fillPaint.color = GameTheme.stoneDeep.withValues(
+              alpha: 0.72,
+            );
+            canvas.drawRect(dst, _TileRoomPainter._fillPaint);
           }
           continue;
         }

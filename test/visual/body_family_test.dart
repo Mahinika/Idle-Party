@@ -5,6 +5,8 @@ import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/visual/body_family.dart';
 import 'package:idle_party/visual/hero_anim_state.dart';
+import 'package:idle_party/visual/rig/rig_ability_clips.dart';
+import 'package:idle_party/visual/rig/rig_clips.dart';
 
 void main() {
   test('gear affinity maps to body family', () {
@@ -155,4 +157,28 @@ void main() {
       );
     },
   );
+
+  test('each family flinches, and the mage does not swing a sword', () {
+    expect(RigAbilityClips.forName('hit'), same(RigClips.hit));
+    expect(RigAbilityClips.hit.name, 'hit');
+    for (final clip in [
+      RigAbilityClips.hit,
+      RigAbilityClips.hitRogue,
+      RigAbilityClips.hitMage,
+      RigAbilityClips.hitHealer,
+    ]) {
+      expect(clip.keys.first.bones, isEmpty);
+      expect(clip.keys.last.bones, isEmpty);
+      expect(clip.length, lessThan(0.4));
+    }
+    for (final key in RigAbilityClips.hitMage.keys) {
+      expect(key.bones.containsKey('sword'), isFalse);
+    }
+    final duck = RigAbilityClips.hitRogue.keys[1];
+    expect(duck.rootY, greaterThan(0));
+    expect(duck.bones['thigh_l']!.abs(), lessThan(8));
+    final hands = RigAbilityClips.hitHealer.keys[1];
+    expect(hands.bones['upper_l']!.abs(), greaterThan(30));
+    expect(hands.bones['torso']!.abs(), lessThan(12));
+  });
 }

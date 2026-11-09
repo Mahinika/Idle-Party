@@ -13,11 +13,13 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1] / "assets" / "custom" / "enemies"
 S = 96
-INK = (16, 10, 12, 255)
+# Warm ink, the same family as sandy_mite's contour. Two pixels, not a wire.
+INK = (36, 18, 12, 255)
+INK_OUTER = (52, 26, 16, 255)
 
 
 def clamp_i(i: int, n: int) -> int:
@@ -135,20 +137,152 @@ class Pix:
                 ny = (y - cy) / span
                 self.put(x, y, ramp[self.tone(nx * 1.4, ny * 1.1, n, x, y)])
 
-    def outline(self, ink: tuple[int, int, int, int] = INK) -> None:
-        add: list[tuple[int, int]] = []
-        for y in range(self.h):
-            row = y * self.w
-            for x in range(self.w):
-                if self.px[row + x] is not None:
+    def _filled(self) -> list[bool]:
+        return [p is not None for p in self.px]
+
+    def outline(self, passes: int = 2) -> None:
+        """Two-pixel warm contour. Inner pass is darker so the line has weight."""
+        for step in range(passes):
+            ink = INK if step == 0 else INK_OUTER
+            filled = self._filled()
+            add: list[tuple[int, int]] = []
+            for y in range(self.h):
+                row = y * self.w
+                for x in range(self.w):
+                    if filled[row + x]:
+                        continue
+                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < self.w and 0 <= ny < self.h and filled[ny * self.w + nx]:
+                            add.append((x, y))
+                            break
+            for x, y in add:
+                self.px[y * self.w + x] = ink
+
+    def enrich(self) -> None:
+        """Upper-left light, plate seams, and a few interior marks.
+
+        Flat ramps stay in the creature's own colors. Eyes and gems are
+        left alone: a pixel that already disagrees with its neighbors is a
+        feature, not a plate.
+        """
+        w, h = self.w, self.h
+        src = list(self.px)
+        mask = [p is not None for p in src]
+        dist = [99] * (w * h)
+        for y in range(h):
+            row = y * w
+            for x in range(w):
+                i = row + x
+                if not mask[i]:
+                    dist[i] = 0
                     continue
+                edge = False
                 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                     nx, ny = x + dx, y + dy
-                    if 0 <= nx < self.w and 0 <= ny < self.h and self.px[ny * self.w + nx] is not None:
-                        add.append((x, y))
+                    if not (0 <= nx < w and 0 <= ny < h) or not mask[ny * w + nx]:
+                        edge = True
                         break
-        for x, y in add:
-            self.px[y * self.w + x] = ink
+                dist[i] = 1 if edge else 99
+        for _ in range(6):
+            nxt = list(dist)
+            for y in range(h):
+                row = y * w
+                for x in range(w):
+                    i = row + x
+                    if not mask[i] or dist[i] <= 1:
+                        continue
+                    best = dist[i]
+                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < w and 0 <= ny < h:
+                            best = min(best, dist[ny * w + nx] + 1)
+                    nxt[i] = best
+            dist = nxt
+
+        def feature(x: int, y: int) -> bool:
+            c = src[y * w + x]
+            if c is None:
+                return False
+            disagree = 0
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    if dx == 0 and dy == 0:
+                        continue
+                    nx, ny = x + dx, y + dy
+                    if not (0 <= nx < w and 0 <= ny < h):
+                        continue
+                    o = src[ny * w + nx]
+                    if o is None:
+                        continue
+                    if abs(c[0] - o[0]) + abs(c[1] - o[1]) + abs(c[2] - o[2]) > 150:
+                        disagree += 1
+            return disagree >= 2
+
+        def shade(rgb: tuple[int, int, int, int], t: float) -> tuple[int, int, int, int]:
+            r, g, b = rgb[0], rgb[1], rgb[2]
+            if t >= 0:
+                r = r + (248 - r) * t * 0.62
+                g = g + (228 - g) * t * 0.5
+                b = b + (186 - b) * t * 0.32
+            else:
+                k = -t
+                r *= 1 - 0.78 * k
+                g *= 1 - 0.8 * k
+                b *= 1 - 0.74 * k
+            return (
+                clamp_i(int(r), 256),
+                clamp_i(int(g), 256),
+                clamp_i(int(b), 256),
+                255,
+            )
+
+        cx = cy = n = 0
+        for y in range(h):
+            for x in range(w):
+                if mask[y * w + x]:
+                    cx += x
+                    cy += y
+                    n += 1
+        if n == 0:
+            return
+        cx /= n
+        cy /= n
+        span = max(12.0, (n ** 0.5) * 0.55)
+
+        for y in range(h):
+            for x in range(w):
+                i = y * w + x
+                c = src[i]
+                if c is None or feature(x, y):
+                    continue
+                d = dist[i]
+                nx = (x - cx) / span
+                ny = (y - cy) / span
+                light = 0.2 - 0.9 * nx - 0.65 * ny
+                light = max(-1.0, min(1.0, light))
+                ao = min(1.0, d / 5.0)
+                # Shell cuts, not a brick wall. A seam only crosses a wide
+                # run, and it breaks so a leg stays a leg.
+                seam = False
+                if d > 2 and y % 8 == 3:
+                    run = 0
+                    for dx in range(-8, 9):
+                        nx2 = x + dx
+                        if 0 <= nx2 < w and mask[y * w + nx2]:
+                            run += 1
+                    if run >= 12 and ((x // 4) % 3) != 2:
+                        seam = True
+                # A short keel on the body's midline.
+                if d > 3 and abs(x - cx) <= 1.2 and (y // 5) % 2 == 0:
+                    seam = True
+                bump = 0.18 if (not seam and d > 3 and (x + y * 3) % 17 == 0) else 0.0
+                if seam:
+                    self.px[i] = shade(c, -0.78)
+                    continue
+                t = max(-0.8, min(0.85, light * (0.4 + 0.6 * ao) + bump))
+                t = round(t * 6) / 6
+                self.px[i] = shade(c, t)
 
     def image(self) -> Image.Image:
         im = Image.new("RGBA", (self.w, self.h), (0, 0, 0, 0))
@@ -174,6 +308,7 @@ def save(img: Image.Image, name: str) -> None:
 
 
 def finish(p: Pix, name: str) -> None:
+    p.enrich()
     p.outline()
     save(p.image(), name)
 
@@ -204,36 +339,6 @@ BRASS = [(70, 46, 16), (112, 74, 22), (158, 108, 32), (196, 146, 48), (228, 186,
 VEIL = [(48, 36, 64), (90, 70, 110), (140, 110, 160), (186, 160, 200), (220, 200, 226), (245, 236, 246)]
 SILK = [(90, 70, 100), (150, 120, 160), (200, 170, 200), (236, 214, 226)]
 
-
-def sandy_tank() -> Image.Image:
-    """Shellback: a wide beetle, not a circle. Mandibles and six legs."""
-    p = Pix()
-    # Six jointed legs, tucked under a shell that is wider than it is tall.
-    for i, x in enumerate((12, 22, 32, 58, 68, 78)):
-        p.box(x, 60, 5, 8, SHELL)
-        p.box(x + (2 if i < 3 else -2), 68, 5, 10, SAND)
-        p.box(x - 1, 76, 8, 3, SHELL)
-    p.disc(48, 50, 36, 20, SAND)
-    p.disc(48, 46, 28, 12, SHELL)
-    # Plates and a gold keel so the back is not one oval.
-    for y in (36, 44, 52):
-        p.box(22, y, 52, 2, SHELL)
-    p.box(46, 28, 4, 32, GOLD)
-    for sx in (30, 40, 56, 66):
-        p.disc(sx, 42, 3, 2, GOLD)
-        p.disc(sx, 52, 2, 2, SHELL)
-    p.disc(48, 26, 13, 10, SAND)
-    p.poly([(34, 28), (22, 14), (30, 24), (26, 32)], SAND)
-    p.poly([(62, 28), (74, 14), (66, 24), (70, 32)], SAND)
-    p.box(24, 18, 3, 3, (40, 22, 12))
-    p.box(70, 18, 3, 3, (40, 22, 12))
-    eye(p, 42, 24, 3, (240, 220, 140), (40, 24, 12))
-    eye(p, 54, 24, 3, (240, 220, 140), (40, 24, 12))
-    p.box(44, 30, 8, 2, (60, 32, 16))
-    p.put(46, 32, (240, 220, 160))
-    p.put(50, 32, (240, 220, 160))
-    finish(p, "sandy_tank.png")
-    return p.image()
 
 
 def sandy_brute() -> Image.Image:
@@ -357,23 +462,6 @@ def king_guard() -> Image.Image:
     return p.image()
 
 
-def king_tank() -> Image.Image:
-    p = Pix()
-    leg(p, 46, 72, 9, 16, STEEL)
-    leg(p, 60, 72, 9, 16, STEEL)
-    p.box(44, 40, 28, 34, NAVY)
-    # Tower shield, a rectangle that owns the left half.
-    p.box(8, 22, 34, 62, STEEL)
-    p.box(12, 26, 26, 50, NAVY)
-    p.box(20, 36, 10, 28, GOLD)
-    p.disc(64, 26, 12, 11, STEEL)
-    p.box(56, 16, 16, 8, GOLD)
-    p.box(60, 10, 8, 8, (170, 36, 40))
-    # Visor slit, not two friendly eyes.
-    p.box(58, 28, 14, 3, (12, 14, 20))
-    finish(p, "king_tank.png")
-    return p.image()
-
 
 def underworld_elite() -> Image.Image:
     """A beholder-kin eye with tentacles. Not a cyclops body."""
@@ -493,23 +581,6 @@ def hell_elite() -> Image.Image:
     finish(p, "hell_elite.png")
     return p.image()
 
-
-def hell_brute() -> Image.Image:
-    p = Pix()
-    leg(p, 22, 72, 14, 16, ASH)
-    leg(p, 60, 72, 14, 16, ASH)
-    p.box(18, 40, 60, 36, FIRE)
-    p.disc(48, 28, 18, 14, ASH)
-    p.poly([(30, 24), (22, 4), (40, 24)], FIRE)
-    p.poly([(66, 24), (76, 4), (56, 24)], FIRE)
-    # Fists, no wings. The elite has the wings.
-    p.disc(12, 52, 10, 9, FIRE)
-    p.disc(84, 52, 10, 9, FIRE)
-    eye(p, 40, 28, 3, (255, 200, 40), (40, 10, 8))
-    eye(p, 56, 28, 3, (255, 200, 40), (40, 10, 8))
-    p.box(44, 36, 10, 3, (40, 12, 8))
-    finish(p, "hell_brute.png")
-    return p.image()
 
 
 def hell_ranged() -> Image.Image:
@@ -703,23 +774,6 @@ def storm_wraith() -> Image.Image:
     finish(p, "storm_wraith.png")
     return p.image()
 
-
-def storm_brute() -> Image.Image:
-    """Storm bull. Wide shoulders and a lightning horn, not a stacked oval."""
-    p = Pix()
-    leg(p, 22, 72, 12, 16, STORM)
-    leg(p, 62, 72, 12, 16, STORM)
-    p.box(16, 40, 64, 34, STORM)
-    p.disc(36, 30, 14, 12, STORM)
-    p.poly([(24, 26), (8, 8), (30, 28)], BOLT)
-    p.poly([(48, 24), (58, 6), (40, 28)], BONE)
-    p.disc(8, 52, 8, 7, STORM)
-    p.disc(88, 52, 8, 7, STORM)
-    eye(p, 30, 30, 3, (255, 240, 140), (40, 24, 60))
-    eye(p, 42, 30, 3, (255, 240, 140), (40, 24, 60))
-    p.box(30, 38, 12, 3, (20, 12, 28))
-    finish(p, "storm_brute.png")
-    return p.image()
 
 
 def storm_tank() -> Image.Image:
@@ -1102,6 +1156,8 @@ def boss_veil() -> Image.Image:
     return p.image()
 
 
+
+
 def snake() -> Image.Image:
     p = Pix()
     # Coils.
@@ -1122,6 +1178,939 @@ def snake() -> Image.Image:
         p.put(64, y, (20, 50, 24))
     finish(p, "snake.png")
     return p.image()
+
+
+
+# --- Organic pass -------------------------------------------------------
+# sandy_tank, king_tank, hell_brute, storm_brute, boss_brass, boss_rime.
+# Overlapping anatomy, a 6-tone ramp per material, light from the upper
+# left, contact shadow, and a 1px silhouette. Not stacked primitives.
+
+CHITIN = [
+    (90, 51, 19),
+    (117, 70, 25),
+    (141, 89, 33),
+    (176, 119, 38),
+    (208, 152, 48),
+    (230, 183, 75),
+    (248, 220, 140),
+]
+LIMB = [
+    (69, 27, 17),
+    (102, 58, 22),
+    (138, 86, 28),
+    (164, 107, 35),
+    (196, 137, 42),
+    (218, 165, 56),
+    (238, 195, 87),
+]
+HORN = [
+    (62, 40, 22),
+    (98, 68, 36),
+    (132, 96, 52),
+    (168, 128, 74),
+    (198, 160, 104),
+    (226, 196, 142),
+]
+ORG_STEEL = [
+    (20, 26, 40),
+    (34, 46, 66),
+    (54, 72, 98),
+    (80, 102, 128),
+    (112, 134, 156),
+    (148, 168, 186),
+    (188, 204, 216),
+]
+ORG_NAVY = [
+    (16, 22, 44),
+    (28, 36, 68),
+    (42, 56, 96),
+    (64, 82, 128),
+    (96, 116, 158),
+    (140, 158, 190),
+]
+ORG_GOLD = [
+    (92, 64, 18),
+    (140, 96, 28),
+    (186, 138, 36),
+    (220, 176, 58),
+    (244, 210, 102),
+    (255, 236, 170),
+]
+PLUME = [
+    (92, 18, 24),
+    (140, 28, 32),
+    (176, 42, 44),
+    (208, 64, 58),
+    (232, 110, 96),
+    (248, 170, 150),
+]
+CAPE = [
+    (18, 16, 36),
+    (32, 28, 58),
+    (48, 42, 82),
+    (70, 60, 108),
+    (98, 86, 138),
+    (140, 124, 170),
+]
+ORG_BRASS = [
+    (78, 48, 16),
+    (116, 72, 22),
+    (156, 102, 30),
+    (190, 136, 42),
+    (214, 168, 64),
+    (236, 198, 102),
+    (252, 226, 156),
+]
+IRON = [
+    (28, 24, 22),
+    (52, 44, 38),
+    (78, 66, 56),
+    (108, 92, 78),
+    (142, 122, 104),
+    (176, 156, 136),
+]
+HIDE = [
+    (72, 24, 18),
+    (112, 36, 24),
+    (148, 52, 32),
+    (176, 74, 44),
+    (204, 104, 64),
+    (228, 142, 96),
+    (246, 184, 140),
+]
+BELLY = [
+    (96, 36, 28),
+    (140, 56, 40),
+    (172, 82, 56),
+    (198, 112, 78),
+    (220, 146, 108),
+    (238, 180, 146),
+]
+ORG_BONE = [
+    (48, 32, 26),
+    (86, 64, 50),
+    (124, 98, 76),
+    (162, 134, 108),
+    (196, 170, 142),
+    (226, 206, 180),
+]
+ORG_STORM = [
+    (22, 30, 48),
+    (40, 54, 78),
+    (62, 82, 112),
+    (92, 114, 144),
+    (132, 152, 176),
+    (176, 194, 210),
+    (214, 226, 234),
+]
+MANE = [
+    (36, 48, 78),
+    (58, 74, 112),
+    (86, 108, 148),
+    (124, 146, 182),
+    (168, 186, 210),
+    (214, 224, 236),
+]
+ORG_ICE = [
+    (14, 40, 56),
+    (26, 74, 98),
+    (48, 118, 140),
+    (86, 160, 176),
+    (140, 198, 208),
+    (196, 228, 232),
+    (236, 248, 250),
+]
+DEEP = [
+    (8, 22, 34),
+    (14, 40, 56),
+    (22, 64, 84),
+    (36, 96, 116),
+    (58, 128, 146),
+    (92, 160, 174),
+]
+FROST = [
+    (36, 86, 108),
+    (72, 132, 152),
+    (120, 176, 192),
+    (170, 210, 220),
+    (214, 234, 240),
+    (246, 252, 255),
+]
+INK_SAND = (42, 16, 12)
+INK_STEEL = (12, 14, 24)
+INK_BRASS = (36, 20, 8)
+INK_HELL = (28, 8, 8)
+INK_STORM = (10, 14, 28)
+INK_ICE = (8, 24, 36)
+PATINA = (58, 108, 76)
+SHADE = (18, 10, 8)
+
+
+def clamp(v, a, b):
+    return a if v < a else b if v > b else v
+
+
+def mix(a, b, t):
+    return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
+
+
+def hsh(x, y, s=0):
+    n = (int(x) * 374761393 + int(y) * 668265263 + s * 1442695041) & 0xFFFFFFFF
+    n = (n ^ (n >> 13)) * 1274126177 & 0xFFFFFFFF
+    return ((n ^ (n >> 16)) & 255) / 255.0
+
+
+def oval(cx, cy, rx, ry, n=18, rot=0.0, scallop=0.0, tooth=0.0):
+    """Closed outline. Scallop pulls every other point in. Tooth pushes every third out."""
+    c, s = math.cos(rot), math.sin(rot)
+    pts = []
+    for i in range(n):
+        a = -math.pi / 2 + i * math.tau / n
+        pull = 1.0
+        if scallop and i % 2 == 0:
+            pull -= scallop
+        if tooth and i % 2 == 0:
+            pull += tooth
+        x = math.cos(a) * rx * pull
+        y = math.sin(a) * ry * pull
+        pts.append((cx + x * c - y * s, cy + x * s + y * c))
+    return pts
+
+
+def heater(cx, cy, rx, ry):
+    """Shield: curved shoulders, long point. Not a rectangle."""
+    return [
+        (cx, cy - ry),
+        (cx + rx * 0.72, cy - ry * 0.72),
+        (cx + rx, cy - ry * 0.28),
+        (cx + rx * 0.92, cy + ry * 0.18),
+        (cx + rx * 0.55, cy + ry * 0.58),
+        (cx + rx * 0.16, cy + ry * 0.86),
+        (cx, cy + ry),
+        (cx - rx * 0.16, cy + ry * 0.86),
+        (cx - rx * 0.55, cy + ry * 0.58),
+        (cx - rx * 0.92, cy + ry * 0.18),
+        (cx - rx, cy - ry * 0.28),
+        (cx - rx * 0.72, cy - ry * 0.72),
+    ]
+
+
+def torso(cx, cy, rx, ry):
+    """Shoulders wider than the waist, hips rounding back out."""
+    return [
+        (cx - rx * 0.15, cy - ry),
+        (cx + rx * 0.35, cy - ry * 0.92),
+        (cx + rx, cy - ry * 0.55),
+        (cx + rx * 0.78, cy - ry * 0.05),
+        (cx + rx * 0.55, cy + ry * 0.35),
+        (cx + rx * 0.72, cy + ry * 0.78),
+        (cx + rx * 0.2, cy + ry),
+        (cx - rx * 0.35, cy + ry * 0.9),
+        (cx - rx * 0.7, cy + ry * 0.4),
+        (cx - rx * 0.62, cy - ry * 0.05),
+        (cx - rx * 0.85, cy - ry * 0.5),
+        (cx - rx * 0.4, cy - ry * 0.9),
+    ]
+
+
+def scarab(cx, cy, rx, ry):
+    """Wide elytra: flatter belly line, scalloped shoulders, a crown ridge."""
+    return [
+        (cx, cy - ry),
+        (cx + rx * 0.28, cy - ry * 0.96),
+        (cx + rx * 0.55, cy - ry * 0.78),
+        (cx + rx * 0.82, cy - ry * 0.48),
+        (cx + rx, cy - ry * 0.12),
+        (cx + rx * 0.9, cy + ry * 0.22),
+        (cx + rx * 0.62, cy + ry * 0.55),
+        (cx + rx * 0.28, cy + ry * 0.78),
+        (cx, cy + ry * 0.7),
+        (cx - rx * 0.28, cy + ry * 0.78),
+        (cx - rx * 0.62, cy + ry * 0.55),
+        (cx - rx * 0.9, cy + ry * 0.22),
+        (cx - rx, cy - ry * 0.12),
+        (cx - rx * 0.82, cy - ry * 0.48),
+        (cx - rx * 0.55, cy - ry * 0.78),
+        (cx - rx * 0.28, cy - ry * 0.96),
+    ]
+
+
+def snout_head(cx, cy, rx, ry, face=1):
+    """Skull with a brow shelf and a muzzle. face=1 pushes the muzzle down (toward the camera)."""
+    return [
+        (cx - rx * 0.2, cy - ry),
+        (cx + rx * 0.45, cy - ry * 0.85),
+        (cx + rx * 0.95, cy - ry * 0.35),
+        (cx + rx, cy + ry * 0.05),
+        (cx + rx * 0.7, cy + ry * 0.4),
+        (cx + rx * 0.35, cy + ry * 0.72),
+        (cx + rx * 0.1 * face, cy + ry),
+        (cx - rx * 0.25, cy + ry * 0.78),
+        (cx - rx * 0.7, cy + ry * 0.4),
+        (cx - rx, cy + ry * 0.05),
+        (cx - rx * 0.85, cy - ry * 0.4),
+        (cx - rx * 0.4, cy - ry * 0.88),
+    ]
+
+
+class Form:
+    def __init__(self):
+        n = S * S
+        self.a = [0] * n
+        self.z = [0.0] * n
+        self.pri = [-1] * n
+        self.mat = [0] * n
+        self.mode = [0] * n  # 0 dome, 1 tube, 2 facet
+        self.nx = [0.0] * n
+        self.ny = [0.0] * n
+        self.nz = [1.0] * n
+        self.edge = [0.0] * n
+        self.along = [0.0] * n
+        self.cx = [0.0] * n
+        self.cy = [0.0] * n
+        self.kind = [""] * n
+        self.seams = [0] * n
+        self.pid = [0] * n
+        self._seq = 1
+
+    def _i(self, x, y):
+        return y * S + x
+
+    def _put(self, x, y, h, mat, pri, mode, nx, ny, nz, edge, along, cx, cy, kind, seams, pid):
+        if not (0 <= x < S and 0 <= y < S):
+            return
+        i = self._i(x, y)
+        if pri > self.pri[i] or (pri == self.pri[i] and h >= self.z[i]):
+            self.a[i] = 1
+            self.z[i] = h
+            self.pri[i] = pri
+            self.mat[i] = mat
+            self.mode[i] = mode
+            self.nx[i] = nx
+            self.ny[i] = ny
+            self.nz[i] = nz
+            self.edge[i] = edge
+            self.along[i] = along
+            self.cx[i] = cx
+            self.cy[i] = cy
+            self.kind[i] = kind
+            self.seams[i] = 1 if seams else 0
+            self.pid[i] = pid
+
+    def blob(self, pts, mat, pri, height=1.0, mode="dome", kind="plain", seams=False, normal=None, bevel=7.0):
+        mask = Image.new("L", (S, S), 0)
+        ImageDraw.Draw(mask).polygon([(int(round(x)), int(round(y))) for x, y in pts], fill=255)
+        pix = mask.load()
+        dist = [[0.0] * S for _ in range(S)]
+        for y in range(S):
+            for x in range(S):
+                dist[y][x] = 0.0 if not pix[x, y] else 99.0
+        for y in range(S):
+            for x in range(S):
+                d = dist[y][x]
+                if x:
+                    d = min(d, dist[y][x - 1] + 1)
+                if y:
+                    d = min(d, dist[y - 1][x] + 1)
+                if x and y:
+                    d = min(d, dist[y - 1][x - 1] + 1.4)
+                dist[y][x] = d
+        for y in range(S - 1, -1, -1):
+            for x in range(S - 1, -1, -1):
+                d = dist[y][x]
+                if x < S - 1:
+                    d = min(d, dist[y][x + 1] + 1)
+                if y < S - 1:
+                    d = min(d, dist[y + 1][x] + 1)
+                if x < S - 1 and y < S - 1:
+                    d = min(d, dist[y + 1][x + 1] + 1.4)
+                dist[y][x] = d
+        cx = sum(p[0] for p in pts) / len(pts)
+        cy = sum(p[1] for p in pts) / len(pts)
+        self._seq += 1
+        pid = self._seq
+        mode_i = {"dome": 0, "tube": 1, "facet": 2}[mode]
+        fnx, fny, fnz = normal if normal else (0.0, -0.75, 0.55)
+        if normal:
+            L = math.hypot(fnx, fny, fnz) or 1
+            fnx, fny, fnz = fnx / L, fny / L, fnz / L
+        for y in range(S):
+            for x in range(S):
+                if not pix[x, y]:
+                    continue
+                d = dist[y][x]
+                if mode == "dome":
+                    h = height * (1.0 - math.exp(-d / bevel))
+                    self._put(x, y, h, mat, pri, 0, 0, 0, 1, d, 0, cx, cy, kind, seams, pid)
+                else:
+                    h = height * min(1.0, d / 3.2)
+                    self._put(x, y, h, mat, pri, mode_i, fnx, fny, fnz, d, 0, cx, cy, kind, seams, pid)
+
+    def limb(self, pts, r0, r1, mat, pri, height=0.9, mode="tube", kind="plain", seams=False):
+        samples = []
+        total = 0.0
+        spans = []
+        for i in range(len(pts) - 1):
+            ax, ay = pts[i]
+            bx, by = pts[i + 1]
+            d = math.hypot(bx - ax, by - ay)
+            spans.append((ax, ay, bx, by, total, d))
+            total += d
+        if total < 0.5:
+            return
+        steps = max(2, int(total * 2))
+        for s in range(steps + 1):
+            dist = total * s / steps
+            for ax, ay, bx, by, acc, d in spans:
+                if dist <= acc + d or spans[-1][4] == acc:
+                    t = 0 if d == 0 else (dist - acc) / d
+                    t = clamp(t, 0, 1)
+                    x = ax + (bx - ax) * t
+                    y = ay + (by - ay) * t
+                    tx, ty = (bx - ax) / d if d else 1, (by - ay) / d if d else 0
+                    samples.append((x, y, dist / total, tx, ty))
+                    break
+        xs = [p[0] for p in samples]
+        ys = [p[1] for p in samples]
+        pad = int(max(r0, r1) + 3)
+        x0 = max(0, int(min(xs)) - pad)
+        x1 = min(S, int(max(xs)) + pad + 1)
+        y0 = max(0, int(min(ys)) - pad)
+        y1 = min(S, int(max(ys)) + pad + 1)
+        mode_i = 2 if mode == "facet" else 1
+        self._seq += 1
+        pid = self._seq
+        cx = sum(xs) / len(xs)
+        cy = sum(ys) / len(ys)
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                best = 1e9
+                pick = samples[0]
+                for smp in samples:
+                    dd = (x + 0.5 - smp[0]) ** 2 + (y + 0.5 - smp[1]) ** 2
+                    if dd < best:
+                        best = dd
+                        pick = smp
+                dist = math.sqrt(best)
+                along, tx, ty = pick[2], pick[3], pick[4]
+                rad = r0 + (r1 - r0) * along
+                if rad < 0.4 or dist > rad:
+                    continue
+                vx = (x + 0.5 - pick[0]) / dist if dist > 0.15 else -ty
+                vy = (y + 0.5 - pick[1]) / dist if dist > 0.15 else tx
+                edge = rad - dist
+                if mode == "facet":
+                    px, py = -ty, tx
+                    if vx * px + vy * py < 0:
+                        px, py = -px, -py
+                    nz = 0.85 if edge < 1.5 else 0.28
+                    h = height * (0.45 + 0.55 * min(1.0, edge / 2.2))
+                    self._put(x, y, h, mat, pri, mode_i, px, py, nz, edge, along, cx, cy, kind, seams, pid)
+                else:
+                    nz = math.sqrt(max(0.05, 1.0 - (dist / rad) ** 2))
+                    h = height * nz
+                    self._put(x, y, h, mat, pri, mode_i, vx, vy, nz, edge, along, cx, cy, kind, seams, pid)
+
+    def bake(self, ramps, ink, highlight):
+        light = (-0.48, -0.72, 0.50)
+        ll = math.sqrt(sum(c * c for c in light))
+        light = tuple(c / ll for c in light)
+        img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+        px = img.load()
+        tone_at = [-1] * (S * S)
+        for y in range(S):
+            for x in range(S):
+                i = self._i(x, y)
+                if not self.a[i]:
+                    continue
+                if self.mode[i] == 0:
+                    def zz(xx, yy, i=i):
+                        if 0 <= xx < S and 0 <= yy < S and self.a[yy * S + xx] and self.pid[yy * S + xx] == self.pid[i]:
+                            return self.z[yy * S + xx]
+                        return self.z[i]
+                    dzdx = (zz(x + 1, y) - zz(x - 1, y)) * 0.5
+                    dzdy = (zz(x, y + 1) - zz(x, y - 1)) * 0.5
+                    nx, ny, nz = -dzdx * 11.0, -dzdy * 11.0, 0.72
+                else:
+                    nx, ny, nz = self.nx[i], self.ny[i], self.nz[i]
+                L = math.sqrt(nx * nx + ny * ny + nz * nz) or 1
+                nx, ny, nz = nx / L, ny / L, nz / L
+                nd = nx * light[0] + ny * light[1] + nz * light[2]
+                nd = clamp(nd, 0.0, 1.0)
+                # A facet that faces the lamp must not flood the whole face white.
+                if self.mode[i] == 2:
+                    nd = 0.16 + 0.46 * nd
+                # Contact shadow from a part sitting up-light of this pixel.
+                ao = 0.0
+                my = self.pid[i]
+                for ox, oy, w in ((-1, -1, 0.9), (-2, -1, 0.7), (-1, -2, 0.7), (-2, -2, 0.55), (-3, -2, 0.4), (-2, -3, 0.4), (-3, -3, 0.28)):
+                    xx, yy = x + ox, y + oy
+                    if not (0 <= xx < S and 0 <= yy < S):
+                        continue
+                    j = self._i(xx, yy)
+                    if self.a[j] and self.pid[j] != my and self.z[j] > self.z[i] - 0.02:
+                        ao = max(ao, w)
+                edge = self.edge[i]
+                # Bevel on facets: bright lip on the lit side, dark lip on the shadow side.
+                if self.mode[i] == 2 and edge < 2.0:
+                    up = self.edge[self._i(x - 1, y)] if x else 0
+                    left = self.edge[self._i(x, y - 1)] if y else 0
+                    if (x and self.a[self._i(x - 1, y)] and up > edge) or (y and self.a[self._i(x, y - 1)] and left > edge):
+                        nd = min(1.0, nd + 0.38)
+                    if x < S - 1 and self.a[self._i(x + 1, y)] and self.edge[self._i(x + 1, y)] > edge:
+                        nd *= 0.62
+                kind = self.kind[i]
+                ramp = ramps[self.mat[i]]
+                if kind == "shield":
+                    ramp = ORG_STEEL if edge < 2.6 else ORG_NAVY
+                steps = len(ramp) - 1
+                ti = int(nd * steps + 0.5)
+                # Material texture. Seams follow the form, not the screen.
+                if self.seams[i] and kind == "chitin" and edge > 2.2 and int(edge) % 5 == 3:
+                    ti -= 2
+                if kind == "chitin" and abs(x - self.cx[i]) <= 0.6 and edge > 3 and self.seams[i]:
+                    ti -= 1
+                if kind == "chitin" and self.seams[i] and edge > 4 and hsh(x, y, 11) > 0.94:
+                    ti -= 1
+                if kind == "horn" and int(self.along[i] * 16) % 4 == 0 and edge < 2.4:
+                    ti -= 1
+                if kind == "hide" and hsh(x // 2, y // 2, 3) > 0.84:
+                    ti -= 1
+                if kind == "hide" and edge > 3 and abs(math.sin((y - self.cy[i]) * 0.55 + x * 0.04)) < 0.13 and hsh(x, y, 5) > 0.55:
+                    ti -= 1
+                if kind == "brass" and self.seams[i] and edge > 2.5 and abs((edge * 0.55) % 1 - 0.5) < 0.06:
+                    ti -= 1
+                if kind == "ice" and abs(math.sin(math.atan2(y - self.cy[i], x - self.cx[i]) * 3.0 + self.pid[i])) < 0.10 and edge > 1.4:
+                    ti -= 1
+                if kind == "steel" and self.seams[i] and abs((edge * 0.7) % 1 - 0.5) < 0.05 and edge > 2:
+                    ti -= 1
+                if kind == "cloth" and int((x * 0.15 + y) / 4) % 3 == 0 and hsh(x, y, 8) > 0.6:
+                    ti -= 1
+                if kind == "mane" and int(self.along[i] * 8 + x) % 3 == 0:
+                    ti += 1
+                # Specular cluster only where the surface faces the lamp.
+                if self.mode[i] != 2 and nd > 0.91 and kind not in ("cloth", "shield") and ramp[-1][0] > 90:
+                    ti = steps
+                ti = int(clamp(ti, 0, steps))
+                col = ramp[ti]
+                ao_q = 0.0 if ao < 0.22 else (0.42 if ao < 0.55 else 0.7)
+                if ao_q:
+                    col = mix(col, mix(ramp[0], SHADE, 0.55), ao_q)
+                if kind == "brass" and y > self.cy[i] + 3 and edge < 5 and hsh(x // 3, y // 3, 9) > 0.78:
+                    col = mix(col, PATINA, 0.55)
+                if kind == "ice" and nd > 0.75 and edge > 3 and hsh(x, y, 4) > 0.72:
+                    col = mix(col, (255, 255, 255), 0.35)
+                if kind == "ice" and edge > 2 and hsh(x, y, 6) > 0.9:
+                    col = mix(col, (8, 28, 42), 0.5)
+                tone_at[i] = ti
+                px[x, y] = (*col, 255)
+        # Inner rim, just inside the top-left contour.
+        rim = highlight
+        for y in range(1, S - 1):
+            for x in range(1, S - 1):
+                i = self._i(x, y)
+                if not self.a[i]:
+                    continue
+                if px[x, y][3] == 0:
+                    continue
+                edge_l = self.a[i] and (not self.a[self._i(x - 1, y)] or not self.a[self._i(x, y - 1)])
+                if edge_l:
+                    continue
+                near = (not self.a[self._i(x - 2, y)] or not self.a[self._i(x - 1, y - 1)] or not self.a[self._i(x, y - 2)])
+                if near and (not self.a[self._i(x - 1, y)] or not self.a[self._i(x, y - 1)] or not self.a[self._i(x - 1, y - 1)]):
+                    px[x, y] = (*mix(px[x, y][:3], rim, 0.62), 255)
+        # 1px silhouette ink. Lit corner stays a breath lighter so the rim reads.
+        for y in range(S):
+            for x in range(S):
+                i = self._i(x, y)
+                if not self.a[i]:
+                    continue
+                transparent = 0
+                up_left = 0
+                for ox, oy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                    xx, yy = x + ox, y + oy
+                    if not (0 <= xx < S and 0 <= yy < S) or not self.a[self._i(xx, yy)]:
+                        transparent += 1
+                        if ox < 0 or oy < 0:
+                            up_left += 1
+                if transparent:
+                    if up_left and transparent == 1:
+                        px[x, y] = (*mix(ink, highlight, 0.28), 255)
+                    else:
+                        px[x, y] = (*ink, 255)
+        return img
+
+
+def put_if(im, x, y, c):
+    if 0 <= x < S and 0 <= y < S:
+        p = im.getpixel((x, y))
+        if p[3] > 0:
+            im.putpixel((x, y), (*c, 255))
+
+
+def paint_eye(im, x, y, iris, pupil, socket, glint=(255, 252, 236), r=3):
+    for dy in range(-r - 1, r + 2):
+        for dx in range(-r - 1, r + 2):
+            if dx * dx + dy * dy <= (r + 1) * (r + 1):
+                put_if(im, x + dx, y + dy, socket)
+    for dy in range(-r, r + 1):
+        for dx in range(-r, r + 1):
+            if dx * dx + dy * dy <= r * r:
+                put_if(im, x + dx, y + dy, iris)
+    put_if(im, x + 1, y, pupil)
+    put_if(im, x + 1, y + 1, pupil)
+    put_if(im, x, y + 1, pupil)
+    put_if(im, x - 1, y - 1, glint)
+    if r >= 3:
+        put_if(im, x - 2, y - 1, glint)
+
+
+def rivet(im, x, y, hi, lo):
+    put_if(im, x, y, hi)
+    put_if(im, x - 1, y - 1, hi)
+    put_if(im, x + 1, y + 1, lo)
+
+
+def glint(im, x, y, c):
+    for dx, dy in ((0, 0), (1, 0), (0, 1), (2, 0), (1, -1)):
+        put_if(im, x + dx, y + dy, c)
+
+
+def stroke(im, pts, col, side):
+    def plot(x0, y0, x1, y1):
+        dx, dy = abs(x1 - x0), abs(y1 - y0)
+        sx, sy = (1 if x0 < x1 else -1), (1 if y0 < y1 else -1)
+        err = dx - dy
+        x, y = x0, y0
+        while True:
+            put_if(im, x, y, col)
+            put_if(im, x + 1, y + 1, side)
+            if x == x1 and y == y1:
+                break
+            e2 = 2 * err
+            if e2 > -dy:
+                err -= dy
+                x += sx
+            if e2 < dx:
+                err += dx
+                y += sy
+
+    for i in range(len(pts) - 1):
+        plot(int(pts[i][0]), int(pts[i][1]), int(pts[i + 1][0]), int(pts[i + 1][1]))
+
+
+def save_organic(im, name):
+    im.save(ROOT / name)
+    cols = len({p[:3] for p in im.getdata() if p[3] > 20})
+    xs, ys = [], []
+    pix = im.load()
+    for y in range(S):
+        for x in range(S):
+            if pix[x, y][3] > 20:
+                xs.append(x)
+                ys.append(y)
+    print(f"{name:20} colors {cols:4}  bbox {min(xs):2},{min(ys):2} {max(xs):2},{max(ys):2}")
+
+
+def sandy_tank():
+    f = Form()
+    # Legs first, tucked under the shell. Joints are their own bulges.
+    legs = [
+        ([(30, 50), (16, 40), (8, 24)], 4.4, 1.3),
+        ([(33, 56), (14, 60), (6, 74)], 4.6, 1.4),
+        ([(38, 62), (22, 74), (18, 90)], 4.8, 1.6),
+    ]
+    for pts, r0, r1 in legs:
+        f.limb(pts, r0, r1, 1, 1, height=0.85, kind="chitin")
+        f.blob(oval(pts[1][0], pts[1][1], r0 * 0.85, r0 * 0.7, n=10, scallop=0.12), 1, 2, height=0.8, kind="chitin")
+        mx = [(96 - x, y) for x, y in pts]
+        f.limb(mx, r0, r1, 1, 1, height=0.85, kind="chitin")
+        f.blob(oval(mx[1][0], mx[1][1], r0 * 0.85, r0 * 0.7, n=10, scallop=0.12), 1, 2, height=0.8, kind="chitin")
+        # Hooked claw.
+        tip = pts[-1]
+        f.limb([tip, (tip[0] - 3, tip[1] + 3)], 1.7, 0.5, 2, 3, kind="horn")
+        f.limb([(96 - tip[0], tip[1]), (96 - tip[0] + 3, tip[1] + 3)], 1.7, 0.5, 2, 3, kind="horn")
+    # Belly shadow under the shell, between the legs.
+    f.blob(oval(48, 66, 16, 9, n=12, scallop=0.1), 1, 2, height=0.55, kind="chitin")
+    # Elytra. Scalloped, with a raised keel.
+    f.blob(scarab(48, 40, 32, 24), 0, 4, height=1.05, kind="chitin", seams=True, bevel=8.5)
+    # Each scute is its own dome, so the shell reads as plates rather than one egg.
+    for cx, cy, rx, ry in (
+        (30, 30, 9, 5.5),
+        (48, 28, 7, 6),
+        (66, 30, 9, 5.5),
+        (26, 42, 10, 5.5),
+        (48, 40, 8, 5),
+        (70, 42, 10, 5.5),
+        (34, 52, 9, 4.5),
+        (58, 52, 9, 4.5),
+    ):
+        f.blob(oval(cx, cy, rx, ry, n=10, scallop=0.1), 0, 5, height=0.72, kind="chitin", bevel=3.2)
+    f.blob(oval(48, 36, 5, 16, n=12, scallop=0.06), 0, 6, height=1.2, kind="chitin", seams=True, bevel=4)
+    # Head tucked under the front lip, mandibles in front of it.
+    f.blob(snout_head(48, 64, 13, 10), 0, 6, height=0.95, kind="chitin", bevel=5.5)
+    f.limb([(40, 70), (32, 80), (26, 90)], 3.6, 1.0, 2, 7, kind="horn")
+    f.limb([(56, 70), (64, 80), (70, 90)], 3.6, 1.0, 2, 7, kind="horn")
+    f.limb([(44, 72), (42, 80)], 1.8, 0.6, 2, 8, kind="horn")
+    f.limb([(52, 72), (54, 80)], 1.8, 0.6, 2, 8, kind="horn")
+    # Antennae.
+    f.limb([(38, 58), (26, 46), (18, 32), (14, 22)], 1.6, 0.55, 2, 7, kind="horn")
+    f.limb([(58, 58), (70, 46), (78, 32), (82, 22)], 1.6, 0.55, 2, 7, kind="horn")
+    im = f.bake({0: CHITIN, 1: LIMB, 2: HORN}, INK_SAND, (255, 236, 190))
+    paint_eye(im, 41, 62, (255, 186, 48), (48, 16, 8), (42, 18, 10), r=3)
+    paint_eye(im, 55, 62, (255, 186, 48), (48, 16, 8), (42, 18, 10), r=3)
+    # Brow and a mouth between the mandibles.
+    for dx in range(-4, 5):
+        put_if(im, 48 + dx, 57, (62, 32, 14))
+    put_if(im, 46, 68, (36, 14, 8))
+    put_if(im, 47, 69, (36, 14, 8))
+    put_if(im, 48, 69, (36, 14, 8))
+    put_if(im, 49, 69, (36, 14, 8))
+    put_if(im, 50, 68, (36, 14, 8))
+    put_if(im, 47, 71, (230, 200, 140))
+    put_if(im, 49, 71, (230, 200, 140))
+    glint(im, 30, 26, (255, 236, 196))
+    glint(im, 34, 34, (248, 214, 130))
+    for x, y in ((28, 28), (38, 26), (60, 27), (24, 40), (68, 39), (34, 48), (62, 47), (44, 24)):
+        put_if(im, x, y, (90, 51, 19))
+        put_if(im, x + 1, y + 1, (117, 70, 25))
+    save_organic(im, "sandy_tank.png")
+    return im
+
+
+def king_tank():
+    f = Form()
+    # Cape behind the body, one side longer.
+    cape = oval(52, 60, 20, 26, n=16, rot=0.15, scallop=0.16)
+    f.blob(cape, 5, 0, height=0.7, kind="cloth", bevel=6)
+    f.limb([(58, 74), (68, 84), (60, 92)], 8, 2.4, 5, 0, kind="cloth")
+    # Legs and sabatons.
+    f.limb([(44, 64), (40, 76), (38, 86)], 5.2, 3.4, 0, 1, kind="steel")
+    f.limb([(60, 64), (64, 76), (66, 86)], 5.0, 3.2, 0, 1, kind="steel")
+    f.blob(oval(38, 87, 6.5, 3.0, n=10), 0, 2, height=0.6, kind="steel")
+    f.blob(oval(66, 87, 6.2, 2.8, n=10), 0, 2, height=0.6, kind="steel")
+    f.blob(oval(41, 78, 4.2, 3.4, n=10, scallop=0.1), 0, 2, height=0.75, kind="steel")
+    f.blob(oval(63, 78, 4.0, 3.2, n=10, scallop=0.1), 0, 2, height=0.75, kind="steel")
+    # Torso, pauldrons, helm.
+    f.blob(torso(52, 52, 15, 18), 0, 3, height=1.0, kind="steel", seams=True, bevel=6.5)
+    f.blob(oval(34, 42, 9, 6.5, n=12, rot=-0.5, scallop=0.14), 0, 4, height=1.05, kind="steel")
+    f.blob(oval(68, 40, 8, 6, n=12, rot=0.4, scallop=0.14), 0, 4, height=1.0, kind="steel")
+    f.blob(oval(52, 28, 12, 13, n=14, scallop=0.06), 0, 5, height=1.15, kind="steel", bevel=5.5)
+    # Crest.
+    f.limb([(52, 18), (60, 8), (70, 12), (74, 18)], 2.6, 0.8, 4, 6, kind="plain")
+    # Sword arm on the right, partly behind the shield's opposite side.
+    f.limb([(64, 48), (76, 58), (82, 70)], 4.6, 2.6, 0, 4, kind="steel")
+    f.blob(oval(82, 72, 4.2, 4.6, n=10, scallop=0.12), 0, 5, height=0.8, kind="steel")
+    f.limb([(78, 36), (86, 22), (88, 14)], 1.5, 0.7, 0, 3, kind="steel")
+    f.blob(oval(78, 36, 5, 1.6, n=8, rot=0.4), 3, 4, height=0.5, kind="plain")
+    # Shield in front. Heater, gold boss, overlaps the torso.
+    f.blob(heater(24, 54, 15, 24), 0, 7, height=0.85, mode="facet", kind="shield", seams=False, normal=(-0.2, -0.25, 0.95))
+    f.limb([(52, 62), (40, 64)], 1.7, 1.4, 3, 4, kind="plain")
+    f.blob(oval(24, 50, 5.2, 5.2, n=12), 3, 8, height=1.1, kind="plain")
+    f.limb([(24, 40), (24, 62)], 1.5, 1.5, 3, 8, kind="plain")
+    # Visor slit. Dark, then the eyes punch through it.
+    f.blob(oval(52, 30, 8, 3.2, n=10), 6, 8, height=0.3, mode="facet", kind="plain", normal=(0, 0, 1))
+    im = f.bake(
+        {0: ORG_STEEL, 3: ORG_GOLD, 4: PLUME, 5: CAPE, 6: [(8, 10, 16), (14, 16, 26), (20, 24, 36)]},
+        INK_STEEL,
+        (236, 242, 248),
+    )
+    paint_eye(im, 48, 30, (255, 196, 64), (40, 18, 8), (8, 10, 16), r=2)
+    paint_eye(im, 56, 30, (255, 196, 64), (40, 18, 8), (8, 10, 16), r=2)
+    for x, y in ((16, 40), (32, 38), (14, 64), (30, 66), (24, 78)):
+        rivet(im, x, y, (244, 214, 120), (40, 28, 16))
+    for x, y in ((46, 44), (58, 46), (52, 60)):
+        rivet(im, x, y, (244, 214, 120), (20, 24, 36))
+    glint(im, 42, 20, (240, 246, 252))
+    glint(im, 14, 40, (220, 230, 240))
+    save_organic(im, "king_tank.png")
+    return im
+
+
+def boss_brass():
+    """A boiler on wheels. Gear teeth, a short stack, a level cannon. No legs."""
+    f = Form()
+    # Gear center sits inside the boiler, so only the teeth show on the left.
+    f.blob(oval(22, 54, 12, 12, n=16, tooth=0.26), 0, 1, height=0.8, kind="brass", seams=True, bevel=4)
+    f.blob(oval(22, 54, 3.4, 3.4, n=8), 1, 2, height=0.3, mode="facet", kind="plain", normal=(0, 0, 1))
+    # The boiler covers the gear's right half.
+    f.blob(oval(52, 50, 20, 16, n=16, scallop=0.06), 0, 3, height=1.15, kind="brass", seams=True, bevel=8)
+    f.blob(oval(52, 60, 15, 9, n=12, scallop=0.05), 0, 3, height=1.0, kind="brass", seams=True, bevel=5)
+    # Face on the front of the pot, below the stack.
+    f.blob(oval(46, 42, 9, 8, n=12, scallop=0.08), 0, 5, height=1.0, kind="brass", bevel=4.5)
+    # Short stack rising from the top of the boiler, behind the face. A cap, not a fist.
+    f.limb([(58, 32), (58, 22), (58, 16)], 5.0, 4.2, 0, 4, kind="brass", seams=True)
+    f.blob(oval(58, 15, 8, 3.4, n=12), 0, 5, height=0.45, kind="brass")
+    f.blob(oval(58, 14, 3.0, 1.6, n=8), 1, 6, height=0.2, mode="facet", kind="plain", normal=(0, -0.15, 0.5))
+    # Level cannon out of the belly.
+    f.limb([(66, 58), (78, 58), (86, 59)], 5.4, 4.4, 0, 5, kind="brass")
+    f.blob(oval(76, 58, 6.4, 6.4, n=12), 0, 6, height=0.55, kind="brass")
+    f.blob(oval(86, 59, 5.2, 5.2, n=12), 0, 6, height=0.5, kind="brass")
+    f.blob(oval(89, 59, 2.6, 2.6, n=8), 1, 7, height=0.2, mode="facet", kind="plain", normal=(0.5, 0.05, 0.35))
+    # Axle and two spoked wheels. Not a pair of legs.
+    f.limb([(32, 74), (68, 74)], 2.4, 2.4, 1, 4, kind="plain")
+    for wx in (32, 68):
+        f.blob(oval(wx, 82, 8, 8, n=14), 1, 4, height=0.55, kind="plain", bevel=3)
+        f.blob(oval(wx, 82, 3.2, 3.2, n=8), 0, 5, height=0.7, kind="brass")
+        f.limb([(wx, 75), (wx, 89)], 1.15, 1.15, 0, 6, kind="brass")
+        f.limb([(wx - 6, 82), (wx + 6, 82)], 1.15, 1.15, 0, 6, kind="brass")
+    # Valve on the belly.
+    f.blob(oval(52, 52, 3.4, 3.4, n=10), 1, 6, height=0.45, kind="plain")
+    f.limb([(48, 52), (56, 52)], 1.0, 1.0, 0, 7, kind="brass")
+    f.limb([(52, 48), (52, 56)], 1.0, 1.0, 0, 7, kind="brass")
+    im = f.bake({0: ORG_BRASS, 1: IRON}, INK_BRASS, (255, 236, 180))
+    paint_eye(im, 46, 42, (120, 220, 210), (16, 40, 42), (48, 28, 12), glint=(230, 255, 250), r=3)
+    for a in range(0, 360, 40):
+        rad = math.radians(a)
+        rivet(im, int(52 + math.cos(rad) * 13), int(52 + math.sin(rad) * 11), (255, 228, 160), (60, 32, 12))
+    for x, y in ((74, 58), (82, 58), (56, 20)):
+        rivet(im, x, y, (255, 228, 160), (60, 32, 12))
+    glint(im, 40, 36, (255, 232, 170))
+    glint(im, 52, 18, (255, 236, 190))
+    save_organic(im, "boss_brass.png")
+    return im
+
+
+def boss_rime():
+    """A frost beast with a real head. Three back-spires, not a spike ball."""
+    f = Form()
+    # Body has volume. A deeper belly, one crystal plate on the haunch.
+    f.blob(oval(62, 64, 22, 13, n=14, scallop=0.08), 0, 1, height=1.05, kind="ice", bevel=7)
+    f.blob(oval(60, 72, 13, 6, n=10), 1, 2, height=0.7, kind="ice", bevel=4)
+    f.blob(oval(46, 58, 8, 6, n=10), 0, 4, height=0.8, kind="ice", bevel=4)
+    f.blob(oval(76, 56, 9, 7, n=8, rot=0.45, scallop=0.1), 2, 2, mode="facet", kind="ice", normal=(0.45, -0.45, 0.6), height=0.9)
+    # Large head in front of the thicket, so the face wins any overlap.
+    f.blob(snout_head(32, 50, 15, 13), 0, 5, height=1.15, kind="ice", bevel=6)
+    f.blob(oval(16, 54, 8, 5.5, n=10, rot=0.15, scallop=0.08), 0, 6, height=0.85, kind="ice")
+    f.blob(oval(28, 40, 9, 4.2, n=8), 0, 6, height=0.75, kind="ice")
+    # Three spires, different heights, growing from the back.
+    f.limb([(56, 52), (52, 30), (46, 14)], 5.2, 1.0, 2, 3, mode="facet", kind="ice")
+    f.limb([(68, 54), (78, 32), (86, 16)], 4.6, 1.1, 2, 3, mode="facet", kind="ice")
+    f.limb([(62, 48), (66, 28), (72, 16)], 3.2, 0.7, 2, 4, mode="facet", kind="ice")
+    # Legs and a short tail.
+    f.limb([(44, 70), (38, 80), (36, 88)], 4.2, 2.1, 0, 3, kind="ice")
+    f.limb([(58, 72), (60, 82), (62, 88)], 4.0, 2.0, 0, 3, kind="ice")
+    f.limb([(74, 70), (82, 80), (86, 88)], 3.6, 1.7, 0, 3, kind="ice")
+    f.blob(oval(35, 89, 4.2, 2.0, n=8), 0, 4, height=0.4, kind="ice")
+    f.blob(oval(62, 89, 4.0, 2.0, n=8), 0, 4, height=0.4, kind="ice")
+    f.blob(oval(87, 89, 3.6, 1.8, n=8), 0, 4, height=0.35, kind="ice")
+    f.limb([(80, 62), (88, 58), (90, 50)], 2.8, 0.7, 2, 3, mode="facet", kind="ice")
+    # Two jaw icicles, different lengths.
+    f.limb([(18, 60), (14, 72), (12, 82)], 2.1, 0.4, 2, 7, mode="facet", kind="ice")
+    f.limb([(24, 62), (22, 74), (22, 80)], 1.7, 0.35, 2, 7, mode="facet", kind="ice")
+    im = f.bake({0: ORG_ICE, 1: DEEP, 2: FROST}, INK_ICE, (240, 252, 255))
+    paint_eye(im, 26, 48, (186, 236, 255), (16, 44, 64), (8, 24, 36), glint=(255, 255, 255), r=3)
+    paint_eye(im, 36, 46, (186, 236, 255), (16, 44, 64), (8, 24, 36), glint=(255, 255, 255), r=2)
+    for dx in range(-4, 5):
+        put_if(im, 30 + dx, 42, (10, 32, 48))
+    put_if(im, 12, 54, (8, 24, 36))
+    put_if(im, 14, 55, (8, 24, 36))
+    put_if(im, 13, 57, (220, 240, 248))
+    glint(im, 22, 38, (255, 255, 255))
+    glint(im, 50, 20, (230, 248, 255))
+    save_organic(im, "boss_rime.png")
+    return im
+
+
+def hell_brute():
+    f = Form()
+    # Tail, behind.
+    f.limb([(64, 64), (80, 56), (90, 66), (84, 80)], 4.2, 1.6, 0, 0, kind="hide")
+    f.blob(oval(82, 82, 5.5, 4.2, n=8, scallop=0.2, rot=0.4), 0, 1, height=0.6, kind="hide")
+    # Legs and hooves.
+    f.limb([(38, 66), (32, 78), (30, 90)], 6.4, 3.6, 0, 1, kind="hide")
+    f.limb([(58, 68), (66, 80), (70, 90)], 6.0, 3.4, 0, 1, kind="hide")
+    f.blob(oval(28, 91, 6.5, 3.0, n=8), 2, 2, height=0.45, kind="horn")
+    f.blob(oval(72, 91, 6.2, 2.8, n=8), 2, 2, height=0.45, kind="horn")
+    # Belly, chest, shoulders. Overlapping masses, not one circle.
+    f.blob(oval(48, 60, 18, 13, n=14, scallop=0.1), 1, 2, height=1.05, kind="hide", bevel=6)
+    f.blob(torso(46, 46, 16, 14), 0, 3, height=1.15, kind="hide", bevel=6.5)
+    f.blob(oval(28, 40, 10, 8, n=12, rot=-0.4, scallop=0.16), 0, 4, height=1.05, kind="hide")
+    f.blob(oval(66, 42, 9, 7.5, n=12, rot=0.35, scallop=0.16), 0, 4, height=1.0, kind="hide")
+    # Arms into clawed hands. The hand is smaller than the forearm.
+    f.limb([(26, 48), (14, 58), (10, 70)], 6.0, 3.4, 0, 4, kind="hide")
+    f.blob(oval(10, 74, 5, 4.5, n=10, scallop=0.15), 0, 5, height=0.8, kind="hide")
+    f.limb([(8, 76), (6, 82), (6, 88)], 1.8, 0.45, 2, 6, kind="horn")
+    f.limb([(12, 78), (12, 86), (14, 90)], 1.8, 0.45, 2, 6, kind="horn")
+    f.limb([(14, 74), (18, 82)], 1.6, 0.4, 2, 6, kind="horn")
+    f.limb([(68, 50), (80, 58), (86, 68)], 5.4, 3.2, 0, 4, kind="hide")
+    f.blob(oval(88, 72, 4.6, 4.2, n=10, scallop=0.15), 0, 5, height=0.75, kind="hide")
+    f.limb([(90, 74), (92, 80)], 1.6, 0.4, 2, 6, kind="horn")
+    f.limb([(86, 76), (84, 84), (82, 90)], 1.6, 0.4, 2, 6, kind="horn")
+    # Head, brow, muzzle. Horns are uneven: one tall, one broken.
+    f.blob(snout_head(48, 30, 13, 12), 0, 6, height=1.15, kind="hide", bevel=5.5)
+    f.blob(oval(48, 22, 10, 4.5, n=10, rot=0.05), 0, 7, height=0.85, kind="hide")
+    f.blob(oval(48, 36, 8, 5.5, n=10, scallop=0.12), 0, 7, height=0.8, kind="hide")
+    f.limb([(38, 20), (26, 10), (18, 8)], 3.6, 0.9, 2, 8, kind="horn")
+    f.limb([(58, 20), (70, 12), (78, 16)], 3.2, 1.3, 2, 8, kind="horn")
+    # A short spine ridge.
+    f.limb([(48, 40), (46, 28), (44, 18)], 2.2, 0.6, 2, 5, kind="horn")
+    im = f.bake({0: HIDE, 1: BELLY, 2: ORG_BONE}, INK_HELL, (255, 214, 170))
+    paint_eye(im, 42, 28, (255, 150, 30), (40, 8, 4), (28, 8, 8), r=2)
+    paint_eye(im, 54, 28, (255, 150, 30), (40, 8, 4), (28, 8, 8), r=2)
+    for dx in range(-5, 6):
+        put_if(im, 48 + dx, 23, (48, 14, 10))
+    for x, y in ((45, 38), (46, 39), (47, 39), (48, 40), (49, 39), (50, 39), (51, 38)):
+        put_if(im, x, y, (24, 6, 6))
+    put_if(im, 46, 41, (230, 210, 170))
+    put_if(im, 50, 41, (230, 210, 170))
+    glint(im, 34, 36, (255, 200, 150))
+    save_organic(im, "hell_brute.png")
+    return im
+
+
+def storm_brute():
+    f = Form()
+    # Mane tufts behind the skull, each its own lock.
+    for cx, cy, rx, ry, rot in (
+        (30, 34, 8, 11, -0.4),
+        (64, 32, 8, 12, 0.5),
+        (46, 22, 11, 8, 0.1),
+        (22, 44, 6, 8, -0.6),
+        (70, 44, 6, 8, 0.7),
+    ):
+        f.blob(oval(cx, cy, rx, ry, n=10, rot=rot, scallop=0.22), 2, 1, height=0.75, kind="mane")
+    # Body under the head. A bull's head is the mass.
+    f.blob(oval(48, 70, 18, 11, n=12, scallop=0.1), 0, 1, height=0.9, kind="hide", bevel=6)
+    f.blob(oval(48, 60, 16, 7, n=10, scallop=0.08), 0, 2, height=1.0, kind="hide")
+    f.limb([(34, 70), (30, 80), (28, 88)], 5.4, 3.0, 0, 2, kind="hide")
+    f.limb([(62, 70), (66, 80), (68, 88)], 5.4, 3.0, 0, 2, kind="hide")
+    f.blob(oval(26, 89, 5.5, 2.4, n=8), 1, 3, height=0.4, kind="horn")
+    f.blob(oval(70, 89, 5.5, 2.4, n=8), 1, 3, height=0.4, kind="horn")
+    # Chest and shoulders so the torso is not one oval under the skull.
+    f.blob(oval(36, 62, 8, 6, n=10, rot=-0.3, scallop=0.14), 0, 3, height=0.95, kind="hide")
+    f.blob(oval(60, 62, 8, 6, n=10, rot=0.3, scallop=0.14), 0, 3, height=0.95, kind="hide")
+    # Skull, brow, muzzle.
+    f.blob(snout_head(48, 42, 16, 13), 0, 4, height=1.2, kind="hide", bevel=6)
+    f.blob(oval(48, 32, 12, 5, n=10), 0, 5, height=0.9, kind="hide")
+    f.blob(oval(48, 52, 10, 6.5, n=12, scallop=0.1), 0, 5, height=0.85, kind="hide")
+    # Ears.
+    f.blob(oval(24, 38, 5, 3.5, n=8, rot=-0.6), 0, 4, height=0.6, kind="hide")
+    f.blob(oval(72, 36, 5, 3.5, n=8, rot=0.6), 0, 4, height=0.6, kind="hide")
+    # Horns sweep out, then hook. The wide span is the silhouette.
+    f.limb([(32, 30), (16, 18), (6, 26)], 4.2, 1.2, 1, 6, kind="horn")
+    f.limb([(64, 30), (80, 14), (92, 20)], 4.4, 1.1, 1, 6, kind="horn")
+    # Beard tuft.
+    f.limb([(48, 58), (48, 66), (46, 72)], 2.4, 0.8, 2, 5, kind="mane")
+    im = f.bake({0: ORG_STORM, 1: ORG_BONE, 2: MANE}, INK_STORM, (230, 240, 255))
+    paint_eye(im, 40, 40, (255, 230, 70), (30, 20, 8), (10, 14, 28), r=2)
+    paint_eye(im, 56, 40, (255, 230, 70), (30, 20, 8), (10, 14, 28), r=2)
+    for dx in range(-6, 7):
+        put_if(im, 48 + dx, 34, (12, 16, 32))
+    put_if(im, 44, 52, (8, 10, 20))
+    put_if(im, 45, 53, (8, 10, 20))
+    put_if(im, 52, 52, (8, 10, 20))
+    put_if(im, 53, 53, (8, 10, 20))
+    stroke(
+        im,
+        [(30, 62), (36, 54), (33, 50), (42, 44), (38, 40), (46, 36)],
+        (255, 236, 120),
+        (70, 50, 16),
+    )
+    glint(im, 34, 30, (230, 240, 255))
+    save_organic(im, "storm_brute.png")
+    return im
 
 
 def main() -> None:
@@ -1181,6 +2170,8 @@ def main() -> None:
         veil_support,
         veil_mite_sprite,
         boss_veil,
+        boss_brass,
+        boss_rime,
         snake,
     ]
     for fn in painters:

@@ -333,7 +333,65 @@ abstract final class RigAbilityClips {
     ],
   );
 
+  /// Short recoil. Warrior keeps the shared hit. The others are not that chop.
+  static const hit = RigClips.hit;
+
+  static const hitRogue = RigClip(
+    name: 'hitRogue',
+    length: 0.28,
+    keys: [
+      RigKey(0),
+      RigKey(0.4, rootY: 5, bones: {
+        'torso': 10,
+        'head': 14,
+        'thigh_l': 4,
+        'thigh_r': 4,
+        'upper_l': -16,
+        'upper_r': 16,
+      }),
+      RigKey(1),
+    ],
+  );
+
+  static const hitMage = RigClip(
+    name: 'hitMage',
+    length: 0.28,
+    keys: [
+      RigKey(0),
+      RigKey(0.4, rootX: -3, bones: {
+        'torso': -8,
+        'head': -6,
+        'upper_l': -28,
+        'upper_r': 22,
+        'fore_l': -16,
+        'fore_r': 14,
+      }),
+      RigKey(1),
+    ],
+  );
+
+  static const hitHealer = RigClip(
+    name: 'hitHealer',
+    length: 0.28,
+    keys: [
+      RigKey(0),
+      RigKey(0.4, bones: {
+        'torso': 4,
+        'head': 6,
+        'upper_l': -42,
+        'upper_r': 42,
+        'fore_l': -48,
+        'fore_r': 48,
+      }),
+      RigKey(1),
+    ],
+  );
+
   static RigClip? forName(String? name) => switch (name) {
+    'hit' => hit,
+    'hitRogue' => hitRogue,
+    'hitMage' => hitMage,
+    'hitHealer' => hitHealer,
     'defensiveStance' => defensiveStance,
     'charge' => charge,
     'shieldBlock' => shieldBlock,

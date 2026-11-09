@@ -865,11 +865,23 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                 children: [
                                   ready == null || !_canPaintFloor
                                       ? ColoredBox(
-                                          color: GameTheme.stone,
+                                          color: GameTheme.stoneDeep,
                                           child: Center(
-                                            child: Text(
-                                              'Loading floor…',
-                                              style: GameTheme.readable(color: GameTheme.parchmentDim),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                KenneySprite(
+                                                  asset: KenneyAssets.torch,
+                                                  size: 28,
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  'Loading floor…',
+                                                  style: GameTheme.readable(
+                                                    color: GameTheme.torchHot,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         )
@@ -1002,9 +1014,7 @@ class DungeonModeChip extends StatelessWidget {
       width: expand ? double.infinity : null,
       height: expand ? GameTheme.minTouch : null,
       constraints: BoxConstraints(
-        minHeight: expand
-            ? GameTheme.minTouch
-            : (prominent ? 40 : (dense ? 30 : GameTheme.minTouch)),
+        minHeight: GameTheme.minTouch,
         minWidth: expand ? 0 : (prominent ? 76 : 0),
       ),
       padding: EdgeInsets.symmetric(
@@ -1014,11 +1024,13 @@ class DungeonModeChip extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: selected
-            ? (prominent ? const Color(0xFF6A3E12) : const Color(0xFF3A2810))
-            : const Color(0xFF1A1610),
+            ? (prominent
+                  ? GameTheme.buttonBrownTop
+                  : GameTheme.buttonBrownBottom)
+            : GameTheme.hudPartyRowIdle,
         borderRadius: BorderRadius.circular(3),
         border: Border.all(
-          color: selected ? GameTheme.torchHot : const Color(0xFF4A4030),
+          color: selected ? GameTheme.torchHot : GameTheme.rarityCommon,
           width: prominent && selected ? 2 : 1,
         ),
       ),
@@ -1102,7 +1114,7 @@ class GodHandRing extends StatelessWidget {
                   : 'God Hand ready'))
         : (coolingLabel ?? 'Cooling ${formatCombatSeconds(cooldown)}');
     final action = onTap != null && ready ? onTap : null;
-    final box = dense ? 40.0 : GameTheme.minTouch;
+    final box = GameTheme.minTouch;
     final ring = dense ? 26.0 : 28.0;
     final fist = dense ? 16.0 : 18.0;
     return WebClickScope(

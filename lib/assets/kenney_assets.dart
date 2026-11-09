@@ -495,6 +495,25 @@ abstract final class KenneyAssets {
     return i < 0 ? 0 : i;
   }
 
+  /// Portrait and body share one file. A boss keeps its stored index so a
+  /// Gauntlet tell can wear another cave's boss. Elites and trash use the
+  /// zone job, which is what the fight already spawned.
+  static String enemyFightSprite({
+    required EnemyRole role,
+    required EnemyArchetype archetype,
+    required int assetIndex,
+    String? dungeonId,
+  }) {
+    if (role == EnemyRole.boss) {
+      final i = assetIndex.clamp(0, enemySpriteCatalog.length - 1);
+      return enemySpriteCatalog[i];
+    }
+    if (role == EnemyRole.elite) {
+      return enemySpriteForRole(EnemyRole.elite, dungeonId: dungeonId);
+    }
+    return enemySpriteForArchetype(archetype, dungeonId: dungeonId);
+  }
+
   /// Every enemy sprite one zone can spawn. The stage decodes this set
   /// instead of all 24 sprites, and reloads it when the zone changes.
   static Set<String> enemySpritesForDungeon(String dungeonId) =>
@@ -533,9 +552,8 @@ abstract final class KenneyAssets {
       'ice caster' ||
       'frost slinger' ||
       'rime chanter' ||
-      'spire archer' ||
-      'splinter blade' ||
-      'shatter fang' => enemyCrystalWraith,
+      'spire archer' => enemyCrystalWraith,
+      'splinter blade' || 'shatter fang' => enemyCrystalMite,
       'prism chanter' || 'frost adept' || 'spire adept' => enemyCrystalSupport,
       'spume spitter' || 'salt slinger' || 'leviathan spitter' => enemyTideMite,
       // Tide glass/support fight as slime (ZoneArt).
@@ -553,7 +571,7 @@ abstract final class KenneyAssets {
       'goblin scrapper' || 'hideout runt' || 'pest' => enemyGoblinMite,
       'fort rat' || 'keep gnawer' => enemyKingMite,
       'imp swarm' || 'ash tick' => enemyUnderworldMite,
-      'risen husk' || 'bone swarm' => enemyDeadMite,
+      'risen husk' || 'bone swarm' => enemyDeadSwarm,
       'hellspawn' || 'cinder rat' => enemyHellMite,
       'ash mite' || 'cinder tick' => enemyEmberMite,
       'moss slime' || 'root tick' || 'leaf mite' => enemyGroveMite,
@@ -577,7 +595,7 @@ abstract final class KenneyAssets {
       'gale bulwark' || 'storm guard' || 'tyrant guard' => enemyStormTank,
       'volt spitter' || 'gale slinger' || 'tyrant bolt' => enemyStormRanged,
       'storm chanter' || 'tempest adept' || 'tyrant adept' => enemyStormSupport,
-      'lightning fang' || 'zephyr blade' => enemyRat,
+      'lightning fang' || 'zephyr blade' => enemyStormMite,
       'rime mite' || 'frost tick' || 'glass flea' => enemyRimeMite,
       'rime brute' || 'frost crusher' || 'colossus thug' => enemyRimeBrute,
       'glass bulwark' || 'rime guard' || 'colossus guard' => enemyRimeTank,
@@ -591,17 +609,55 @@ abstract final class KenneyAssets {
       'rot fang' || 'mire blade' => enemyFenMite,
       'fen chanter' || 'mire adept' || 'hydra adept' => enemySlime,
       'cog mite' || 'rust tick' || 'brass flea' => enemyBrassMite,
-      'vault bruiser' || 'cog crusher' => enemyCyclops,
+      'vault bruiser' || 'cog crusher' => enemyBrassBrute,
       'brass bulwark' || 'cog guard' => enemyBrassBrute,
       'spark spitter' || 'coil slinger' || 'spring coil' => enemyBrassRanged,
       'razor cog' || 'spring fang' || 'spring blade' => enemyBrassGlass,
       'clock chanter' || 'brass adept' || 'spring adept' => enemyBrassSupport,
+      // Boss adds use the same PNG the fight paints for that job.
+      'hatch guard' => enemySandyTank,
+      'hatch adept' => enemyRat,
+      'hatch blade' || 'hatch pack' => enemySandyMite,
+      'hatch thug' => enemySandyBrute,
+      'throne guard' => enemyKingTank,
+      'throne adept' || 'throne pack' => enemyKingMite,
+      'throne blade' => enemyRat,
+      'throne thug' => enemyKingGuard,
+      'eye guard' => enemyUnderworldTank,
+      'eye blade' || 'eye pack' => enemyUnderworldMite,
+      'pale guard' => enemyDeadTank,
+      'pale adept' => enemyDeadSupport,
+      'pale blade' => enemyGhost,
+      'pale pack' => enemyDeadSwarm,
+      'pale thug' => enemyCyclops,
+      'gate guard' || 'gate thug' => enemyHellBrute,
+      'gate adept' => enemyCultist,
+      'gate blade' || 'gate pack' => enemyHellMite,
+      'spire guard' || 'spire thug' => enemyCrystalBrute,
+      'spire blade' || 'spire pack' => enemyCrystalMite,
+      'leviathan guard' || 'leviathan thug' => enemyTideBrute,
+      'leviathan adept' || 'leviathan blade' => enemySlime,
+      'leviathan pack' => enemyTideMite,
+      'sovereign spark' ||
+      'sovereign blade' ||
+      'sovereign pack' => enemyEmberMite,
+      'sovereign guard' || 'sovereign thug' => enemyEmberBrute,
+      'sovereign adept' => enemySpider,
+      'root blade' || 'root pack' => enemyGroveMite,
+      'root thug' => enemyGroveBrute,
+      'tyrant blade' || 'tyrant pack' => enemyStormMite,
+      'colossus shard' || 'colossus blade' || 'colossus pack' => enemyRimeMite,
+      'colossus adept' => enemyRimeWraith,
+      'hydra blade' || 'hydra pack' => enemyFenMite,
+      'spring guard' || 'spring thug' => enemyBrassBrute,
+      'spring pack' => enemyBrassMite,
+      'monarch blade' || 'monarch pack' => enemyVeilMite,
       'dust moth' || 'veil mite' || 'silk flea' => enemyVeilMite,
       'silk bruiser' || 'veil crusher' || 'monarch thug' => enemyVeilBrute,
       'cocoon guard' || 'veil bulwark' || 'monarch guard' => enemyVeilTank,
       'dust spitter' || 'silk slinger' || 'monarch silk' => enemyVeilRanged,
       'moth chanter' || 'veil adept' || 'monarch adept' => enemyVeilSupport,
-      'wing fang' || 'veil blade' => enemySpider,
+      'wing fang' || 'veil blade' => enemyVeilMite,
       // Sandy swarm fight as sandy mite (ZoneArt).
       'cave slime' || 'drip ooze' || 'sand mite' => enemySandyMite,
       'spit bat' || 'cavern spitter' || 'hatch spitter' => enemySandyRanged,
@@ -622,37 +678,34 @@ abstract final class KenneyAssets {
       'infernal brute' || 'flame guard' => enemyHellBrute,
       'obsidian golem' || 'pit guard' => enemyUnderworldTank,
       'tomb shield' || 'ossuary guard' => enemyDeadTank,
-      'molten golem' || 'ash behemoth' || 'ash colossus' => enemyEmberBrute,
-      'bulwark golem' || 'iron ward' || 'gate knight' => enemyGolem,
+      'molten golem' || 'ash behemoth' => enemyHellBrute,
+      'ash colossus' => enemyHellElite,
+      'bulwark golem' => enemyGolem,
+      'iron ward' || 'gate knight' => enemyKingTank,
       // Goblin elite fight art (ZoneArt.elite).
       'stash bulwark' ||
       'raid pack' ||
       'raid slinger' ||
       'coin cutter' ||
       'hex hag' => enemyGoblinElite,
-      'hideout guard' || 'scrap shield' || 'lord guard' => enemyCyclops,
+      'hideout guard' || 'scrap shield' || 'lord guard' => enemyGoblinTank,
       'hex cultist' || 'hell chanter' || 'rift priest' => enemyCultist,
       // King support fight as king mite (ZoneArt).
       'court mage' || 'banner cleric' => enemyKingMite,
       // Goblin trash support fight as cultist (ZoneArt).
-      'hex witch' || 'totem caller' || 'lord hexer' => enemyCultist,
+      'hex witch' || 'totem caller' || 'lord hexer' => enemyGoblinRanged,
       // Underworld ranged fight as underworld mite (ZoneArt).
       'hex spider' || 'soul spitter' || 'eye spitter' => enemyUnderworldMite,
-      'wailing ghost' ||
-      'specter blade' ||
-      'pale reaper' ||
-      'grave knight' => enemyGhost,
+      'wailing ghost' => enemyDeadMite,
+      'specter blade' || 'pale reaper' => enemyGhost,
+      'grave knight' => enemyCyclops,
+      'cutthroat' || 'knife kin' || 'lord blade' => enemySnake,
+      'shade stalker' || 'wisp blade' => enemyUnderworldMite,
+      'flame assassin' || 'cinder blade' => enemyHellMite,
       'blood stalker' ||
-      'cutthroat' ||
-      'knife kin' ||
-      'lord blade' ||
       'loot snatcher' ||
       'royal assassin' ||
-      'blade page' ||
-      'shade stalker' ||
-      'wisp blade' ||
-      'flame assassin' ||
-      'cinder blade' => enemyRat,
+      'blade page' => enemyRat,
       'stash guard' || 'lord pack' => enemyGoblinMite,
       'goblin slinger' || 'dart rascal' || 'lord slinger' => enemyGoblinRanged,
       // King ranged fight as cultist (ZoneArt).
@@ -746,7 +799,9 @@ abstract final class KenneyAssets {
         key.contains('moth ') ||
         key.contains('silk') ||
         (key.contains('veil') && !key.contains('brass'))) {
-      if (key.contains('monarch')) return enemyVeilBoss;
+      if (key == 'the pale monarch' || key == 'pale monarch') {
+        return enemyVeilBoss;
+      }
       if (key.contains('chanter') || key.contains('adept')) {
         return enemyCultist;
       }

@@ -182,7 +182,7 @@ class FloorDecalPlan {
       final sandy =
           theme.decals.isNotEmpty &&
           theme.decals.first == FloorDecalKind.sandDrift;
-      final budget = (floorCells * (sandy ? 0.12 : 0.07)).round();
+      final budget = (floorCells * (sandy ? 0.20 : 0.07)).round();
       var spent = 0;
       for (var tries = 0; spent < budget && tries < 12; tries++) {
         final size = 3 + rng.nextInt(5);
