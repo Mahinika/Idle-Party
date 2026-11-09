@@ -42,7 +42,7 @@ void main() {
       final fight = FirstClimbCoach.line(director.state, inDungeon: true);
       expect(
         fight,
-        'Your party keeps fighting if you close the app. Boss on floor 2.',
+        'Boss on floor 2.',
       );
       expect(
         FirstClimbCoach.wipeLine(director.state),
@@ -112,7 +112,7 @@ void main() {
       expect(GameLogic.checkInActive(director.state), isFalse);
       expect(
         FirstClimbCoach.line(director.state, inDungeon: true),
-        'Floor 1 paid out. They keep fighting if you close the app. Boss on floor 2.',
+        'Floor 1 paid out. Boss on floor 2.',
       );
       expect(
         FirstClimbCoach.wipeLine(director.state),
@@ -147,7 +147,7 @@ void main() {
     expect(bossFloor.currentRoom.floorNumber, 2);
     expect(
       FirstClimbCoach.line(bossFloor, inDungeon: true),
-      'This is the boss. They keep fighting if you close the app.',
+      'This is the boss.',
     );
   });
 
@@ -169,7 +169,7 @@ void main() {
     await tester.pump();
     expect(
       find.text(
-        'Your party keeps fighting if you close the app. Boss on floor 2.',
+        'Boss on floor 2.',
       ),
       findsOneWidget,
     );
@@ -210,7 +210,7 @@ void main() {
     expect(director.state.inDungeon, isTrue);
     expect(
       find.text(
-        'Floor 1 paid out. They keep fighting if you close the app. Boss on floor 2.',
+        'Floor 1 paid out. Boss on floor 2.',
       ),
       findsOneWidget,
     );

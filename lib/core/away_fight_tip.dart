@@ -79,10 +79,9 @@ abstract final class AwayFightTip {
     if (GameLogic.canClaimDailyVault(state)) {
       if (ReturnWeek.active(state)) {
         final pay = GameLogic.checkInPayout(state);
-        return 'Tap CLAIM before the day ends. ${ReturnWeek.spendSentence(pay)} '
-            'Your party keeps fighting.';
+        return 'Tap CLAIM before the day ends. ${ReturnWeek.spendSentence(pay)}';
       }
-      return 'Tap CLAIM before the day ends. Your party keeps fighting.';
+      return 'Tap CLAIM before the day ends.';
     }
     if (!GameLogic.checkInActive(state)) return onHub ? hubLine : line;
     final pay = GameLogic.checkInPayout(state);
@@ -90,15 +89,14 @@ abstract final class AwayFightTip {
       final cave = ReturnWeek.caveName(state);
       if (state.metaDepth.dailyVaultClaimed) {
         return 'Tomorrow: $cave pays ${pay.hookPrize}. '
-            '${ReturnWeek.spendSentence(pay)} Your party keeps fighting.';
+            '${ReturnWeek.spendSentence(pay)}';
       }
-      return 'One cave, $cave, fills the vault. '
-          '${ReturnWeek.spendSentence(pay)} Your party keeps fighting.';
+      return 'One cave, $cave, fills the vault. ${ReturnWeek.spendSentence(pay)}';
     }
     if (state.metaDepth.dailyVaultClaimed) {
-      return 'Tomorrow pays ${pay.hookPrize}. Your party keeps fighting.';
+      return 'Tomorrow pays ${pay.hookPrize}.';
     }
-    return 'One cave fills the vault. Your party keeps fighting.';
+    return 'One cave fills the vault.';
   }
 
   /// Stamp today the first time the appointment can show. Later days hide it.

@@ -50,7 +50,7 @@ abstract final class SaveImportFlow {
     if (!context.mounted) return false;
     if (onConfirmed != null) await onConfirmed();
     final success = await director.importSaveJson(raw);
-    director.showToast(success ? 'Save imported' : 'Could not read that save');
+    director.showToast(success ? 'Save imported' : 'That file was not a save.');
     return success;
   }
 }

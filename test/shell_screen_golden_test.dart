@@ -15,8 +15,34 @@ import 'package:idle_party/ui/shell/menu_surface.dart';
 import 'package:idle_party/ui/shell/overlay_scaffold.dart';
 import 'package:idle_party/ui/shell/play_shell.dart';
 import 'package:idle_party/ui/shell/shop_dock.dart';
+import 'package:idle_party/ui/hero_doll_sprite.dart';
 import 'package:idle_party/ui/theme.dart';
 import 'shell_golden_harness.dart';
+
+/// Gear golden: wait for async doll decode (shared harness stays at 400ms).
+Future<void> pumpGearGoldenUntilDoll(WidgetTester tester) async {
+  await pumpGoldenFrames(tester, ms: 100);
+  final sw = Stopwatch()..start();
+  var idle = 0;
+  while (sw.elapsedMilliseconds < 8000) {
+    if (HeroDollSprite.pendingLoads == 0) {
+      idle++;
+      if (idle >= 5) break;
+    } else {
+      idle = 0;
+    }
+    await tester.pump();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 16)),
+    );
+  }
+  expect(
+    HeroDollSprite.pendingLoads,
+    0,
+    reason: 'gear golden timed out waiting for HeroDollSprite',
+  );
+  await pumpGoldenFrames(tester, ms: 200);
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -504,7 +530,7 @@ void main() {
         ),
       ),
     );
-    await pumpGoldenFrames(tester, ms: 600);
+    await pumpGearGoldenUntilDoll(tester);
     await expectShellGolden(
       tester,
       find.byType(OverlayScrim),
