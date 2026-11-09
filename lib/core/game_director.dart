@@ -1763,11 +1763,11 @@ class GameDirector extends ChangeNotifier {
 
   void setFarmIntensity(int mult) {
     if (!FarmIntensity.canPick(_state, mult)) {
-      showToast('Unlock ${mult}× on FARM later', life: 2);
+      showToast('Unlock $mult× on FARM later', life: 2);
       return;
     }
     _applyUpgrade(GameLogic.setFarmIntensity(_state, mult));
-    showToast('FARM ${mult}× packs · ${mult}× loot', life: 2.2);
+    showToast('FARM $mult× packs · $mult× loot', life: 2.2);
     if (_state.inDungeon) _rebuildSpatial();
   }
 
@@ -1777,7 +1777,7 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     _applyUpgrade(GameLogic.startFarmTry(_state, mult));
-    showToast('TRY FARM ${mult}× this room', life: 2.2);
+    showToast('TRY FARM $mult× this room', life: 2.2);
     if (_state.inDungeon) _rebuildSpatial();
   }
 

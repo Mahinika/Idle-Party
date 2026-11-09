@@ -118,7 +118,8 @@ class _ScrollBuffPip extends StatelessWidget {
     final scale = MediaQuery.textScalerOf(context)
         .scale(1)
         .clamp(1.0, GameTheme.typeScaleMax);
-    final width = math.max(GameTheme.minTouch, 56 * scale);
+  // Wide enough for "12:00" at max text scale without ellipsis.
+    final width = math.max(GameTheme.minTouch, 72 * scale);
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: Semantics(
@@ -148,7 +149,6 @@ class _ScrollBuffPip extends StatelessWidget {
                 Text(
                   chip.timeLabel,
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   softWrap: false,
                   textAlign: TextAlign.center,
                   style: GameTheme.combat(color: tint),
