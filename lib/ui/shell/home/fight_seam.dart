@@ -40,10 +40,9 @@ class FightSeam extends StatelessWidget {
     final modeHint = plain
         ? 'Repeat loots. Next goes deeper.'
         : 'FARM loops. PUSH climbs.';
-    final mqScale = MediaQuery.textScalerOf(context).scale(1);
-    final osScale = View.of(context).platformDispatcher.textScaleFactor;
-    final effectiveScale = mqScale > osScale ? mqScale : osScale;
-    final showModeHint = effectiveScale <= GameTheme.typeScaleMax;
+    final osScale =
+        WidgetsBinding.instance.platformDispatcher.textScaleFactor;
+    final seamFitsExtras = osScale <= GameTheme.typeScaleMax;
     return Material(
       color: GameTheme.panel,
       child: Column(
@@ -113,6 +112,18 @@ class FightSeam extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (hideRails && seamFitsExtras) ...[
+                    const SizedBox(width: 4),
+                    _tap(
+                      label: 'MORE menu',
+                      onTap: () => router.open(MenuRoute.more),
+                      minHeight: GameTheme.minTouch,
+                      child: Text(
+                        'MORE',
+                        style: GameTheme.readable(color: GameTheme.torchHot),
+                      ),
+                    ),
+                  ],
                   const SizedBox(width: 4),
                   _tap(
                     label: state.homePanelFull ? 'TALL' : 'FORGE',
@@ -141,7 +152,7 @@ class FightSeam extends StatelessWidget {
                 ],
               ),
           ),
-          if (showModeHint)
+          if (seamFitsExtras)
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
               child: Text(
@@ -196,22 +207,6 @@ class FightSeam extends StatelessWidget {
             ),
           if (!hideRails)
             FightSeamRails(director: director, router: router),
-          if (hideRails)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: _tap(
-                  label: 'MORE menu',
-                  onTap: () => router.open(MenuRoute.more),
-                  minHeight: GameTheme.minTouch,
-                  child: Text(
-                    'MORE',
-                    style: GameTheme.readable(color: GameTheme.torchHot),
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
