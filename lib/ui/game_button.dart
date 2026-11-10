@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'feedback_toast.dart';
 import 'game_theme.dart';
 import 'web_click_bridge.dart';
 
@@ -92,20 +91,6 @@ class GameButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
-        onLongPress: tip == null || !enabled
-            ? null
-            : () {
-                final overlay = Overlay.maybeOf(context);
-                if (overlay == null) return;
-                late OverlayEntry entry;
-                entry = OverlayEntry(
-                  builder: (ctx) => FeedbackToast(message: tip!),
-                );
-                overlay.insert(entry);
-                Future<void>.delayed(const Duration(seconds: 2), () {
-                  if (entry.mounted) entry.remove();
-                });
-              },
         borderRadius: radius,
         child: Ink(
           decoration: BoxDecoration(
@@ -158,6 +143,15 @@ class GameButton extends StatelessWidget {
       ),
     );
 
+    final tipped = tip == null || !enabled
+        ? button
+        : Tooltip(
+            message: tip!,
+            triggerMode: TooltipTriggerMode.longPress,
+            preferBelow: false,
+            child: button,
+          );
+
     return WebClickScope(
       label: label,
       onPressed: onPressed,
@@ -167,7 +161,7 @@ class GameButton extends StatelessWidget {
         label: tip == null ? label : '$label. $tip',
         onTap: onPressed,
         excludeSemantics: true,
-        child: button,
+        child: tipped,
       ),
     );
   }

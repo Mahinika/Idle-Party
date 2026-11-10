@@ -785,6 +785,7 @@ abstract final class MenuChrome {
     required double max,
     required int divisions,
     required ValueChanged<double> onChanged,
+    String? label,
   }) {
     return _MenuSlider(
       value: value,
@@ -792,6 +793,7 @@ abstract final class MenuChrome {
       max: max,
       divisions: divisions,
       onChanged: onChanged,
+      label: label,
     );
   }
 
@@ -822,6 +824,7 @@ class _MenuSlider extends StatelessWidget {
     required this.max,
     required this.divisions,
     required this.onChanged,
+    this.label,
   });
 
   final double value;
@@ -829,6 +832,7 @@ class _MenuSlider extends StatelessWidget {
   final double max;
   final int divisions;
   final ValueChanged<double> onChanged;
+  final String? label;
 
   void _setFromLocal(double localX, double width) {
     if (width <= 0) return;
@@ -845,12 +849,19 @@ class _MenuSlider extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final w = constraints.maxWidth;
-        return GestureDetector(
+        final shown = ((value - min) / (max - min) * divisions)
+            .round()
+            .clamp(0, divisions);
+        return Semantics(
+          slider: true,
+          label: label ?? 'Slider',
+          value: '$shown',
+          child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapDown: (d) => _setFromLocal(d.localPosition.dx, w),
           onHorizontalDragUpdate: (d) => _setFromLocal(d.localPosition.dx, w),
           child: SizedBox(
-            height: 28,
+            height: GameTheme.minTouch,
             child: Stack(
               alignment: Alignment.centerLeft,
               children: [
@@ -890,6 +901,7 @@ class _MenuSlider extends StatelessWidget {
               ],
             ),
           ),
+        ),
         );
       },
     );

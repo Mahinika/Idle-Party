@@ -7,6 +7,7 @@ import '../../core/build_stamp.dart';
 import '../../core/community_links.dart';
 import '../../core/meta_systems.dart';
 import '../../core/ability_mastery.dart';
+import '../../core/game_audio.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/local_reminders.dart';
@@ -134,7 +135,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         Expanded(
           child: TabBarView(
             controller: _tabs,
-            physics: const NeverScrollableScrollPhysics(),
+            physics: const ClampingScrollPhysics(),
             children: [
               _scrollPage(_SettingsPage.sound, _soundPage()),
               _scrollPage(_SettingsPage.display, _displayPage()),
@@ -217,6 +218,14 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           onChanged: director.setHapticsEnabled,
         ),
         const SizedBox(height: 8),
+        GameButton(
+          label: 'PLAY A HIT',
+          tip: 'Sample sound at the current SFX level.',
+          style: GameButtonStyle.grey,
+          dense: true,
+          onPressed: GameAudio.hit,
+        ),
+        const SizedBox(height: 8),
         _SettingsToggle(
           label: 'Screen shake',
           value: state.screenShake,
@@ -255,36 +264,64 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           );
         }(),
         const SizedBox(height: 6),
-        Semantics(
-          slider: true,
-          label: 'UI text scale',
-          value: '${(state.uiTextScale * 100).round()} percent',
-          child: Row(
-            children: [
-              Expanded(
-                child: MenuChrome.slider(
-                  value: state.uiTextScale.clamp(
-                    kUiTextScaleMin,
-                    kUiTextScaleMax,
-                  ),
-                  min: kUiTextScaleMin,
-                  max: kUiTextScaleMax,
-                  divisions: 13,
-                  onChanged: director.setUiTextScale,
+        Builder(
+          builder: (context) {
+            final wide = MediaQuery.sizeOf(context).width >= 400;
+            final largeType =
+                MediaQuery.textScalerOf(context).scale(1) > 1.2;
+            final percent = '${(state.uiTextScale * 100).round()}%';
+            final slider = Semantics(
+              slider: true,
+              label: 'UI text scale',
+              value: '${(state.uiTextScale * 100).round()} percent',
+              child: MenuChrome.slider(
+                value: state.uiTextScale.clamp(
+                  kUiTextScaleMin,
+                  kUiTextScaleMax,
                 ),
+                min: kUiTextScaleMin,
+                max: kUiTextScaleMax,
+                divisions: 13,
+                onChanged: director.setUiTextScale,
               ),
-              SizedBox(
-                width: 40 * MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0) + 12,
-                child: Text(
-                  '${(state.uiTextScale * 100).round()}%',
-                  textAlign: TextAlign.right,
+            );
+            if (wide || !largeType) {
+              return Row(
+                children: [
+                  Expanded(child: slider),
+                  SizedBox(
+                    width: 40 *
+                            MediaQuery.textScalerOf(context).scale(1).clamp(
+                              1.0,
+                              2.0,
+                            ) +
+                        12,
+                    child: Text(
+                      percent,
+                      textAlign: TextAlign.right,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: GameTheme.readable(color: GameTheme.parchmentDim),
+                    ),
+                  ),
+                ],
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                slider,
+                const SizedBox(height: 4),
+                Text(
+                  percent,
+                  textAlign: TextAlign.center,
                   maxLines: 1,
                   softWrap: false,
-                  style: GameTheme.readable(color: GameTheme.parchmentDim),
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
         const SizedBox(height: 10),
         _SettingsCycle(

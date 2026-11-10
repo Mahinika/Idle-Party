@@ -13,6 +13,7 @@ import '../../core/greater_rift.dart';
 import '../../core/keystone.dart';
 import '../../core/rift.dart';
 import '../../core/menu_alerts.dart';
+import '../../core/party_meter.dart';
 import '../../core/nav_copy.dart';
 import '../../models/dungeon_mode.dart';
 import '../../models/dungeon_room.dart';
@@ -110,6 +111,14 @@ String _keyAffixBit(GameState state) {
   return ' · $names';
 }
 
+/// Drop a one-glyph prefix (`↻ FARM` → `FARM`) so the classic row fits.
+/// Longer labels, including gauntlet chips, stay whole.
+String _modeChipWord(String label) {
+  final space = label.indexOf(' ');
+  if (space > 0 && space <= 2) return label.substring(space + 1);
+  return label;
+}
+
 class DungeonTopHud extends StatelessWidget {
   const DungeonTopHud({
     super.key,
@@ -121,6 +130,8 @@ class DungeonTopHud extends StatelessWidget {
     this.onOpenKey,
     this.onOpenForge,
     this.onOpenParty,
+    this.placeLineOnly = false,
+    this.onFloorLineTap,
   });
 
   final GameState state;
@@ -131,6 +142,12 @@ class DungeonTopHud extends StatelessWidget {
   final VoidCallback? onOpenKey;
   final VoidCallback? onOpenForge;
   final VoidCallback? onOpenParty;
+
+  /// Home fight already has FARM / PUSH. This paints only the floor line.
+  final bool placeLineOnly;
+
+  /// Opens the floor jump sheet on the home layout.
+  final void Function(BuildContext context)? onFloorLineTap;
 
   List<PopupMenuEntry<String>> _floorMenuItems({
     required int floor,
@@ -319,6 +336,47 @@ class DungeonTopHud extends StatelessWidget {
     }
   }
 
+  Future<void> _showFloorTravelSheet(BuildContext context, int floor) async {
+    final entries = _floorMenuItems(floor: floor, includeExtras: false);
+    final picked = await showDialog<String>(
+      context: context,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: 'TRAVEL',
+        content: SizedBox(
+          width: 280,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final entry in entries)
+                if (entry is PopupMenuItem<String>)
+                  ListTile(
+                    dense: true,
+                    enabled: entry.enabled,
+                    title: entry.child,
+                    onTap: entry.enabled && entry.value != null
+                        ? () => Navigator.pop(ctx, entry.value)
+                        : null,
+                  )
+                else if (entry is PopupMenuDivider)
+                  const Divider(height: 12),
+            ],
+          ),
+        ),
+        actions: [
+          GameButton(
+            label: 'CANCEL',
+            style: GameButtonStyle.grey,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx),
+          ),
+        ],
+      ),
+    );
+    if (picked == null || !context.mounted) return;
+    _onFloorMenu(context, picked, floor);
+  }
+
   void _claimAllReadyMissions() {
     director.claimAllReadyMissions();
   }
@@ -428,7 +486,75 @@ class DungeonTopHud extends StatelessWidget {
         ? GreaterRift.roomLine(state.grTier)
         : state.inWorldBoss
         ? AshenCrown.kitByDungeonId(state.dungeonId).roomLine
+        : placeLineOnly
+        ? 'F$floor$keyBit$fightBit'
         : '$zoneShort · F$floor$keyBit$fightBit';
+    if (placeLineOnly) {
+      final holdLine = awaitingExit &&
+          !state.isPartyDefeated &&
+          !director.exitHoldActive;
+      final snap = world != null && world.combatElapsed > 0.05
+          ? PartyMeter.fromHeroes(
+              world.heroes,
+              elapsed: world.combatElapsed,
+            )
+          : null;
+      final showDps =
+          snap != null && !snap.isEmpty && snap.chipLabel != '0 DPS';
+      final lineColor = awaitingExit || state.isPartyDefeated
+          ? GameTheme.clear
+          : GameTheme.parchment;
+      return Container(
+        padding: holdLine
+            ? const EdgeInsets.symmetric(horizontal: 6, vertical: 3)
+            : EdgeInsets.zero,
+        decoration: holdLine
+            ? BoxDecoration(
+                borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                border: Border.all(
+                  color: GameTheme.torchHot.withValues(alpha: 0.65),
+                ),
+                color: GameTheme.torch.withValues(alpha: 0.12),
+              )
+            : null,
+        child: Row(
+          children: [
+            Expanded(
+              child: Semantics(
+                button: onFloorLineTap != null,
+                label: 'Floor line · $placeLine',
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: onFloorLineTap != null
+                        ? () => onFloorLineTap!(context)
+                        : null,
+                    child: Text(
+                      holdLine ? '$placeLine · HOLD' : placeLine,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.hint(color: lineColor),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (showDps) ...[
+              const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: MenuChrome.hudWell(),
+                child: Text(
+                  snap.chipLabel,
+                  maxLines: 1,
+                  style: GameTheme.combat(color: GameTheme.parchmentDim),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
     void setMode(DungeonMode mode) {
       final fighting = (world?.enemies.any((e) => e.isAlive) ?? false);
       if (fighting && state.dungeonMode != mode) {
@@ -527,7 +653,9 @@ class DungeonTopHud extends StatelessWidget {
           child: CoachPulse(
             active: coachFarm != null,
             child: DungeonModeChip(
-              label: GameLogic.dungeonModeChipLabel(DungeonMode.farm, state),
+              label: _modeChipWord(
+                GameLogic.dungeonModeChipLabel(DungeonMode.farm, state),
+              ),
               selected: farm,
               expand: true,
               tip:
@@ -545,7 +673,9 @@ class DungeonTopHud extends StatelessWidget {
           child: CoachPulse(
             active: coachFarm != null,
             child: DungeonModeChip(
-              label: GameLogic.dungeonModeChipLabel(DungeonMode.push, state),
+              label: _modeChipWord(
+                GameLogic.dungeonModeChipLabel(DungeonMode.push, state),
+              ),
               selected: !farm,
               expand: true,
               tip:
@@ -624,6 +754,7 @@ class DungeonTopHud extends StatelessWidget {
                   child: Text(
                     keyTimerLabel,
                     maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GameTheme.combat(color: GameTheme.torchHot),
                   ),
                 ),
@@ -696,7 +827,7 @@ class DungeonTopHud extends StatelessWidget {
                   ],
                 Expanded(
                   child: DungeonModeChip(
-                    label: state.combatPace >= 2 ? 'SPEED 2×' : 'SPEED 1×',
+                    label: state.combatPace >= 2 ? '2×' : '1×',
                     selected: state.combatPace >= 2,
                     prominent: true,
                     expand: true,
@@ -712,17 +843,15 @@ class DungeonTopHud extends StatelessWidget {
                     button: true,
                     label: 'Floor menu',
                     excludeSemantics: true,
-                    child: PopupMenuButton<String>(
-                      tooltip: 'Floor',
-                      padding: EdgeInsets.zero,
-                      color: GameTheme.stoneDeep,
-                      onSelected: (value) => _onFloorMenu(context, value, floor),
-                      itemBuilder: (context) =>
-                          _floorMenuItems(floor: floor, includeExtras: false),
-                      child: Center(
-                        child: Text(
-                          state.inGauntlet ? '...' : 'F$floor',
-                          style: GameTheme.combat(color: GameTheme.torchHot),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _showFloorTravelSheet(context, floor),
+                        child: Center(
+                          child: Text(
+                            state.inGauntlet ? '...' : 'F$floor',
+                            style: GameTheme.combat(color: GameTheme.torchHot),
+                          ),
                         ),
                       ),
                     ),
@@ -836,27 +965,31 @@ class DungeonTopHud extends StatelessWidget {
                       plain
                           ? 'Too weak · buy power or better gear'
                           : 'Underleveled · ~$softcap lvl or gear',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: GameTheme.hint(color: GameTheme.torchHot),
                     ),
                   ),
                   if (onOpenForge != null) ...[
                     const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: onOpenForge,
-                      child: Text(
-                        'GOLD',
-                        style: GameTheme.combat(color: GameTheme.clear),
+                    Semantics(
+                      button: true,
+                      label: 'Open GOLD',
+                      child: MenuChrome.textLink(
+                        label: 'GOLD',
+                        onPressed: onOpenForge,
                       ),
                     ),
                   ],
                   if (onOpenParty != null) ...[
                     const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: onOpenParty,
-                      child: Text(
-                        'GEAR',
-                        style: GameTheme.combat(color: GameTheme.clear),
+                    Semantics(
+                      button: true,
+                      label: 'Open GEAR',
+                      child: MenuChrome.textLink(
+                        label: 'GEAR',
+                        onPressed: onOpenParty,
                       ),
                     ),
                   ],

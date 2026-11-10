@@ -56,6 +56,27 @@ abstract final class DungeonEnvironment {
       ? const Color(0x66402814)
       : const Color(0x66000000);
 
+  /// Wall face. A darker shade of that zone's floor, not one shared grey.
+  /// Sandy stays warm bone (R > B) and darker than the sand tile.
+  static Color wallShade(String dungeonId) => switch (dungeonId) {
+    'sandy' => const Color(0xE05C3A28),
+    'goblin' => const Color(0xE03A2C14),
+    'king' => const Color(0xE02A3048),
+    'underworld' => const Color(0xE0221430),
+    'dead' => const Color(0xE0283028),
+    'hell' => const Color(0xE0200C0A),
+    'crystal' => const Color(0xE0182838),
+    'tide' => const Color(0xE0102C30),
+    'ember' => const Color(0xE0281408),
+    'grove' => const Color(0xE0182C14),
+    'storm' => const Color(0xE0181630),
+    'rime' => const Color(0xE0203840),
+    'fen' => const Color(0xE020280C),
+    'brass' => const Color(0xE038240C),
+    'veil' => const Color(0xE0281830),
+    _ => const Color(0xE0201814),
+  };
+
   /// Edge vignette; Sandy stays open so sandstone reads. Other zones tint
   /// the frame with their wash so a black rim does not flatten every cave.
   static List<Color> vignetteColors(String dungeonId) {

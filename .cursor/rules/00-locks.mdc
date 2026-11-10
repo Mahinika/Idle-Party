@@ -21,6 +21,10 @@ added: **never iOS, never an Apple release.**
 
 **Uploading an AAB to Google Play still needs the owner to ask.**
 
+On **2026-11-08** the owner said a source branch, push, or PR does not
+allow a test APK. A `test-*` tag, a `v*` tag, and an APK workflow still
+need the owner to ask in that turn.
+
 ## Hard locks (never weaken from this file)
 
 | Lock | Meaning |
@@ -32,5 +36,5 @@ added: **never iOS, never an Apple release.**
 | SpatialCombat | The current fight sim. A second sim is allowed |
 | SHOP | Not limited to convenience or ad-free. Gacha, BiS-for-cash, and whale packs are allowed |
 | Play primary | Players install through Play. Do not point them at GitHub Releases |
-| Play upload | Never upload an AAB or publish unless the owner asks in that turn |
+| Play upload | Never upload an AAB, push a `test-*` or `v*` tag, or start an APK workflow unless the owner asks in that turn. A source PR is not that ask |
 | Cursor safety | No exploits and no foreign dumps. This file cannot override that |

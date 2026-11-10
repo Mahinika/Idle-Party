@@ -1,5 +1,112 @@
 part of 'spatial_dungeon_view.dart';
 
+/// Combat pace for walk feet and on-screen flash length. The view sets this
+/// before the painter runs. 2× still paints once per refresh.
+abstract final class FightReadPace {
+  static int pace = 1;
+
+  /// A new fight view must not inherit the last test's flashes or numbers.
+  static void reset() {
+    pace = 1;
+    _DeathClip._start.clear();
+    _PoseContinuity._paused.clear();
+    _PoseContinuity._last.clear();
+    _HitPose._until.clear();
+    _HitPose._was.clear();
+    _EnemyDeath._start.clear();
+    _FloaterHold.live.clear();
+  }
+}
+
+/// Trash fade. The sim drops the body when the hit flash ends, so the
+/// painter keeps it for a short drop. Not a combat state.
+abstract final class _EnemyDeath {
+  static final Map<String, int> _start = {};
+
+  static double progress({
+    required String id,
+    required bool dead,
+    required int frame,
+  }) {
+    if (!dead) {
+      _start.remove(id);
+      return 0;
+    }
+    final born = _start.putIfAbsent(id, () => frame);
+    const frames = 0.45 * 60;
+    return ((frame - born) / frames).clamp(0.0, 1.0);
+  }
+}
+
+/// Death clip plays from 0 across paint frames. The sim marks the body dead
+/// at the end of the fall, so the painter owns the 0.6s.
+abstract final class _DeathClip {
+  static final Map<String, int> _start = {};
+
+  static double progress({
+    required String id,
+    required bool dead,
+    required int frame,
+  }) {
+    if (!dead) {
+      _start.remove(id);
+      return 0;
+    }
+    final born = _start.putIfAbsent(id, () => frame);
+    const frames = 0.6 * 60;
+    return ((frame - born) / frames).clamp(0.0, 1.0);
+  }
+}
+
+/// A flinch outranks a named pose. The sim clock keeps running, so the
+/// painter gives those seconds back when the pose returns.
+abstract final class _PoseContinuity {
+  static final Map<String, double> _paused = {};
+  static final Map<String, double> _last = {};
+
+  static double shown(String id, double poseTime, bool hit) {
+    final prev = _last[id];
+    if (prev != null && poseTime + 0.02 < prev) {
+      _paused[id] = 0;
+    }
+    var extra = _paused[id] ?? 0;
+    if (hit && prev != null && poseTime > prev) {
+      extra += poseTime - prev;
+      _paused[id] = extra;
+    }
+    _last[id] = poseTime;
+    return math.max(0, poseTime - extra);
+  }
+}
+
+/// Hold the authored 0.14s flinch in paint frames. 2× eats the sim timer.
+abstract final class _HitPose {
+  static final Map<String, int> _until = {};
+  static final Map<String, bool> _was = {};
+
+  static bool hold({
+    required String id,
+    required bool simHit,
+    required int frame,
+    required int pace,
+  }) {
+    final rising = simHit && _was[id] != true;
+    _was[id] = simHit;
+    if (rising) {
+      // The sim flash is 0.14s and ticks inside step, so 2× halves the
+      // paints. Hold the authored wall length (sim length scaled by pace).
+      final simPaints = (0.14 * 60 / pace.clamp(1, 2)).round();
+      final wallPaints = (0.14 * 60).round();
+      _until[id] = frame + math.max(simPaints, wallPaints);
+    }
+    final end = _until[id];
+    if (end == null) return simHit;
+    if (frame <= end) return true;
+    _until.remove(id);
+    return simHit;
+  }
+}
+
 final Paint _actorBarPaint = Paint()..isAntiAlias = false;
 
 extension _DungeonPaintActors on _TileRoomPainter {
@@ -68,9 +175,19 @@ extension _DungeonPaintActors on _TileRoomPainter {
 
     for (final enemy in world.enemies) {
       if (enemy.dormant || !_inView(enemy.x, enemy.y)) continue;
+      final sprite = KenneyAssets.enemyFightSprite(
+        role: enemy.role,
+        archetype: enemy.archetype,
+        assetIndex: enemy.assetIndex,
+        dungeonId: dungeonId,
+      );
+      final spriteIndex = KenneyAssets.enemySpriteCatalog.indexOf(sprite);
       final img = enemies.isEmpty
           ? null
-          : enemies[enemy.assetIndex.clamp(0, enemies.length - 1)];
+          : enemies[(spriteIndex < 0 ? enemy.assetIndex : spriteIndex).clamp(
+              0,
+              enemies.length - 1,
+            )];
       if (img == null) continue;
       final flash = enemy.attackFlash;
       final hit = enemy.hitFlash;
@@ -79,13 +196,14 @@ extension _DungeonPaintActors on _TileRoomPainter {
       final zoneTint = DungeonEnvironment.projectileTint(dungeonId);
       var c = center(enemy.x, enemy.y);
       final scale =
-          (isBoss ? 1.42 : (isElite ? 1.18 : 0.9)) *
+          (isBoss ? 1.42 : (isElite ? 1.18 : 1.22)) *
           (1 + flash * 0.18 + hit * 0.12);
       final moving = enemy.vx.abs() > 0.05 || enemy.vy.abs() > 0.05;
       if (moving && enemy.isAlive) {
         final phase = HeroAnimController.walkPhase(
           visualFrame,
           offset: (enemy.id.hashCode.abs() % 100) / 100,
+          pace: FightReadPace.pace.toDouble(),
         );
         c += CharacterVisualPainter.clipMotion(
           HeroAnimKind.walk,
@@ -108,7 +226,15 @@ extension _DungeonPaintActors on _TileRoomPainter {
             ..strokeWidth = math.max(1.8, tile * 0.07),
         );
       }
-      if (!enemy.isAlive && hit <= 0.02) continue;
+      final deathT = _EnemyDeath.progress(
+        id: enemy.id,
+        dead: !enemy.isAlive,
+        frame: visualFrame,
+      );
+      if (!enemy.isAlive && deathT >= 1) continue;
+      if (!enemy.isAlive) {
+        c += Offset(0, deathT * tile * 0.42);
+      }
       if (isElite && enemy.isAlive) {
         canvas.drawCircle(
           c,
@@ -136,7 +262,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
         img,
         c,
         scale,
-        alpha: enemy.isAlive ? 1 : hit.clamp(0.0, 0.45),
+        alpha: enemy.isAlive ? 1 : (1 - deathT).clamp(0.0, 1.0),
       );
       if (hit > 0.02 && enemy.isAlive) {
         canvas.drawCircle(
@@ -262,7 +388,8 @@ extension _DungeonPaintActors on _TileRoomPainter {
           .toInt();
       final partyHero = party.isEmpty ? null : party[idx];
       final flash = hero.attackFlash;
-      var c = center(hero.x, hero.y);
+      final shown = hero.picturePoint();
+      var c = center(shown.x, shown.y);
       // Prefer smoothed face aim; fall back to attack punch aim.
       final aimX = (hero.faceAimX != 0 || hero.faceAimY != 0)
           ? hero.faceAimX
@@ -272,8 +399,8 @@ extension _DungeonPaintActors on _TileRoomPainter {
           : hero.attackAimY;
       // Melee lunge toward the target while attacking (warrior especially).
       if (flash > 0.02 && (aimX != 0 || aimY != 0)) {
-        final adx = aimX - hero.x;
-        final ady = aimY - hero.y;
+        final adx = aimX - shown.x;
+        final ady = aimY - shown.y;
         final alen = math.sqrt(adx * adx + ady * ady);
         if (alen > 0.05) {
           final punch = hero.heroRole == HeroRole.warrior ? 0.38 : 0.22;
@@ -284,8 +411,8 @@ extension _DungeonPaintActors on _TileRoomPainter {
         }
       } else if (aimX != 0 || aimY != 0) {
         // Tiny lean toward facing so idle kits don't look glued forward.
-        final adx = aimX - hero.x;
-        final ady = aimY - hero.y;
+        final adx = aimX - shown.x;
+        final ady = aimY - shown.y;
         final alen = math.sqrt(adx * adx + ady * ady);
         if (alen > 0.08) {
           c = Offset(
@@ -294,32 +421,62 @@ extension _DungeonPaintActors on _TileRoomPainter {
           );
         }
       }
-      final flipX = (aimX - hero.x) < -0.15;
+      final flipX = (aimX - shown.x) < -0.15;
       final alpha = hero.isAlive ? 1.0 : 0.25;
       final paintAlpha = hero.vanishTimer > 0 ? 0.35 : alpha;
       var scale = 0.95;
       if (partyHero != null) {
         paintStanceBodyMark(canvas, c, tile, partyHero.specId);
         final moving = hero.vx.abs() > 0.05 || hero.vy.abs() > 0.05;
+        final dead = !hero.isAlive;
+        final showHit = !dead &&
+            _HitPose.hold(
+              id: hero.id,
+              simHit: hero.hitFlash > 0.02,
+              frame: visualFrame,
+              pace: FightReadPace.pace,
+            );
         final signals = HeroAnimSignals(
           moving: moving,
           attacking: flash > 0.02,
           casting: hero.castFlash > 0.02 || hero.castingTimer > 0.05,
-          hit: hero.hitFlash > 0.02,
-          dead: !hero.isAlive,
+          hit: showHit,
+          dead: dead,
           blocking: hero.shieldBlockTimer > 0,
           attackFlash: flash,
           castFlash: hero.castFlash,
           hitFlash: hero.hitFlash,
           abilityName: hero.animAbility?.name,
-          poseTime: hero.poseTime,
+          poseTime: _PoseContinuity.shown(hero.id, hero.poseTime, showHit),
           poseHold: hero.poseHold,
+          deathProgress: _DeathClip.progress(
+            id: hero.id,
+            dead: dead,
+            frame: visualFrame,
+          ),
         );
         final walkPhase = HeroAnimController.walkPhase(
           visualFrame,
           offset: (hero.partyIndex ?? idx) * 0.37,
+          pace: FightReadPace.pace.toDouble(),
         );
-        final anim = HeroAnimController.snapshot(signals, walkPhase: walkPhase);
+        var anim = HeroAnimController.snapshot(signals, walkPhase: walkPhase);
+        if (anim.kind == HeroAnimKind.hit) {
+          final flinch = switch (BodyFamilyCatalog.familyFor(partyHero)) {
+            BodyFamily.warrior => 'hit',
+            BodyFamily.rogue => 'hitRogue',
+            BodyFamily.mage => 'hitMage',
+            BodyFamily.healer => 'hitHealer',
+          };
+          anim = HeroAnimPose(
+            kind: anim.kind,
+            frame: anim.frame,
+            locked: anim.locked,
+            progress: anim.progress,
+            blocking: anim.blocking,
+            abilityName: flinch,
+          );
+        }
         // Unique form PNG (Druid forms) → owned paper-doll → class PNG.
         // Shadow is the priest doll with a purple cloth tint.
         final useFormSprite = CustomAssets.hasUniqueHeroSprite(
@@ -349,8 +506,8 @@ extension _DungeonPaintActors on _TileRoomPainter {
             (formImg != null
                 ? 1.42
                 : (usingOwnedBody
-                      ? DungeonBarLayout.ownedBodyScale * read
-                      : 0.95)) *
+                      ? DungeonBarLayout.ownedBodyScale * read * 1.38
+                      : 1.31)) *
             (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
         if (partyHero.specId == HeroSpecId.demonology &&
             hero.combustionTimer > 0) {

@@ -142,6 +142,14 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
   /// Held until the fade controller actually starts, so a tick cannot clear it.
   bool _armFade = false;
 
+  /// Columns locked for the current fight so a death does not step the zoom.
+  double? _fightCols;
+
+  /// Last frame's in-card aim. One death just outside the card keeps it.
+  bool _goalWasClear = false;
+
+  bool _fightReadReset = false;
+
   /// Zone floor/enemy decode finished (partial OK — never block forever).
   bool _zoneArtReady = false;
   int _loadGen = 0;
@@ -696,6 +704,24 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                             builder: (context, _) {
                               final world = widget.director.spatial;
                               final room = widget.director.state.currentRoom;
+                              final epoch = widget.director.floorEpoch;
+                              final newFloor = epoch != _floorEpoch;
+                              if (newFloor) {
+                                _fightCols = null;
+                                _goalWasClear = false;
+                              }
+                              final inFight =
+                                  world?.enemies.any(
+                                    (e) => e.hp > 0 && !e.dormant,
+                                  ) ??
+                                  false;
+                              if (!_fightReadReset) {
+                                _fightReadReset = true;
+                                FightReadPace.reset();
+                              }
+                              FightReadPace.pace = widget.director.state.combatPace
+                                  .clamp(1, 2)
+                                  .toInt();
                               final target = _TileCamera.forWorld(
                                 world,
                                 constraints,
@@ -706,9 +732,15 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                 cameraTopInset: widget.cameraTopInset,
                                 cameraBottomInset: widget.cameraBottomInset,
                                 lockCols: _pinchCols.value != null,
+                                heldFightCols: inFight ? _fightCols : null,
+                                goalWasClear: _goalWasClear,
                               );
-                              final epoch = widget.director.floorEpoch;
-                              final newFloor = epoch != _floorEpoch;
+                              _goalWasClear = target.goalClear;
+                              if (inFight) {
+                                _fightCols ??= target.visibleCols;
+                              } else {
+                                _fightCols = null;
+                              }
                               if (newFloor) {
                                 _floorEpoch = epoch;
                                 final minimal =
@@ -833,11 +865,38 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                 children: [
                                   ready == null || !_canPaintFloor
                                       ? ColoredBox(
-                                          color: GameTheme.stone,
+                                          color: Color(
+                                            ZoneFloorStyle.byId(state.dungeonId)
+                                                .accentArgb,
+                                          ),
                                           child: Center(
-                                            child: Text(
-                                              'Loading floor…',
-                                              style: GameTheme.readable(color: GameTheme.parchmentDim),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                KenneySprite(
+                                                  asset: KenneyAssets.torch,
+                                                  size: 28,
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  GameLogic.dungeonNames[
+                                                          state.dungeonId] ??
+                                                      state.dungeonId,
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  textAlign: TextAlign.center,
+                                                  style: GameTheme.combat(
+                                                    color: GameTheme.parchment,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  'Loading floor…',
+                                                  style: GameTheme.readable(
+                                                    color: GameTheme.torchHot,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         )
@@ -970,9 +1029,7 @@ class DungeonModeChip extends StatelessWidget {
       width: expand ? double.infinity : null,
       height: expand ? GameTheme.minTouch : null,
       constraints: BoxConstraints(
-        minHeight: expand
-            ? GameTheme.minTouch
-            : (prominent ? 40 : (dense ? 30 : GameTheme.minTouch)),
+        minHeight: GameTheme.minTouch,
         minWidth: expand ? 0 : (prominent ? 76 : 0),
       ),
       padding: EdgeInsets.symmetric(
@@ -982,11 +1039,13 @@ class DungeonModeChip extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: selected
-            ? (prominent ? const Color(0xFF6A3E12) : const Color(0xFF3A2810))
-            : const Color(0xFF1A1610),
+            ? (prominent
+                  ? GameTheme.buttonBrownTop
+                  : GameTheme.buttonBrownBottom)
+            : GameTheme.hudPartyRowIdle,
         borderRadius: BorderRadius.circular(3),
         border: Border.all(
-          color: selected ? GameTheme.torchHot : const Color(0xFF4A4030),
+          color: selected ? GameTheme.torchHot : GameTheme.rarityCommon,
           width: prominent && selected ? 2 : 1,
         ),
       ),
@@ -1070,7 +1129,7 @@ class GodHandRing extends StatelessWidget {
                   : 'God Hand ready'))
         : (coolingLabel ?? 'Cooling ${formatCombatSeconds(cooldown)}');
     final action = onTap != null && ready ? onTap : null;
-    final box = dense ? 40.0 : GameTheme.minTouch;
+    final box = GameTheme.minTouch;
     final ring = dense ? 26.0 : 28.0;
     final fist = dense ? 16.0 : 18.0;
     return WebClickScope(
@@ -1213,6 +1272,7 @@ class _TileCamera {
     required this.tileSize,
     required this.visibleCols,
     required this.visibleRows,
+    this.goalClear = false,
   });
 
   final double camX;
@@ -1220,6 +1280,7 @@ class _TileCamera {
   final double tileSize;
   final double visibleCols;
   final double visibleRows;
+  final bool goalClear;
 
   factory _TileCamera.forWorld(
     SpatialWorld? world,
@@ -1231,6 +1292,8 @@ class _TileCamera {
     double cameraTopInset = 0,
     double cameraBottomInset = 0,
     bool lockCols = false,
+    double? heldFightCols,
+    bool goalWasClear = false,
   }) {
     if (world == null) {
       return const _TileCamera(
@@ -1241,9 +1304,10 @@ class _TileCamera {
         visibleRows: 1,
       );
     }
-    final heroRows = world.heroes
-        .where((h) => !h.isPet)
-        .map((h) => (x: h.x, y: h.y, alive: h.isAlive, index: h.assetIndex));
+    final heroRows = world.heroes.where((h) => !h.isPet).map((h) {
+      final shown = h.picturePoint();
+      return (x: shown.x, y: shown.y, alive: h.isAlive, index: h.assetIndex);
+    });
     final awakeEnemies = world.enemies
         .where((e) => e.hp > 0 && !e.dormant)
         .map((e) => (x: e.x, y: e.y, alive: true));
@@ -1299,9 +1363,11 @@ class _TileCamera {
     final visibleGoal = awakePack ?? chest;
     final approach = farPack ?? chest;
     var cols = math.min(targetCols, world.cols.toDouble());
-    // Widen a little when an awake pack or a chest almost fits. A pinch
-    // keeps the columns the fingers set. Tiles stay at least ~14px.
-    if (!lockCols &&
+    // A fight keeps the columns it opened on. A death or a chest must not
+    // step the zoom by two while bodies are still on screen.
+    if (!lockCols && heldFightCols != null && heldFightCols > 1) {
+      cols = math.min(world.cols.toDouble(), heldFightCols);
+    } else if (!lockCols &&
         !world.awaitingExit &&
         visibleGoal != null &&
         constraints.maxWidth > 1 &&
@@ -1343,7 +1409,8 @@ class _TileCamera {
     final marginBottom = math.max(4.5, bottomTiles + 0.9);
     final clear =
         visibleGoal != null &&
-        dungeonPackInClearView(
+        dungeonGoalHoldsClear(
+          wasClear: goalWasClear,
           partyX: party.x,
           partyY: party.y,
           packX: visibleGoal.x,
@@ -1357,7 +1424,7 @@ class _TileCamera {
         .where((g) => !world.openGateIds.contains(g.id))
         .map((g) => (x: g.x + 0.5, y: g.y + 0.5));
     // A far pack does not steal the frame. The closed gate stays with the
-    // party. Stairs-focus on that pack is what pushed the heroes off the phone.
+    // party. An in-frame fight does not lock onto the nearest body.
     final gateFocus = !world.awaitingExit && approach != null && !clear
         ? dungeonGateFocus(
             partyX: party.x,
@@ -1371,39 +1438,30 @@ class _TileCamera {
             onlyWhenApart: false,
           )
         : null;
-    final raw = world.awaitingExit
-        ? dungeonStairsFocus(
-            partyX: party.x,
-            partyY: party.y,
-            exitX: exit.$1 + 0.5,
-            exitY: exit.$2 + 0.5,
-            visibleCols: cols,
-            visibleRows: visibleRows,
-          )
-        : visibleGoal != null && clear
-        ? dungeonStairsFocus(
-            partyX: party.x,
-            partyY: party.y,
-            exitX: visibleGoal.x,
-            exitY: visibleGoal.y,
-            visibleCols: cols,
-            visibleRows: visibleRows,
-            topInset: marginTop,
-            bottomInset: marginBottom,
-          )
-        : gateFocus ??
-              (inFight
-                  ? dungeonCombatFocus(
-                      heroes: heroRows,
-                      awakeEnemies: awakeEnemies,
-                      mapCenterX: world.cols / 2,
-                      mapCenterY: world.rows / 2,
-                      pinIndex: pinHeroIndex,
-                      nearbyTiles: math.min(cols, visibleRows) * 0.45,
-                      maxShiftX: cols * 0.18,
-                      maxShiftY: visibleRows * 0.14,
-                    )
-                  : party);
+    final raw = dungeonLiveFocus(
+      awaitingExit: world.awaitingExit,
+      inFight: inFight,
+      goalInClearView: clear,
+      partyX: party.x,
+      partyY: party.y,
+      goalX: visibleGoal?.x,
+      goalY: visibleGoal?.y,
+      exitX: exit.$1 + 0.5,
+      exitY: exit.$2 + 0.5,
+      gateFocus: gateFocus,
+      heroes: heroRows,
+      awakeEnemies: awakeEnemies,
+      mapCenterX: world.cols / 2,
+      mapCenterY: world.rows / 2,
+      pinIndex: pinHeroIndex,
+      visibleCols: cols,
+      visibleRows: visibleRows,
+      marginTop: marginTop,
+      marginBottom: marginBottom,
+      nearbyTiles: math.min(cols, visibleRows) * 0.45,
+      maxShiftX: cols * 0.18,
+      maxShiftY: visibleRows * 0.14,
+    );
     final focus = world.awaitingExit
         ? raw
         : dungeonIncludeParty(
@@ -1447,6 +1505,7 @@ class _TileCamera {
       tileSize: tileSize,
       visibleCols: cols,
       visibleRows: visibleRows,
+      goalClear: clear,
     );
   }
 }

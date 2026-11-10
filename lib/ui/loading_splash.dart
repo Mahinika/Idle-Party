@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../assets/kenney_assets.dart';
 import 'cognifox_mark.dart';
 import 'game_theme.dart';
+import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
 
 /// Cold-start splash while [GameDirector.boot] runs. No minimum dwell.
@@ -28,14 +30,7 @@ class LoadingSplash extends StatelessWidget {
               footer: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(
-                    width: 26,
-                    height: 26,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.4,
-                      color: GameTheme.torch.withValues(alpha: 0.9),
-                    ),
-                  ),
+                  const _LoadingTorch(),
                   const SizedBox(height: 12),
                   Text(
                     'Loading…',
@@ -47,6 +42,55 @@ class LoadingSplash extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Slow torch blink while boot finishes. No spinner, no [FittedBox].
+class _LoadingTorch extends StatefulWidget {
+  const _LoadingTorch();
+
+  @override
+  State<_LoadingTorch> createState() => _LoadingTorchState();
+}
+
+class _LoadingTorchState extends State<_LoadingTorch>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _blink;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final calm = MediaQuery.disableAnimationsOf(context);
+    if (calm) {
+      _blink?.dispose();
+      _blink = null;
+      return;
+    }
+    _blink ??= AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _blink?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final blink = _blink;
+    final torch = KenneySprite(asset: KenneyAssets.torch, size: 48);
+    if (blink == null) return torch;
+    return AnimatedBuilder(
+      animation: blink,
+      builder: (context, child) => Opacity(
+        opacity: 0.45 + (blink.value * 0.55),
+        child: child,
+      ),
+      child: torch,
     );
   }
 }

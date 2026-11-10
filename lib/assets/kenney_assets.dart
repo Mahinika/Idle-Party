@@ -174,6 +174,42 @@ abstract final class KenneyAssets {
   static String get enemyDeadTank => CustomAssets.enemyDeadTank;
   static String get enemyHellBrute => CustomAssets.enemyHellBrute;
   static String get enemyCrystalBrute => CustomAssets.enemyCrystalBrute;
+
+  /// Appended role art. Paths live here so the catalog can grow without
+  /// reordering the slots old saves already stored.
+  static const String enemyUnderworldBrute =
+      'assets/custom/enemies/underworld_brute.png';
+  static const String enemyUnderworldSupport =
+      'assets/custom/enemies/underworld_support.png';
+  static const String enemyHellRanged = 'assets/custom/enemies/hell_ranged.png';
+  static const String enemyCrystalSupport =
+      'assets/custom/enemies/crystal_support.png';
+  static const String enemyGroveTank = 'assets/custom/enemies/grove_tank.png';
+  static const String enemyGroveRanged =
+      'assets/custom/enemies/grove_ranged.png';
+  static const String enemyGroveSupport =
+      'assets/custom/enemies/grove_support.png';
+  static const String enemyStormTank = 'assets/custom/enemies/storm_tank.png';
+  static const String enemyStormRanged =
+      'assets/custom/enemies/storm_ranged.png';
+  static const String enemyStormSupport =
+      'assets/custom/enemies/storm_support.png';
+  static const String enemyRimeTank = 'assets/custom/enemies/rime_tank.png';
+  static const String enemyFenTank = 'assets/custom/enemies/fen_tank.png';
+  static const String enemyFenRanged = 'assets/custom/enemies/fen_ranged.png';
+  static const String enemyBrassRanged =
+      'assets/custom/enemies/brass_ranged.png';
+  static const String enemyBrassGlass = 'assets/custom/enemies/brass_glass.png';
+  static const String enemyBrassSupport =
+      'assets/custom/enemies/brass_support.png';
+  static const String enemyVeilTank = 'assets/custom/enemies/veil_tank.png';
+  static const String enemyVeilRanged = 'assets/custom/enemies/veil_ranged.png';
+  static const String enemyVeilSupport =
+      'assets/custom/enemies/veil_support.png';
+
+  static String get townNameplate => CustomAssets.townNameplate;
+  static String get townPennants => CustomAssets.townPennants;
+  static String get townLanterns => CustomAssets.townLanterns;
   static String get enemyBossTide => CustomAssets.enemyBossTide;
   static String get enemyTideMite => CustomAssets.enemyTideMite;
   static String get enemyBossEmber => CustomAssets.enemyBossEmber;
@@ -295,38 +331,38 @@ abstract final class KenneyAssets {
       if (custom != null) return custom;
     }
     return switch (kind) {
-    MapPropKind.barrel => barrel,
-    MapPropKind.crate => crate,
-    MapPropKind.table => table,
-    MapPropKind.stool => stool,
-    MapPropKind.torch => torch,
-    MapPropKind.torchAlt => torchAlt,
-    MapPropKind.gravestone => gravestone,
-    MapPropKind.fountain => fountainSlime,
-    MapPropKind.trap => trapSpikes,
-    MapPropKind.pot => propPot,
-    MapPropKind.bones => propBones,
-    MapPropKind.skull => gravestoneAlt,
-    MapPropKind.hatch => hatch,
-    MapPropKind.water => hazardWater,
-    MapPropKind.lava => hazardLava,
-    MapPropKind.anvil => anvil,
-    MapPropKind.shelf => propShelf,
-    MapPropKind.fence => propFence,
-    MapPropKind.pillar => propPillar,
-    MapPropKind.rubble => propRubble,
-    MapPropKind.chest => chestClosed,
-    MapPropKind.chestOpen => CustomAssets.propChestOpen,
-    MapPropKind.altar => CustomAssets.propAltar,
-    MapPropKind.statue => CustomAssets.propStatue,
-    MapPropKind.bookshelf => CustomAssets.propBookshelf,
-    MapPropKind.banner => CustomAssets.propBanner,
-    MapPropKind.crystalCluster => CustomAssets.propCrystalCluster,
-    MapPropKind.cauldron => CustomAssets.propCauldron,
-    MapPropKind.sacks => CustomAssets.propSacks,
-    MapPropKind.chains => CustomAssets.propChains,
-    MapPropKind.signatureA => CustomAssets.propSignatureA,
-    MapPropKind.signatureB => CustomAssets.propSignatureB,
+      MapPropKind.barrel => barrel,
+      MapPropKind.crate => crate,
+      MapPropKind.table => table,
+      MapPropKind.stool => stool,
+      MapPropKind.torch => torch,
+      MapPropKind.torchAlt => torchAlt,
+      MapPropKind.gravestone => gravestone,
+      MapPropKind.fountain => fountainSlime,
+      MapPropKind.trap => trapSpikes,
+      MapPropKind.pot => propPot,
+      MapPropKind.bones => propBones,
+      MapPropKind.skull => gravestoneAlt,
+      MapPropKind.hatch => hatch,
+      MapPropKind.water => hazardWater,
+      MapPropKind.lava => hazardLava,
+      MapPropKind.anvil => anvil,
+      MapPropKind.shelf => propShelf,
+      MapPropKind.fence => propFence,
+      MapPropKind.pillar => propPillar,
+      MapPropKind.rubble => propRubble,
+      MapPropKind.chest => chestClosed,
+      MapPropKind.chestOpen => CustomAssets.propChestOpen,
+      MapPropKind.altar => CustomAssets.propAltar,
+      MapPropKind.statue => CustomAssets.propStatue,
+      MapPropKind.bookshelf => CustomAssets.propBookshelf,
+      MapPropKind.banner => CustomAssets.propBanner,
+      MapPropKind.crystalCluster => CustomAssets.propCrystalCluster,
+      MapPropKind.cauldron => CustomAssets.propCauldron,
+      MapPropKind.sacks => CustomAssets.propSacks,
+      MapPropKind.chains => CustomAssets.propChains,
+      MapPropKind.signatureA => CustomAssets.propSignatureA,
+      MapPropKind.signatureB => CustomAssets.propSignatureB,
     };
   }
 
@@ -432,11 +468,50 @@ abstract final class KenneyAssets {
     enemyDeadTank,
     enemyHellBrute,
     enemyCrystalBrute,
+    // Append only. Roles that used to share a mite, a brute, or the bat.
+    enemyUnderworldBrute,
+    enemyUnderworldSupport,
+    enemyHellRanged,
+    enemyCrystalSupport,
+    enemyGroveTank,
+    enemyGroveRanged,
+    enemyGroveSupport,
+    enemyStormTank,
+    enemyStormRanged,
+    enemyStormSupport,
+    enemyRimeTank,
+    enemyFenTank,
+    enemyFenRanged,
+    enemyBrassRanged,
+    enemyBrassGlass,
+    enemyBrassSupport,
+    enemyVeilTank,
+    enemyVeilRanged,
+    enemyVeilSupport,
   ];
 
   static int enemySpriteCatalogIndex(String asset) {
     final i = enemySpriteCatalog.indexOf(asset);
     return i < 0 ? 0 : i;
+  }
+
+  /// Portrait and body share one file. A boss keeps its stored index so a
+  /// Gauntlet tell can wear another cave's boss. Elites and trash use the
+  /// zone job, which is what the fight already spawned.
+  static String enemyFightSprite({
+    required EnemyRole role,
+    required EnemyArchetype archetype,
+    required int assetIndex,
+    String? dungeonId,
+  }) {
+    if (role == EnemyRole.boss) {
+      final i = assetIndex.clamp(0, enemySpriteCatalog.length - 1);
+      return enemySpriteCatalog[i];
+    }
+    if (role == EnemyRole.elite) {
+      return enemySpriteForRole(EnemyRole.elite, dungeonId: dungeonId);
+    }
+    return enemySpriteForArchetype(archetype, dungeonId: dungeonId);
   }
 
   /// Every enemy sprite one zone can spawn. The stage decodes this set
@@ -476,12 +551,11 @@ abstract final class KenneyAssets {
       'crystal wraith' ||
       'ice caster' ||
       'frost slinger' ||
-      'prism chanter' ||
       'rime chanter' ||
-      'frost adept' ||
-      'splinter blade' ||
-      'shatter fang' => enemyCrystalWraith,
-      'spume spitter' || 'salt slinger' => enemyTideMite,
+      'spire archer' => enemyCrystalWraith,
+      'splinter blade' || 'shatter fang' => enemyCrystalMite,
+      'prism chanter' || 'frost adept' || 'spire adept' => enemyCrystalSupport,
+      'spume spitter' || 'salt slinger' || 'leviathan spitter' => enemyTideMite,
       // Tide glass/support fight as slime (ZoneArt).
       'depth chanter' ||
       'tide adept' ||
@@ -497,7 +571,7 @@ abstract final class KenneyAssets {
       'goblin scrapper' || 'hideout runt' || 'pest' => enemyGoblinMite,
       'fort rat' || 'keep gnawer' => enemyKingMite,
       'imp swarm' || 'ash tick' => enemyUnderworldMite,
-      'risen husk' || 'bone swarm' => enemyDeadMite,
+      'risen husk' || 'bone swarm' => enemyDeadSwarm,
       'hellspawn' || 'cinder rat' => enemyHellMite,
       'ash mite' || 'cinder tick' => enemyEmberMite,
       'moss slime' || 'root tick' || 'leaf mite' => enemyGroveMite,
@@ -512,116 +586,133 @@ abstract final class KenneyAssets {
       'ash chanter' || 'ember adept' => enemySpider,
       'char blade' || 'soot fang' => enemyEmberMite,
       'grove brute' || 'timber crusher' => enemyGroveBrute,
-      'hollow guard' || 'bark bulwark' => enemyGroveMite,
-      'spore bat' ||
-      'canopy spitter' ||
-      'wyrd chanter' ||
-      'grove adept' => enemyBat,
-      'thorn skitter' || 'bramble fang' => enemySlime,
+      'hollow guard' || 'bark bulwark' || 'root guard' => enemyGroveTank,
+      'spore bat' || 'canopy spitter' || 'root spitter' => enemyGroveRanged,
+      'wyrd chanter' || 'grove adept' || 'root adept' => enemyGroveSupport,
+      'thorn skitter' || 'bramble fang' => enemyGroveMite,
       'gale mite' || 'storm tick' || 'spark bat' => enemyStormMite,
-      'storm brute' ||
-      'thunder crusher' ||
-      'gale bulwark' ||
-      'storm guard' => enemyStormBrute,
-      'volt spitter' || 'gale slinger' => enemyBat,
-      'lightning fang' || 'zephyr blade' => enemyRat,
-      'storm chanter' || 'tempest adept' => enemyCultist,
+      'storm brute' || 'thunder crusher' || 'tyrant thug' => enemyStormBrute,
+      'gale bulwark' || 'storm guard' || 'tyrant guard' => enemyStormTank,
+      'volt spitter' || 'gale slinger' || 'tyrant bolt' => enemyStormRanged,
+      'storm chanter' || 'tempest adept' || 'tyrant adept' => enemyStormSupport,
+      'lightning fang' || 'zephyr blade' => enemyStormMite,
       'rime mite' || 'frost tick' || 'glass flea' => enemyRimeMite,
-      'rime brute' ||
-      'frost crusher' ||
-      'glass bulwark' ||
-      'rime guard' => enemyRimeBrute,
+      'rime brute' || 'frost crusher' || 'colossus thug' => enemyRimeBrute,
+      'glass bulwark' || 'rime guard' || 'colossus guard' => enemyRimeTank,
       'shard slinger' || 'rime spitter' => enemyRimeMite,
       'glass fang' || 'frost blade' => enemyRimeMite,
       'glacier chanter' || 'stillfrost adept' => enemyRimeWraith,
       'bile slime' || 'fen tick' || 'spore flea' => enemyFenMite,
-      'fen brute' ||
-      'mire crusher' ||
-      'bog bulwark' ||
-      'fen guard' => enemyFenBrute,
-      'bile spitter' || 'fen slinger' => enemyFenMite,
+      'fen brute' || 'mire crusher' || 'hydra thug' => enemyFenBrute,
+      'bog bulwark' || 'fen guard' || 'hydra guard' => enemyFenTank,
+      'bile spitter' || 'fen slinger' || 'hydra spitter' => enemyFenRanged,
       'rot fang' || 'mire blade' => enemyFenMite,
-      'fen chanter' || 'mire adept' => enemyCultist,
+      'fen chanter' || 'mire adept' || 'hydra adept' => enemySlime,
       'cog mite' || 'rust tick' || 'brass flea' => enemyBrassMite,
-      'vault bruiser' || 'cog crusher' => enemyCyclops,
+      'vault bruiser' || 'cog crusher' => enemyBrassBrute,
       'brass bulwark' || 'cog guard' => enemyBrassBrute,
-      'spark spitter' || 'coil slinger' => enemyBrassMite,
-      'razor cog' || 'spring fang' => enemyBrassMite,
-      'clock chanter' || 'brass adept' => enemyCultist,
+      'spark spitter' || 'coil slinger' || 'spring coil' => enemyBrassRanged,
+      'razor cog' || 'spring fang' || 'spring blade' => enemyBrassGlass,
+      'clock chanter' || 'brass adept' || 'spring adept' => enemyBrassSupport,
+      // Boss adds use the same PNG the fight paints for that job.
+      'hatch guard' => enemySandyTank,
+      'hatch adept' => enemyRat,
+      'hatch blade' || 'hatch pack' => enemySandyMite,
+      'hatch thug' => enemySandyBrute,
+      'throne guard' => enemyKingTank,
+      'throne adept' || 'throne pack' => enemyKingMite,
+      'throne blade' => enemyRat,
+      'throne thug' => enemyKingGuard,
+      'eye guard' => enemyUnderworldTank,
+      'eye blade' || 'eye pack' => enemyUnderworldMite,
+      'pale guard' => enemyDeadTank,
+      'pale adept' => enemyDeadSupport,
+      'pale blade' => enemyGhost,
+      'pale pack' => enemyDeadSwarm,
+      'pale thug' => enemyCyclops,
+      'gate guard' || 'gate thug' => enemyHellBrute,
+      'gate adept' => enemyCultist,
+      'gate blade' || 'gate pack' => enemyHellMite,
+      'spire guard' || 'spire thug' => enemyCrystalBrute,
+      'spire blade' || 'spire pack' => enemyCrystalMite,
+      'leviathan guard' || 'leviathan thug' => enemyTideBrute,
+      'leviathan adept' || 'leviathan blade' => enemySlime,
+      'leviathan pack' => enemyTideMite,
+      'sovereign spark' ||
+      'sovereign blade' ||
+      'sovereign pack' => enemyEmberMite,
+      'sovereign guard' || 'sovereign thug' => enemyEmberBrute,
+      'sovereign adept' => enemySpider,
+      'root blade' || 'root pack' => enemyGroveMite,
+      'root thug' => enemyGroveBrute,
+      'tyrant blade' || 'tyrant pack' => enemyStormMite,
+      'colossus shard' || 'colossus blade' || 'colossus pack' => enemyRimeMite,
+      'colossus adept' => enemyRimeWraith,
+      'hydra blade' || 'hydra pack' => enemyFenMite,
+      'spring guard' || 'spring thug' => enemyBrassBrute,
+      'spring pack' => enemyBrassMite,
+      'monarch blade' || 'monarch pack' => enemyVeilMite,
       'dust moth' || 'veil mite' || 'silk flea' => enemyVeilMite,
-      'silk bruiser' || 'veil crusher' || 'cocoon guard' || 'veil bulwark' =>
-        enemyVeilBrute,
-      'dust spitter' || 'silk slinger' => enemyVeilMite,
-      'wing fang' || 'veil blade' => enemySpider,
-      'moth chanter' || 'veil adept' => enemyCultist,
+      'silk bruiser' || 'veil crusher' || 'monarch thug' => enemyVeilBrute,
+      'cocoon guard' || 'veil bulwark' || 'monarch guard' => enemyVeilTank,
+      'dust spitter' || 'silk slinger' || 'monarch silk' => enemyVeilRanged,
+      'moth chanter' || 'veil adept' || 'monarch adept' => enemyVeilSupport,
+      'wing fang' || 'veil blade' => enemyVeilMite,
       // Sandy swarm fight as sandy mite (ZoneArt).
       'cave slime' || 'drip ooze' || 'sand mite' => enemySandyMite,
-      'spit bat' || 'cavern spitter' => enemySandyRanged,
-      'needle rat' || 'sneak rat' => enemyRat,
+      'spit bat' || 'cavern spitter' || 'hatch spitter' => enemySandyRanged,
+      'needle rat' ||
+      'sneak rat' ||
+      'mire shaman' ||
+      'glow cultist' => enemyRat,
       'rock crab' || 'cave brute' => enemySandyBrute,
       'shellback' || 'stone maw' => enemySandyTank,
       // Goblin brute fight as a goblin body; elite club champion stays elite.
       'goblin thug' || 'clubber' || 'lord thug' => enemyGoblinTank,
       'club champion' => enemyGoblinElite,
       'fort sentry' || 'hall guard' => enemyKingGuard,
-      'elite brute' ||
-      'bone brute' ||
-      'crypt brute' => enemyCyclops,
+      'elite brute' || 'crypt brute' => enemyCyclops,
+      'bone brute' || 'underworld imp' || 'eye thug' => enemyUnderworldBrute,
+      'cult chanter' || 'rift adept' || 'eye adept' => enemyUnderworldSupport,
+      'necro acolyte' || 'death chanter' => enemyDeadSupport,
       'infernal brute' || 'flame guard' => enemyHellBrute,
       'obsidian golem' || 'pit guard' => enemyUnderworldTank,
       'tomb shield' || 'ossuary guard' => enemyDeadTank,
-      'molten golem' ||
-      'ash behemoth' ||
-      'ash colossus' => enemyEmberBrute,
-      'bulwark golem' || 'iron ward' || 'gate knight' => enemyGolem,
+      'molten golem' || 'ash behemoth' => enemyHellBrute,
+      'ash colossus' => enemyHellElite,
+      'bulwark golem' => enemyGolem,
+      'iron ward' || 'gate knight' => enemyKingTank,
       // Goblin elite fight art (ZoneArt.elite).
       'stash bulwark' ||
       'raid pack' ||
       'raid slinger' ||
       'coin cutter' ||
       'hex hag' => enemyGoblinElite,
-      'hideout guard' ||
-      'scrap shield' ||
-      'lord guard' => enemyCyclops,
-      'hex cultist' ||
-      'glow cultist' ||
-      'mire shaman' ||
-      'cult chanter' ||
-      'rift adept' ||
-      'necro acolyte' ||
-      'death chanter' ||
-      'fire cultist' ||
-      'hell chanter' ||
-      'rift priest' => enemyCultist,
+      'hideout guard' || 'scrap shield' || 'lord guard' => enemyGoblinTank,
+      'hex cultist' || 'hell chanter' || 'rift priest' => enemyCultist,
       // King support fight as king mite (ZoneArt).
       'court mage' || 'banner cleric' => enemyKingMite,
       // Goblin trash support fight as cultist (ZoneArt).
-      'hex witch' || 'totem caller' || 'lord hexer' => enemyCultist,
+      'hex witch' || 'totem caller' || 'lord hexer' => enemyGoblinRanged,
       // Underworld ranged fight as underworld mite (ZoneArt).
-      'hex spider' || 'soul spitter' => enemyUnderworldMite,
-      'wailing ghost' ||
-      'specter blade' ||
-      'pale reaper' ||
-      'grave knight' => enemyGhost,
+      'hex spider' || 'soul spitter' || 'eye spitter' => enemyUnderworldMite,
+      'wailing ghost' => enemyDeadMite,
+      'specter blade' || 'pale reaper' => enemyGhost,
+      'grave knight' => enemyCyclops,
+      'cutthroat' || 'knife kin' || 'lord blade' => enemySnake,
+      'shade stalker' || 'wisp blade' => enemyUnderworldMite,
+      'flame assassin' || 'cinder blade' => enemyHellMite,
       'blood stalker' ||
-      'cutthroat' ||
-      'knife kin' ||
-      'lord blade' ||
       'loot snatcher' ||
       'royal assassin' ||
-      'blade page' ||
-      'shade stalker' ||
-      'wisp blade' ||
-      'flame assassin' ||
-      'cinder blade' => enemyRat,
+      'blade page' => enemyRat,
       'stash guard' || 'lord pack' => enemyGoblinMite,
       'goblin slinger' || 'dart rascal' || 'lord slinger' => enemyGoblinRanged,
       // King ranged fight as cultist (ZoneArt).
-      'crossbowman' || 'tower archer' => enemyCultist,
-      'ember archer' => enemyHellMite,
-      'bone archer' => enemyDeadMite,
-      'warden archer' => enemyBat,
-      'underworld imp' => enemyCultist,
+      'crossbowman' || 'tower archer' || 'throne archer' => enemyCultist,
+      'ember archer' || 'fire cultist' || 'gate archer' => enemyHellRanged,
+      'bone archer' || 'pale archer' => enemyDeadMite,
+      'warden archer' => enemyCrystalWraith,
       'warden shield' || 'warden guard' || 'warden adept' => enemyGolem,
       'coral champion' || 'reef ward' => enemyCrab,
       'timber champion' || 'heartwood ward' => enemyGroveElite,
@@ -708,12 +799,14 @@ abstract final class KenneyAssets {
         key.contains('moth ') ||
         key.contains('silk') ||
         (key.contains('veil') && !key.contains('brass'))) {
-      if (key.contains('monarch')) return enemyVeilBoss;
+      if (key == 'the pale monarch' || key == 'pale monarch') {
+        return enemyVeilBoss;
+      }
       if (key.contains('chanter') || key.contains('adept')) {
         return enemyCultist;
       }
       if (key.contains('spitter') || key.contains('slinger')) {
-        return enemyBat;
+        return enemyVeilRanged;
       }
       if (key.contains('bruiser') || key.contains('crusher')) {
         return enemySpider;
@@ -745,7 +838,9 @@ abstract final class KenneyAssets {
       return enemyTideMite;
     }
 
-    if (key.contains('rime') || key.contains('glacier') || key.contains('stillfrost')) {
+    if (key.contains('rime') ||
+        key.contains('glacier') ||
+        key.contains('stillfrost')) {
       if (key.contains('colossus')) return enemyRimeBoss;
       if (key.contains('brute') ||
           key.contains('crusher') ||
@@ -825,11 +920,10 @@ abstract final class KenneyAssets {
     if (key.contains('crab') || key.contains('shell') || key.contains('maw')) {
       return enemyCrab;
     }
-    if (key.contains('bat') ||
-        key.contains('spit') ||
-        key.contains('archer') ||
-        key.contains('slinger') ||
-        key.contains('crossbow')) {
+    // A real bat, not every archer or spitter the fight already named.
+    if (key.contains('bat') &&
+        !key.contains('spit') &&
+        !key.contains('spore')) {
       return enemyBat;
     }
     if (key.contains('brute') ||
@@ -846,7 +940,7 @@ abstract final class KenneyAssets {
         return enemyCultist;
       }
       if (key.contains('spitter') || key.contains('slinger')) {
-        return enemyBat;
+        return enemyBrassRanged;
       }
       if (key.contains('bulwark') || key.contains('guard')) {
         return enemyGolem;
@@ -865,7 +959,7 @@ abstract final class KenneyAssets {
         return enemyCultist;
       }
       if (key.contains('spitter') || key.contains('slinger')) {
-        return enemyBat;
+        return enemyFenRanged;
       }
       return enemyFenMite;
     }
@@ -907,7 +1001,12 @@ abstract final class KenneyAssets {
       if (key.contains('fang') || key.contains('blade')) {
         return enemyRat;
       }
-      return enemyBat;
+      if (key.contains('spit') ||
+          key.contains('sling') ||
+          key.contains('archer')) {
+        return enemyStormRanged;
+      }
+      return enemyStormMite;
     }
     if (key.contains('hell') ||
         key.contains('infernal') ||

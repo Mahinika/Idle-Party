@@ -159,7 +159,7 @@ void main() {
     );
     expect(
       KenneyAssets.enemySpriteForCodexName('Hex Witch'),
-      KenneyAssets.enemyCultist,
+      KenneyAssets.enemyGoblinRanged,
     );
     expect(
       KenneyAssets.enemySpriteForCodexName('Ash Chanter'),
@@ -171,11 +171,11 @@ void main() {
     );
     expect(
       KenneyAssets.enemySpriteForCodexName('Ash Behemoth'),
-      KenneyAssets.enemyEmberBrute,
+      KenneyAssets.enemyHellBrute,
     );
     expect(
       KenneyAssets.enemySpriteForCodexName('Ash Colossus'),
-      KenneyAssets.enemyEmberBrute,
+      KenneyAssets.enemyHellElite,
     );
   });
 }

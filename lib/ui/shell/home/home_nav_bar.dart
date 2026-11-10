@@ -125,7 +125,10 @@ class HomeNavBar extends StatelessWidget {
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                GameIcon.asset(UiIcon.closeTab, size: 24),
+                Semantics(
+                  label: 'CLOSE',
+                  child: GameIcon.asset(UiIcon.closeTab, size: 24),
+                ),
                 const SizedBox(height: 2),
                 Flexible(
                   child: ExcludeSemantics(
@@ -201,9 +204,12 @@ class HomeNavBar extends StatelessWidget {
         button: true,
         selected: selected,
         label: semantics,
+        explicitChildNodes: selected,
         child: InkWell(
           onTap: onTap,
-          child: AnimatedContainer(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+            child: AnimatedContainer(
             duration: const Duration(milliseconds: 120),
             decoration: BoxDecoration(
               color: selected
@@ -224,6 +230,7 @@ class HomeNavBar extends StatelessWidget {
                 child: child,
               ),
             ),
+          ),
           ),
         ),
       ),

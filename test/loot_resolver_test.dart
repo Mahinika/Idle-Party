@@ -314,6 +314,9 @@ void main() {
     expect(formatGold(1543), '1,543g');
     expect(formatGold(28000), '28,000g');
     expect(formatGold(28000), isNot(contains('kg')));
-    expect(formatGold(1200000), '1.2M g');
+    expect(formatGold(1200000), '1.2Mg');
+    expect(formatGold(10000), '10,000g');
+    expect(formatGold(999), '999g');
+    expect(formatGold(1000), '1,000g');
   });
 }

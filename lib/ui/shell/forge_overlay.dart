@@ -34,9 +34,9 @@ class ForgeOverlay extends StatefulWidget {
       return 'Run gold power resets when you start over. Buy the row tagged BEST when unsure.';
     }
     if (showCamp) {
-      return 'GOLD → FORGE + bag gold wipe on Ascend. BLESSING stays on ESSENCE.';
+      return 'Forge gold and bag gold reset when you Ascend. Blessing on Essence does not.';
     }
-    return 'GOLD → FORGE + bag gold wipe on Ascend. BLESSING stays.';
+    return 'Forge gold and bag gold reset when you Ascend. Blessing does not.';
   }
 
   /// One-line sheet totals for the FORGE header (fits narrow home panel).
@@ -46,13 +46,16 @@ class ForgeOverlay extends StatefulWidget {
           'Armor +${state.forgeDefenseSheet} · '
           'STA +${state.forgeVitalitySheet}';
     }
+    final move = GameState.softForgePercent(state.moveSpeedBonus).round();
+    final haste = GameState.softForgePercent(state.attackSpeedBonus).round();
+    final crit = GameState.softForgePercent(state.critBonus, softAt: 25).round();
     final parts = <String>[
       'AP +${state.forgeAttackSheet}',
       'Armor +${state.forgeDefenseSheet}',
       'STA +${state.forgeVitalitySheet}',
-      'MOVE +${GameState.softForgePercent(state.moveSpeedBonus).round()}%',
-      'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%',
-      'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%',
+      if (move > 0) 'MOVE +$move%',
+      if (haste > 0) 'HASTE +$haste%',
+      if (crit > 0) 'CRIT +$crit%',
       'MASTERY +${state.forgeMasterySheet}',
     ];
     return 'Bought: ${parts.join(' · ')}';
@@ -73,15 +76,28 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   bool get _scrollAllTracks =>
       widget.inlineUnderFight || widget.expandedTrackList;
 
-  Color _forgeAccent(PartyUpgradeType type) => switch (type) {
-    PartyUpgradeType.attack => GameTheme.hudHpDamage,
-    PartyUpgradeType.defense => GameTheme.rarityRare,
-    PartyUpgradeType.vitality => GameTheme.mossLit,
-    PartyUpgradeType.moveSpeed => GameTheme.torchHot,
-    PartyUpgradeType.attackSpeed => GameTheme.torch,
-    PartyUpgradeType.crit => GameTheme.bloodLit,
-    PartyUpgradeType.mastery => GameTheme.tooltipEpic,
-  };
+  Color _forgeAccent(PartyUpgradeType type) {
+    if (director.state.colorblindMode) {
+      return switch (type) {
+        PartyUpgradeType.attack => GameTheme.parchment,
+        PartyUpgradeType.defense => GameTheme.parchmentDim,
+        PartyUpgradeType.vitality => GameTheme.borderLit,
+        PartyUpgradeType.moveSpeed => GameTheme.stoneRaised,
+        PartyUpgradeType.attackSpeed => GameTheme.ink,
+        PartyUpgradeType.crit => GameTheme.panelInset,
+        PartyUpgradeType.mastery => GameTheme.clear,
+      };
+    }
+    return switch (type) {
+      PartyUpgradeType.attack => GameTheme.hudHpDamage,
+      PartyUpgradeType.defense => GameTheme.rarityRare,
+      PartyUpgradeType.vitality => GameTheme.mossLit,
+      PartyUpgradeType.moveSpeed => GameTheme.torchHot,
+      PartyUpgradeType.attackSpeed => GameTheme.torch,
+      PartyUpgradeType.crit => GameTheme.bloodLit,
+      PartyUpgradeType.mastery => GameTheme.tooltipEpic,
+    };
+  }
 
   String _forgeName(PartyUpgradeType type) => switch (type) {
     PartyUpgradeType.attack => 'AP',
@@ -267,22 +283,35 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   }
 
   Widget _spendAllButton(GameState state) {
-    return GameButton(
-      label: GameLogic.canForgeGoldSpendEven(state)
-          ? 'SPEND ALL · EVEN'
-          : 'SPEND ALL · EVEN · Need gold',
-      tip:
-          'Splits wallet gold round-robin across every track. '
-          'AP, Armor, STA, and MASTERY soften past 40 buys. '
-          'MOVE and HASTE soften past 40. CRIT softens past 25.',
-      style: GameButtonStyle.grey,
-      dense: true,
-      onPressed: GameLogic.canForgeGoldSpendEven(state)
-          ? () {
-              director.upgradeSpendAllEvenly();
-              setState(() {});
-            }
-          : null,
+  return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        GameButton(
+          label: GameLogic.canForgeGoldSpendEven(state)
+              ? 'SPEND ALL · EVEN'
+              : 'SPEND ALL · EVEN · Need gold',
+          tip:
+              'Splits wallet gold round-robin across every track. '
+              'AP, Armor, STA, and MASTERY soften past 40 buys. '
+              'MOVE and HASTE soften past 40. CRIT softens past 25.',
+          style: GameButtonStyle.grey,
+          dense: true,
+          onPressed: GameLogic.canForgeGoldSpendEven(state)
+              ? () {
+                  director.upgradeSpendAllEvenly();
+                  setState(() {});
+                }
+              : null,
+        ),
+        const SizedBox(height: 2),
+        Text(
+          'Buys the cheapest track.',
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
+        ),
+      ],
     );
   }
 
@@ -390,10 +419,11 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
           ),
       ],
     );
+    final inline = _scrollAllTracks;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _farmIntensityRow(state),
+        if (!inline) _farmIntensityRow(state),
         Expanded(child: body),
       ],
     );
@@ -427,13 +457,26 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   }) {
     final state = director.state;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    // The home fight gives this panel whatever height is left. A short
+    // phone at text scale 1.45 can be shorter than the spend row, so the
+    // row scrolls with the tracks instead of painting a stripe.
+    final farmInline = FarmIntensity.applies(state) ? _farmIntensityRow(state) : null;
+    return ListView(
+      primary: false,
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
       children: [
-        if (canBuyAny)
+        if (farmInline != null || canBuyAny)
           Padding(
             padding: ShellLayout.seamPadding.copyWith(bottom: 2),
-            child: _spendModeSegmented(dense: true),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (farmInline != null) Expanded(child: farmInline),
+                if (farmInline != null && canBuyAny) const SizedBox(width: 6),
+                if (canBuyAny) Expanded(child: _spendModeSegmented(dense: true)),
+              ],
+            ),
           )
         else
           Padding(
@@ -445,22 +488,22 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
               maxLines: 1,
             ),
           ),
-        Expanded(
-          child: ListView(
-            primary: false,
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(
-              ShellLayout.sheetHorizontal,
-              4,
-              ShellLayout.sheetHorizontal,
-              8,
-            ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            ShellLayout.sheetHorizontal,
+            4,
+            ShellLayout.sheetHorizontal,
+            8,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final type in PartyUpgradeType.values)
                 _upgradeRow(
                   state: state,
                   type: type,
-                  onPressed: GameLogic.canForgeGoldSpend(state, type, _spendMode)
+                  onPressed:
+                      GameLogic.canForgeGoldSpend(state, type, _spendMode)
                       ? () {
                           director.upgradePartyTrack(type, mode: _spendMode);
                           setState(() {});
@@ -494,9 +537,8 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
           padding: ShellLayout.listPadding.copyWith(bottom: homeFight ? 2 : 6),
           child: Text(
             ForgeOverlay.boughtSummary(state, plain: plain),
-            maxLines: 1,
-            softWrap: false,
-            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+            softWrap: true,
             style: GameTheme.readable(color: homeFight
                   ? GameTheme.parchmentDim
                   : GameTheme.parchment),

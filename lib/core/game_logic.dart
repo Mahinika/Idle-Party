@@ -28,6 +28,7 @@ import 'game_state.dart';
 import 'gauntlet_pact.dart';
 import 'gauntlet_trophies.dart';
 import 'check_in.dart';
+import 'return_week.dart';
 import 'comeback_chest.dart';
 import 'keystone.dart';
 import 'logic_notices.dart';
@@ -1559,11 +1560,71 @@ class GameLogic {
     );
   }
 
+  /// What this return's gold or essence can actually pay for.
+  ///
+  /// Uses the wallet after the credit and the next forge or CAMP price.
+  /// Does not spend anything. [canOpenGold] / [canOpenEssence] are true
+  /// only when the screen can open that existing panel.
+  static String returnGainLine(
+    GameState state, {
+    required int goldGained,
+    required int essenceGained,
+    bool canOpenGold = false,
+    bool canOpenEssence = false,
+  }) {
+    if (goldGained <= 0 && essenceGained <= 0) {
+      return 'No gold or essence this time. The button below is the next fight.';
+    }
+    PartyUpgradeType? cheapest;
+    var cost = 1 << 30;
+    for (final type in PartyUpgradeType.values) {
+      final next = upgradeCostFor(state, type);
+      if (next < cost) {
+        cost = next;
+        cheapest = type;
+      }
+    }
+    final name = _returnForgeName(cheapest ?? PartyUpgradeType.attack);
+    final camp = cheapestSanctuaryNextCost(state);
+    if (goldGained > 0 && state.gold >= cost) {
+      final open = canOpenGold ? ' Open GOLD.' : '';
+      return 'You brought back ${OfflineProgressResult.groupedCount(goldGained)} gold. The wallet covers '
+          '$name ($cost g).$open';
+    }
+    if (essenceGained > 0 && state.essence >= camp) {
+      final brought = goldGained > 0
+          ? 'You brought back ${OfflineProgressResult.groupedCount(goldGained)} gold and ${OfflineProgressResult.groupedCount(essenceGained)} essence. '
+          : 'You brought back ${OfflineProgressResult.groupedCount(essenceGained)} essence. ';
+      final open = canOpenEssence ? 'Open ESSENCE.' : '';
+      return '${brought}The wallet covers CAMP (${OfflineProgressResult.groupedCount(camp)} essence). $open'
+          .trim();
+    }
+    if (goldGained > 0) {
+      final short = cost - state.gold;
+      return 'You brought back ${OfflineProgressResult.groupedCount(goldGained)} gold. The next $name still '
+          'needs ${OfflineProgressResult.groupedCount(short)} g.';
+    }
+    final short = camp - state.essence;
+    return 'You brought back ${OfflineProgressResult.groupedCount(essenceGained)} essence. The next CAMP buy still '
+        'needs ${OfflineProgressResult.groupedCount(short)} essence. The fight earns the rest.';
+  }
+
+  static String _returnForgeName(PartyUpgradeType type) => switch (type) {
+    PartyUpgradeType.attack => 'AP',
+    PartyUpgradeType.defense => 'Armor',
+    PartyUpgradeType.vitality => 'STA',
+    PartyUpgradeType.moveSpeed => 'MOVE',
+    PartyUpgradeType.attackSpeed => 'HASTE',
+    PartyUpgradeType.crit => 'CRIT',
+    PartyUpgradeType.mastery => 'MASTERY',
+  };
+
   /// Welcome Back line. Empty in the first hour.
   /// A prize waits on the vault only when it can be claimed now.
   /// An empty vault needs one cave. After the claim, names tomorrow.
   static String checkInWelcomeLine(GameState state) {
     if (!checkInActive(state)) return '';
+    if (ReturnWeek.active(state)) return ReturnWeek.welcomeLine(state);
     final pay = checkInPayout(state);
     if (state.metaDepth.dailyVaultClaimed) return pay.tomorrowLine;
     if (canClaimDailyVault(state)) return pay.waitingLine;
@@ -3479,7 +3540,8 @@ class OfflineProgressResult {
     }
     if (wasInDungeon) {
       if (goldGained > 0) {
-        return 'Your party kept fighting the dungeon and earned $goldGained gold while you were away.';
+        return 'Your party kept fighting the dungeon and earned '
+            '${groupedCount(goldGained)} gold while you were away.';
       }
       if (essenceGained > 0) {
         return 'Your party kept fighting the dungeon while you were away.';
@@ -3494,12 +3556,13 @@ class OfflineProgressResult {
     if (goldGained > 0) {
       if (hubChestStopped) {
         return 'Gold filled for $hubChestHours hours and then stopped. '
-            'Your party earned $goldGained gold.';
+            'Your party earned ${groupedCount(goldGained)} gold.';
       }
-      return 'Your party earned $goldGained gold while you were away.';
+      return 'Your party earned ${groupedCount(goldGained)} gold while you were away.';
     }
     if (essenceGained > 0) {
-      return 'Gold kept coming in while you were away.';
+      return 'Your party earned ${groupedCount(essenceGained)} essence '
+          'while you were away.';
     }
     return 'Welcome back.';
   }
@@ -3565,8 +3628,8 @@ class OfflineProgressResult {
     }
     if (goldGained > 0) {
       final goldValue = hubChestStopped
-          ? '+${goldGained}g · full'
-          : '+${goldGained}g';
+          ? '+${groupedCount(goldGained)}g · full'
+          : '+${groupedCount(goldGained)}g';
       ranked.add((6, wasInDungeon ? 'Combat gold' : 'Gold', goldValue));
     }
     ranked.sort((a, b) => a.$1.compareTo(b.$1));

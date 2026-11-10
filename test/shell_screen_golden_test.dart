@@ -14,15 +14,73 @@ import 'package:idle_party/ui/shell/home/home_shell.dart';
 import 'package:idle_party/ui/shell/menu_surface.dart';
 import 'package:idle_party/ui/shell/overlay_scaffold.dart';
 import 'package:idle_party/ui/shell/play_shell.dart';
+import 'package:idle_party/ui/spatial_dungeon_view.dart';
 import 'package:idle_party/ui/shell/shop_dock.dart';
+import 'package:idle_party/models/vfx_quality.dart';
+import 'package:idle_party/ui/hero_doll_sprite.dart';
+import 'package:idle_party/ui/shell/shell_common.dart';
 import 'package:idle_party/ui/theme.dart';
 import 'shell_golden_harness.dart';
+
+/// Gear golden: wait for async doll decode (shared harness stays at 400ms).
+Future<void> pumpGearGoldenUntilDoll(WidgetTester tester) async {
+  // Earlier screens can leave a doll decode running. This shot only has to
+  // finish the loads it starts.
+  final baseline = HeroDollSprite.pendingLoads;
+  await pumpGoldenFrames(tester, ms: 100);
+  final sw = Stopwatch()..start();
+  var idle = 0;
+  while (sw.elapsedMilliseconds < 15000) {
+    if (HeroDollSprite.pendingLoads <= baseline) {
+      idle++;
+      if (idle >= 5) break;
+    } else {
+      idle = 0;
+    }
+    await tester.pump();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 16)),
+    );
+  }
+  expect(
+    HeroDollSprite.pendingLoads,
+    lessThanOrEqualTo(baseline),
+    reason: 'gear golden timed out waiting for HeroDollSprite',
+  );
+  await pumpGoldenFrames(tester, ms: 200);
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
     await ensureShellGoldenFonts();
+  });
+
+  testWidgets('classic hub header tracks wallet gold', (tester) async {
+    bindA56View(tester);
+    final director = hubGoldenDirector();
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    addTearDown(director.dispose);
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        HubScreen(
+          director: director,
+          router: router,
+          onEnterDungeon: (_) {},
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester, ms: 200);
+    final before = director.state.gold;
+    expect(find.textContaining(formatGold(before)), findsWidgets);
+    director.debugSetGold(before + 777);
+    director.notifyListeners();
+    await tester.pump();
+    expect(find.textContaining(formatGold(director.state.gold)), findsWidgets);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 2));
   });
 
   testWidgets('hub screen golden A56', (tester) async {
@@ -424,7 +482,7 @@ void main() {
     await showGauntletDialogGolden(tester, director);
     await expectShellGolden(
       tester,
-      find.text('Gauntlet climb'),
+      find.text('Gauntlet'),
       'gauntlet_dialog_a56.png',
     );
     await tester.tap(find.text('CANCEL'));
@@ -504,7 +562,7 @@ void main() {
         ),
       ),
     );
-    await pumpGoldenFrames(tester, ms: 600);
+    await pumpGearGoldenUntilDoll(tester);
     await expectShellGolden(
       tester,
       find.byType(OverlayScrim),
@@ -621,6 +679,63 @@ void main() {
     await waitForFightChrome(tester, director);
     expect(tester.takeException(), isNull);
     await expectShellGolden(tester, find.byKey(key), 'fight_a56.png');
+    director.dispose();
+    directorLive = false;
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 20));
+  });
+
+  testWidgets('fight hit golden full VFX A56', (tester) async {
+    debugHoldFloorBake();
+    bindA56View(tester);
+    final director = await fightHitGoldenDirector();
+    var directorLive = true;
+    addTearDown(() {
+      if (directorLive) director.dispose();
+    });
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: key,
+        child: shellGoldenScaffold(
+          HomeShell(director: director, router: router, onLeave: () {}),
+        ),
+      ),
+    );
+    await waitForFightChrome(tester, director);
+    expect(find.text('WELCOME BACK'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await expectShellGolden(tester, find.byKey(key), 'fight_hit_a56.png');
+    director.dispose();
+    directorLive = false;
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 20));
+  });
+
+  testWidgets('fight hit golden minimal VFX A56', (tester) async {
+    debugHoldFloorBake();
+    bindA56View(tester);
+    final director = await fightHitGoldenDirector(vfx: VfxQuality.minimal);
+    var directorLive = true;
+    addTearDown(() {
+      if (directorLive) director.dispose();
+    });
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: key,
+        child: shellGoldenScaffold(
+          HomeShell(director: director, router: router, onLeave: () {}),
+        ),
+      ),
+    );
+    await waitForFightChrome(tester, director);
+    expect(tester.takeException(), isNull);
+    await expectShellGolden(tester, find.byKey(key), 'fight_hit_min_a56.png');
     director.dispose();
     directorLive = false;
     await tester.pumpWidget(const SizedBox.shrink());

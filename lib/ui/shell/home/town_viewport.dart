@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../assets/custom_assets.dart';
+import '../../../assets/kenney_assets.dart';
 import '../../../core/chase_dispatcher.dart';
 import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
@@ -12,14 +15,18 @@ import '../../../core/town_access.dart';
 import '../../../models/dungeon_def.dart';
 import '../../../models/hero.dart';
 import '../../../models/town_building.dart';
+import 'town_life.dart';
+import 'town_scene.dart';
 import '../../chase_bind.dart';
 import '../../confirm_dialogs.dart';
+import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../hero_doll_sprite.dart';
 import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import '../menu_surface.dart';
+import 'director_select.dart';
 import 'fight_seam_rails.dart';
 
 /// Out-of-dungeon town on [HomeShell]: party on the square, distinct
@@ -124,86 +131,113 @@ class _TownViewportState extends State<TownViewport> {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: director,
-      builder: (context, _) => _scene(context),
+    return Material(
+      color: GameTheme.stoneDeep,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: _square(context)),
+          // Cave name, ENTER, and the rails still follow every director tick.
+          // The square does not: a gold tick must not rebuild its images.
+          ListenableBuilder(
+            listenable: director,
+            builder: (context, _) => _chrome(context),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _scene(BuildContext context) {
+  Widget _square(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        DirectorSelect<TownPaintToken>(
+          director: director,
+          select: TownPaintToken.of,
+          builder: (context, state) {
+            final motion = townFolkMotionEnabled(
+              quality: state.vfxQuality,
+              disableAnimations: MediaQuery.disableAnimationsOf(context),
+            );
+            final token = TownPaintToken.of(state).withMotion(motion);
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                return _Hold(
+                  key: const ValueKey('town-paint'),
+                  token: token,
+                  child: _TownSquare(
+                    size: Size(constraints.maxWidth, constraints.maxHeight),
+                    state: state,
+                    tier: TownTier.paintedIndex(state.ascensionLevel),
+                    onTap: _openBuilding,
+                    badgeOf: (id) => _badge(id, state),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+        if (_lockedTitle != null && _lockedBody != null)
+          Positioned.fill(
+            child: _TownLockedNote(
+              title: _lockedTitle!,
+              body: _lockedBody!,
+              onClose: _clearLocked,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _chrome(BuildContext context) {
     final state = director.state;
     final chase = HubChase.forState(state);
     final plan = ChaseDispatcher.plan(chase, state: state);
     final label = plan.label ?? 'ENTER';
     final cave = DungeonCatalog.byId(state.dungeonId).name;
     final al = state.ascensionLevel;
-    final tier = TownTier.paintedIndex(al);
-
-    return Material(
-      color: GameTheme.stoneDeep,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Stack(
-              fit: StackFit.expand,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FightSeamRails(director: director, router: router),
+        DecoratedBox(
+          decoration: MenuChrome.panel(opaque: true),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Positioned.fill(child: _TownBackdrop()),
-                if (TownTier.showPennants(al))
-                  const Positioned(
-                    left: 24,
-                    right: 24,
-                    top: 18,
-                    height: 36,
-                    child: IgnorePointer(child: _TownPennants()),
-                  ),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    return _TownSquare(
-                      size: Size(constraints.maxWidth, constraints.maxHeight),
-                      state: state,
-                      tier: tier,
-                      onTap: _openBuilding,
-                      badgeOf: (id) => _badge(id, state),
-                    );
-                  },
+                Text(
+                  townProgressLine(ascensionLevel: al, cave: cave),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.hint(),
                 ),
-                if (_lockedTitle != null && _lockedBody != null)
-                  Positioned.fill(
-                    child: _TownLockedNote(
-                      title: _lockedTitle!,
-                      body: _lockedBody!,
-                      onClose: _clearLocked,
-                    ),
+                Text(
+                  cave,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.section(),
+                ),
+                const SizedBox(height: GameTheme.clusterGap),
+                WebClickScope(
+                  label: label,
+                  onPressed: () => runChasePlan(
+                    context: context,
+                    director: director,
+                    router: router,
+                    plan: plan,
+                    onEnterDungeon: (id) {
+                      router.close();
+                      director.enterDungeon(dungeonId: id);
+                    },
                   ),
-              ],
-            ),
-          ),
-          FightSeamRails(director: director, router: router),
-          DecoratedBox(
-            decoration: MenuChrome.panel(opaque: true),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    TownTier.progressLine(al),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.hint(),
-                  ),
-                  Text(
-                    cave,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.section(),
-                  ),
-                  const SizedBox(height: GameTheme.clusterGap),
-                  WebClickScope(
+                  child: GameButton(
                     label: label,
                     onPressed: () => runChasePlan(
                       context: context,
@@ -215,38 +249,25 @@ class _TownViewportState extends State<TownViewport> {
                         director.enterDungeon(dungeonId: id);
                       },
                     ),
-                    child: GameButton(
-                      label: label,
-                      onPressed: () => runChasePlan(
-                        context: context,
-                        director: director,
-                        router: router,
-                        plan: plan,
-                        onEnterDungeon: (id) {
-                          router.close();
-                          director.enterDungeon(dungeonId: id);
-                        },
-                      ),
-                    ),
                   ),
-                  if (GameLogic.canAscend(state) &&
-                      plan.op != ChaseOp.confirmAscend &&
-                      plan.op != ChaseOp.enter &&
-                      plan.op != ChaseOp.enterKey) ...[
-                    const SizedBox(height: 6),
-                    GameButton(
-                      label: 'ASCEND',
-                      style: GameButtonStyle.brown,
-                      dense: true,
-                      onPressed: () => confirmAscend(context, director),
-                    ),
-                  ],
+                ),
+                if (GameLogic.canAscend(state) &&
+                    plan.op != ChaseOp.confirmAscend &&
+                    plan.op != ChaseOp.enter &&
+                    plan.op != ChaseOp.enterKey) ...[
+                  const SizedBox(height: 6),
+                  GameButton(
+                    label: 'ASCEND',
+                    style: GameButtonStyle.brown,
+                    dense: true,
+                    onPressed: () => confirmAscend(context, director),
+                  ),
                 ],
-              ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -268,179 +289,278 @@ class _TownSquare extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final h = size.height;
-    final w = size.width;
-    final compact = h < 420;
+    final layout = TownSceneLayout.pack(
+      size,
+      textScale: MediaQuery.textScalerOf(context).scale(1),
+    );
     final guild = TownBuilding.byId(TownBuildingId.guild);
     final vault = TownBuilding.byId(TownBuildingId.vault);
-    final partyH = compact ? 46.0 : 54.0;
-    double fit(double value, double lo, double hi) {
-      if (hi < lo) return hi;
-      return value.clamp(lo, hi);
-    }
-
-    final frontW = fit(w / 3.15, compact ? 96.0 : 108.0, 128.0);
-    // Hit boxes do not overlap, so the forge chimney cannot cover GUILD
-    // or steal its tap. The cave stays visible above the plaza.
-    final frontRoom = h - partyH - 64;
-    final frontH = fit(
-      h * 0.40,
-      compact ? 88.0 : 112.0,
-      fit(168, 72, frontRoom),
-    );
-    final frontTop = h - partyH - frontH;
-    final backTop = compact ? 0.0 : 2.0;
-    final guildW = fit(w * 0.46, compact ? 112.0 : 128.0, 176.0);
-    final guildH = fit(frontTop - backTop - 2, 0, h);
-    final vaultW = fit(w * 0.26, 72.0, 104.0);
-    final vaultH = fit(guildH * 0.62, 64.0, guildH);
-    final well = compact ? 36.0 : 44.0;
-    final cobbleH = fit(frontTop + frontH * 0.55, partyH + 48, h * 0.78);
     final vaultPath = TownAccess.vaultClaimedToday(state)
         ? CustomAssets.townVaultOpen
         : CustomAssets.townVaultShut;
-    final guildLeft = w * 0.02;
-    final vaultLeft = w - vaultW - w * 0.03;
+    final motion = townFolkMotionEnabled(
+      quality: state.vfxQuality,
+      disableAnimations: MediaQuery.disableAnimationsOf(context),
+    );
+    final labels = <(String, Rect)>[
+      (guild.label, layout.guildLabel),
+      (vault.label, layout.vaultLabel),
+      for (var i = 0; i < TownBuilding.frontRow.length; i++)
+        (TownBuilding.frontRow[i].label, layout.frontLabels[i]),
+    ];
 
     return Stack(
       fit: StackFit.expand,
       children: [
+        const Positioned.fill(child: _TownBackdrop()),
         Positioned(
           left: 0,
           right: 0,
+          top: layout.grassTop,
           bottom: 0,
-          height: cobbleH,
           child: Image.asset(
             CustomAssets.townGround,
+            // Native pixels. scaleDown would shrink a tile that is larger
+            // than the lawn and bring the repeat back.
+            fit: BoxFit.none,
             repeat: ImageRepeat.repeat,
-            alignment: Alignment.bottomCenter,
+            alignment: Alignment.topLeft,
             filterQuality: FilterQuality.none,
             excludeFromSemantics: true,
           ),
         ),
+        for (final spur in layout.approaches) _approach(spur),
+        for (final street in layout.streets) _street(street),
+        for (final shade in layout.contacts)
+          _sprite(
+            shade,
+            CustomAssets.townContact,
+            fit: BoxFit.contain,
+            align: Alignment.bottomCenter,
+          ),
+        for (final tree in layout.trees)
+          _sprite(
+            tree,
+            tree.width > 60
+                ? CustomAssets.townTreeRound
+                : CustomAssets.townTreeTall,
+            fit: BoxFit.contain,
+            align: Alignment.bottomCenter,
+          ),
+        for (final planting in layout.plantings)
+          if (!_coversLabel(planting.rect, labels))
+            _sprite(
+              planting.rect,
+              _plantingAsset(planting.asset),
+              fit: BoxFit.contain,
+              align: Alignment.bottomCenter,
+            ),
+        _building(layout.guild, guild, guild.assetPath(tier)),
+        _building(layout.vault, vault, vaultPath),
+        _sprite(layout.well, CustomAssets.townWell),
+        Positioned.fill(
+          child: TownFolkLayer(
+            motion: motion && layout.folkScale > 0,
+            lane: layout.folkScale > 0
+                ? layout.lane
+                : Rect.fromLTWH(8, math.max(0, size.height - 52), 120, 36),
+            scale: layout.folkScale > 0 ? layout.folkScale : 1,
+          ),
+        ),
+        for (var i = 0; i < TownBuilding.frontRow.length; i++)
+          _building(
+            layout.front[i],
+            TownBuilding.frontRow[i],
+            TownBuilding.frontRow[i].assetPath(tier),
+          ),
+        for (final patch in layout.thresholds)
+          if (!_coversLabel(patch, labels))
+            _sprite(
+              patch,
+              CustomAssets.townWorn,
+              fit: BoxFit.contain,
+              align: Alignment.bottomCenter,
+            ),
         if (TownTier.showArcade(state.ascensionLevel))
           Positioned(
-            left: 20,
-            right: 20,
-            bottom: cobbleH - 8,
-            height: 18,
+            left: layout.doorPath.left + 16,
+            right: 16,
+            top: layout.doorPath.top,
+            height: 14,
             child: const IgnorePointer(child: _TownArcade()),
           ),
         Positioned(
-          left: guildLeft,
-          top: backTop,
-          width: guildW,
-          height: guildH,
-          child: _TownBuildingButton(
-            building: guild,
-            assetPath: guild.assetPath(tier),
-            badge: badgeOf(guild.id),
-            onTap: () => onTap(guild),
-          ),
-        ),
-        Positioned(
-          left: vaultLeft,
-          top: backTop + 8,
-          width: vaultW,
-          height: vaultH,
-          child: _TownBuildingButton(
-            building: vault,
-            assetPath: vaultPath,
-            badge: badgeOf(vault.id),
-            onTap: () => onTap(vault),
-          ),
-        ),
-        Positioned(
-          left: (w - well) / 2,
-          top: frontTop - well - 2,
-          width: well,
-          height: well,
-          child: IgnorePointer(
-            child: Image.asset(
-              CustomAssets.townWell,
-              filterQuality: FilterQuality.none,
-              fit: BoxFit.contain,
-              excludeFromSemantics: true,
-            ),
-          ),
-        ),
-        for (var i = 0; i < TownBuilding.frontRow.length; i++)
-          Positioned(
-            left: _frontLeft(w, frontW, i),
-            top: frontTop,
-            width: frontW,
-            height: frontH,
-            child: _TownBuildingButton(
-              building: TownBuilding.frontRow[i],
-              assetPath: TownBuilding.frontRow[i].assetPath(tier),
-              badge: badgeOf(TownBuilding.frontRow[i].id),
-              onTap: () => onTap(TownBuilding.frontRow[i]),
-            ),
-          ),
-        Positioned(
-          left: GameTheme.edgeGap,
-          right: GameTheme.edgeGap,
+          left: layout.party.left,
+          right: size.width - layout.party.right,
           bottom: 0,
-          height: partyH,
-          child: _PartyRow(heroes: state.heroes, compact: compact),
-        ),
-        // Chips sit on the sprites. Bottom-aligned art leaves sky above
-        // the towers, so the names are not pinned to the top of the box.
-        _nameChip(
-          guild.label,
-          left: guildLeft + 8,
-          top: backTop + guildH * 0.22,
-        ),
-        _nameChip(
-          vault.label,
-          left: vaultLeft + 4,
-          top: backTop + vaultH * 0.22,
-        ),
-        for (var i = 0; i < TownBuilding.frontRow.length; i++)
-          _nameChip(
-            TownBuilding.frontRow[i].label,
-            left: _frontLeft(w, frontW, i) + 10,
-            bottom: partyH + 2,
+          height: layout.party.height,
+          child: _PartyRow(
+            heroes: state.heroes,
+            doll: layout.lane.height >= 48 && size.width >= 360
+                ? 40
+                : (size.height < 380 ? 34 : 42),
           ),
+        ),
+        if (TownTier.showPennants(state.ascensionLevel) && layout.grassTop > 26)
+          const Positioned(
+            left: 16,
+            right: 16,
+            top: 2,
+            height: 22,
+            child: IgnorePointer(child: _TownPennants()),
+          ),
+        for (final (label, rect) in labels) _nameChip(label, rect),
       ],
     );
   }
 
-  double _frontLeft(double w, double frontW, int i) {
-    const gap = 6.0;
-    final total = frontW * 3 + gap * 2;
-    final start = (w - total) / 2;
-    return start + i * (frontW + gap);
+  bool _coversLabel(Rect flower, List<(String, Rect)> labels) {
+    for (final (_, label) in labels) {
+      if (flower.overlaps(label.inflate(2))) return true;
+    }
+    return false;
   }
 
-  Widget _nameChip(
-    String label, {
-    double? left,
-    double? top,
-    double? bottom,
-    double? width,
-  }) {
-    return Positioned(
-      left: left,
-      top: top,
-      bottom: bottom,
-      width: width,
+  /// Two cobble courses. The join is the shared mortar column in both tiles.
+  Widget _street(Rect rect) {
+    final scale = rect.height / 36.0;
+    final joint = 180.0 * scale;
+    final leftW = math.min(joint, rect.width);
+    return Positioned.fromRect(
+      rect: rect,
       child: IgnorePointer(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: GameTheme.hudPartyRowIdle.withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(GameTheme.radiusHud),
-            border: Border.all(color: GameTheme.equipChipNeutral),
+        child: ClipRect(
+          child: Row(
+            children: [
+              SizedBox(
+                width: leftW,
+                height: rect.height,
+                child: ClipRect(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Image.asset(
+                      CustomAssets.townPath,
+                      height: rect.height,
+                      fit: BoxFit.fitHeight,
+                      filterQuality: FilterQuality.none,
+                      excludeFromSemantics: true,
+                    ),
+                  ),
+                ),
+              ),
+              if (rect.width > leftW + 1)
+                Expanded(
+                  child: ClipRect(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Transform.translate(
+                        offset: Offset(-joint, 0),
+                        child: Image.asset(
+                          CustomAssets.townPathAlt,
+                          height: rect.height,
+                          fit: BoxFit.fitHeight,
+                          filterQuality: FilterQuality.none,
+                          excludeFromSemantics: true,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.hint(color: GameTheme.parchment),
+        ),
+      ),
+    );
+  }
+
+  /// A cobble spur. Native pixels, repeated only when the yard is taller
+  /// than the sprite. The sprite's mortar joins, so the repeat is not a line.
+  Widget _approach(Rect rect) {
+    return Positioned.fromRect(
+      rect: rect,
+      child: IgnorePointer(
+        child: ClipRect(
+          child: Image.asset(
+            CustomAssets.townApproach,
+            fit: BoxFit.none,
+            repeat: ImageRepeat.repeatY,
+            alignment: Alignment.topCenter,
+            filterQuality: FilterQuality.none,
+            excludeFromSemantics: true,
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _plantingAsset(String key) {
+    return switch (key) {
+      'shrub' => CustomAssets.townShrub,
+      'wild' => CustomAssets.townWild,
+      'herbs' => CustomAssets.townHerbs,
+      'meadow' => CustomAssets.townMeadow,
+      'thicket' => CustomAssets.townThicket,
+      'scuff' => CustomAssets.townScuff,
+      _ => CustomAssets.townFlowers,
+    };
+  }
+
+  Widget _sprite(
+    Rect rect,
+    String asset, {
+    BoxFit fit = BoxFit.contain,
+    Alignment align = Alignment.bottomCenter,
+  }) {
+    return Positioned.fromRect(
+      rect: rect,
+      child: IgnorePointer(
+        child: Image.asset(
+          asset,
+          fit: fit,
+          alignment: align,
+          filterQuality: FilterQuality.none,
+          excludeFromSemantics: true,
+        ),
+      ),
+    );
+  }
+
+  Widget _building(Rect rect, TownBuilding building, String asset) {
+    return Positioned.fromRect(
+      rect: rect,
+      child: _TownBuildingButton(
+        building: building,
+        assetPath: asset,
+        badge: badgeOf(building.id),
+        onTap: () => onTap(building),
+      ),
+    );
+  }
+
+  Widget _nameChip(String label, Rect rect) {
+    return Positioned.fromRect(
+      rect: rect,
+      child: IgnorePointer(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              KenneyAssets.townNameplate,
+              fit: BoxFit.fill,
+              filterQuality: FilterQuality.none,
+              excludeFromSemantics: true,
             ),
-          ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: GameTheme.hint(color: GameTheme.parchment),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -467,37 +587,14 @@ class _TownPennants extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(painter: _PennantPainter());
+    return Image.asset(
+      KenneyAssets.townPennants,
+      fit: BoxFit.contain,
+      alignment: Alignment.topCenter,
+      filterQuality: FilterQuality.none,
+      excludeFromSemantics: true,
+    );
   }
-}
-
-class _PennantPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final line = Paint()
-      ..color = GameTheme.equipChipNeutral
-      ..strokeWidth = 2;
-    canvas.drawLine(Offset(0, 6), Offset(size.width, 6), line);
-    const colors = [
-      GameTheme.blood,
-      GameTheme.borderLit,
-      GameTheme.moss,
-      GameTheme.navGear,
-    ];
-    final n = 7;
-    for (var i = 0; i < n; i++) {
-      final x = size.width * (i + 0.5) / n;
-      final path = Path()
-        ..moveTo(x - 7, 6)
-        ..lineTo(x + 7, 6)
-        ..lineTo(x, 28)
-        ..close();
-      canvas.drawPath(path, Paint()..color = colors[i % colors.length]);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _TownArcade extends StatelessWidget {
@@ -505,56 +602,56 @@ class _TownArcade extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        for (var i = 0; i < 5; i++)
-          Container(
-            width: 10,
-            height: 10,
-            decoration: const BoxDecoration(
-              color: GameTheme.torch,
-              shape: BoxShape.circle,
-            ),
-          ),
-      ],
+    return Image.asset(
+      KenneyAssets.townLanterns,
+      fit: BoxFit.contain,
+      alignment: Alignment.center,
+      filterQuality: FilterQuality.none,
+      excludeFromSemantics: true,
     );
   }
 }
 
 class _PartyRow extends StatelessWidget {
-  const _PartyRow({required this.heroes, required this.compact});
+  const _PartyRow({required this.heroes, required this.doll});
 
   final List<PartyHero> heroes;
-  final bool compact;
+  final double doll;
 
   @override
   Widget build(BuildContext context) {
-    final size = compact ? 34.0 : (heroes.length > 4 ? 36.0 : 42.0);
+    final standW = doll * heroes.length;
     return Semantics(
       label: 'Party resting in town',
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
         children: [
-          for (var i = 0; i < heroes.length; i++)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  HeroDollSprite(hero: heroes[i], partyIndex: i, size: size),
-                  Container(
-                    width: size * 0.72,
-                    height: 3,
-                    decoration: BoxDecoration(
-                      color: GameTheme.hudPartyRowIdle,
-                      borderRadius: BorderRadius.circular(2),
+          Image.asset(
+            CustomAssets.townContact,
+            width: standW,
+            height: 14,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.none,
+            excludeFromSemantics: true,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (var i = 0; i < heroes.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: HeroDollSprite(
+                      hero: heroes[i],
+                      partyIndex: i,
+                      size: doll,
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
+          ),
         ],
       ),
     );
@@ -599,15 +696,16 @@ class _TownBuildingButton extends StatelessWidget {
               ),
               if (badge)
                 Positioned(
-                  right: 4,
-                  top: 4,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: GameTheme.torchHot,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: GameTheme.stone, width: 2),
+                  right: 2,
+                  top: 2,
+                  child: IgnorePointer(
+                    child: Image.asset(
+                      CustomAssets.townAlert,
+                      key: ValueKey('town-alert-${building.id.name}'),
+                      width: 22,
+                      height: 22,
+                      filterQuality: FilterQuality.none,
+                      excludeFromSemantics: true,
                     ),
                   ),
                 ),
@@ -652,10 +750,24 @@ class _TownLockedNote extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          title,
-                          textAlign: TextAlign.center,
-                          style: GameTheme.section(),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                title,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GameTheme.section(),
+                              ),
+                            ),
+                            GameIconButton(
+                              key: const ValueKey('town-locked-close'),
+                              label: 'CLOSE',
+                              glyph: UiGlyph.close,
+                              onPressed: onClose,
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -679,6 +791,162 @@ class _TownLockedNote extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Below the pennant tier the line names the town and the cave.
+/// At the tier it keeps [TownTier.progressLine], which says banners.
+String townProgressLine({required int ascensionLevel, required String cave}) {
+  if (TownTier.showPennants(ascensionLevel)) {
+    return TownTier.progressLine(ascensionLevel);
+  }
+  final look = ascensionLevel >= 1 ? 'Stone town' : 'Timber town';
+  return '$look · $cave';
+}
+
+/// What the town square paints. Gold is not in here, so a wallet tick
+/// does not rebuild the buildings, the lawn, or the walkers.
+class TownPaintToken {
+  const TownPaintToken({
+    required this.ascension,
+    required this.dungeonId,
+    required this.vaultOpen,
+    required this.marketBadge,
+    required this.innBadge,
+    required this.guildBadge,
+    required this.vaultBadge,
+    required this.vfx,
+    required this.portraits,
+    this.motion = true,
+  });
+
+  final int ascension;
+  final String dungeonId;
+  final bool vaultOpen;
+  final bool marketBadge;
+  final bool innBadge;
+  final bool guildBadge;
+  final bool vaultBadge;
+  final String vfx;
+  final String portraits;
+  final bool motion;
+
+  static TownPaintToken of(GameState state) {
+    final portraits = StringBuffer();
+    for (final hero in state.heroes) {
+      portraits
+        ..write(hero.id)
+        ..write('|')
+        ..write(hero.specId.name)
+        ..write('|')
+        ..write(hero.level)
+        ..write('|')
+        ..write(hero.race.name)
+        ..write('|')
+        ..write(hero.sex.name);
+      for (final entry in hero.equipped.entries) {
+        final item = entry.value;
+        portraits
+          ..write('|')
+          ..write(entry.key.name)
+          ..write(':')
+          ..write(item.id)
+          ..write(':')
+          ..write(item.visualSetId)
+          ..write(':')
+          ..write(item.iconId);
+      }
+      portraits.write(';');
+    }
+    return TownPaintToken(
+      ascension: state.ascensionLevel,
+      dungeonId: state.dungeonId,
+      vaultOpen: TownAccess.vaultClaimedToday(state),
+      marketBadge: !MenuAlerts.marketAlert(state).isQuiet,
+      innBadge: state.metaDepth.pendingHeroReveals.isNotEmpty,
+      guildBadge: state.missions.any((m) => m.canClaim),
+      vaultBadge: TownAccess.vaultClaimable(state),
+      vfx: state.vfxQuality.name,
+      portraits: portraits.toString(),
+    );
+  }
+
+  TownPaintToken withMotion(bool value) {
+    if (value == motion) return this;
+    return TownPaintToken(
+      ascension: ascension,
+      dungeonId: dungeonId,
+      vaultOpen: vaultOpen,
+      marketBadge: marketBadge,
+      innBadge: innBadge,
+      guildBadge: guildBadge,
+      vaultBadge: vaultBadge,
+      vfx: vfx,
+      portraits: portraits,
+      motion: value,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is TownPaintToken &&
+        other.ascension == ascension &&
+        other.dungeonId == dungeonId &&
+        other.vaultOpen == vaultOpen &&
+        other.marketBadge == marketBadge &&
+        other.innBadge == innBadge &&
+        other.guildBadge == guildBadge &&
+        other.vaultBadge == vaultBadge &&
+        other.vfx == vfx &&
+        other.portraits == portraits &&
+        other.motion == motion;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    ascension,
+    dungeonId,
+    vaultOpen,
+    marketBadge,
+    innBadge,
+    guildBadge,
+    vaultBadge,
+    vfx,
+    portraits,
+    motion,
+  );
+}
+
+/// Returns the same child widget when [token] is unchanged, so a parent
+/// rebuild (the root director listener) does not recreate [Image.asset]s.
+class _Hold extends StatefulWidget {
+  const _Hold({super.key, required this.token, required this.child});
+
+  final TownPaintToken token;
+  final Widget child;
+
+  @override
+  State<_Hold> createState() => _HoldState();
+}
+
+class _HoldState extends State<_Hold> {
+  late TownPaintToken _token;
+  late Widget _child;
+
+  @override
+  void initState() {
+    super.initState();
+    _token = widget.token;
+    _child = widget.child;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.token != _token) {
+      _token = widget.token;
+      _child = widget.child;
+    }
+    return _child;
   }
 }
 

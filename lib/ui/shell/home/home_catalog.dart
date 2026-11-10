@@ -153,7 +153,7 @@ abstract final class HomeCatalog {
       id: 'menu_patch',
       place: HomePlace.menuGrid,
       order: 20,
-      icon: UiIcon.more,
+      icon: UiIcon.star,
       label: 'PATCH NOTES',
       visible: (_, _) => true,
       badge: (_) => false,
@@ -321,7 +321,10 @@ abstract final class HomeCatalog {
       director.claimDailyVault();
       return;
     }
-    director.showToast('Daily Vault $clears/$target', life: 2.2);
+    director.showToast(
+      'Today: clears $clears/$target',
+      life: 2.2,
+    );
     router.open(MenuRoute.more, more: MoreSection.quests);
     router.pushSub();
   }
@@ -329,6 +332,9 @@ abstract final class HomeCatalog {
   static List<HomeEntry> of(HomePlace place) {
     final list = entries.where((e) => e.place == place).toList();
     list.sort((a, b) => a.order.compareTo(b.order));
+    if (place == HomePlace.menuGrid) {
+      return TownNavPolicy.filterMenuGrid(list, (e) => e.id);
+    }
     return TownNavPolicy.filterEntries(list, (e) => e.id);
   }
 }

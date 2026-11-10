@@ -30,10 +30,10 @@ abstract final class FirstClimbCoach {
     if (claim) return 'Tap CLAIM. The boss is on $_bossBit.';
     final floor = state.currentRoom.floorNumber;
     if (floor >= GameLogic.firstBossFloor) {
-      return 'This is the boss. Your party fights on its own.';
+      return 'This is the boss.';
     }
     if (state.highestFloorCleared < 1) {
-      return 'Your party fights on its own. Boss on $_bossBit.';
+      return 'Boss on $_bossBit.';
     }
     return 'Floor ${state.highestFloorCleared} paid out. Boss on $_bossBit.';
   }

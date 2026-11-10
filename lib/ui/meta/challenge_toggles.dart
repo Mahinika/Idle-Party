@@ -18,12 +18,16 @@ class ChallengeToggles extends StatefulWidget {
     required this.director,
     this.collapsed = false,
     this.lockExpanded = false,
+    this.foldEssays = false,
   });
   final GameDirector director;
   final bool collapsed;
 
   /// KEY sheet: keep dial visible — accidental collapse looked like an empty tab.
   final bool lockExpanded;
+
+  /// KEY sheet: dial stays open. Affix essays, week, and the vault sit in a fold.
+  final bool foldEssays;
 
   @override
   State<ChallengeToggles> createState() => _ChallengeTogglesState();
@@ -139,6 +143,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
             textAlign: TextAlign.center,
             style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
+          ...() {
+            final essays = <Widget>[
           if (GameLogic.endgameUnlocked(state)) ...[
             const SizedBox(height: 4),
             Text(
@@ -294,12 +300,19 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 Text(
                   md.seasonKey.isEmpty
                       ? 'Season: rotating…'
-                      : 'Season: ${month.name} · '
-                            '+${GameLogic.seasonWeeklyBonusEssence}e '
-                            'first vault claim',
+                      : 'Season: ${month.name}',
                   textAlign: TextAlign.center,
                   style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
+                if (md.seasonKey.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '+${GameLogic.seasonWeeklyBonusEssence} essence on the '
+                    'first vault claim this month',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.hint(color: GameTheme.mossLit),
+                  ),
+                ],
                 if (GameLogic.checkInActive(state)) ...[
                   const SizedBox(height: 2),
                   Text(
@@ -311,7 +324,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 if (vaultReady) ...[
                   const SizedBox(height: 6),
                   GameButton(
-                    label: 'CLAIM VAULT  +${vaultE}e · +1 Cinder',
+                    label:
+                        'CLAIM VAULT · +${OfflineProgressResult.groupedCount(vaultE)} essence · +1 Cinder',
                     onPressed: director.claimDailyVault,
                   ),
                 ],
@@ -337,6 +351,17 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
             textAlign: TextAlign.center,
             style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
+            ];
+            if (!widget.foldEssays) return essays;
+            return <Widget>[
+              MenuChrome.fold(
+                title: 'AFFIXES',
+                subtitle: 'Week, challenges, and the vault',
+                initiallyExpanded: false,
+                children: essays,
+              ),
+            ];
+          }(),
         ],
       ],
     );

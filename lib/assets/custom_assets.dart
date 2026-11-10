@@ -307,6 +307,28 @@ abstract final class CustomAssets {
   static const String _townRoot = '$_root/town';
   static const String townBackdrop = '$_townRoot/backdrop.png';
   static const String townGround = '$_townRoot/ground.png';
+  static const String townPath = '$_townRoot/path.png';
+
+  /// Second cobble course. Same size as [townPath]. Not in [townAssetPaths]
+  /// so the shipped path count stays put; the folder is already bundled.
+  static const String townPathAlt = '$_townRoot/path_b.png';
+  static const String townApproach = '$_townRoot/approach.png';
+  static const String townTreeRound = '$_townRoot/tree_round.png';
+  static const String townTreeTall = '$_townRoot/tree_tall.png';
+  static const String townFlowers = '$_townRoot/flowers.png';
+  static const String townShrub = '$_townRoot/shrub.png';
+  static const String townWild = '$_townRoot/wild.png';
+  static const String townHerbs = '$_townRoot/herbs.png';
+  static const String townWorn = '$_townRoot/worn.png';
+  static const String townMeadow = '$_townRoot/meadow.png';
+  static const String townThicket = '$_townRoot/thicket.png';
+  static const String townScuff = '$_townRoot/scuff.png';
+  static const String townContact = '$_townRoot/contact.png';
+  static const String townFolk = '$_townRoot/folk.png';
+  static const String townAlert = '$_townRoot/alert.png';
+  static const String townNameplate = '$_townRoot/nameplate.png';
+  static const String townPennants = '$_townRoot/pennants.png';
+  static const String townLanterns = '$_townRoot/lanterns.png';
   static const String townWell = '$_townRoot/well.png';
   static const String townVaultShut = '$_townRoot/vault_shut.png';
   static const String townVaultOpen = '$_townRoot/vault_open.png';
@@ -323,6 +345,24 @@ abstract final class CustomAssets {
   static List<String> get townAssetPaths => [
     townBackdrop,
     townGround,
+    townPath,
+    townApproach,
+    townTreeRound,
+    townTreeTall,
+    townFlowers,
+    townShrub,
+    townWild,
+    townHerbs,
+    townWorn,
+    townMeadow,
+    townThicket,
+    townScuff,
+    townContact,
+    townFolk,
+    townAlert,
+    townNameplate,
+    townPennants,
+    townLanterns,
     townWell,
     townVaultShut,
     townVaultOpen,

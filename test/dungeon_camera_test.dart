@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/ui/dungeon_camera.dart';
 
 /// The pre-fix ease: a gap of 0.35 tiles or less snapped, and anything
@@ -55,6 +56,46 @@ class _Follow {
     aimX = tx;
     aimY = ty;
   }
+}
+
+({double x, double y}) _live({
+  required List<({double x, double y, bool alive, int index})> heroes,
+  required List<({double x, double y, bool alive})> enemies,
+  int? pinIndex,
+}) {
+  var sx = 0.0;
+  var sy = 0.0;
+  var n = 0;
+  for (final h in heroes) {
+    if (!h.alive && pinIndex == null) continue;
+    if (pinIndex != null && h.index != pinIndex) continue;
+    sx += h.x;
+    sy += h.y;
+    n++;
+  }
+  final partyX = n == 0 ? 0.0 : sx / n;
+  final partyY = n == 0 ? 0.0 : sy / n;
+  return dungeonLiveFocus(
+    awaitingExit: false,
+    inFight: enemies.isNotEmpty,
+    goalInClearView: true,
+    partyX: partyX,
+    partyY: partyY,
+    goalX: enemies.isEmpty ? null : enemies.first.x,
+    goalY: enemies.isEmpty ? null : enemies.first.y,
+    exitX: 20,
+    exitY: 40,
+    gateFocus: null,
+    heroes: heroes,
+    awakeEnemies: enemies,
+    mapCenterX: 26,
+    mapCenterY: 20,
+    pinIndex: pinIndex,
+    visibleCols: 20,
+    visibleRows: 32,
+    marginTop: 5,
+    marginBottom: 12,
+  );
 }
 
 double _straightLag({
@@ -423,7 +464,11 @@ void main() {
       mapCenterY: 10,
       pinIndex: 0,
     );
-    expect(corpseStillPinned.x, 4, reason: 'a chosen hero stays the aim');
+    expect(
+      corpseStillPinned.x,
+      6.5,
+      reason: 'a pinned corpse releases to a living hero',
+    );
     final living = dungeonPartyFocus(
       heroes: [
         (x: 4.0, y: 8.0, alive: false, index: 0),
@@ -434,6 +479,45 @@ void main() {
       pinIndex: null,
     );
     expect(living.x, 6.5);
+
+    expect(
+      dungeonGoalHoldsClear(
+        wasClear: true,
+        partyX: 8,
+        partyY: 10,
+        packX: 8,
+        packY: 16,
+        visibleCols: 18,
+        visibleRows: 32,
+      ),
+      isTrue,
+      reason: 'one death a couple of tiles outside the card stays on the party',
+    );
+    expect(
+      dungeonGoalHoldsClear(
+        wasClear: false,
+        partyX: 8,
+        partyY: 10,
+        packX: 8,
+        packY: 16,
+        visibleCols: 18,
+        visibleRows: 32,
+      ),
+      isFalse,
+    );
+    expect(
+      dungeonGoalHoldsClear(
+        wasClear: true,
+        partyX: 8,
+        partyY: 10,
+        packX: 8,
+        packY: 40,
+        visibleCols: 18,
+        visibleRows: 32,
+      ),
+      isFalse,
+      reason: 'a pack off the phone still uses the gate',
+    );
 
     void glide({
       required double from,
@@ -675,6 +759,282 @@ void main() {
     expect(screen, lessThanOrEqualTo(rows - 14));
   });
 
+  test('a one-frame charge hop lags and the slide at 1× and 2× does not', () {
+    final jumped = _Follow()
+      ..x = 0
+      ..y = 0
+      ..aimX = 0
+      ..aimY = 0;
+    jumped.sample(2.2, 0, 1 / 60, legacy: false);
+    expect((2.2 - jumped.x!).abs(), greaterThan(1));
+
+    double followLag(double dt) {
+      final cam = _Follow()
+        ..x = 0
+        ..y = 0
+        ..aimX = 0
+        ..aimY = 0;
+      var shown = 0.0;
+      const travel = 6.6;
+      final speed = SpatialActor.pictureRushTilesPerSec;
+      var worst = 0.0;
+      for (var i = 0; i < 90; i++) {
+        shown = math.min(travel, shown + speed * dt);
+        cam.sample(shown, 0, dt, legacy: false);
+        worst = math.max(worst, (shown - cam.x!).abs());
+        if (shown >= travel) break;
+      }
+      expect(shown, travel);
+      return worst;
+    }
+
+    expect(followLag(1 / 60), lessThan(1e-6));
+    expect(followLag(2 / 60), lessThan(1e-6));
+    expect(followLag(3 / 60), lessThan(1e-6));
+    expect(followLag(1 / 30), lessThan(1e-6));
+  });
+
+  test('two on-screen foes do not throw the aim when one dies or swaps nearer', () {
+    const heroes = [
+      (x: 20.0, y: 20.0, alive: true, index: 0),
+      (x: 21.0, y: 20.4, alive: true, index: 1),
+    ];
+    const southNear = [
+      (x: 20.0, y: 26.0, alive: true),
+      (x: 20.0, y: 14.2, alive: true),
+    ];
+    const northNear = [
+      (x: 20.0, y: 26.2, alive: true),
+      (x: 20.0, y: 14.0, alive: true),
+    ];
+    final both = _live(heroes: heroes, enemies: southNear);
+    final swapped = _live(heroes: heroes, enemies: northNear);
+    final survivor = _live(
+      heroes: heroes,
+      enemies: [(x: 20.0, y: 14.2, alive: true)],
+    );
+    expect((both.y - swapped.y).abs(), lessThan(0.05));
+    expect((both.y - survivor.y).abs(), lessThan(0.05));
+    expect(both.x, closeTo(20.5, 0.05));
+
+    final stairsSouth = dungeonStairsFocus(
+      partyX: 20.5,
+      partyY: 20.2,
+      exitX: 20,
+      exitY: 26,
+      visibleCols: 20,
+      visibleRows: 32,
+      topInset: 5,
+      bottomInset: 12,
+    );
+    final stairsNorth = dungeonStairsFocus(
+      partyX: 20.5,
+      partyY: 20.2,
+      exitX: 20,
+      exitY: 14,
+      visibleCols: 20,
+      visibleRows: 32,
+      topInset: 5,
+      bottomInset: 12,
+    );
+    expect((stairsSouth.y - stairsNorth.y).abs(), greaterThan(4));
+
+    final cam = _Follow()
+      ..x = both.x
+      ..y = both.y
+      ..aimX = both.x
+      ..aimY = both.y;
+    for (final dt in [1 / 60, 2 / 60, 3 / 60, 1 / 30]) {
+      final flip = dt == 2 / 60 ? northNear : southNear;
+      final aim = _live(heroes: heroes, enemies: flip);
+      final before = cam.y!;
+      cam.sample(aim.x, aim.y, dt, legacy: false);
+      expect((cam.y! - before).abs(), lessThan(0.05), reason: 'dt $dt');
+    }
+  });
+
+  test('a pinned hero and a hero death do not chase the other foe', () {
+    const heroes = [
+      (x: 18.0, y: 20.0, alive: true, index: 0),
+      (x: 23.0, y: 21.0, alive: true, index: 1),
+    ];
+    const foes = [
+      (x: 20.0, y: 26.0, alive: true),
+      (x: 20.0, y: 14.0, alive: true),
+    ];
+    final pinned = _live(heroes: heroes, enemies: foes, pinIndex: 0);
+    final pinnedAfter = _live(
+      heroes: heroes,
+      enemies: [(x: 20.0, y: 14.0, alive: true)],
+      pinIndex: 0,
+    );
+    expect(pinned.x, 18);
+    expect(pinned.y, 20);
+    expect(pinnedAfter.x, pinned.x);
+    expect(pinnedAfter.y, pinned.y);
+
+    final alive = _live(heroes: heroes, enemies: foes);
+    final afterDeath = _live(
+      heroes: [
+        (x: 18.0, y: 20.0, alive: false, index: 0),
+        (x: 23.0, y: 21.0, alive: true, index: 1),
+      ],
+      enemies: foes,
+    );
+    expect(afterDeath.x, 23);
+    expect(afterDeath.y, 21);
+    final cam = _Follow()
+      ..x = alive.x
+      ..y = alive.y
+      ..aimX = alive.x
+      ..aimY = alive.y;
+    cam.sample(afterDeath.x, afterDeath.y, 2 / 60, legacy: false);
+    expect(cam.x!, inInclusiveRange(alive.x, afterDeath.x));
+    expect(cam.x!, isNot(closeTo(afterDeath.x, 0.2)));
+  });
+
+  test('a charge slide that crosses the nearer foe stays on the party', () {
+    const foes = [
+      (x: 20.0, y: 26.0, alive: true),
+      (x: 20.0, y: 14.0, alive: true),
+    ];
+    final before = _live(
+      heroes: [(x: 20.0, y: 20.0, alive: true, index: 0)],
+      enemies: foes,
+    );
+    final after = _live(
+      heroes: [(x: 20.0, y: 20.4, alive: true, index: 0)],
+      enemies: foes,
+    );
+    expect((after.y - before.y).abs(), closeTo(0.4, 0.05));
+    final stairsBefore = dungeonStairsFocus(
+      partyX: 20,
+      partyY: 20,
+      exitX: 20,
+      exitY: 26,
+      visibleCols: 20,
+      visibleRows: 32,
+      topInset: 5,
+      bottomInset: 12,
+    );
+    final stairsAfter = dungeonStairsFocus(
+      partyX: 20,
+      partyY: 20.4,
+      exitX: 20,
+      exitY: 14,
+      visibleCols: 20,
+      visibleRows: 32,
+      topInset: 5,
+      bottomInset: 12,
+    );
+    expect((stairsAfter.y - stairsBefore.y).abs(), greaterThan(4));
+  });
+
+  test('an offscreen pack still uses the gate, and the exit still frames', () {
+    const gate = (x: 20.0, y: 30.0);
+    final approach = dungeonLiveFocus(
+      awaitingExit: false,
+      inFight: true,
+      goalInClearView: false,
+      partyX: 20,
+      partyY: 10,
+      goalX: 20,
+      goalY: 40,
+      exitX: 20,
+      exitY: 50,
+      gateFocus: gate,
+      heroes: [(x: 20.0, y: 10.0, alive: true, index: 0)],
+      awakeEnemies: [(x: 20.0, y: 40.0, alive: true)],
+      mapCenterX: 26,
+      mapCenterY: 20,
+      pinIndex: null,
+      visibleCols: 20,
+      visibleRows: 32,
+    );
+    expect(approach.x, gate.x);
+    expect(approach.y, gate.y);
+    final exit = dungeonLiveFocus(
+      awaitingExit: true,
+      inFight: false,
+      goalInClearView: false,
+      partyX: 20,
+      partyY: 10,
+      goalX: null,
+      goalY: null,
+      exitX: 22,
+      exitY: 4,
+      gateFocus: null,
+      heroes: [(x: 20.0, y: 10.0, alive: true, index: 0)],
+      awakeEnemies: const [],
+      mapCenterX: 26,
+      mapCenterY: 20,
+      pinIndex: null,
+      visibleCols: 20,
+      visibleRows: 32,
+    );
+    expect(exit.y, lessThan(10));
+    final chest = dungeonLiveFocus(
+      awaitingExit: false,
+      inFight: false,
+      goalInClearView: true,
+      partyX: 20,
+      partyY: 12,
+      goalX: 21,
+      goalY: 16,
+      exitX: 20,
+      exitY: 40,
+      gateFocus: null,
+      heroes: [(x: 20.0, y: 12.0, alive: true, index: 0)],
+      awakeEnemies: const [],
+      mapCenterX: 26,
+      mapCenterY: 20,
+      pinIndex: null,
+      visibleCols: 20,
+      visibleRows: 32,
+      marginTop: 5,
+      marginBottom: 12,
+    );
+    expect(chest.y, isNot(12));
+  });
+
+  test('an in-room step does not change zoom, and a new floor still snaps', () {
+    final wide = dungeonFitCols(
+      partyX: 51,
+      partyY: 10,
+      goalX: 51,
+      goalY: 16,
+      viewWidth: 360,
+      viewHeight: 780,
+      targetCols: 20,
+      topInsetPx: 8,
+      bottomInsetPx: 220,
+    );
+    final stepped = dungeonFitCols(
+      partyX: 51,
+      partyY: 10.4,
+      goalX: 51,
+      goalY: 16,
+      viewWidth: 360,
+      viewHeight: 780,
+      targetCols: 20,
+      topInsetPx: 8,
+      bottomInsetPx: 220,
+    );
+    expect(stepped, wide);
+    final fresh = dungeonCamEase(
+      prevX: 10,
+      prevY: 10,
+      prevTargetX: 10,
+      prevTargetY: 10,
+      targetX: 40,
+      targetY: 12,
+      newWorld: true,
+      dt: 2 / 60,
+    );
+    expect(fresh.x, 40);
+    expect(fresh.y, 12);
+  });
+
   test('a hero at the edge is pulled back inside the phone', () {
     final framed = dungeonIncludeParty(
       focusX: 10,
@@ -685,5 +1045,29 @@ void main() {
     );
     final halfY = 11.0;
     expect(20 - framed.y, lessThanOrEqualTo(halfY - 4.5));
+  });
+
+  test('a blink picture slides while the landed tile stays put', () {
+    final hero = SpatialActor(
+      id: 'blink',
+      name: 'Blink',
+      team: SpatialTeam.hero,
+      x: 10,
+      y: 4,
+      hp: 20,
+      maxHp: 20,
+      attack: 4,
+      defense: 2,
+      moveSpeed: 3,
+      attackRange: 1.2,
+      attackCooldown: 1,
+    );
+    hero.beginPictureRush(4, 4);
+    expect(hero.x, 10);
+    expect(hero.y, 4);
+    expect(hero.picturePoint().x, inInclusiveRange(4, 10));
+    hero.tickPictureRush(hero.pictureRushSpan);
+    expect(hero.picturePoint().x, closeTo(10, 0.01));
+    expect(hero.x, 10);
   });
 }

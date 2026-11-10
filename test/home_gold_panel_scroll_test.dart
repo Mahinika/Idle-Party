@@ -79,7 +79,7 @@ void main() {
 
     expect(find.text('All tracks'), findsNothing);
     expect(find.text('Gold Find'), findsOneWidget);
-    expect(find.text('War Altar'), findsOneWidget);
+    expect(find.text('War Altar (Attack)'), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.text('Lore Font'),
@@ -87,7 +87,7 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Lore Font'), findsOneWidget);
-    expect(find.text('15e'), findsWidgets);
+    expect(find.text('15 essence'), findsWidgets);
   });
 
   testWidgets('inline SPLIT market scrolls listings and shows flask chips', (

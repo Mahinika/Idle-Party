@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:math' show max, min;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/app_analytics.dart';
 import 'package:idle_party/core/boot_clock.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/measurement_consent.dart';
 
 void main() {
@@ -85,6 +87,54 @@ void main() {
     expect(added[0], startsWith('main '));
     expect(added[1], startsWith('runApp '));
     expect(added[2], startsWith('firstFrame '));
+  });
+
+  test('boot clock keeps firstFrame before firebase on the splash path', () {
+    final before = BootClock.marks.length;
+    BootClock.mark('firstFrame');
+    BootClock.mark('firebase');
+    BootClock.mark('remoteTune');
+    final names = BootClock.marks
+        .skip(before)
+        .map(BootClock.nameOf)
+        .toList(growable: false);
+    expect(names.indexOf('firstFrame'), lessThan(names.indexOf('firebase')));
+    expect(names.indexOf('firebase'), lessThan(names.indexOf('remoteTune')));
+  });
+
+  test('parallel save boot and Play probe marks overlap', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final before = BootClock.marks.length;
+    final director = GameDirector.preview();
+    addTearDown(director.dispose);
+    BootClock.mark('saveBootStart');
+    BootClock.mark('playUpdateProbeStart');
+    await Future.wait<void>([
+      director.boot().whenComplete(() => BootClock.mark('saveBootEnd')),
+      director.checkMandatoryPlayUpdate().whenComplete(
+        () => BootClock.mark('playUpdateProbeEnd'),
+      ),
+    ]);
+    final names = BootClock.marks
+        .skip(before)
+        .map(BootClock.nameOf)
+        .toList(growable: false);
+    expect(
+      names,
+      containsAll(<String>[
+        'saveBootStart',
+        'playUpdateProbeStart',
+        'saveBootEnd',
+        'playUpdateProbeEnd',
+      ]),
+    );
+    final bootStart = names.indexOf('saveBootStart');
+    final probeStart = names.indexOf('playUpdateProbeStart');
+    final bootEnd = names.indexOf('saveBootEnd');
+    final probeEnd = names.indexOf('playUpdateProbeEnd');
+    expect(bootStart, lessThan(bootEnd));
+    expect(probeStart, lessThan(probeEnd));
+    expect(min(bootStart, probeStart), lessThan(max(bootEnd, probeEnd)));
   });
 
   test('early buffer keeps a Flutter error until Crashlytics attaches', () {

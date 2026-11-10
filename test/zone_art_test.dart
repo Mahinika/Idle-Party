@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/enemy_flavor.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/pet.dart';
@@ -108,13 +109,30 @@ void main() {
   });
 
   test('codex art matches what the zone actually spawns', () {
-    for (final def in DungeonCatalog.all) {
-      expect(
-        KenneyAssets.enemySpriteForCodexName(def.bossName),
-        ZoneArt.byId(def.id).enemies.boss,
-        reason: '${def.bossName} looks different in the codex',
-      );
+    final misses = <String>[];
+    void check(String name, String want) {
+      final got = KenneyAssets.enemySpriteForCodexName(name);
+      if (got != want) misses.add('$name -> $got want $want');
     }
+
+    for (final def in DungeonCatalog.all) {
+      final art = ZoneArt.byId(def.id).enemies;
+      check(def.bossName, art.boss);
+      for (final archetype in EnemyArchetype.values) {
+        for (var i = 0; i < 4; i++) {
+          check(
+            EnemyFlavor.trashName(def.id, archetype, i),
+            art.forArchetype(archetype),
+          );
+        }
+        check(EnemyFlavor.eliteName(def.id, archetype), art.elite);
+        check(
+          EnemyFlavor.addName(def.id, archetype),
+          art.forArchetype(archetype),
+        );
+      }
+    }
+    expect(misses, isEmpty, reason: misses.join('\n'));
   });
 
   test('unknown zone ids still paint instead of throwing', () {

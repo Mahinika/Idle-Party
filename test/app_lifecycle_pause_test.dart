@@ -48,6 +48,21 @@ void main() {
     expect(director.visualFrame, greaterThan(frame));
   });
 
+  test('cold boot away logs welcome_back once', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final hits = <String>[];
+    AppAnalytics.debugSink = (name, _) => hits.add(name);
+    addTearDown(() => AppAnalytics.debugSink = null);
+    final base = GameLogic.createInitialState();
+    final seed = base.copyWith(
+      lastUpdated: DateTime.now().subtract(const Duration(hours: 2)),
+    );
+    final director = GameDirector.preview(initialState: seed);
+    addTearDown(director.dispose);
+    await director.boot();
+    expect(hits.where((h) => h == 'welcome_back').length, 1);
+  });
+
   test('resume after 2h pays hub gold and offline_gold', () async {
     TestWidgetsFlutterBinding.ensureInitialized();
     final hits = <String>[];
@@ -70,7 +85,7 @@ void main() {
       FunnelAnalytics.has(director.state, FunnelAnalytics.offlineGold),
       isTrue,
     );
-    expect(hits, contains('welcome_back'));
+    expect(hits.where((h) => h == 'welcome_back').length, 1);
   });
 
   test('Welcome Back offers the ad only after the first boss', () async {
@@ -89,7 +104,7 @@ void main() {
     director.setAppPaused(false);
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
-    expect(hits, contains('welcome_back'));
+    expect(hits.where((h) => h == 'welcome_back').length, 1);
     expect(hits, contains('welcome_back_ad_offer'));
   });
 

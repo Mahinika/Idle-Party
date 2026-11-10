@@ -8,12 +8,15 @@ import '../../../core/game_state.dart';
 import '../../../core/hub_endgame_act.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
+import '../../../assets/kenney_assets.dart';
 import '../../../models/dungeon_def.dart';
 import '../../confirm_dialogs.dart';
+import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../hub/hub_ranks.dart';
 import '../../hub/hub_world_map.dart';
 import '../../kenney_button.dart';
+import '../../kenney_sprite.dart';
 import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import '../shell_layout.dart';
@@ -102,6 +105,8 @@ class _MapScreenState extends State<MapScreen> {
       child: Text(
         line,
         textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
         style: GameTheme.hint(color: GameTheme.parchmentDim),
       ),
     );
@@ -113,29 +118,45 @@ class _MapScreenState extends State<MapScreen> {
       padding: ShellLayout.listPadding,
       children: [
         if (MenuTabs.showKey(state))
-          _card('KEY', 'Harder cave. Same floors.', () {
-            widget.router.open(MenuRoute.key);
-          }),
+          _card(
+            'KEY',
+            'Harder cave. Same floors.',
+            () {
+              setState(() => _hunt = null);
+              widget.router.open(MenuRoute.key);
+            },
+            portrait: UiIcon.key,
+          ),
         for (final node in HubEndgameAct.nodes)
           _card(
             node.shortLabel,
             endgame ? node.blurb : 'Active party all Lv100.',
-            endgame
-                ? () => setState(() => _hunt = node.hunt)
-                : null,
+            endgame ? () => setState(() => _hunt = node.hunt) : null,
             selected: _hunt == node.hunt,
+            portrait: KenneyAssets.dungeonPortraitFor(node.portraitDungeonId),
             badge: node.hunt == HubEndgameHunt.ashen &&
                     AshenCrown.canEnter(state)
                 ? '${state.metaDepth.worldBossTickets}'
                 : null,
           ),
-        _card('DAILY', 'Today\'s cave.', () {
-          setState(() => _hunt = null);
-          confirmDailyRun(context, director);
-        }),
-        _card('RANKS', 'Season boards.', () {
-          openHubRanksSheet(context, director);
-        }),
+        _card(
+          'DAILY',
+          'Today\'s cave.',
+          () {
+            setState(() => _hunt = null);
+            confirmDailyRun(context, director);
+          },
+          portrait: UiIcon.daily,
+        ),
+        _card(
+          'RANKS',
+          'Season boards.',
+          () {
+            setState(() => _hunt = null);
+            openHubRanksSheet(context, director);
+          },
+          portrait: UiIcon.trophy,
+        ),
       ],
     );
   }
@@ -146,55 +167,86 @@ class _MapScreenState extends State<MapScreen> {
     VoidCallback? onTap, {
     bool selected = false,
     String? badge,
+    String? portrait,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: ShellLayout.card(
         selected: selected,
         child: WebClickScope(
-        label: title,
-        onPressed: onTap,
-        child: Semantics(
-          button: onTap != null,
           label: title,
-          child: InkWell(
-            onTap: onTap,
-            child: DecoratedBox(
-              decoration: const BoxDecoration(),
-              child: Padding(
-                padding: EdgeInsets.zero,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(title, style: GameTheme.readable()),
-                          Text(
-                            body,
-                            style: GameTheme.hint(color: GameTheme.parchmentDim),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (badge != null && badge.isNotEmpty)
-                      Text(
-                        badge,
-                        style: GameTheme.hint(color: GameTheme.torchHot),
-                      ),
+          onPressed: onTap,
+          child: Semantics(
+            button: onTap != null,
+            label: badge != null && badge.isNotEmpty
+                ? '$title. $body. Tickets: $badge.'
+                : '$title. $body',
+            child: InkWell(
+              onTap: onTap,
+              child: Row(
+                children: [
+                  if (portrait != null) ...[
+                    _huntPortrait(portrait),
+                    const SizedBox(width: 8),
                   ],
-                ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.readable(),
+                        ),
+                        Text(
+                          body,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.hint(
+                            color: GameTheme.parchmentDim,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (badge != null && badge.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    MenuChrome.chip(
+                      label: badge,
+                      selected: true,
+                      tone: GameTheme.torchHot,
+                    ),
+                  ],
+                ],
               ),
             ),
           ),
         ),
       ),
-      ),
+    );
+  }
+
+  /// 48 px zone portrait. Hunt cards use the hub node picture. KEY, the
+  /// daily, and ranks use the icons those screens already show.
+  Widget _huntPortrait(String asset) {
+    if (asset.endsWith('.png') && asset.contains('/dungeon/')) {
+      return KenneySprite(asset: asset, size: 48);
+    }
+    return Image.asset(
+      asset,
+      width: 48,
+      height: 48,
+      filterQuality: FilterQuality.none,
+      gaplessPlayback: true,
     );
   }
 
   Widget _footer(GameState state, int mean) {
     final endgame = GameLogic.endgameUnlocked(state);
+    // KEY, the daily, and ranks already start on tap. ENTER is the hunt
+    // confirm, and the cave confirm on PATH.
+    if (_endgame && _hunt == null) return const SizedBox.shrink();
     return Padding(
       padding: ShellLayout.listPadding,
       child: GameButton(

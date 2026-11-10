@@ -5,6 +5,7 @@ import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/home_layout.dart';
 import '../core/nav_copy.dart';
+import 'game_icon.dart';
 import 'game_theme.dart';
 import 'menu_chrome.dart';
 import 'shell/shell_layout.dart';
@@ -101,9 +102,10 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
                                           : GameTheme.parchment),
                                   ),
                                 ),
-                                Text(
-                                  open ? '▾' : '▸',
-                                  style: GameTheme.readable(color: GameTheme.parchmentDim),
+                                GameIcon.glyph(
+                                  open ? UiGlyph.prev : UiGlyph.next,
+                                  size: 14,
+                                  color: GameTheme.parchmentDim,
                                 ),
                               ],
                             ),

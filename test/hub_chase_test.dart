@@ -986,7 +986,7 @@ void main() {
     );
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.keystone);
-    expect(chase.detail, startsWith("Tonight's KEY +5:"));
+    expect(chase.detail, startsWith("Today's KEY +5:"));
     expect(chase.detail, contains('clock'));
     expect(chase.detail, endsWith('.'));
     expect(chase.detail, isNot(contains('iLvl')));
@@ -1009,7 +1009,7 @@ void main() {
     expect(chase.kind, HubChaseKind.keystone);
     expect(
       chase.detail,
-      "Tonight's KEY +2: denser packs — more bodies per room, clock ${Keystone.formatTimer(Keystone.parTimeMs(bossFloor: GameLogic.bossFloorFor(state), key: 2))}.",
+      "Today's KEY +2: denser packs — more bodies per room, clock ${Keystone.formatTimer(Keystone.parTimeMs(bossFloor: GameLogic.bossFloorFor(state), key: 2))}.",
     );
     expect(chase.detail, isNot(contains('Shield')));
   });
@@ -1060,9 +1060,10 @@ void main() {
         );
         final chase = HubChase.forState(state, now: now);
         expect(chase.kind, HubChaseKind.dailyVaultProgress);
-        expect(chase.title, 'Tomorrow: one cave');
+        expect(chase.title, 'Tomorrow: Sandy Caverns');
         expect(chase.detail.toLowerCase(), contains('tomorrow'));
-        expect(chase.detail.toLowerCase(), contains('one cave'));
+        expect(chase.detail.toLowerCase(), contains('keeps fighting'));
+        expect(chase.detail, contains('CAMP'));
         expect(chase.detail.toUpperCase(), isNot(contains('KEY')));
         expect(chase.detail.toUpperCase(), isNot(contains('GAUNTLET')));
         expect(chase.kind, isNot(HubChaseKind.dailyRun));
@@ -1081,7 +1082,8 @@ void main() {
         9,
       );
       final chase = HubChase.forState(state, now: now);
-      expect(chase.title, 'Tomorrow: one cave');
+      expect(chase.title, 'Tomorrow: Sandy Caverns');
+      expect(chase.detail.toLowerCase(), contains('keeps fighting'));
       expect(chase.detail.toUpperCase(), isNot(contains('KEY')));
       expect(chase.detail.toUpperCase(), isNot(contains('GAUNTLET')));
       expect(chase.kind, isNot(HubChaseKind.clearFloors));

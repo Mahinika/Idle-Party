@@ -113,6 +113,12 @@ void main() {
     expect(r.highlightRows.map((e) => e.$1), isNot(contains('Combat gold')));
   });
 
+  test('essence-only welcomeLead names essence, not gold', () {
+    final r = result(essence: 6, gold: 0);
+    expect(r.welcomeLead.toLowerCase(), contains('essence'));
+    expect(r.welcomeLead.toLowerCase(), isNot(contains('gold kept')));
+  });
+
   test('sanctuary AFK uses calm lead and gold/essence rows', () {
     final r = result(gold: 80, essence: 5);
     expect(r.wasInDungeon, isFalse);
@@ -165,7 +171,7 @@ void main() {
     expect(contract.upNextLine, startsWith('Up next'));
   });
 
-  testWidgets('Welcome Back is wow, highlights, Up next — not a syllabus', (
+  testWidgets('Welcome Back is wow, highlights, one spend line — not a syllabus', (
     tester,
   ) async {
     final director = GameDirector.preview();
@@ -183,9 +189,9 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('WELCOME BACK'), findsOneWidget);
-    expect(find.textContaining('While you are away'), findsOneWidget);
-    expect(find.textContaining('keep fighting'), findsOneWidget);
-    expect(find.textContaining('Up next:'), findsOneWidget);
+    expect(find.textContaining('Away for'), findsOneWidget);
+    expect(find.textContaining('Up next:'), findsNothing);
+    expect(find.textContaining('Why:'), findsNothing);
     expect(find.textContaining('AFK'), findsNothing);
     expect(find.textContaining('Sanctuary'), findsNothing);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
@@ -194,7 +200,7 @@ void main() {
     expect(find.textContaining('40 gold'), findsWidgets);
   });
 
-  testWidgets('day-2–7 Welcome Back Up next is one cave today', (tester) async {
+  testWidgets('day-2–7 Welcome Back skips redundant coach rows', (tester) async {
     final now = DateTime.utc(2026, 8, 8);
     final state = GameLogic.createInitialState(
       now: now,
@@ -224,14 +230,8 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('WELCOME BACK'), findsOneWidget);
-    expect(
-      find.textContaining('Up next: Clear one cave today'),
-      findsOneWidget,
-    );
-    expect(
-      find.textContaining('While you are away the hub pays'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Up next:'), findsNothing);
+    expect(find.textContaining('Why:'), findsNothing);
     expect(find.textContaining('Daily Run'), findsNothing);
     expect(find.textContaining('KEY'), findsNothing);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
@@ -277,7 +277,7 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('kept fighting in the cave'), findsOneWidget);
+    expect(find.textContaining('dungeon'), findsOneWidget);
     expect(
       find.textContaining('While you are away the hub pays'),
       findsNothing,

@@ -4,7 +4,6 @@ import 'package:idle_party/core/apex_forge.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
-import 'package:idle_party/core/game_storage.dart';
 import 'package:idle_party/core/offline_progress.dart';
 import 'package:idle_party/core/save_swap.dart';
 import 'package:idle_party/models/apex_craft.dart';
@@ -424,7 +423,9 @@ void main() {
   testWidgets('opening CRAFT with no goal saves the party default', (
     tester,
   ) async {
-    final director = GameDirector.preview(initialState: _fresh());
+    final director = GameDirector.preview(
+      initialState: _fresh().copyWith(bossVictories: 1),
+    );
     try {
       await director.boot();
       expect(director.state.metaDepth.apexCraftClassId, isEmpty);
@@ -612,6 +613,7 @@ GameState _fresh() => GameLogic.createInitialState(now: DateTime.now());
 
 GameState _goal({int progress = 0, String mat = ''}) {
   return _fresh().copyWith(
+    bossVictories: 1,
     metaDepth: MetaDepthState(
       apexCraftClassId: 'warrior',
       apexCraftRoleTag: 'tank',

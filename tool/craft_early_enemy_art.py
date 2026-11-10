@@ -252,26 +252,47 @@ def king_wall(variant: int) -> Image.Image:
 
 
 def main() -> None:
-    sprites = {
-        "sandy_brute.png": sandy_brute,
-        "sandy_tank.png": sandy_tank,
-        "sandy_ranged.png": sandy_ranged,
-        "goblin_elite.png": goblin_elite,
-        "goblin_tank.png": goblin_tank,
-        "goblin_ranged.png": goblin_ranged,
-        "king_guard.png": king_guard,
-        "king_tank.png": king_tank,
-        "underworld_elite.png": underworld_elite,
-        "dead_swarm.png": dead_swarm,
-        "dead_support.png": dead_support,
-        "hell_elite.png": hell_elite,
-        "underworld_tank.png": underworld_tank,
-        "dead_tank.png": dead_tank,
-        "hell_brute.png": hell_brute,
-        "crystal_brute.png": crystal_brute,
-    }
-    for name, fn in sprites.items():
-        _save(fn(), ENEMIES / name)
+    # The 96px pass owns these silhouettes. Re-running this file must not
+    # put the old 32px ellipses back.
+    from craft_pixel_enemies import (  # noqa: WPS433
+        crystal_brute,
+        dead_support,
+        dead_swarm,
+        dead_tank,
+        goblin_elite,
+        goblin_ranged,
+        goblin_tank,
+        hell_brute,
+        hell_elite,
+        king_guard,
+        king_tank,
+        sandy_brute,
+        sandy_ranged,
+        sandy_tank,
+        underworld_elite,
+        underworld_tank,
+    )
+
+    sprites = [
+        sandy_brute,
+        sandy_tank,
+        sandy_ranged,
+        goblin_elite,
+        goblin_tank,
+        goblin_ranged,
+        king_guard,
+        king_tank,
+        underworld_elite,
+        dead_swarm,
+        dead_support,
+        hell_elite,
+        underworld_tank,
+        dead_tank,
+        hell_brute,
+        crystal_brute,
+    ]
+    for fn in sprites:
+        fn()
     king = ROOT / "dungeon" / "king" / "tiles"
     _save(king_wall(0), king / "wall_a.png")
     _save(king_wall(1), king / "wall_b.png")

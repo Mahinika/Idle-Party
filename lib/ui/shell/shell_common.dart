@@ -1,22 +1,43 @@
 import 'package:flutter/material.dart';
 import '../../core/game_logic.dart';
+import '../../spatial/spatial_combat.dart';
 import '../../core/game_state.dart';
 import '../../core/market_listings_service.dart';
 import '../../core/menu_alerts.dart';
 import '../../models/loot.dart';
 import '../game_theme.dart';
 
-Color rarityBorderColor(LootRarity rarity) => switch (rarity) {
-  LootRarity.common => GameTheme.rarityCommon,
-  LootRarity.uncommon => GameTheme.rarityUncommon,
-  LootRarity.rare => GameTheme.rarityRare,
-  LootRarity.epic => GameTheme.borderLit,
-  LootRarity.legendary => GameTheme.rarityLegendary,
-};
+Color rarityBorderColor(LootRarity rarity, {bool? colorblind}) {
+  final cb = colorblind ?? SpatialCombat.colorblindMode;
+  if (cb) {
+    return switch (rarity) {
+      LootRarity.common => GameTheme.parchmentDim,
+      LootRarity.uncommon => GameTheme.torch,
+      LootRarity.rare => GameTheme.rarityRare,
+      LootRarity.epic => GameTheme.borderLit,
+      LootRarity.legendary => GameTheme.torchHot,
+    };
+  }
+  return switch (rarity) {
+    LootRarity.common => GameTheme.rarityCommon,
+    LootRarity.uncommon => GameTheme.rarityUncommon,
+    LootRarity.rare => GameTheme.rarityRare,
+    LootRarity.epic => GameTheme.borderLit,
+    LootRarity.legendary => GameTheme.rarityLegendary,
+  };
+}
+
+String _compactScale(double value, String suffix) {
+  final raw = value.toStringAsFixed(1);
+  if (raw.endsWith('.0')) {
+    return '${raw.substring(0, raw.length - 2)}$suffix';
+  }
+  return '$raw$suffix';
+}
 
 String formatCount(int n) {
-  if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
-  if (n >= 10000) return '${(n / 1000).toStringAsFixed(1)}k';
+  if (n >= 1000000) return _compactScale(n / 1000000, 'M');
+  if (n >= 10000) return _compactScale(n / 1000, 'k');
   if (n >= 1000) {
     final s = n.toString();
     final buf = StringBuffer();
@@ -31,7 +52,7 @@ String formatCount(int n) {
 
 /// Gold with a g suffix. Commas past 999 so a k-suffix never glues into "kg".
 String formatGold(int n) {
-  if (n >= 1000000) return '${formatCount(n)} g';
+  if (n >= 1000000) return '${formatCount(n)}g';
   final negative = n < 0;
   final s = n.abs().toString();
   final buf = StringBuffer();

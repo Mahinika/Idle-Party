@@ -35,7 +35,7 @@ Optional MCP shortcut when `user-idle-party` is up: `verify`.
   - save/meta → `test/save_load_test.dart`, `test/meta_systems_test.dart`
   - assets/dungeons → `test/asset_catalog_test.dart`, `test/custom_assets_test.dart`, `test/dungeon_environment_test.dart`
 - Use `GameDirector.preview()` in new tests (no SharedPreferences / no spatial timer).
-- **Commit locally when analyze/tests are green** (`20-how-we-work`). Push / PR / tag when needed. **Play AAB only when the owner asks.**
+- **Commit locally when analyze/tests are green** (`20-how-we-work`). Hand off on a branch and a PR. Do not merge, and do not push a `test-*` or `v*` tag, unless the owner asks in that turn.
 - Windows: set process env `PROGRAMFILES(X86)` to `C:\Program Files (x86)` or `flutter test` dies. Widget `timersPending` / missing `flutter_soloud_plugin.dll` on this machine is environment noise — do not “fix” GEAR/GOLD for it.
 
 ## Progress
@@ -53,4 +53,4 @@ Verify:
 ## Done when
 
 - Analyze has zero issues and `flutter test --exclude-tags sim` is green.
-- The matching extra tests from `30-done` for this change are green.
+- The matching extra tests from `30-done` for this change are green.

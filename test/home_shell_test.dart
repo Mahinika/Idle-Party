@@ -6,6 +6,10 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/core/nav_copy.dart';
+import 'package:idle_party/models/vfx_quality.dart';
+import 'package:idle_party/ui/coach_pulse.dart';
+import 'package:idle_party/ui/shell/overlay_scaffold.dart';
+import 'package:idle_party/ui/web_click_bridge.dart';
 import 'package:idle_party/ui/shell/home/home_catalog.dart';
 import 'package:idle_party/ui/shell/home/home_prompts.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
@@ -112,7 +116,7 @@ void main() {
 
     router.open(MenuRoute.gear);
     await tester.pump();
-    expect(find.text('Close'), findsNothing);
+    expect(find.bySemanticsLabel('CLOSE'), findsWidgets);
     expect(find.bySemanticsLabel('Close HEROES'), findsWidgets);
     expect(tester.takeException(), isNull);
 
@@ -120,5 +124,132 @@ void main() {
     await tester.pump();
     expect(router.route, MenuRoute.none);
     expect(director.uiPaused, isFalse);
+  });
+
+  testWidgets('MAP sheet uses scrim over fight in cave', (tester) async {
+    final state = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 11, 3)),
+    ).copyWith(homeLayout: HomeLayout.home, homePanelFull: true);
+    final director = GameDirector.preview(initialState: state);
+    final router = MenuRouter();
+    addTearDown(director.dispose);
+    addTearDown(router.dispose);
+    router.open(MenuRoute.map);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeShell(
+          director: director,
+          router: router,
+          onLeave: () {},
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.byType(OverlayScrim), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('BACK semantics matches visible label', (tester) async {
+    final state = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 11, 3)),
+    ).copyWith(homeLayout: HomeLayout.home);
+    final director = GameDirector.preview(initialState: state);
+    final router = MenuRouter();
+    addTearDown(director.dispose);
+    addTearDown(router.dispose);
+    router.open(MenuRoute.gear);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeShell(
+          director: director,
+          router: router,
+          onLeave: () {},
+        ),
+      ),
+    );
+    await tester.pump();
+    router.pushSub();
+    await tester.pump();
+    expect(find.text('BACK'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is WebClickScope && w.label == 'BACK',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('claim chip semantics names daily vault', (tester) async {
+    var state = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 11, 3)),
+    ).copyWith(homeLayout: HomeLayout.home);
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        dailyVaultClears: GameLogic.dailyVaultClearTarget,
+        dailyVaultClaimed: false,
+      ),
+    );
+    final director = GameDirector.preview(initialState: state);
+    final router = MenuRouter();
+    addTearDown(director.dispose);
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeShell(
+          director: director,
+          router: router,
+          onLeave: () {},
+        ),
+      ),
+    );
+    await tester.pump();
+    final node = tester.getSemantics(find.bySemanticsLabel(RegExp('Claim the daily')));
+    expect(node.label, contains('daily'));
+    expect(node.label.toLowerCase(), isNot(contains('day ends')));
+  });
+
+  testWidgets('minimal VFX coach pulse has no ticker', (tester) async {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 11, 3));
+    state = state.copyWith(vfxQuality: VfxQuality.minimal);
+    final director = GameDirector.preview(initialState: state);
+    addTearDown(director.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CoachPulse(
+          active: true,
+          enabled: false,
+          child: const SizedBox(width: 48, height: 48),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(tester.binding.transientCallbackCount, 0);
+  });
+
+  testWidgets('fight marks farm_push seen after first frame in cave', (tester) async {
+    var state = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 11, 3)),
+    ).copyWith(
+      homeLayout: HomeLayout.home,
+      homePanelFull: false,
+      highestFloorCleared: 1,
+      seenTips: const ['first_run', 'godhand'],
+    );
+    final director = GameDirector.preview(initialState: state);
+    final router = MenuRouter();
+    addTearDown(director.dispose);
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeShell(
+          director: director,
+          router: router,
+          onLeave: () {},
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(director.state.seenTips, contains('farm_push'));
   });
 }

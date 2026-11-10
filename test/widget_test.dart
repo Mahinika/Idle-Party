@@ -30,7 +30,7 @@ Future<void> dismissHubPrompts(WidgetTester tester) async {
   for (var i = 0; i < 4; i++) {
     await tester.pump();
     Finder? target;
-    for (final label in ['MAYBE LATER', 'NOT NOW', 'GOT IT']) {
+    for (final label in ['MAYBE LATER', 'NOT NOW', 'GOT IT', 'LATER', 'CLOSE']) {
       final found = find.text(label);
       if (found.evaluate().isNotEmpty) {
         target = found;
@@ -39,7 +39,7 @@ Future<void> dismissHubPrompts(WidgetTester tester) async {
     }
     if (target == null) {
       await tester.pump();
-      for (final label in ['MAYBE LATER', 'NOT NOW', 'GOT IT']) {
+      for (final label in ['MAYBE LATER', 'NOT NOW', 'GOT IT', 'LATER', 'CLOSE']) {
         final found = find.text(label);
         if (found.evaluate().isNotEmpty) {
           target = found;

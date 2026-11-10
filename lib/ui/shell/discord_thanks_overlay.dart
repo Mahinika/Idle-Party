@@ -123,7 +123,7 @@ class DiscordThanksOverlay extends StatelessWidget {
         ),
         ShellLayout.gap(8),
         GameButton(
-          label: 'MAYBE LATER',
+          label: 'LATER',
           style: GameButtonStyle.grey,
           onPressed: () => _dismiss(context),
         ),

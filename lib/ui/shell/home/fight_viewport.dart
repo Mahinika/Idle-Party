@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../core/game_director.dart';
 import '../../../core/menu_router.dart';
 import '../../is2_shell.dart';
+import '../dungeon_top_hud.dart';
+import 'floor_jump_sheet.dart';
 import 'home_fight_tools.dart';
 
 /// The cave picture. The seam sits under it, outside this flex.
@@ -30,7 +32,23 @@ class FightViewport extends StatelessWidget {
           onLeaveDungeon: onLeave,
           homeChrome: true,
         ),
-        HomeFightTools(director: director),
+        Positioned(
+          left: 8,
+          top: 2,
+          right: 78,
+          child: ListenableBuilder(
+            listenable: director,
+            builder: (context, _) => DungeonTopHud(
+              state: director.state,
+              director: director,
+              placeLineOnly: true,
+              onOpenSettings: () {},
+              onOpenContracts: () {},
+              onFloorLineTap: (ctx) => showFloorJumpSheet(ctx, director),
+            ),
+          ),
+        ),
+        HomeFightTools(director: director, seamClearance: 108),
       ],
     );
   }

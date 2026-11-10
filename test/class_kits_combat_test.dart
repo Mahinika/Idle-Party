@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
@@ -306,6 +308,61 @@ void main() {
       warrior.rage = 100;
     }
     expect(charged, isTrue);
+  });
+
+  test('Charge lands immediately and the picture slides under a tile', () {
+    final state = _partyAtLevel(15);
+    final world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final warrior = world.heroes.firstWhere(
+      (h) => h.heroRole == HeroRole.warrior,
+    );
+    warrior
+      ..rage = 100
+      ..x = target.x - 6
+      ..y = target.y;
+    final fromX = warrior.x;
+    final fromY = warrior.y;
+    final ok = KitNamedCasts.run(
+      world,
+      warrior,
+      target,
+      ClassKits.defFor(AbilityId.charge)!,
+      rng: math.Random(1),
+      reducedVfx: true,
+    );
+    expect(ok, isTrue);
+    expect(target.rootTimer, greaterThan(0.5));
+    final landed = warrior.x;
+    expect((landed - fromX).abs(), greaterThan(3));
+    expect(warrior.y, closeTo(target.y, 0.35));
+    final takeoff = warrior.picturePoint();
+    expect(takeoff.x, closeTo(fromX, 0.05));
+    expect(takeoff.y, closeTo(fromY, 0.05));
+
+    double hop(double dt) {
+      final prev = warrior.picturePoint();
+      SpatialCombat.step(world, state, dt: dt);
+      final next = warrior.picturePoint();
+      final dx = next.x - prev.x;
+      final dy = next.y - prev.y;
+      return math.sqrt(dx * dx + dy * dy);
+    }
+
+    expect(hop(1 / 60), lessThan(1));
+    expect(hop(1 / 60), lessThan(1));
+    final two = hop(1 / 60) + hop(1 / 60);
+    expect(two, lessThan(1), reason: '2× is two sim steps per paint');
+    final three = hop(1 / 60) + hop(1 / 60) + hop(1 / 60);
+    expect(three, lessThan(1), reason: '2× plus one catch-up step');
+    expect(hop(1 / 30), lessThan(1));
+    for (var i = 0; i < 50; i++) {
+      SpatialCombat.step(world, state, dt: 1 / 60);
+    }
+    final done = warrior.picturePoint();
+    expect(done.x, closeTo(warrior.x, 0.2));
+    expect(done.y, closeTo(warrior.y, 0.2));
+    expect(warrior.pictureRushLeft, 0);
   });
 
   test('Charge refuses targets beyond max range', () {

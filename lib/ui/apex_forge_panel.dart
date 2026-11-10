@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/apex_forge.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
+import '../core/menu_alerts.dart';
 import '../core/game_state.dart';
 import '../models/apex_craft.dart';
 import '../models/dungeon_def.dart';
@@ -151,6 +152,13 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
+    if (!MenuTabs.showCraft(state)) {
+      return Text(
+        'CRAFT opens after the first boss.',
+        textAlign: TextAlign.center,
+        style: GameTheme.readable(color: GameTheme.parchmentDim),
+      );
+    }
     final md = state.metaDepth;
     final roles = ApexCraft.validRolesFor(_apexClass).toList();
     final existingItem = _existingPiece(

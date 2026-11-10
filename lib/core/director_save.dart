@@ -12,6 +12,10 @@ enum RecoverySlotOpen {
   needsNewGame,
 }
 
+/// Last [GameState.lastUpdated] we logged [AppAnalytics.welcomeBack] for.
+/// Stops a rebuild or a second credit pass from double-counting one return.
+DateTime? _welcomeAnalyticsCreditFrom;
+
 /// Save — extracted from GameDirector.
 extension GameDirectorSave on GameDirector {
   void _persist() {
@@ -914,33 +918,44 @@ extension GameDirectorSave on GameDirector {
     _welcomeBackAdGranted = false;
     final offline = await _simulateAwayProgress(saved, elapsed);
     if (stillCurrent != null && !stillCurrent()) return saved;
-    return _finishAwayCredit(offline, showCard: showCard);
+    return _finishAwayCredit(
+      offline,
+      showCard: showCard,
+      creditFrom: saved.lastUpdated,
+    );
   }
 
   /// Welcome Back card and funnel for a result that is already simulated.
   Future<GameState> _finishAwayCredit(
     OfflineProgressResult offline, {
     required bool showCard,
+    required DateTime creditFrom,
   }) async {
     var caught = offline.state;
     if (offline.hasSummary) {
       if (showCard) {
         uiFeedback.presentOffline(offline);
         noteReviewWelcome(offline);
-        unawaited(
-          AppAnalytics.welcomeBack(
-            where: offline.wasInDungeon ? 'dungeon' : 'hub',
-            seconds: offline.secondsApplied,
-            gold: offline.goldGained,
-          ),
-        );
-        if (offline.welcomeBackAdOffer) {
-          unawaited(AppAnalytics.welcomeBackAdOffer());
+        final alreadyLogged =
+            _welcomeAnalyticsCreditFrom != null &&
+            _welcomeAnalyticsCreditFrom == creditFrom;
+        if (!alreadyLogged) {
+          _welcomeAnalyticsCreditFrom = creditFrom;
           unawaited(
-            AdRewarded.prepareOffer(
-              placement: AnalyticsEvents.placementWelcomeBack,
+            AppAnalytics.welcomeBack(
+              where: offline.wasInDungeon ? 'dungeon' : 'hub',
+              seconds: offline.secondsApplied,
+              gold: offline.goldGained,
             ),
           );
+          if (offline.welcomeBackAdOffer) {
+            unawaited(AppAnalytics.welcomeBackAdOffer());
+            unawaited(
+              AdRewarded.prepareOffer(
+                placement: AnalyticsEvents.placementWelcomeBack,
+              ),
+            );
+          }
         }
         // The cave opens the same Welcome Back card. A toast would cover it.
       }

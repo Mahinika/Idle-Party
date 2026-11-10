@@ -41,33 +41,40 @@ class HubOfflineBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onDismiss,
-        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(
-            horizontal: compact ? 8 : 12,
-            vertical: compact ? 6 : 10,
-          ),
-          decoration: MenuChrome.hubPanel(),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  text,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.hint(color: GameTheme.mossLit),
-                ),
+    return Semantics(
+      button: true,
+      label: 'Open offline summary',
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onDismiss,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(
+                horizontal: compact ? 8 : 12,
+                vertical: compact ? 6 : 10,
               ),
-              Text(
-                'OPEN SUMMARY',
-                style: GameTheme.section(color: GameTheme.parchmentDim),
+              decoration: MenuChrome.hubPanel(),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      text,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.hint(color: GameTheme.mossLit),
+                    ),
+                  ),
+                  Text(
+                    'OPEN SUMMARY',
+                    style: GameTheme.section(color: GameTheme.parchmentDim),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

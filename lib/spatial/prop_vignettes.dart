@@ -81,8 +81,21 @@ abstract final class PropVignettes {
   /// Share of vignettes that get one out-of-place piece (aftermath).
   static const double aftermathChance = 0.2;
 
+  static bool _nearHalfArmed = false;
+
+  /// Next [build] shifts one sandy vignette two cells into the room, toward
+  /// the near (south) half of the first chamber. Floor decals arm this.
+  static void armFirstRoomNearHalf() => _nearHalfArmed = true;
+
   static List<VignettePiece> build(PropVignetteKind kind, Random rng) {
     final base = List<VignettePiece>.of(_templates[kind]!);
+    if (_nearHalfArmed) {
+      _nearHalfArmed = false;
+      for (var i = 0; i < base.length; i++) {
+        final p = base[i];
+        base[i] = VignettePiece(p.dx, p.dy + 2, p.kind);
+      }
+    }
     if (base.length > 2 && rng.nextDouble() < aftermathChance) {
       final i = 1 + rng.nextInt(base.length - 1);
       final odd = _oddOnes[kind]!;
@@ -131,6 +144,15 @@ abstract final class PropVignettes {
         return MapPropKind.banner;
       case FloorBeatKind.treasure:
         return MapPropKind.chest;
+      case FloorBeatKind.approach:
+        if (kit.dungeonId == 'sandy') return MapPropKind.crate;
+        final pool = kit.landmarks.isNotEmpty ? kit.landmarks : kit.edgeClutter;
+        final safe = [
+          for (final k in pool)
+            if (k != MapPropKind.chest) k,
+        ];
+        final use = safe.isEmpty ? const [MapPropKind.pillar] : safe;
+        return use[rng.nextInt(use.length)];
       default:
         final pool = kit.landmarks.isNotEmpty ? kit.landmarks : kit.edgeClutter;
         final safe = [

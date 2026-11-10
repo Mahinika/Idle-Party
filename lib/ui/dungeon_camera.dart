@@ -129,7 +129,7 @@ const double dungeonCamShakeOmegaY = 38;
 }) {
   if (pinIndex != null) {
     for (final h in heroes) {
-      if (h.index == pinIndex) return (x: h.x, y: h.y);
+      if (h.index == pinIndex && h.alive) return (x: h.x, y: h.y);
     }
   }
   final living = heroes.where((h) => h.alive).toList();
@@ -197,6 +197,85 @@ const double dungeonCamShakeOmegaY = 38;
     maxShiftY.abs(),
   );
   return (x: party.x + shiftX, y: party.y + shiftY);
+}
+
+/// Live aim. An in-frame fight stays on the party.
+///
+/// The old in-frame branch sat halfway between the party and the single
+/// nearest living enemy. A death, or two foes trading which one is nearer,
+/// moved that point to the other side of the party and the view snapped
+/// with it. The pack is already on screen in that case, so the party
+/// (or the pinned hero) is the aim. A foe that does not fit still uses the
+/// gate, then the capped pack nudge. The exit and a chest with no fight
+/// still use the stairs framing.
+({double x, double y}) dungeonLiveFocus({
+  required bool awaitingExit,
+  required bool inFight,
+  required bool goalInClearView,
+  required double partyX,
+  required double partyY,
+  required double? goalX,
+  required double? goalY,
+  required double exitX,
+  required double exitY,
+  required ({double x, double y})? gateFocus,
+  required Iterable<({double x, double y, bool alive, int index})> heroes,
+  required Iterable<({double x, double y, bool alive})> awakeEnemies,
+  required double mapCenterX,
+  required double mapCenterY,
+  int? pinIndex,
+  required double visibleCols,
+  required double visibleRows,
+  double marginTop = 4.5,
+  double marginBottom = 4.5,
+  double nearbyTiles = 9,
+  double maxShiftX = 3.5,
+  double maxShiftY = 3.5,
+}) {
+  if (awaitingExit) {
+    return dungeonStairsFocus(
+      partyX: partyX,
+      partyY: partyY,
+      exitX: exitX,
+      exitY: exitY,
+      visibleCols: visibleCols,
+      visibleRows: visibleRows,
+    );
+  }
+  if (inFight) {
+    if (goalInClearView) {
+      return dungeonPartyFocus(
+        heroes: heroes,
+        mapCenterX: mapCenterX,
+        mapCenterY: mapCenterY,
+        pinIndex: pinIndex,
+      );
+    }
+    return gateFocus ??
+        dungeonCombatFocus(
+          heroes: heroes,
+          awakeEnemies: awakeEnemies,
+          mapCenterX: mapCenterX,
+          mapCenterY: mapCenterY,
+          pinIndex: pinIndex,
+          nearbyTiles: nearbyTiles,
+          maxShiftX: maxShiftX,
+          maxShiftY: maxShiftY,
+        );
+  }
+  if (goalInClearView && goalX != null && goalY != null) {
+    return dungeonStairsFocus(
+      partyX: partyX,
+      partyY: partyY,
+      exitX: goalX,
+      exitY: goalY,
+      visibleCols: visibleCols,
+      visibleRows: visibleRows,
+      topInset: marginTop,
+      bottomInset: marginBottom,
+    );
+  }
+  return gateFocus ?? (x: partyX, y: partyY);
 }
 
 /// Pull the cleared floor toward the stairs so the exit sits under the HUD.
@@ -313,6 +392,49 @@ bool dungeonSharesFrame({
   final spanX = math.max(0.0, visibleCols - marginX * 2);
   final spanY = math.max(0.0, visibleRows - marginY * 2);
   return (partyX - packX).abs() <= spanX && (partyY - packY).abs() <= spanY;
+}
+
+/// Keeps an in-frame fight on the party when one death leaves the next
+/// survivor a couple of tiles outside the card. A pack that is actually
+/// off the phone still falls through so the gate can take the aim.
+bool dungeonGoalHoldsClear({
+  required bool wasClear,
+  required double partyX,
+  required double partyY,
+  required double packX,
+  required double packY,
+  required double visibleCols,
+  required double visibleRows,
+  double cardRows = 12,
+  double marginX = 2,
+  double topMargin = 5,
+  double slackTiles = 3,
+}) {
+  if (dungeonPackInClearView(
+    partyX: partyX,
+    partyY: partyY,
+    packX: packX,
+    packY: packY,
+    visibleCols: visibleCols,
+    visibleRows: visibleRows,
+    cardRows: cardRows,
+    marginX: marginX,
+    topMargin: topMargin,
+  )) {
+    return true;
+  }
+  if (!wasClear || slackTiles <= 0) return false;
+  return dungeonPackInClearView(
+    partyX: partyX,
+    partyY: partyY,
+    packX: packX,
+    packY: packY,
+    visibleCols: visibleCols,
+    visibleRows: visibleRows,
+    cardRows: math.max(0, cardRows - slackTiles),
+    marginX: math.max(0, marginX - 0.75),
+    topMargin: math.max(0, topMargin - slackTiles),
+  );
 }
 
 /// The pack or chest sits in the picture above the party card.

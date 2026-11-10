@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
+import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/ui/apex_forge_panel.dart';
 
 void main() {
   testWidgets('CRAFT sheet is hero then slot then one craft button', (
     tester,
   ) async {
-    final director = GameDirector.preview();
+    final director = GameDirector.preview(
+      initialState: GameLogic.createInitialState().copyWith(bossVictories: 1),
+    );
     addTearDown(director.dispose);
 
     await tester.pumpWidget(

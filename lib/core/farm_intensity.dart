@@ -53,6 +53,6 @@ abstract final class FarmIntensity {
   static String hudLabel(GameState state) {
     if (!applies(state)) return '';
     final m = effectiveMult(state);
-    return 'FARM ${m}× packs · ${m}× loot';
+    return 'FARM $m× packs · $m× loot';
   }
 }

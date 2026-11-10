@@ -28,12 +28,12 @@ Before you tell the owner a coding task is finished:
 4. **Legal:** no foreign dumps. Art goes through `CustomAssets` /
    `KenneyAssets` only.
 5. **Docs:** if architecture, Ascend, the world path, distribution, or
-   tooling changed, update `AGENTS.md` (or run `/init`). Standing growth
+   tooling changed, update `AGENTS.md`. Do not run `/init` unasked. Standing growth
    principles live in `docs/GROWTH_MANDATE.md`.
 
 Git and the phone handoff live in `20-how-we-work`.
 
 Skip heavy mid-band sims unless the task is balance. Skip the A56 for pure
-logic, unless the owner should look on the phone (then push this batch
-first) or UI chrome changed. For UI changes, prefer the A56 or hub smoke
-when practical.
+logic. When the owner should look at the phone, hand off the source PR
+first. A phone look is not a test APK. For UI changes, prefer the A56 or
+hub smoke when practical, and do not uninstall the save to get there.

@@ -397,7 +397,6 @@ abstract final class _FloorLookState {
 
 extension _DungeonFloorLayer on _TileRoomPainter {
   static const Color _faceTop = Color(0x30FFFFFF);
-  static const Color _faceShade = Color(0x8C000000);
   static const Color _faceFoot = Color(0x48000000);
 
   Color? _beatTint(Chamber c) {
@@ -456,8 +455,11 @@ extension _DungeonFloorLayer on _TileRoomPainter {
           tile + 0.5,
         );
         if (kind == TileKind.wall) {
-          if (wallVariants.isEmpty ||
-              !DungeonEnvironment.wallTouchesCarved(map, x, y)) {
+          final touches = DungeonEnvironment.wallTouchesCarved(map, x, y);
+          // Sandy fills the rock past the carved edge so the fight is a
+          // cavern. Other caves keep the open void.
+          final sandyRock = dungeonId == 'sandy' && !touches;
+          if (wallVariants.isEmpty || (!touches && !sandyRock)) {
             continue;
           }
           final img =
@@ -470,6 +472,12 @@ extension _DungeonFloorLayer on _TileRoomPainter {
           _drawWallCaps(canvas, x, y, dst, tile, img);
           if (DungeonEnvironment.isCarved(map.at(x, y + 1))) {
             _drawWallFace(canvas, dst, tile, img);
+          }
+          if (sandyRock) {
+            _TileRoomPainter._fillPaint.color = DungeonEnvironment.wallShade(
+              dungeonId,
+            );
+            canvas.drawRect(dst, _TileRoomPainter._fillPaint);
           }
           continue;
         }
@@ -544,7 +552,7 @@ extension _DungeonFloorLayer on _TileRoomPainter {
       dst.height - tile * 0.30,
     );
     _drawImage(canvas, wall, face);
-    _TileRoomPainter._fillPaint.color = _faceShade;
+    _TileRoomPainter._fillPaint.color = DungeonEnvironment.wallShade(dungeonId);
     canvas.drawRect(face, _TileRoomPainter._fillPaint);
     _TileRoomPainter._fillPaint.color = _faceTop;
     canvas.drawRect(
@@ -717,7 +725,7 @@ extension _DungeonFloorLayer on _TileRoomPainter {
         }
         canvas.drawLine(at(3, 5), at(10, 3), stroke);
       case FloorDecalKind.sandDrift:
-        stroke.color = const Color(0x40F8E0A8);
+        stroke.color = d.accent ? const Color(0xE0FFE8B0) : const Color(0x40F8E0A8);
         canvas.drawArc(
           Rect.fromLTWH(at(1, 4).dx, at(1, 4).dy, 12 * u, 6 * u),
           math.pi,
@@ -732,6 +740,54 @@ extension _DungeonFloorLayer on _TileRoomPainter {
           false,
           stroke,
         );
+        paint.color = const Color(0xD0C4A070);
+        canvas.drawRect(
+          Rect.fromLTWH(at(2, 11).dx, at(2, 11).dy, 2 * u, u),
+          paint,
+        );
+        canvas.drawRect(Rect.fromLTWH(at(5, 12).dx, at(5, 12).dy, u, u), paint);
+        canvas.drawRect(
+          Rect.fromLTWH(at(11, 6).dx, at(11, 6).dy, 2 * u, u),
+          paint,
+        );
+        paint.color = const Color(0xD0C8A040);
+        canvas.drawRect(
+          Rect.fromLTWH(at(8, 3).dx, at(8, 3).dy, u, 4 * u),
+          paint,
+        );
+        canvas.drawRect(
+          Rect.fromLTWH(at(10, 4).dx, at(10, 4).dy, u, 3 * u),
+          paint,
+        );
+        paint.color = const Color(0xE0A06030);
+        canvas.drawRect(
+          Rect.fromLTWH(at(12, 9).dx, at(12, 9).dy, 3 * u, 3 * u),
+          paint,
+        );
+        paint.color = const Color(0xE0E8C070);
+        canvas.drawRect(
+          Rect.fromLTWH(at(12, 9).dx, at(12, 9).dy, 3 * u, u),
+          paint,
+        );
+        paint.color = const Color(0xE0E8D8C0);
+        canvas.drawRect(
+          Rect.fromLTWH(at(3, 7).dx, at(3, 7).dy, 4 * u, u),
+          paint,
+        );
+        canvas.drawRect(Rect.fromLTWH(at(3, 6).dx, at(3, 6).dy, u, u), paint);
+        canvas.drawRect(Rect.fromLTWH(at(6, 6).dx, at(6, 6).dy, u, u), paint);
+        if (d.accent) {
+          paint.color = const Color(0xF0FFE6A0);
+          canvas.drawRect(
+            Rect.fromLTWH(at(4, 5).dx, at(4, 5).dy, 6 * u, 3 * u),
+            paint,
+          );
+          paint.color = const Color(0xF0FFF4D0);
+          canvas.drawRect(
+            Rect.fromLTWH(at(5, 5).dx, at(5, 5).dy, 2 * u, u),
+            paint,
+          );
+        }
       case FloorDecalKind.gearInlay:
         stroke.color = const Color(0x90C89830);
         final c = r.center;
@@ -988,4 +1044,162 @@ extension _DungeonFloorLayer on _TileRoomPainter {
       ..blendMode = BlendMode.plus;
     canvas.drawCircle(c, tile * 2.4, fill);
   }
+}
+
+/// Floor-only picture (no HUD). Goldens pump this at 360×200.
+class DungeonFloorLayer extends StatefulWidget {
+  const DungeonFloorLayer({
+    super.key,
+    required this.dungeonId,
+    this.layoutSeed = 4,
+    this.roomType = RoomType.normal,
+  });
+
+  final String dungeonId;
+  final int layoutSeed;
+  final RoomType roomType;
+
+  @override
+  State<DungeonFloorLayer> createState() => DungeonFloorLayerState();
+}
+
+class DungeonFloorLayerState extends State<DungeonFloorLayer> {
+  ui.Image? _floorA;
+  ui.Image? _floorB;
+  ui.Image? _wall;
+  TileMap? _map;
+
+  bool get ready => _map != null && _floorA != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final id = widget.dungeonId;
+    final floorA = await DecodedImageCache.load(
+      CustomAssets.dungeonTile(id, 'floor_a'),
+    );
+    final floorB = await DecodedImageCache.load(
+      CustomAssets.dungeonTile(id, 'floor_b'),
+    );
+    final wall = await DecodedImageCache.load(
+      CustomAssets.dungeonTile(id, 'wall_a'),
+    );
+    final room = DungeonRoom(
+      floorNumber: 5,
+      roomIndex: 0,
+      type: widget.roomType,
+      enemyLevel: 9,
+      enemyCount: widget.roomType == RoomType.treasure ? 0 : 8,
+    );
+    final map = RoomLayouts.forFloor(
+      floorNumber: 5,
+      room: room,
+      dungeonId: id,
+      layoutSeed: widget.layoutSeed,
+    );
+    if (!mounted) return;
+    setState(() {
+      _floorA = floorA;
+      _floorB = floorB;
+      _wall = wall;
+      _map = map;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final map = _map;
+    final floorA = _floorA;
+    final floorB = _floorB;
+    final wall = _wall;
+    if (map == null || floorA == null || floorB == null || wall == null) {
+      return const ColoredBox(color: Color(0xFF1A140C));
+    }
+    return CustomPaint(
+      painter: _FloorDressingPainter(
+        map: map,
+        dungeonId: widget.dungeonId,
+        floorA: floorA,
+        floorB: floorB,
+        wall: wall,
+        layoutSeed: widget.layoutSeed,
+      ),
+      child: const SizedBox.expand(),
+    );
+  }
+}
+
+class _FloorDressingPainter extends CustomPainter {
+  _FloorDressingPainter({
+    required this.map,
+    required this.dungeonId,
+    required this.floorA,
+    required this.floorB,
+    required this.wall,
+    required this.layoutSeed,
+  });
+
+  final TileMap map;
+  final String dungeonId;
+  final ui.Image floorA;
+  final ui.Image floorB;
+  final ui.Image wall;
+  final int layoutSeed;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..filterQuality = FilterQuality.none
+      ..isAntiAlias = false;
+    final tile = math.min(size.width / map.cols, size.height / map.rows);
+    final srcOf = (ui.Image image) => Rect.fromLTWH(
+      0,
+      0,
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
+    for (var y = 0; y < map.rows; y++) {
+      for (var x = 0; x < map.cols; x++) {
+        final dst = Rect.fromLTWH(x * tile, y * tile, tile + 0.5, tile + 0.5);
+        final kind = map.at(x, y);
+        paint.color = const Color(0xFFFFFFFF);
+        if (kind == TileKind.wall) {
+          final touches = DungeonEnvironment.wallTouchesCarved(map, x, y);
+          if (!touches && dungeonId != 'sandy') continue;
+          canvas.drawImageRect(wall, srcOf(wall), dst, paint);
+          paint.color = DungeonEnvironment.wallShade(dungeonId);
+          canvas.drawRect(dst, paint);
+          continue;
+        }
+        final pick = _TileRoomPainter._hashPick(x, y, layoutSeed, 3);
+        final image = pick == 1 ? floorB : floorA;
+        canvas.drawImageRect(image, srcOf(image), dst, paint);
+        paint.color = DungeonEnvironment.floorBlend(dungeonId);
+        canvas.drawRect(dst, paint);
+      }
+    }
+    for (final d in map.decals) {
+      if (d.w > 1 || d.h > 1) continue;
+      paint.color = d.accent
+          ? const Color(0xF0FFE6A0)
+          : const Color(0x88301810);
+      canvas.drawRect(
+        Rect.fromLTWH(
+          d.x * tile + tile * 0.25,
+          d.y * tile + tile * 0.25,
+          d.w * tile * 0.5,
+          d.h * tile * 0.5,
+        ),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _FloorDressingPainter oldDelegate) =>
+      oldDelegate.map != map || oldDelegate.dungeonId != dungeonId;
 }

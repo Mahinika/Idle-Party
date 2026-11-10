@@ -61,7 +61,9 @@ void main() {
 
   testWidgets('CRAFT fits 360x640 at scale 1, 1.4, and 2', (tester) async {
     final director = GameDirector.preview(
-      initialState: GameLogic.createInitialState(now: DateTime(2026, 11, 7)),
+      initialState: GameLogic.createInitialState(
+        now: DateTime(2026, 11, 7),
+      ).copyWith(bossVictories: 1),
     );
     addTearDown(() => release(tester));
     await director.boot(deferCombatLoop: true);

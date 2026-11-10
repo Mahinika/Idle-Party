@@ -302,7 +302,7 @@ Future<void> confirmGauntletRun(
       context: context,
       barrierColor: MenuChrome.scrim,
       builder: (ctx) => MenuChrome.dialog(
-        title: 'Gauntlet climb',
+        title: 'Gauntlet',
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -317,9 +317,14 @@ Future<void> confirmGauntletRun(
               maxLines: 4,
             ),
             ShellLayout.gap(8),
+            Text(
+              'Recommended.',
+              textAlign: TextAlign.center,
+              style: GameTheme.hint(color: GameTheme.torchHot),
+            ),
+            ShellLayout.gap(4),
             GameButton(
-              label:
-                  'START · ${GauntletPacts.title(recommended)} · recommended',
+              label: GauntletPacts.title(recommended),
               style: GameButtonStyle.brown,
               primary: true,
               onPressed: () => Navigator.pop(ctx, recommended),

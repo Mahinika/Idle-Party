@@ -1,12 +1,14 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 
 import '../../core/ad_rewarded.dart';
 import '../../core/analytics_events.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
+import '../../core/home_layout.dart';
 import '../../core/first_climb_coach.dart';
 import '../../core/wipe_advice.dart';
 import '../../core/wisp_gift.dart';
@@ -76,11 +78,11 @@ class DungeonWipePanel extends StatelessWidget {
                                     : state.inRift
                                     ? 'Farm Rift ends. Best R${state.metaDepth.riftBestTier}.'
                                     : plain
-                                    ? 'They go again in a moment. HUB leaves the cave.'
+                                    ? 'They go again in a moment. Leave returns to town.'
                                     : dailyEcho
-                                    ? 'RETRY this floor. HUB ends the run.'
+                                    ? 'RETRY this floor. Leave ends the run.'
                                     : farm
-                                    ? 'RETRY restarts F${state.currentRoom.floorNumber}. HUB ends the run.'
+                                    ? 'RETRY restarts F${state.currentRoom.floorNumber}. Leave ends the run.'
                                     : () {
                                         final cur = state.currentRoom.floorNumber;
                                         final uncleared =
@@ -97,7 +99,7 @@ class DungeonWipePanel extends StatelessWidget {
                                         if (uncleared) {
                                           return 'Same floor again. A second wipe farms the floor below.';
                                         }
-                                        return 'RETRY restarts F$cur. HUB ends the run.';
+                                        return 'RETRY restarts F$cur. Leave ends the run.';
                                       }(),
                                 maxLines: 4,
                               ),
@@ -170,20 +172,7 @@ class DungeonWipePanel extends StatelessWidget {
                                 ),
                               ],
                               const SizedBox(height: 10),
-                              ValueListenableBuilder<int>(
-                                valueListenable: director.wipeAutoSeconds,
-                                builder: (context, seconds, _) {
-                                  if (seconds <= 0) return const SizedBox.shrink();
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 6),
-                                    child: Text(
-                                      'Fighting again in $seconds',
-                                      textAlign: TextAlign.center,
-                                      style: GameTheme.section(color: GameTheme.torchHot),
-                                    ),
-                                  );
-                                },
-                              ),
+                              _WipeAutoCountdown(director: director),
                               if (!state.inGauntlet && !state.inAnyRiftMode)
                                 GameButton(
                                   label: (farm || dailyEcho)
@@ -258,9 +247,11 @@ class DungeonWipePanel extends StatelessWidget {
   Widget _buildHubSection(GameState state) {
     final fixLabel = WipeAdvice.hubCtaLabelFor(state.wipeAdviceLine);
     final fixNav = WipeAdvice.hubNavFor(state.wipeAdviceLine);
+    final leaveLabel =
+        state.homeLayout == HomeLayout.home ? 'LEAVE' : 'HUB';
     if (fixLabel == null) {
       return GameButton(
-        label: 'HUB',
+        label: leaveLabel,
         style: GameButtonStyle.grey,
         primary: state.inGauntlet || state.inAnyRiftMode,
         dense: true,
@@ -280,12 +271,58 @@ class DungeonWipePanel extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         GameButton(
-          label: 'HUB',
+          label: leaveLabel,
           style: GameButtonStyle.grey,
           dense: true,
           onPressed: director.hubAfterWipe,
         ),
       ],
+    );
+  }
+}
+
+class _WipeAutoCountdown extends StatefulWidget {
+  const _WipeAutoCountdown({required this.director});
+
+  final GameDirector director;
+
+  @override
+  State<_WipeAutoCountdown> createState() => _WipeAutoCountdownState();
+}
+
+class _WipeAutoCountdownState extends State<_WipeAutoCountdown> {
+  int _prev = -1;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: widget.director.wipeAutoSeconds,
+      builder: (context, seconds, _) {
+        if (seconds <= 0) return const SizedBox.shrink();
+        if (seconds <= 3 && seconds != _prev) {
+          _prev = seconds;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final view = View.of(context);
+            SemanticsService.sendAnnouncement(
+              view,
+              'Fighting again in $seconds',
+              TextDirection.ltr,
+            );
+          });
+        }
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Semantics(
+            liveRegion: true,
+            label: 'Fighting again in $seconds',
+            child: Text(
+              'Fighting again in $seconds',
+              textAlign: TextAlign.center,
+              style: GameTheme.section(color: GameTheme.torchHot),
+            ),
+          ),
+        );
+      },
     );
   }
 }

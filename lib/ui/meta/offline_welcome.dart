@@ -9,13 +9,17 @@ import '../../core/chase_dispatcher.dart';
 import '../../core/comeback_chest.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
-import '../../core/gold_income.dart';
+import '../../core/menu_router.dart';
+import '../../core/home_layout.dart';
 import '../../core/hub_chase.dart';
+import '../../core/menu_alerts.dart';
 import '../../core/pet_service.dart';
 import '../chase_bind.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/home/home_gold_dock.dart';
+import '../shell/home/upgrade_panel.dart';
 import '../shell/shell_layout.dart';
 import '../shell/play_nav.dart';
 import '../web_click_bridge.dart';
@@ -23,8 +27,9 @@ import '../web_click_bridge.dart';
 /// Short Welcome Back: wow lead, ≤3 highlights, one Up next, dismiss.
 Future<void> showOfflineProgressDialog(
   BuildContext context,
-  GameDirector director,
-) async {
+  GameDirector director, {
+  MenuRouter? router,
+}) async {
   final summary = director.offlineSummary;
   final rewardState = summary?.state ?? director.state;
   final now = DateTime.now();
@@ -33,11 +38,9 @@ Future<void> showOfflineProgressDialog(
   }
   final contract = ChaseContract.fromState(rewardState);
   final checkInLine = GameLogic.checkInWelcomeLine(rewardState);
-  final showCheckIn =
-      checkInLine.isNotEmpty && !contract.detail.contains('Check-in');
   final chase = contract.chase;
   final rows = summary?.highlightRows ?? const <(String, String)>[];
-  final lead = summary?.lootLead;
+  // lootLead merged into welcomeLead in the dialog body.
   final chestLine = ComebackChest.waitingLine(
     rewardState,
     sanctuaryCost: GameLogic.cheapestSanctuaryNextCost(rewardState),
@@ -47,6 +50,8 @@ Future<void> showOfflineProgressDialog(
       : '';
 
   final nav = PlayNav.maybeOf(context);
+  final menu = router ?? nav?.router;
+  final home = director.state.homeLayout == HomeLayout.home;
   final plan = ChaseDispatcher.plan(
     chase,
     state: director.state,
@@ -99,6 +104,24 @@ Future<void> showOfflineProgressDialog(
   // prize is still one tap, and the next press is the fight.
   final inCave = director.state.inDungeon;
   final returnLabel = inCave ? 'CONTINUE' : 'ENTER DUNGEON';
+  final canSpend = menu != null && (home || nav != null);
+  final gainLine = GameLogic.returnGainLine(
+    rewardState,
+    goldGained: summary?.goldGained ?? 0,
+    essenceGained: summary?.essenceGained ?? 0,
+    canOpenGold: canSpend && MenuTabs.showGold(rewardState),
+    canOpenEssence: canSpend && MenuTabs.showCamp(rewardState),
+  );
+  final showCheckIn = checkInLine.isNotEmpty &&
+      !gainLine.contains('wallet covers') &&
+      !gainLine.contains('Open ESSENCE');
+  final openGold = canSpend && gainLine.contains('Open GOLD');
+  final openEssence = canSpend && gainLine.contains('Open ESSENCE');
+  final shownGain = _welcomeGainVisible(
+    welcome: summary?.welcomeLead ?? '',
+    gainLine: gainLine,
+    goldGained: summary?.goldGained ?? 0,
+  );
   var showWatch = summary?.welcomeBackAdOffer == true;
   var watchBusy = false;
   var adNote = '';
@@ -109,7 +132,55 @@ Future<void> showOfflineProgressDialog(
     context: context,
     barrierDismissible: false,
     barrierColor: MenuChrome.scrim,
-    builder: (ctx) => MenuChrome.dialog(
+    builder: (ctx) {
+      final media = MediaQuery.of(ctx);
+      final crowded =
+          media.textScaler.scale(1) > 1.2 || media.size.height < 700;
+      final greyActions = <Widget>[
+        if (openGold)
+          GameButton(
+            label: 'OPEN GOLD',
+            expanded: false,
+            style: GameButtonStyle.grey,
+            onPressed: () => _openReturnSpend(
+              context,
+              ctx,
+              director,
+              menu,
+              home: home,
+              panel: HomeGoldPanel.forge,
+              route: MenuRoute.gold,
+            ),
+          )
+        else if (openEssence)
+          GameButton(
+            label: 'OPEN ESSENCE',
+            expanded: false,
+            style: GameButtonStyle.grey,
+            onPressed: () => _openReturnSpend(
+              context,
+              ctx,
+              director,
+              menu,
+              home: home,
+              panel: HomeGoldPanel.camp,
+              route: MenuRoute.essence,
+            ),
+          )
+        else if (showChaseCta)
+          GameButton(
+            label: readyLabel,
+            expanded: false,
+            style: GameButtonStyle.grey,
+            onPressed: () {
+              director.claimReturnRewards();
+              director.dismissOfflineSummary();
+              Navigator.pop(ctx);
+              readyAction?.call();
+            },
+          ),
+      ];
+      return MenuChrome.dialog(
       title: 'WELCOME BACK',
       // The dialog scrolls. A fixed 55% cap clipped Check-in on a
       // 1080×1920 phone (360×640 logical).
@@ -118,30 +189,22 @@ Future<void> showOfflineProgressDialog(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (lead != null) ...[
-            Text(
-              lead,
-              style: GameTheme.readable(color: GameTheme.torchHot),
-            ),
-            const SizedBox(height: 6),
-          ],
           if (summary != null) ...[
             Text(
-              'Away for ${OfflineProgressResult.formatOfflineDuration(summary.awayForSeconds)} · ${summary.welcomeLead}',
-              style: GameTheme.readable(color: GameTheme.parchment),
+              'Away for '
+              '${OfflineProgressResult.formatOfflineDuration(summary.awayForSeconds)}'
+              ' · ${summary.welcomeLead}',
+              style: GameTheme.readable(color: GameTheme.torchHot),
             ),
+          ],
+          if (shownGain.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
-              summary.afkWhereLine,
-              style: GameTheme.section(color: GameTheme.mossLit),
+              shownGain,
+              style: GameTheme.readable(color: GameTheme.parchment),
             ),
-            if (summary.awayReport.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(
-                summary.awayReport,
-                style: GameTheme.section(color: GameTheme.parchment),
-              ),
-            ],
+          ],
+          if (summary != null) ...[
             if (summary.materialsLine.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(
@@ -149,14 +212,13 @@ Future<void> showOfflineProgressDialog(
                 style: GameTheme.section(color: GameTheme.torchHot),
               ),
             ],
-            const SizedBox(height: 6),
-            Text(
-              GoldIncome.awayPromise(
-                summary.state,
-                wasInDungeon: summary.wasInDungeon,
+            if (summary.bestDrop.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                'Best find: ${summary.bestDrop}',
+                style: GameTheme.section(color: GameTheme.parchment),
               ),
-              style: GameTheme.section(color: GameTheme.mossLit),
-            ),
+            ],
           ],
           if (chestLine.isNotEmpty) ...[
             const SizedBox(height: 6),
@@ -167,10 +229,7 @@ Future<void> showOfflineProgressDialog(
           ],
           if (petLine.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(
-              petLine,
-              style: GameTheme.readable(color: GameTheme.torchHot),
-            ),
+            Text(petLine, style: GameTheme.readable(color: GameTheme.torchHot)),
           ],
           if (showCheckIn) ...[
             const SizedBox(height: 6),
@@ -181,8 +240,8 @@ Future<void> showOfflineProgressDialog(
           ],
           if (rows.isNotEmpty) ...[
             const SizedBox(height: 10),
-            for (final row in rows)
-              if (lead == null || !_lootAlreadySaid(row.$1))
+            for (final row in rows.take(OfflineProgressResult.maxHighlightRows))
+              if (!_lootAlreadySaid(row.$1))
                 MenuChrome.statRow(label: row.$1, value: row.$2),
           ],
           if (director.state.missions.any((m) => m.canClaim)) ...[
@@ -244,10 +303,11 @@ Future<void> showOfflineProgressDialog(
                                 setLocal(() => watchBusy = true);
                                 final beforeGold = director.state.gold;
                                 final beforeEssence = director.state.essence;
-                                final ok = await director.watchWelcomeBackGoldAd(
-                                  summary.goldGained,
-                                  baseEssence: summary.essenceGained,
-                                );
+                                final ok = await director
+                                    .watchWelcomeBackGoldAd(
+                                      summary.goldGained,
+                                      baseEssence: summary.essenceGained,
+                                    );
                                 if (!context.mounted) return;
                                 setLocal(() {
                                   watchBusy = false;
@@ -273,32 +333,15 @@ Future<void> showOfflineProgressDialog(
                 );
               },
             ),
-          const SizedBox(height: 10),
-          Text(
-            contract.upNextLine,
-            style: GameTheme.readable(color: chase.urgency == HubChaseUrgency.normal
-                  ? GameTheme.mossLit
-                  : GameTheme.accentWarn),
-          ),
-          if (contract.detail.isNotEmpty) ...[
-            ShellLayout.gap(4),
-            ShellLayout.hint(contract.detail, maxLines: 3),
-          ],
+          if (crowded)
+            for (final button in greyActions) ...[
+              const SizedBox(height: 8),
+              button,
+            ],
         ],
       ),
       actions: [
-        if (showChaseCta)
-          GameButton(
-            label: readyLabel,
-            expanded: false,
-            style: GameButtonStyle.grey,
-            onPressed: () {
-              director.claimReturnRewards();
-              director.dismissOfflineSummary();
-              Navigator.pop(ctx);
-              readyAction?.call();
-            },
-          ),
+        if (!crowded) ...greyActions,
         GameButton(
           label: returnLabel,
           expanded: false,
@@ -313,6 +356,14 @@ Future<void> showOfflineProgressDialog(
               return;
             }
             final id = GameLogic.recommendedDungeonId(director.state);
+            // Home already enters from the shell. PlayNav on that tree must
+            // not skip the unlock check the camp button uses.
+            if (home) {
+              if (ChaseDispatcher.zoneUnlocked(director.state, id)) {
+                director.enterDungeon(dungeonId: id);
+              }
+              return;
+            }
             if (nav != null) {
               nav.onEnterDungeon(id);
             } else if (ChaseDispatcher.zoneUnlocked(director.state, id)) {
@@ -321,8 +372,58 @@ Future<void> showOfflineProgressDialog(
           },
         ),
       ],
-    ),
+    );
+    },
   ).whenComplete(WebClickBridge.popLayer);
+}
+
+/// Drop a gain sentence that only repeats gold [welcome] already named.
+/// Keep a sentence that adds the next forge or CAMP buy.
+String _welcomeGainVisible({
+  required String welcome,
+  required String gainLine,
+  required int goldGained,
+}) {
+  if (gainLine.isEmpty || goldGained <= 0) return gainLine;
+  final grouped = OfflineProgressResult.groupedCount(goldGained);
+  if (!welcome.contains(grouped) || !gainLine.contains(grouped)) {
+    return gainLine;
+  }
+  final sentences = gainLine.split(RegExp(r'(?<=\.)\s+'));
+  final kept = <String>[];
+  for (final sentence in sentences) {
+    final repeatsBroughtGold =
+        sentence.contains(grouped) &&
+        sentence.toLowerCase().contains('brought back') &&
+        sentence.toLowerCase().contains('gold');
+    if (repeatsBroughtGold) continue;
+    kept.add(sentence);
+  }
+  return kept.join(' ').trim();
+}
+
+void _openReturnSpend(
+  BuildContext context,
+  BuildContext dialogContext,
+  GameDirector director,
+  MenuRouter menu, {
+  required bool home,
+  required HomeGoldPanel panel,
+  required MenuRoute route,
+}) {
+  director.claimReturnRewards();
+  director.dismissOfflineSummary();
+  Navigator.pop(dialogContext);
+  if (home) {
+    showHomeGoldSheet(
+      context,
+      director: director,
+      router: menu,
+      initialPanel: panel,
+    );
+    return;
+  }
+  menu.open(route);
 }
 
 bool _lootAlreadySaid(String label) =>

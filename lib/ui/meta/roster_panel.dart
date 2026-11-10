@@ -1,12 +1,14 @@
 
 import 'package:flutter/material.dart';
 
+import '../../assets/custom_assets.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../models/hero.dart';
 import '../../models/hero_spec.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
+import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
 import '../shell/shell_common.dart';
 import '../shell/shell_layout.dart';
@@ -39,6 +41,17 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
       child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Row(
+          children: [
+            KenneySprite(
+              asset: CustomAssets.townInn(1),
+              size: 48,
+            ),
+            const SizedBox(width: 10),
+            Text('INN', style: GameTheme.title()),
+          ],
+        ),
+        ShellLayout.gap(6),
         ShellLayout.hint(
           state.inDungeon
               ? 'Leave the dungeon to change your lineup.'

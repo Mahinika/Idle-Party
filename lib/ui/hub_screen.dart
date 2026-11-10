@@ -1,4 +1,4 @@
-import 'dart:async' show Completer, unawaited;
+import 'dart:async' show Completer, Timer, unawaited;
 
 import 'package:flutter/material.dart';
 
@@ -48,6 +48,7 @@ import 'shell/boost_ad_button.dart';
 import 'shell/scroll_buff_stack.dart';
 import 'hub/hub_today_card.dart';
 import 'hub/hub_world_map.dart';
+import 'shell/home/director_select.dart';
 import 'shell/shell_layout.dart';
 
 /// Idle Party hub: dungeon select / meta / ascend.
@@ -60,6 +61,9 @@ class HubScreen extends StatefulWidget {
   });
 
   final GameDirector director;
+
+  /// True while the ENTER torch scale controller is repeating.
+  static bool debugTorchRepeating = false;
 
   /// Which menu is open — shared with the dungeon shell.
   final MenuRouter router;
@@ -80,6 +84,8 @@ class _HubScreenState extends State<HubScreen>
   late String _selectedId;
   HubEndgameHunt? _selectedHunt;
   late final AnimationController _torch;
+  bool _torchDrive = false;
+  bool _torchApplyQueued = false;
   bool _offlineDialogShown = false;
   bool _offeredWhatsNew = false;
   bool _offeredDiscordThanks = false;
@@ -157,16 +163,6 @@ class _HubScreenState extends State<HubScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1600),
     );
-    // First hub paint stays static — torch starts after two frames so the
-    // world map / TODAY card are not fighting animation ticks on cold start.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        if (director.state.vfxQuality == VfxQuality.minimal) return;
-        _torch.repeat(reverse: true);
-      });
-    });
     director.addListener(_onDirectorForNotify);
     router.addListener(_onMenuForPrompts);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -178,6 +174,56 @@ class _HubScreenState extends State<HubScreen>
       await Future<void>.delayed(const Duration(milliseconds: 450));
       if (!mounted) return;
       await _offerHubCards();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant HubScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncSelectionOutsideBuild();
+  }
+
+  /// Selection follows the chase when the parent rebuilds. Never from build.
+  /// Field writes land before this frame's [build].
+  void _syncSelectionOutsideBuild() {
+    if (_trackedAscension != state.ascensionLevel ||
+        _trackedHighestCleared != state.highestDungeonCleared) {
+      final ascended =
+          _trackedAscension != null &&
+          _trackedAscension != state.ascensionLevel;
+      _trackedAscension = state.ascensionLevel;
+      _trackedHighestCleared = state.highestDungeonCleared;
+      _syncSelection(force: ascended || !_userPickedZone);
+    } else if (!_userPickedZone) {
+      _syncSelection(force: false);
+    }
+    final chase = HubChase.forState(state);
+    if (chase.zoneId != null &&
+        !_userPickedZone &&
+        !_showEndgameMap &&
+        _selectedId != chase.zoneId) {
+      _selectedHunt = null;
+      _selectedId = chase.zoneId!;
+    }
+  }
+
+  void _noteTorch(bool drive) {
+    if (_torchDrive == drive && _torch.isAnimating == drive) return;
+    _torchDrive = drive;
+    if (_torchApplyQueued) return;
+    _torchApplyQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _torchApplyQueued = false;
+      if (!mounted) return;
+      final was = _torch.isAnimating;
+      if (_torchDrive) {
+        if (!_torch.isAnimating) _torch.repeat(reverse: true);
+      } else if (_torch.isAnimating) {
+        _torch.stop();
+        _torch.value = 0;
+      }
+      HubScreen.debugTorchRepeating = _torch.isAnimating;
+      if (was != _torch.isAnimating) setState(() {});
     });
   }
 
@@ -384,7 +430,10 @@ class _HubScreenState extends State<HubScreen>
         return 'Ashen';
       case HubChaseKind.doneForToday:
         return 'rest';
+      case HubChaseKind.dailyRun:
+      case HubChaseKind.dailyVaultProgress:
       case HubChaseKind.claimDailyVault:
+        return 'Next daily';
       case HubChaseKind.claimMissions:
       case HubChaseKind.equipBag:
       case HubChaseKind.marketUpgrade:
@@ -413,14 +462,6 @@ class _HubScreenState extends State<HubScreen>
   }) {
     final contract = ChaseContract.fromState(state);
     final chase = contract.chase;
-    // FEEL 040: KEY enter zone matches map HERE.
-    if (chase.zoneId != null &&
-        !_userPickedZone &&
-        !_showEndgameMap &&
-        _selectedId != chase.zoneId) {
-      _selectedHunt = null;
-      _selectedId = chase.zoneId!;
-    }
     final (actionLabel, onAction) = _chaseAction(context, chase);
     final chaseActionLabel = actionLabel;
     final ready = chase.urgency == HubChaseUrgency.ready;
@@ -527,21 +568,18 @@ class _HubScreenState extends State<HubScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        HubTodayCard(
-          chase: chase,
-          compact: short,
-          hideDetail: short,
-          hideWhy: true,
+        _HoldUntil(
+          token: '${chase.title}|${chase.urgency.name}',
+          child: HubTodayCard(
+            chase: chase,
+            compact: short,
+            hideDetail: short,
+            hideWhy: true,
+          ),
         ),
         if (PetService.errandActive(state)) ...[
           SizedBox(height: short ? 2 : 4),
-          Text(
-            PetService.statusLine(state, DateTime.now()),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: GameTheme.hint(color: GameTheme.torchHot),
-          ),
+          HubPetErrandLine(state: state),
         ],
         SizedBox(height: short ? 4 : 6),
         Builder(
@@ -563,7 +601,14 @@ class _HubScreenState extends State<HubScreen>
                 ? null
                 : awayRaw;
             final enterFamily = HubPrimaryCta.isEnterFamilyLabel(primaryLabel);
-            final showCoach = coachEnter != null && enterFamily;
+            final showCoach =
+                coachEnter != null &&
+                enterFamily &&
+                coachEnter != chase.title;
+            final motion =
+                director.state.vfxQuality != VfxQuality.minimal &&
+                !MediaQuery.disableAnimationsOf(context);
+            _noteTorch(showCoach && motion);
             final readyContract = ChaseContract(chase: chase);
             final readyTip = ready
                 ? (readyContract.readyActionLabel ?? 'Do this first')
@@ -573,12 +618,8 @@ class _HubScreenState extends State<HubScreen>
               children: [
                 if (awayLine != null) CoachLine(awayLine, maxLines: 2),
                 if (showCoach) CoachLine(coachEnter),
-                AnimatedBuilder(
-                  animation: _torch,
-                  builder: (context, child) => Transform.scale(
-                    scale: 1.0 + (_torch.value * 0.012),
-                    child: child,
-                  ),
+                _HubEnterButton(
+                  scale: _torch.isAnimating ? _torch : null,
                   child: CoachPulse(
                     active: showCoach,
                     child: GameButton(
@@ -737,18 +778,6 @@ class _HubScreenState extends State<HubScreen>
 
   @override
   Widget build(BuildContext context) {
-    if (_trackedAscension != state.ascensionLevel ||
-        _trackedHighestCleared != state.highestDungeonCleared) {
-      final ascended =
-          _trackedAscension != null &&
-          _trackedAscension != state.ascensionLevel;
-      _trackedAscension = state.ascensionLevel;
-      _trackedHighestCleared = state.highestDungeonCleared;
-      // After Ascend / new clear, prefer NEXT (or deepest unlocked).
-      _syncSelection(force: ascended || !_userPickedZone);
-    } else if (!_userPickedZone) {
-      _syncSelection(force: false);
-    }
     final canAscend = GameLogic.canAscend(state);
     final unlockedSelected = _selectedHunt != null
         ? GameLogic.endgameUnlocked(state)
@@ -802,32 +831,44 @@ class _HubScreenState extends State<HubScreen>
                             children: [
                               // Torch bloom animates alone above — header must
                               // not rebuild 60×/s (wallet + HubChase.forState).
-                              HubHeader(
-                                ascensionLevel: state.ascensionLevel,
-                                gold: state.gold,
-                                essence: state.essence,
-                                willRank: state.willRankTitle,
-                                collectionScore: state.collectionScore,
-                                displayTitle: state.displayTitle,
-                                onOpenSettings: () => router.open(
-                                  MenuRoute.more,
-                                  more: MoreSection.settings,
-                                ),
-                                onOpenAscend: () =>
-                                    confirmAscend(context, director),
-                                incomeLine: GoldIncome.hubRateLine(state),
-                                hubGoldRate: hubChaseOwnsEndgameRow(chase.kind)
-                                    ? null
-                                    : GoldIncome.hubRateCompact(state),
-                                multiplierLine: GoldIncome.multiplierLine(
-                                  state,
-                                ),
-                                plainChrome: GameLogic.plainPlayerChrome(state),
-                                showEssence: MenuTabs.showCamp(state),
-                                dimIncome: hubChaseOwnsEndgameRow(chase.kind),
-                                huntHint: _shortHuntHint(chase),
-                                blessingStacks: state.metaDepth.ascendBlessings,
-                                showBlessingStacks: MenuTabs.showKeep(state),
+                              DirectorSelect<String>(
+                                director: director,
+                                select: (s) =>
+                                    '${s.gold}|${s.essence}|${s.ascensionLevel}|'
+                                    '${s.willRankTitle}|${s.collectionScore}|'
+                                    '${s.displayTitle}|${s.metaDepth.ascendBlessings}|'
+                                    '${MenuTabs.showCamp(s)}|${_shortHuntHint(HubChase.forState(s))}',
+                                builder: (context, s) {
+                                  final hubChase = HubChase.forState(s);
+                                  return HubHeader(
+                                    ascensionLevel: s.ascensionLevel,
+                                    gold: s.gold,
+                                    essence: s.essence,
+                                    willRank: s.willRankTitle,
+                                    collectionScore: s.collectionScore,
+                                    displayTitle: s.displayTitle,
+                                    onOpenSettings: () => router.open(
+                                      MenuRoute.more,
+                                      more: MoreSection.settings,
+                                    ),
+                                    onOpenAscend: () =>
+                                        confirmAscend(context, director),
+                                    incomeLine: GoldIncome.hubRateLine(s),
+                                    hubGoldRate:
+                                        hubChaseOwnsEndgameRow(hubChase.kind)
+                                        ? null
+                                        : GoldIncome.hubRateCompact(s),
+                                    multiplierLine: GoldIncome.multiplierLine(s),
+                                    plainChrome:
+                                        GameLogic.plainPlayerChrome(s),
+                                    showEssence: MenuTabs.showCamp(s),
+                                    dimIncome:
+                                        hubChaseOwnsEndgameRow(hubChase.kind),
+                                    huntHint: _shortHuntHint(hubChase),
+                                    blessingStacks: s.metaDepth.ascendBlessings,
+                                    showBlessingStacks: MenuTabs.showKeep(s),
+                                  );
+                                },
                               ),
                               const SizedBox(height: 2),
                               _hubAscendTrack(state),
@@ -947,7 +988,14 @@ class _HubScreenState extends State<HubScreen>
                                         crossAxisAlignment:
                                             CrossAxisAlignment.end,
                                         children: [
-                                          BoostAdButton(director: director),
+                                          DecoratedBox(
+                                            decoration: MenuChrome.hudWell(
+                                              borderColor: GameTheme.borderLit,
+                                            ),
+                                            child: BoostAdButton(
+                                              director: director,
+                                            ),
+                                          ),
                                           ScrollBuffStack(
                                             meta: state.metaDepth,
                                             maxHeight: 88,
@@ -1030,6 +1078,131 @@ class _HubScreenState extends State<HubScreen>
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Keeps [child] mounted when [token] is unchanged, so a fight tick that
+/// rebuilds the hub does not rebuild TODAY.
+class _HoldUntil extends StatefulWidget {
+  const _HoldUntil({required this.token, required this.child});
+
+  final String token;
+  final Widget child;
+
+  @override
+  State<_HoldUntil> createState() => _HoldUntilState();
+}
+
+class _HoldUntilState extends State<_HoldUntil> {
+  late String _token;
+  late Widget _held;
+
+  @override
+  void initState() {
+    super.initState();
+    _token = widget.token;
+    _held = widget.child;
+  }
+
+  @override
+  void didUpdateWidget(covariant _HoldUntil oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.token != _token) {
+      _token = widget.token;
+      _held = widget.child;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => _held;
+}
+
+/// Scales the hub ENTER control only while [scale] is running.
+class _HubEnterButton extends StatelessWidget {
+  const _HubEnterButton({required this.child, this.scale});
+
+  final Widget child;
+  final Animation<double>? scale;
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = this.scale;
+    if (scale == null) return child;
+    return AnimatedBuilder(
+      animation: scale,
+      builder: (context, child) => Transform.scale(
+        scale: 1.0 + (scale.value * 0.012),
+        child: child,
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Pet errand copy. The clock is read from a timer, not from [build].
+class HubPetErrandLine extends StatefulWidget {
+  const HubPetErrandLine({
+    super.key,
+    required this.state,
+    this.clock,
+    this.period = const Duration(seconds: 15),
+  });
+
+  final GameState state;
+  final DateTime Function()? clock;
+  final Duration period;
+
+  @override
+  State<HubPetErrandLine> createState() => _HubPetErrandLineState();
+}
+
+class _HubPetErrandLineState extends State<HubPetErrandLine> {
+  late DateTime _now;
+  Timer? _timer;
+
+  DateTime _read() => widget.clock?.call() ?? DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _now = _read();
+    _arm();
+  }
+
+  void _arm() {
+    _timer?.cancel();
+    _timer = Timer.periodic(widget.period, (_) {
+      final next = _read();
+      if (!mounted) return;
+      if (next.minute != _now.minute ||
+          next.hour != _now.hour ||
+          next.day != _now.day) {
+        setState(() => _now = next);
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant HubPetErrandLine oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.period != widget.period) _arm();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      PetService.statusLine(widget.state, _now),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.center,
+      style: GameTheme.hint(color: GameTheme.torchHot),
     );
   }
 }

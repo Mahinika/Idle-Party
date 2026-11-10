@@ -20,6 +20,7 @@ import 'models/hero.dart';
 import 'models/hero_spec.dart';
 import 'ui/boot_intro_screen.dart';
 import 'assets/custom_assets.dart';
+import 'ui/decoded_image_cache.dart';
 import 'ui/game_audio.dart';
 import 'ui/loading_splash.dart';
 import 'ui/theme.dart';
@@ -343,11 +344,20 @@ class _GameHomePageState extends State<GameHomePage>
     unawaited(EquipmentFactory.loadAffixes());
     unawaited(DropTables.load());
     // Defer combat loop until after start menu so dungeon ticks cannot steal focus.
-    await _director.boot(deferCombatLoop: widget.showIntro);
-    if (!mounted) return;
-
-    // Probe is bounded (~3s) in play_store_update_io so offline splash continues.
-    final blocked = await _director.checkMandatoryPlayUpdate();
+    // Save catch-up and the mandatory Play probe run together so cold start waits
+    // for max(boot, probe), not the sum. The gate still blocks when probe says so.
+    BootClock.mark('saveBootStart');
+    BootClock.mark('playUpdateProbeStart');
+    late bool blocked;
+    await Future.wait<void>([
+      _director.boot(deferCombatLoop: widget.showIntro).whenComplete(() {
+        BootClock.mark('saveBootEnd');
+      }),
+      _director.checkMandatoryPlayUpdate().then((gate) {
+        BootClock.mark('playUpdateProbeEnd');
+        blocked = gate;
+      }),
+    ]);
     if (!mounted) return;
     if (blocked) {
       setState(() => _phase = _AppPhase.playUpdateRequired);
@@ -372,6 +382,7 @@ class _GameHomePageState extends State<GameHomePage>
   Future<void> _startPlatformAfterPaint() async {
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
+    unawaited(_precacheTownAssets());
     unawaited(_bootFirebase());
     _director.wakePlatformAfterSplash();
   }
@@ -465,6 +476,21 @@ class _GameHomePageState extends State<GameHomePage>
   /// start menu is still on screen. Decode sizes must match
   /// [CaveAtmosphere.fullBleedScene] or the warm-up lands in a different
   /// cache entry and buys nothing.
+  /// Warms owned town PNGs after the first paint so ENTER town does not decode
+  /// the set on the critical path, including nameplates, pennants, and lanterns
+  /// (see [CustomAssets.townAssetPaths]).
+  Future<void> _precacheTownAssets() async {
+    BootClock.mark('townArtWarmupStart');
+    try {
+      await Future.wait<void>([
+        for (final path in CustomAssets.townAssetPaths)
+          DecodedImageCache.load(path),
+      ]);
+    } finally {
+      BootClock.mark('townArtWarmupEnd');
+    }
+  }
+
   Future<void> _precacheScenes() async {
     for (final asset in <String>[
       CustomAssets.hubScene,

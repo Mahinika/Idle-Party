@@ -234,6 +234,17 @@ class SpatialActor {
   double masteryPoints;
   bool uncrittable;
   double moveSpeed;
+
+  /// Tiles per second for the drawn charge. Gameplay [x]/[y] is already the
+  /// landing. Three sim steps (2× pace plus one catch-up step) stay under a
+  /// tile, which is the camera's follow band, so the view copies the slide
+  /// instead of dropping into the retarget glide.
+  static const double pictureRushTilesPerSec = 18;
+  double pictureRushFromX = 0;
+  double pictureRushFromY = 0;
+  double pictureRushLeft = 0;
+  double pictureRushSpan = 0;
+
   final double attackRange;
   double attackCooldown;
   final int assetIndex;
@@ -246,6 +257,36 @@ class SpatialActor {
 
   /// Index into [GameState.heroes] when this is a party member.
   final int? partyIndex;
+
+  /// Where the body is drawn. A charge keeps combat on [x]/[y] and slides
+  /// the picture from the takeoff so the camera can stay with it.
+  ({double x, double y}) picturePoint() {
+    if (pictureRushLeft <= 0 || pictureRushSpan <= 0) return (x: x, y: y);
+    final t = (pictureRushLeft / pictureRushSpan).clamp(0.0, 1.0);
+    return (
+      x: x + (pictureRushFromX - x) * t,
+      y: y + (pictureRushFromY - y) * t,
+    );
+  }
+
+  void beginPictureRush(double fromX, double fromY) {
+    final dx = x - fromX;
+    final dy = y - fromY;
+    final dist = math.sqrt(dx * dx + dy * dy);
+    if (dist < 0.75) {
+      pictureRushLeft = 0;
+      return;
+    }
+    pictureRushFromX = fromX;
+    pictureRushFromY = fromY;
+    pictureRushSpan = dist / pictureRushTilesPerSec;
+    pictureRushLeft = pictureRushSpan;
+  }
+
+  void tickPictureRush(double dt) {
+    if (pictureRushLeft <= 0 || dt <= 0) return;
+    pictureRushLeft = math.max(0, pictureRushLeft - dt);
+  }
 
   /// Snapshot of hero level for ability unlock checks.
   int heroLevel;
@@ -803,6 +844,7 @@ class SpatialWorld {
     this.bossBannerTimer = 0,
     this.bossBannerName = '',
     this.afkAssist = false,
+    this.roleCover = false,
     this.dungeonId = 'sandy',
     this.keystoneRunAffixes = const <String>[],
     this.keystoneWeekDungeonId = '',
@@ -858,6 +900,10 @@ class SpatialWorld {
 
   /// When true, enemy outgoing damage is softened (offline AFK sim).
   final bool afkAssist;
+
+  /// Live fights only. Casters shoot an exposed non-tank. Offline stays
+  /// on the melee leash so a long away does not change credited loot.
+  final bool roleCover;
 
   /// Zone id for unique boss tells (Sandy SLAM, Tide WAVE, Brass WIND-UP then SLAM).
   final String dungeonId;
@@ -1503,6 +1549,7 @@ abstract final class SpatialCombat {
   }
 
   static void _tickActorBuffs(SpatialWorld world, SpatialActor a, double dt) {
+    a.tickPictureRush(dt);
     if (a.shieldBlockTimer > 0) {
       a.shieldBlockTimer = math.max(0, a.shieldBlockTimer - dt);
     }
@@ -1826,7 +1873,7 @@ abstract final class SpatialCombat {
           attackerAttack: owner?.attack ?? g.tickDamage,
         );
         final wasAlive = e.hp > 0;
-        hurtEnemy(world,e, dealt);
+        hurtEnemy(world, e, dealt);
         if (owner != null) recordHeroDamage(owner, dealt);
         if (wasAlive && e.hp <= 0) {
           final killed = onEnemyKilled(world, state, e, rng);
@@ -1870,7 +1917,7 @@ abstract final class SpatialCombat {
             defense: foe.effectiveDefense,
             attackerAttack: hero.attack,
           );
-          hurtEnemy(world,foe, dealt);
+          hurtEnemy(world, foe, dealt);
           recordHeroDamage(hero, dealt);
           if (wasAlive && foe.hp <= 0) {
             final killed = onEnemyKilled(world, state, foe, rng);
@@ -1970,6 +2017,7 @@ abstract final class SpatialCombat {
     GameState state, {
     double threatScale = 1.0,
     bool? afkAssist,
+    bool roleCover = false,
   }) {
     final room = state.currentRoom;
     final anomaly = GauntletAnomalies.forFloor(
@@ -2308,6 +2356,7 @@ abstract final class SpatialCombat {
       },
       pets: pets,
       afkAssist: afkAssist ?? false,
+      roleCover: roleCover,
       dungeonId: state.dungeonId,
       keystoneRunAffixes: state.keystoneRunActive
           ? List<String>.from(state.keystoneRunAffixes)
@@ -2571,6 +2620,7 @@ abstract final class SpatialCombat {
         bossBannerTimer: world.bossBannerTimer,
         bossBannerName: world.bossBannerName,
         afkAssist: world.afkAssist,
+        roleCover: world.roleCover,
         dungeonId: world.dungeonId,
         keystoneRunAffixes: world.keystoneRunAffixes,
         keystoneWeekDungeonId: world.keystoneWeekDungeonId,
@@ -2978,8 +3028,7 @@ abstract final class SpatialCombat {
     SpatialActor enemy,
     int dealt, {
     bool soft = false,
-  }) =>
-      combatHurtEnemy(world, enemy, dealt, soft: soft);
+  }) => combatHurtEnemy(world, enemy, dealt, soft: soft);
 
   /// Spawn floater when Full VFX, or priority (crit/heal/block) on Lite.
   static bool _allowFloater(VfxQuality quality, {required int priority}) {
@@ -2998,7 +3047,11 @@ abstract final class SpatialCombat {
     healer.healingDone += gained;
   }
 
-  static void _recordHeroTaken(SpatialActor hero, int taken, {required bool isMelee}) {
+  static void _recordHeroTaken(
+    SpatialActor hero,
+    int taken, {
+    required bool isMelee,
+  }) {
     if (taken <= 0 || hero.isPet || hero.team != SpatialTeam.hero) return;
     hero.damageTaken += taken;
     if (isMelee) {
@@ -3464,7 +3517,7 @@ abstract final class SpatialCombat {
             );
           }
           final wasAlive = enemy.hp > 0;
-          hurtEnemy(world,enemy, tickDmg, soft: true);
+          hurtEnemy(world, enemy, tickDmg, soft: true);
           if (caster != null) recordHeroDamage(caster, tickDmg);
           if (!reducedVfx) {
             spawnFloater(
@@ -3495,7 +3548,7 @@ abstract final class SpatialCombat {
               defense: e.effectiveDefense,
               attackerAttack: caster?.attack ?? boom,
             );
-            hurtEnemy(world,e, dealt);
+            hurtEnemy(world, e, dealt);
             if (caster != null) recordHeroDamage(caster, dealt);
             if (!reducedVfx) {
               spawnFloater(
@@ -3548,7 +3601,7 @@ abstract final class SpatialCombat {
             );
           }
           final wasAlive = enemy.hp > 0;
-          hurtEnemy(world,enemy, tickDmg, soft: true);
+          hurtEnemy(world, enemy, tickDmg, soft: true);
           if (caster != null) recordHeroDamage(caster, tickDmg);
           if (!reducedVfx) {
             spawnFloater(
@@ -3567,7 +3620,13 @@ abstract final class SpatialCombat {
           }
         }
       }
-      final target = _focusHero(enemy, world.heroes, pets: world.pets);
+      final target = _focusHero(
+        enemy,
+        world.heroes,
+        pets: world.pets,
+        casterCover: world.roleCover,
+        world: world,
+      );
       if (target == null) continue;
 
       if (enemy.stunTimer > 0) {
@@ -3922,8 +3981,7 @@ abstract final class SpatialCombat {
             : null;
         final offHand = partyHero?.itemIn(EquipmentSlot.offHand);
         final hasShield = offHand?.offHandKind == OffHandKind.shield;
-        AbilityEffectRunner.spellcraftMul =
-            AbilityMastery.damageMul(nextState);
+        AbilityEffectRunner.spellcraftMul = AbilityMastery.damageMul(nextState);
         AbilityEffectRunner.tick(
           world,
           hero,
@@ -3996,7 +4054,7 @@ abstract final class SpatialCombat {
             defense: target.effectiveDefense,
             attackerAttack: hero.attack,
           );
-          hurtEnemy(world,target, dealt);
+          hurtEnemy(world, target, dealt);
           recordHeroDamage(hero, dealt);
           if (dealt > 0) {
             final hitStyle = abilityTag != null
@@ -4052,7 +4110,7 @@ abstract final class SpatialCombat {
                 _ => 0.30,
               };
               final cleave = math.max(1, (dealt * frac).round());
-              hurtEnemy(world,e, cleave, soft: true);
+              hurtEnemy(world, e, cleave, soft: true);
               recordHeroDamage(hero, cleave);
               extras++;
               if (extras >= maxExtras) break;
@@ -4389,7 +4447,7 @@ abstract final class SpatialCombat {
                 defense: v.effectiveDefense,
                 attackerAttack: caster?.attack ?? hitDmg,
               );
-              hurtEnemy(world,v, dealt);
+              hurtEnemy(world, v, dealt);
               if (caster != null) {
                 recordHeroDamage(caster, dealt);
                 applyTankSoftThreat(caster, v);
@@ -4639,7 +4697,7 @@ abstract final class SpatialCombat {
           defense: target.effectiveDefense,
           attackerAttack: pet.attack,
         );
-        hurtEnemy(world,target, petHit);
+        hurtEnemy(world, target, petHit);
         pet.attackFlash = 0.14;
         final owner =
             _heroById(world, pet.petOwnerId) ??
@@ -4744,7 +4802,7 @@ abstract final class SpatialCombat {
       if (distPoint(tileX, tileY, enemy.x, enemy.y) <= radius &&
           canShoot(world, tileX, tileY, enemy.x, enemy.y)) {
         final wasAlive = enemy.hp > 0;
-        hurtEnemy(world,enemy, damage);
+        hurtEnemy(world, enemy, damage);
         if (state.vfxQuality != VfxQuality.minimal) {
           spawnFloater(
             world,
@@ -5129,6 +5187,15 @@ abstract final class SpatialCombat {
     SpatialWorld world,
   ) => HeroFocus.pickSmartFocus(self, world);
 
+  /// Who [enemy] would strike. Pass [world] so a wall blocks the shot.
+  /// Distance cover is not a wall: it only compares distances.
+  static SpatialActor? enemyFocusForTest(
+    SpatialActor enemy,
+    List<SpatialActor> heroes, {
+    SpatialWorld? world,
+    bool casterCover = true,
+  }) => _focusHero(enemy, heroes, casterCover: casterCover, world: world);
+
   /// Test hook: tank taunt + CombatPresence bark path.
   static bool testTauntForPresence(SpatialWorld world, SpatialActor tank) {
     return tauntLooseEnemies(world, tank, reducedVfx: false);
@@ -5167,7 +5234,13 @@ abstract final class SpatialCombat {
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
       if (e.forcedTargetTimer > 0) continue;
-      final focus = _focusHero(e, world.heroes, pets: world.pets);
+      final focus = _focusHero(
+        e,
+        world.heroes,
+        pets: world.pets,
+        casterCover: world.roleCover,
+        world: world,
+      );
       if (focus == null || focus.id == tank.id) continue;
       final d = actorDist(tank, e);
       if (d < best && d <= 5.5) {
@@ -5192,37 +5265,114 @@ abstract final class SpatialCombat {
     return true;
   }
 
-  /// Enemies focus the tank when possible (aggro toward frontliner).
+  /// Who this enemy walks toward and swings at.
+  ///
+  /// A live fight ([casterCover]) uses a clear shot. The anchor is the
+  /// nearest living tank the swing can reach, not the last tank in the
+  /// list. A hero behind a wall is not chosen while a tank has a clear
+  /// shot. Distance cover is separate: a caster skips a non-tank who is
+  /// simply farther than that tank, even when both shots are open.
+  ///
+  /// Away fights leave this on the older leash. That keeps a long return
+  /// on the same credited kills.
   static SpatialActor? _focusHero(
     SpatialActor enemy,
     List<SpatialActor> heroes, {
     List<SpatialActor> pets = const [],
+    bool casterCover = false,
+    SpatialWorld? world,
   }) {
     if (enemy.forcedTargetTimer > 0 && enemy.forcedTargetId != null) {
       for (final h in heroes) {
         if (h.isAlive && h.id == enemy.forcedTargetId) return h;
       }
     }
-    SpatialActor? tank;
-    SpatialActor? nearest;
-    var bestD = double.infinity;
-    for (final h in heroes) {
-      if (!h.isAlive || h.vanishTimer > 0) continue;
-      final d = actorDist(enemy, h);
-      if (actorIsTank(h)) tank = h;
-      if (d < bestD) {
-        bestD = d;
-        nearest = h;
+    if (!casterCover) {
+      SpatialActor? tank;
+      SpatialActor? nearest;
+      var bestD = double.infinity;
+      for (final h in heroes) {
+        if (!h.isAlive || h.vanishTimer > 0) continue;
+        final d = actorDist(enemy, h);
+        if (actorIsTank(h)) tank = h;
+        if (d < bestD) {
+          bestD = d;
+          nearest = h;
+        }
       }
+      final leash = tank != null ? 4.0 : 2.5;
+      final hero = tank != null && actorDist(enemy, tank) < bestD + leash
+          ? tank
+          : nearest;
+      if (hero == null) return null;
+      for (final p in pets) {
+        if (p.hp <= 0 || p.dormant || p.vanishTimer > 0) continue;
+        if (actorDist(enemy, p) + 0.2 < actorDist(enemy, hero)) return p;
+      }
+      return hero;
     }
-    // Tanks hold a wider soft-taunt leash so packs stick to them.
-    final leash = tank != null ? 4.0 : 2.5;
-    final hero = tank != null && actorDist(enemy, tank) < bestD + leash
-        ? tank
-        : nearest;
+
+    bool legal(SpatialActor h) => h.isAlive && h.vanishTimer <= 0;
+
+    bool clearShot(SpatialActor h) {
+      if (world == null) return true;
+      return canShoot(world, enemy.x, enemy.y, h.x, h.y);
+    }
+
+    SpatialActor? nearestWhere(bool Function(SpatialActor h) ok) {
+      SpatialActor? best;
+      var bestD = double.infinity;
+      for (final h in heroes) {
+        if (!legal(h) || !ok(h)) continue;
+        final d = actorDist(enemy, h);
+        final closer = best == null || d < bestD - 0.0001;
+        final tie = best != null && (d - bestD).abs() <= 0.0001;
+        if (closer || (tie && h.id.compareTo(best.id) < 0)) {
+          best = h;
+          bestD = d;
+        }
+      }
+      return best;
+    }
+
+    final openTank = nearestWhere((h) => actorIsTank(h) && clearShot(h));
+    final anyTank = nearestWhere(actorIsTank);
+    final anchor = openTank ?? anyTank;
+    final ranged =
+        enemy.archetype == EnemyArchetype.ranged ||
+        enemy.archetype == EnemyArchetype.support;
+    final SpatialActor? hero;
+    if (!ranged) {
+      final open = nearestWhere(clearShot);
+      if (anchor != null &&
+          clearShot(anchor) &&
+          (open == null ||
+              actorDist(enemy, anchor) < actorDist(enemy, open) + 4.0)) {
+        hero = anchor;
+      } else {
+        hero = open ?? anchor ?? nearestWhere((h) => true);
+      }
+    } else {
+      final tankD = anchor == null ? double.infinity : actorDist(enemy, anchor);
+      final exposed = nearestWhere((h) {
+        if (actorIsTank(h) || !clearShot(h)) return false;
+        if (anchor != null &&
+            clearShot(anchor) &&
+            actorDist(enemy, h) > tankD + 1.6) {
+          return false;
+        }
+        return true;
+      });
+      hero =
+          exposed ??
+          (anchor != null && clearShot(anchor) ? anchor : null) ??
+          nearestWhere(clearShot) ??
+          nearestWhere((h) => true);
+    }
     if (hero == null) return null;
     for (final p in pets) {
       if (p.hp <= 0 || p.dormant || p.vanishTimer > 0) continue;
+      if (!clearShot(p) && world != null) continue;
       if (actorDist(enemy, p) + 0.2 < actorDist(enemy, hero)) return p;
     }
     return hero;
@@ -5255,7 +5405,8 @@ abstract final class SpatialCombat {
       }
     }
     final inFight = nearest <= 2.2;
-    final hadShot = foe != null &&
+    final hadShot =
+        foe != null &&
         hasClearCorridor(
           world.map,
           world.openGateIds,

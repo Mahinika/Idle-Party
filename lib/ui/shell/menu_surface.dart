@@ -15,7 +15,9 @@ import 'power_meta_pillars.dart';
 import 'shop_dock.dart';
 import '../meta/keystone_sheet.dart';
 import 'whats_new_overlay.dart';
+import 'home/essence_tiles_screen.dart';
 import 'home/home_menu_grid.dart';
+import 'home/map_screen.dart';
 
 /// The one menu sheet, shared by hub and dungeon.
 /// All routes fill the stack above the shared [AppBottomBar] (full height).
@@ -34,6 +36,12 @@ class MenuSurface extends StatefulWidget {
   @override
   State<MenuSurface> createState() => _MenuSurfaceState();
 }
+
+/// Home bottom nav already shows CLOSE for these tabs — skip the sheet button.
+bool _homeNavOwnsClose(MenuRoute route) => switch (route) {
+  MenuRoute.gear || MenuRoute.essence || MenuRoute.shop || MenuRoute.map => true,
+  _ => false,
+};
 
 class _MenuSurfaceState extends State<MenuSurface> {
   MenuRoute _lastRoute = MenuRoute.none;
@@ -171,6 +179,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
     // Full height above the shared bottom bar — same for every tab so GOLD /
     // SHOP / ESSENCE / KEY / MORE match GEAR (never cover the bar; OverlayScrim
     // lives only inside the Expanded scene stack).
+    final navOwnedClose = widget.home && _homeNavOwnsClose(router.route);
     return OverlayScrim(
       title: homeMenuGrid ? '' : router.title,
       subtitle: homeMenuGrid ? '' : router.jobHintFor(state),
@@ -178,9 +187,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
       gold: state.gold,
       essence: state.essence,
       showEssence: MenuTabs.showCamp(state),
-      showClose: !widget.home ||
-          questBoard ||
-          router.route == MenuRoute.gold,
+      showClose: !navOwnedClose,
       onClose: router.close,
       child: switch (router.route) {
         MenuRoute.gear => _inventoryDock(),
@@ -190,14 +197,18 @@ class _MenuSurfaceState extends State<MenuSurface> {
           onPanelChanged: (panel) => router.goldPanel = panel,
         ),
         MenuRoute.shop => ShopDock(director: d, homeCompact: widget.home),
-        MenuRoute.essence => EssenceDock(
-          director: d,
-          router: router,
-          panel: router.essencePanel,
-          onPanelChanged: (panel) => router.essencePanel = panel,
-        ),
+        MenuRoute.essence => widget.home
+            ? EssenceTilesScreen(director: d, router: router)
+            : EssenceDock(
+                director: d,
+                router: router,
+                panel: router.essencePanel,
+                onPanelChanged: (panel) => router.essencePanel = panel,
+              ),
         MenuRoute.key => KeystoneSheet(director: d),
-        MenuRoute.map => const SizedBox.shrink(),
+        MenuRoute.map => widget.home
+            ? MapScreen(director: d, router: router)
+            : const SizedBox.shrink(),
         MenuRoute.more => questBoard
             ? SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),

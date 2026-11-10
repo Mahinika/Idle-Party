@@ -46,6 +46,24 @@ void main() {
     expect(cta.primaryLabel, 'Clear one cave today');
   });
 
+  test('return-week shelf stays on the card and the button enters', () {
+    const chase = HubChase(
+      kind: HubChaseKind.dailyVaultProgress,
+      title: 'Sandy Caverns · CAMP',
+      detail: 'Spend the essence in CAMP.',
+    );
+    final cta = HubPrimaryCta.resolve(
+      chase: chase,
+      chaseActionLabel: 'ENTER',
+      hasChaseAction: true,
+      unlockedSelected: true,
+      hardmodeLevel: 0,
+      showKeystoneJargon: false,
+      endgameUnlocked: false,
+    );
+    expect(cta.primaryLabel, 'ENTER DUNGEON');
+  });
+
   test('endgame hunt owns primary — not ENTER DUNGEON', () {
     const chase = HubChase(
       kind: HubChaseKind.gauntletMilestone,

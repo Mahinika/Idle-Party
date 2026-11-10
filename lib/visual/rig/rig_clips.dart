@@ -153,7 +153,12 @@ abstract final class RigClips {
     length: 0.28,
     keys: [
       RigKey(0),
-      RigKey(0.25, rootX: -3, bones: {'torso': -10, 'head': -6}),
+      RigKey(0.35, rootX: -4, bones: {
+        'torso': -16,
+        'head': -10,
+        'upper_l': 18,
+        'upper_r': -12,
+      }),
       RigKey(1),
     ],
   );

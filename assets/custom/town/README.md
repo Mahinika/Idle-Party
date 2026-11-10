@@ -1,6 +1,6 @@
 # Town assets
 
-Owned Idle Party pixel art for the out-of-dungeon town hub.
+Owned Idle Party pixel art for the out-of-dungeon town.
 
 ## Provenance / license
 
@@ -8,12 +8,14 @@ Owned Idle Party pixel art for the out-of-dungeon town hub.
 |-------|--------|
 | Author | Idle Party (this repository) |
 | Tool | `tool/generate_town_art.py` |
-| Method | Hand-specified pixel geometry (PIL). Palette measured from Sandy floor/wall, `gear_style.py` ramps, and `ui/hub_scene.png` |
-| External packs | None. No Kenney, no marketplace, no paid downloads |
+| Method | Hand-placed pixel materials (stone courses, tile rows, cloth folds, chibi townsfolk). No foreign packs. |
+| External packs | None |
 | License | Same as the rest of `assets/custom/` — original game art |
 
-Three **painted** facade tiers (timber / stone / banners). AL10 pennants and
-AL20 lantern arcade are drawn in Flutter on top of these sprites.
+Three painted facade tiers (timber / plaster or ashlar / banners). AL10
+pennants and AL20 lanterns are owned pixel strips. Townsfolk frames share
+one sheet. `TownFolkSheet` in Dart uses the same 96×112 cells and
+draws them beside the party with nearest-neighbor.
 
 Deterministic: no RNG. Regenerate:
 
@@ -21,29 +23,33 @@ Deterministic: no RNG. Regenerate:
 python3 tool/generate_town_art.py
 ```
 
-## Style rules (same game)
+## Style
 
-| Rule | Source |
+| Rule | Choice |
 |------|--------|
-| Warm ink (32, 22, 18), 1 px outer contour | `tool/gear_style.py` |
-| Upper-left light | `LIGHT_DIR` in `gear_style.py` |
-| Sand stone, not grey brick | `dungeon/sandy/tiles/floor_a.png`, `wall_a.png` |
-| Amber windows, torch light | Sandy backdrop + chest highlight |
-| Gatehouse guild | `ui/hub_scene.png` arch and banners |
-| Nearest-neighbor only | `FilterQuality.none` |
+| Ink (32, 22, 18), 1 px contour | Same warm ink as the heroes |
+| Light | Upper-left, in clusters on each stone, tile, and fold |
+| Ground | Soft lawn, 480×960, seamless. Cobbles and flowers sit on the paths |
+| Roofs | Individual tiles. Guild slate, houses terracotta, market a folded awning |
+| Windows | Amber glass, wood mullions |
+| People | Smith, courier, and gardener. Idle + 4 walk frames |
+| Scale | `FilterQuality.none`. Folk are authored for the 48×56 yard |
 
 ## Files
 
-| File | Size | Use |
-|------|------|-----|
-| backdrop.png | 360×400 | Ochre sky, ridges, cave mouth |
-| ground.png | 360×48 | Repeating sand flags (paint 1:1, no cover-scale) |
-| well.png | 56×68 | Well (non-interactive) |
-| forge_t0/t1/t2.png | 120×156 | Smithy. Chimney on the right |
-| market_t0/t1/t2.png | 120×140 | Stall, not a house |
-| inn_t0/t1/t2.png | 120×160 | Jetty inn |
-| guild_t0/t1/t2.png | 156×176 | Crenellated gatehouse |
-| vault_shut.png / vault_open.png | 88×104 | Bound chest |
-| buildings_sheet.png | tier strip for review |
-
-Paint with `FilterQuality.none` via `CustomAssets.town*`.
+| File | Use |
+|------|-----|
+| backdrop.png | Banded sky, clouds, ridge, distant roof |
+| ground.png | Soft lawn, 480×960, edges meet |
+| path.png | Cobble street, 360×36, flower beds at the ends |
+| approach.png | Cobble spur, 36×192, mortar meets at the wrap |
+| alert.png | Claim spark on guild and vault |
+| tree_round.png / tree_tall.png | Leaf clumps, blossoms, fruit |
+| flowers.png / shrub.png / wild.png / herbs.png | Four different plantings |
+| meadow.png / thicket.png / scuff.png | Unique lawn clumps, placed once |
+| worn.png | Small worn patch for a doorway |
+| contact.png | Dark grass under a building |
+| folk.png | 3 people × 5 frames, 96×112 cells |
+| well.png | Stone well |
+| forge / market / inn / guild `_t0..t2` | Facades |
+| vault_shut.png / vault_open.png | Ironbound chest on a plinth |

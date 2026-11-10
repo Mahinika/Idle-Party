@@ -1,5 +1,7 @@
-/// sessionStart: owner Now-line plus the Play-upload lock. Also prunes old
-/// emulator shots in playshots/.
+/// sessionStart: owner Now-line plus the Play and test-APK lock. Also prunes
+/// old emulator shots in playshots/.
+library;
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -12,7 +14,8 @@ void main() {
   final now = _nowLine();
   final context =
       'Idle Party this session: $now '
-      'Never upload Google Play AAB unless the owner asks that turn.';
+      'Never upload a Google Play AAB, and never push a test-* or v* tag '
+      'or start an APK workflow, unless the owner asks in that turn.';
   stdout.write(
     jsonEncode(<String, dynamic>{
       'env': <String, String>{'IDLE_PARTY_FOCUS': now},
@@ -38,9 +41,10 @@ String _nowLine() {
 }
 
 const _fallback =
-    'Propose 2–3 concrete next ideas (at least one revenue: shop/IAP/'
-    'rewarded ads/retention), then pick one and build it. A goal the owner '
-    'names wins. Never Play AAB without owner ask.';
+    'Do the job named this turn. Do not start an unrelated feature. '
+    'Commit locally when the checks are green. Hand off on a branch and a PR. '
+    'Do not merge, do not push a test-* or v* tag, and do not upload an AAB '
+    'unless the owner asks in that turn.';
 
 void _pruneOldShots() {
   final dir = Directory(_shotDir);

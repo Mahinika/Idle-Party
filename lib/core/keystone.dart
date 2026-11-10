@@ -40,9 +40,8 @@ abstract final class Keystone {
 
   static String weekFightLine(String weeklyKey) {
     final id = weekCaveId(weeklyKey);
-    final tell = EnemyFlavor.bossTell(id);
     final name = DungeonCatalog.byId(id).name;
-    return 'PATH boss stays · week packs/tell $tell from $name';
+    return "This week's packs fight in $name with that zone's boss rhythm.";
   }
 
   /// Legacy AL helper only — KEY unlock is [heroLevelGate] / [maxForState].
@@ -271,13 +270,13 @@ abstract final class Keystone {
     required List<String> affixes,
     required String clock,
   }) {
-    final night = "Tonight's KEY +$key";
-    if (affixes.isEmpty) return '$night, clock $clock.';
+    final job = "Today's KEY +$key";
+    if (affixes.isEmpty) return '$job, clock $clock.';
     final twist = blurb(affixes.first);
     final words = twist.isEmpty
         ? twist
         : '${twist[0].toLowerCase()}${twist.substring(1)}';
-    return '$night: $words, clock $clock.';
+    return '$job: $words, clock $clock.';
   }
 
   static String formatTimer(int ms) {

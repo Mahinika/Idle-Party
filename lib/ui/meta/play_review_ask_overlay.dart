@@ -108,7 +108,7 @@ class PlayReviewAskOverlay extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         GameButton(
-          label: 'NOT NOW',
+          label: 'LATER',
           style: GameButtonStyle.grey,
           onPressed: () => _later(context),
         ),

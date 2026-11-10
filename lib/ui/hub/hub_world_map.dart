@@ -42,36 +42,34 @@ class SelectedZoneCaption extends StatelessWidget {
   void _showDetail(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: GameTheme.panel,
-        title: Text(dungeon.name, style: GameTheme.title()),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: dungeon.name,
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Boss: ${dungeon.bossName}',
+              style: GameTheme.section(color: GameTheme.parchmentDim),
+            ),
+            if (keyLevel > 0) ...[
+              const SizedBox(height: 6),
               Text(
-                'Boss: ${dungeon.bossName}',
-                style: GameTheme.section(color: GameTheme.parchmentDim),
+                keyAffixLine != null && keyAffixLine!.isNotEmpty
+                    ? 'KEY +$keyLevel · $keyAffixLine'
+                    : 'KEY +$keyLevel',
+                style: GameTheme.hint(color: GameTheme.torchHot),
               ),
-              if (keyLevel > 0) ...[
-                const SizedBox(height: 6),
-                Text(
-                  keyAffixLine != null && keyAffixLine!.isNotEmpty
-                      ? 'KEY +$keyLevel · $keyAffixLine'
-                      : 'KEY +$keyLevel',
-                  style: GameTheme.hint(color: GameTheme.torchHot),
-                ),
-              ],
-              if (dungeon.blurb.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  dungeon.blurb,
-                  style: GameTheme.hint(color: GameTheme.parchmentDim),
-                ),
-              ],
             ],
-          ),
+            if (dungeon.blurb.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                dungeon.blurb,
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              ),
+            ],
+          ],
         ),
         actions: [
           MenuChrome.dialogCancel(
@@ -95,14 +93,24 @@ class SelectedZoneCaption extends StatelessWidget {
             onTap: () => _showDetail(context),
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-              child: Center(
-                child: Text(
-                  _oneLineUnlocked(),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.section(color: GameTheme.parchmentDim),
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  KenneySprite(
+                    asset: KenneyAssets.dungeonIconFor(dungeon.id),
+                    size: 30,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      _oneLineUnlocked(),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.section(color: GameTheme.parchmentDim),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -206,6 +214,13 @@ class ZonePathMap extends StatelessWidget {
   final Animation<double>? pulse;
   final ValueChanged<String> onSelect;
 
+  /// `world_path_map.png` is 864×1152. Contain-fit uses this so lands
+  /// are not stretched into the hub's leftover band.
+  static const double mapAspect = 864 / 1152;
+
+  /// Short boards scroll instead of vanishing. A 100 px slot still paints.
+  static const double minBoardHeight = 120;
+
   /// Marker centers on the continent board (catalog order 0…14).
   /// Not a vertical road — clusters are lands (frost, dunes, ash, veil…).
   static const List<Offset> markerNorm = [
@@ -238,100 +253,126 @@ class ZonePathMap extends StatelessWidget {
     return '';
   }
 
+  /// Image rect after [BoxFit.contain] inside [box].
+  static Rect containRect(Size box) {
+    final aspect = mapAspect;
+    if (box.width <= 0 || box.height <= 0) return Rect.zero;
+    final boxAspect = box.width / box.height;
+    if (boxAspect > aspect) {
+      final h = box.height;
+      final w = h * aspect;
+      return Rect.fromLTWH((box.width - w) / 2, 0, w, h);
+    }
+    final w = box.width;
+    final h = w / aspect;
+    return Rect.fromLTWH(0, (box.height - h) / 2, w, h);
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final mapW = constraints.maxWidth;
-        final mapH = constraints.maxHeight;
-        if (mapW < 8 || mapH < 8) return const SizedBox.shrink();
-        final discSize = (mapW * 0.082).clamp(30.0, 38.0);
-        final hitSize = math.max(discSize + 6, GameTheme.minTouch + 4);
-        final textScale = MediaQuery.textScalerOf(context).scale(1);
-        final statusH = 16.0 * textScale;
-
-        final dungeons = this.dungeons;
-        assert(
-          dungeons.length == ZonePathMap.markerNorm.length,
-          'World Path markerNorm must match DungeonCatalog (${dungeons.length} vs ${ZonePathMap.markerNorm.length})',
-        );
-        final n = math.min(dungeons.length, ZonePathMap.markerNorm.length);
-
-        final pathChildren = <Widget>[
-          Positioned.fill(
-            child: ExcludeSemantics(
-              child: ColorFiltered(
-                // Dim baked continent labels so HERE / NEXT win.
-                colorFilter: ColorFilter.mode(
-                  const Color(0xFF0A0C12).withValues(alpha: 0.32),
-                  BlendMode.darken,
-                ),
-                child: Image.asset(
-                  CustomAssets.worldPathMap,
-                  fit: BoxFit.fill,
-                  filterQuality: FilterQuality.none,
-                  gaplessPlayback: true,
-                  cacheWidth: (mapW * MediaQuery.devicePixelRatioOf(context))
-                      .round()
-                      .clamp(256, 1024),
-                ),
-              ),
-            ),
-          ),
-        ];
-
-        for (var i = 0; i < n; i++) {
-          final d = dungeons[i];
-          final anchor = ZonePathMap.markerNorm[i];
-          final unlocked = DungeonCatalog.isUnlocked(
-            d.id,
-            partyLevel,
-            highestCleared,
+        final boxW = constraints.maxWidth;
+        if (boxW < 8 || !boxW.isFinite) return const SizedBox.shrink();
+        final rawH = constraints.maxHeight;
+        final innerH = !rawH.isFinite
+            ? boxW / mapAspect
+            : math.max(rawH, minBoardHeight);
+        final board = _board(context, Size(boxW, innerH));
+        if (rawH.isFinite && rawH + 0.5 < innerH) {
+          return SingleChildScrollView(
+            child: SizedBox(width: boxW, height: innerH, child: board),
           );
-          final cleared = highestCleared >= d.number;
-          final selected = d.id == selectedId;
-          final frontier =
-              unlocked && !cleared && d.number == highestCleared + 1;
-          final statusWord = ringLabel(
+        }
+        return SizedBox(width: boxW, height: innerH, child: board);
+      },
+    );
+  }
+
+  Widget _board(BuildContext context, Size box) {
+    final image = containRect(box);
+    final discSize = (image.width * 0.16).clamp(32.0, 44.0);
+    final hitSize = math.max(discSize + 6, GameTheme.minTouch + 4);
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    // Hint is 12px * line height 1.2. Leave room so HERE is not clipped.
+    final statusH = 26.0 * textScale;
+
+    final dungeons = this.dungeons;
+    assert(
+      dungeons.length == ZonePathMap.markerNorm.length,
+      'World Path markerNorm must match DungeonCatalog (${dungeons.length} vs ${ZonePathMap.markerNorm.length})',
+    );
+    final n = math.min(dungeons.length, ZonePathMap.markerNorm.length);
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+
+    final pathChildren = <Widget>[
+      Positioned.fill(
+        child: ExcludeSemantics(
+          child: Image.asset(
+            CustomAssets.worldPathMap,
+            fit: BoxFit.contain,
+            alignment: Alignment.center,
+            filterQuality: FilterQuality.none,
+            gaplessPlayback: true,
+            cacheWidth: (image.width * dpr).round().clamp(256, 1024),
+          ),
+        ),
+      ),
+    ];
+
+    for (var i = 0; i < n; i++) {
+      final d = dungeons[i];
+      final anchor = ZonePathMap.markerNorm[i];
+      final unlocked = DungeonCatalog.isUnlocked(
+        d.id,
+        partyLevel,
+        highestCleared,
+      );
+      final cleared = highestCleared >= d.number;
+      final selected = d.id == selectedId;
+      final frontier = unlocked && !cleared && d.number == highestCleared + 1;
+      final statusWord = ringLabel(
+        unlocked: unlocked,
+        cleared: cleared,
+        selected: selected,
+        frontier: frontier,
+      );
+      final labelH = statusWord.isEmpty ? 0.0 : statusH;
+      final columnW = math.max(hitSize, 96.0);
+      final cx = image.left + anchor.dx * image.width;
+      final cy = image.top + anchor.dy * image.height;
+      final totalH = hitSize + labelH;
+      final left = (cx - columnW / 2)
+          .clamp(0.0, math.max(0.0, box.width - columnW))
+          .toDouble();
+      final top = (cy - hitSize / 2)
+          .clamp(0.0, math.max(0.0, box.height - totalH))
+          .toDouble();
+      pathChildren.add(
+        Positioned(
+          left: left,
+          top: top,
+          width: columnW,
+          height: totalH,
+          child: MapZoneMarker(
+            name: d.name,
+            portraitDungeonId: d.id,
+            discSize: discSize,
+            hitSize: hitSize,
             unlocked: unlocked,
             cleared: cleared,
             selected: selected,
-            frontier: frontier,
-          );
-          final labelH = statusWord.isEmpty ? 0.0 : statusH;
-          final cx = anchor.dx * mapW;
-          final cy = anchor.dy * mapH;
-          final left = (cx - hitSize / 2).clamp(0.0, mapW - hitSize).toDouble();
-          final top = (cy - hitSize / 2 - labelH)
-              .clamp(0.0, math.max(0.0, mapH - hitSize - labelH))
-              .toDouble();
-          pathChildren.add(
-            Positioned(
-              left: left,
-              top: top,
-              width: hitSize,
-              height: hitSize + labelH,
-              child: MapZoneMarker(
-                name: d.name,
-                portraitDungeonId: d.id,
-                discSize: discSize,
-                hitSize: hitSize,
-                unlocked: unlocked,
-                cleared: cleared,
-                selected: selected,
-                pulse: selected ? pulse : null,
-                statusWord: statusWord,
-                onTap: () => onSelect(d.id),
-              ),
-            ),
-          );
-        }
+            pulse: selected ? pulse : null,
+            statusWord: statusWord,
+            onTap: () => onSelect(d.id),
+          ),
+        ),
+      );
+    }
 
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-          child: Stack(clipBehavior: Clip.none, children: pathChildren),
-        );
-      },
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+      child: Stack(clipBehavior: Clip.hardEdge, children: pathChildren),
     );
   }
 }
@@ -445,18 +486,19 @@ class MapZoneMarker extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (statusWord.isNotEmpty)
-                Text(
-                  statusWord,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.hint(color: _statusColor),
-                ),
               SizedBox(
                 width: hitSize,
                 height: hitSize,
                 child: Center(child: disc),
               ),
+              if (statusWord.isNotEmpty)
+                Text(
+                  statusWord,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: GameTheme.hint(color: _statusColor),
+                ),
             ],
           ),
         ),

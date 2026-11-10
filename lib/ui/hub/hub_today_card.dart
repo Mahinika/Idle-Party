@@ -122,13 +122,16 @@ class HubMetaPulse extends StatelessWidget {
     );
 
     if (bits.isEmpty) return const SizedBox.shrink();
+    final visible = bits.length <= 2
+        ? bits
+        : <String>[...bits.take(2), '+${bits.length - 2}'];
 
     return Padding(
       padding: const EdgeInsets.only(top: 2, bottom: 2),
       child: Semantics(
         label: 'Meta: ${bits.join(', ')}',
         child: Text(
-          bits.join(' · '),
+          visible.join(' · '),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -157,8 +160,12 @@ class HubTodayCard extends StatelessWidget {
   final String? actionLabel;
   final VoidCallback? onAction;
 
+  /// Fight ticks must not repaint TODAY when the job did not change.
+  static int debugBuildCount = 0;
+
   @override
   Widget build(BuildContext context) {
+    debugBuildCount++;
     final ready = chase.urgency == HubChaseUrgency.ready;
     final almost = chase.urgency == HubChaseUrgency.almost;
     final accent = ready

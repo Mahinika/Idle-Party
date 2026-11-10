@@ -15,6 +15,7 @@ import 'home/home_shell.dart';
 import '../confirm_dialogs.dart';
 import '../feedback_toast.dart';
 import '../first_session_tips.dart';
+import '../../models/vfx_quality.dart';
 import '../../visual/rig/hero_rig_painter.dart';
 import '../hub_screen.dart';
 import '../is2_shell.dart';
@@ -151,6 +152,8 @@ class _PlayShellState extends State<PlayShell> {
   Widget _bottomBar() {
     final state = director.state;
     final (coachRoute, coachLine) = _coachTab();
+    final coachMotion =
+        state.vfxQuality != VfxQuality.minimal;
     if (state.inDungeon) {
       final graph = DestinationGraph.dungeon(state);
       return AppBottomBar(
@@ -161,6 +164,7 @@ class _PlayShellState extends State<PlayShell> {
         suppressReason: _suppressBarReason,
         coachRoute: coachRoute,
         coachLine: coachLine,
+        coachPulseEnabled: coachMotion,
         onSelect: (dest) => _openMenuFeel(() {
           _dismissCoachTab(dest);
           if (dest == MenuRoute.more) {
@@ -228,6 +232,7 @@ class _PlayShellState extends State<PlayShell> {
       suppressReason: _suppressBarReason,
       coachRoute: coachRoute,
       coachLine: coachLine,
+      coachPulseEnabled: coachMotion,
       onSelect: (dest) {
         _dismissCoachTab(dest);
         if (dest == MenuRoute.more) {
@@ -283,31 +288,38 @@ class _PlayShellState extends State<PlayShell> {
           router.back();
         },
         child: director.state.homeLayout == HomeLayout.home
-            ? HomeShell(
-                director: director,
+            ? PlayNav(
                 router: router,
-                onLeave: () {
-                  if (director.state.isPartyDefeated) {
-                    director.hubAfterWipe();
-                    return;
-                  }
-                  if (director.spatial?.awaitingExit == true) {
-                    if (router.isOpen) router.close();
-                    _leaveDungeon();
-                    return;
-                  }
-                  if (router.isOpen) router.close();
-                  confirmLeaveDungeon(
-                    context,
-                    _leaveDungeon,
-                    state: director.state,
-                    floorCleared: director.spatial?.awaitingExit == true,
-                    keystoneActive: director.state.keystoneRunActive,
-                    keyTimer: director.state.keystoneRunActive
-                        ? Keystone.formatTimer(director.state.keystoneTimerMs)
-                        : null,
-                  );
+                onEnterDungeon: (id) {
+                  router.close();
+                  director.enterDungeon(dungeonId: id);
                 },
+                child: HomeShell(
+                  director: director,
+                  router: router,
+                  onLeave: () {
+                    if (director.state.isPartyDefeated) {
+                      director.hubAfterWipe();
+                      return;
+                    }
+                    if (director.spatial?.awaitingExit == true) {
+                      if (router.isOpen) router.close();
+                      _leaveDungeon();
+                      return;
+                    }
+                    if (router.isOpen) router.close();
+                    confirmLeaveDungeon(
+                      context,
+                      _leaveDungeon,
+                      state: director.state,
+                      floorCleared: director.spatial?.awaitingExit == true,
+                      keystoneActive: director.state.keystoneRunActive,
+                      keyTimer: director.state.keystoneRunActive
+                          ? Keystone.formatTimer(director.state.keystoneTimerMs)
+                          : null,
+                    );
+                  },
+                ),
               )
             : PlayNav(
                 router: router,

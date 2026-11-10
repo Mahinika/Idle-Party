@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -14,11 +15,15 @@ class ScrollBuffStack extends StatefulWidget {
     required this.meta,
     this.nowMs,
     this.maxHeight,
+    this.maxRows = 6,
   });
 
   final MetaDepthState meta;
   final int? nowMs;
   final double? maxHeight;
+
+  /// Home fight caps visible rows; extra scrolls fold to +N.
+  final int maxRows;
 
   @override
   State<ScrollBuffStack> createState() => _ScrollBuffStackState();
@@ -63,11 +68,19 @@ class _ScrollBuffStackState extends State<ScrollBuffStack> {
         .where((c) => c.active)
         .toList();
     if (chips.isEmpty) return const SizedBox.shrink();
+    final visible = chips.take(widget.maxRows).toList();
+    final hidden = chips.length - visible.length;
+    final names = chips.map((c) => c.shortLabel).join(', ');
     Widget column = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        for (final chip in chips) _ScrollBuffPip(chip: chip),
+        for (final chip in visible) _ScrollBuffPip(chip: chip),
+        if (hidden > 0)
+          Text(
+            '+$hidden',
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
+          ),
       ],
     );
     final cap = widget.maxHeight;
@@ -79,7 +92,10 @@ class _ScrollBuffStackState extends State<ScrollBuffStack> {
         ),
       );
     }
-    return column;
+    return Semantics(
+      label: 'Active scrolls: $names',
+      child: column,
+    );
   }
 }
 
@@ -114,12 +130,17 @@ class _ScrollBuffPip extends StatelessWidget {
   Widget build(BuildContext context) {
     final on = chip.active;
     final tint = on ? tintFor(chip.id) : GameTheme.parchmentDim;
+    final scale = MediaQuery.textScalerOf(context)
+        .scale(1)
+        .clamp(1.0, GameTheme.typeScaleMax);
+  // Wide enough for "12:00" at max text scale without ellipsis.
+    final width = math.max(GameTheme.minTouch, 72 * scale);
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: Semantics(
         label: on ? '${chip.shortLabel} ${chip.timeLabel}' : '${chip.shortLabel} off',
         child: SizedBox(
-          width: 32,
+          width: width,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -143,7 +164,7 @@ class _ScrollBuffPip extends StatelessWidget {
                 Text(
                   chip.timeLabel,
                   maxLines: 1,
-                  overflow: TextOverflow.clip,
+                  softWrap: false,
                   textAlign: TextAlign.center,
                   style: GameTheme.combat(color: tint),
                 ),

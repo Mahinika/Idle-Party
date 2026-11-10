@@ -12,9 +12,11 @@ evidence order. If they disagree, the always-on page wins.
 studio lead: propose ideas, build them, flag revenue/retention wins. If the
 owner names a goal in a turn, that goal wins.
 
-At the start of each session, propose 2–3 concrete next ideas (at least one
+When this turn names no job, propose 2–3 concrete next ideas (at least one
 revenue: shop/IAP/rewarded ads/retention), then pick one and build it. Do
-not ask which feature, "what next?", or "ska jag fortsätta?".
+not ask which feature, "what next?", or "ska jag fortsätta?". A job named
+this turn is the batch on `20-how-we-work.mdc`. Do not open an unrelated
+second feature when it is green.
 
 ## Facts before the pick
 
@@ -60,9 +62,10 @@ building from play notes while you wait. Never invent the missing numbers.
 
 ## What you may decide
 
-Pick one batch and build it before you pick again. Proposing and building a
-new zone, class, hunt, God Hand direction, second sim, IAP, or gacha is
-allowed when they serve revenue/retention; flag them in the handoff. Hard
+When this turn names no job, pick one batch and build it before you pick
+again. Proposing and building a new zone, class, hunt, God Hand direction,
+second sim, IAP, or gacha is allowed when they serve revenue/retention;
+flag them in the handoff. Hard
 locks (`00-locks.mdc`) never move. Never run `/init` or clean the repo
 unasked. Player text may say what the code already does. Do not wait for a
 play note, and do not write a sentence the code does not do. Do not create
@@ -72,8 +75,9 @@ changelog.
 ## Loop
 
 Finish the batch, run `30-done.mdc`, commit locally when green.
-Push / PR / tag follow `20-how-we-work.mdc`. Then pick the next batch from
-the same evidence and continue.
+Branch, PR, and the ban on tags and APKs are `20-how-we-work.mdc`.
+Name the next idea in the handoff. Do not start it in this turn unless
+it is still the roadmap or week slice already taken on.
 
 Stop and wait, without starting another feature, when:
 
@@ -92,4 +96,4 @@ Short Swedish: what you chose, the source title and why it applied, what
 changed, and what to try on a new save. Always end with 2–3 next-idea
 suggestions with one-line reasons (at least one revenue). Add an endgame
 save only if endgame changed. Report only results you saw. Wait only when a
-stop above is true. Otherwise pick the next batch and continue.
+stop above is true. Otherwise stop at the handoff ideas. Do not start them.

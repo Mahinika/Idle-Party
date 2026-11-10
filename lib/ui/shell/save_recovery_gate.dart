@@ -12,7 +12,7 @@ import '../game_theme.dart';
 /// offers export and the other slots instead. An empty slot opens party
 /// setup and does not start a fight until that game is saved. Purchases
 /// and combat stay off.
-class SaveRecoveryGate extends StatelessWidget {
+class SaveRecoveryGate extends StatefulWidget {
   const SaveRecoveryGate({
     super.key,
     required this.message,
@@ -35,11 +35,28 @@ class SaveRecoveryGate extends StatelessWidget {
   final Future<void> Function(int slot)? onOpenSlot;
 
   @override
+  State<SaveRecoveryGate> createState() => _SaveRecoveryGateState();
+}
+
+class _SaveRecoveryGateState extends State<SaveRecoveryGate> {
+  bool _retrying = false;
+
+  Future<void> _retry() async {
+    if (_retrying) return;
+    setState(() => _retrying = true);
+    try {
+      await widget.onRetry();
+    } finally {
+      if (mounted) setState(() => _retrying = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final line = message.trim().isEmpty
+    final line = widget.message.trim().isEmpty
         ? 'Saving is paused. An unfinished copy is still on this device. '
               'Retry keeps both copies.'
-        : message.trim();
+        : widget.message.trim();
     return ColoredBox(
       color: GameTheme.scrim,
       child: SafeArea(
@@ -65,11 +82,11 @@ class SaveRecoveryGate extends StatelessWidget {
                 style: GameTheme.readable(color: GameTheme.parchmentDim),
               ),
               const SizedBox(height: 24),
-              if (onExport == null)
+              if (widget.onExport == null)
                 GameButton(
-                  label: 'RETRY',
+                  label: _retrying ? 'RETRYING…' : 'RETRY',
                   primary: true,
-                  onPressed: () => onRetry(),
+                  onPressed: _retrying ? null : _retry,
                 )
               else ...[
                 Text(
@@ -81,16 +98,16 @@ class SaveRecoveryGate extends StatelessWidget {
                 GameButton(
                   label: 'EXPORT RECORDS',
                   primary: true,
-                  onPressed: () => onExport!(),
+                  onPressed: () => widget.onExport!(),
                 ),
               ],
-              for (final slot in safeSlots) ...[
+              for (final slot in widget.safeSlots) ...[
                 const SizedBox(height: 12),
                 GameButton(
                   label: 'OPEN SLOT ${slot + 1}',
-                  onPressed: onOpenSlot == null
+                  onPressed: widget.onOpenSlot == null
                       ? null
-                      : () => onOpenSlot!(slot),
+                      : () => widget.onOpenSlot!(slot),
                 ),
               ],
             ],

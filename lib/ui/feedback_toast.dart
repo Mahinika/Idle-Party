@@ -11,7 +11,7 @@ class FeedbackToast extends StatelessWidget {
     super.key,
     required this.message,
     this.kind = NoticeKind.tip,
-    this.maxLines = 3,
+    this.maxLines = 4,
     this.alignment = const Alignment(0, -0.42),
     this.docked = false,
   });

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +9,7 @@ import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/vfx_quality.dart';
+import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/ui/meta/offline_welcome.dart';
 import 'package:idle_party/ui/confirm_dialogs.dart';
 import 'package:idle_party/ui/theme.dart';
@@ -91,8 +94,17 @@ GameDirector homeShellFullGoldenDirector() {
 }
 
 Future<GameDirector> homeShellFullFightGoldenDirector() async {
-  final director = homeShellFullGoldenDirector();
-  await director.boot();
+  final director = GameDirector.preview(
+    initialState: _freezeFightClock(
+      GameLogic.enterDungeon(
+        _quietHubState().copyWith(
+          homeLayout: HomeLayout.home,
+          homePanelFull: true,
+        ),
+      ),
+    ),
+  );
+  await _bootFightQuiet(director);
   return director;
 }
 
@@ -157,6 +169,9 @@ GameDirector questsGoldenDirector() {
 
 GameDirector settingsGoldenDirector() => hubGoldenDirector();
 
+/// ISO week pinned so KEY sheet goldens do not drift with the calendar.
+const String shellGoldenWeeklyKey = '2026-W46';
+
 GameState endgamePartyGoldenState() {
   final base = _quietHubState().copyWith(
     ascensionLevel: 8,
@@ -167,7 +182,10 @@ GameState endgamePartyGoldenState() {
     heroes: [
       for (final h in base.heroes) h.copyWith(level: GameLogic.maxHeroLevel),
     ],
-    metaDepth: base.metaDepth.copyWith(gauntletBestFloor: 12),
+    metaDepth: base.metaDepth.copyWith(
+      gauntletBestFloor: 12,
+      weeklyKey: shellGoldenWeeklyKey,
+    ),
   );
 }
 
@@ -230,39 +248,160 @@ Future<void> showGreaterRiftDialogGolden(
   await pumpGoldenFrames(tester);
 }
 
-Future<GameDirector> homeShellFightGoldenDirector() async {
-  final director = homeShellGoldenDirector();
+/// Boot reads the machine clock. A fixture stamped at [shellGoldenNow] would
+/// look months away and open Welcome Back over the cave. A clock a few
+/// minutes ahead makes that gap negative, so catch-up is a no-op.
+GameState _freezeFightClock(GameState state) => state.copyWith(
+  lastUpdated: DateTime.now().add(const Duration(minutes: 10)),
+);
+
+Future<void> _bootFightQuiet(GameDirector director) async {
   await director.boot();
+  director.dismissOfflineSummary();
+  director.clearToast();
+}
+
+Future<GameDirector> homeShellFightGoldenDirector() async {
+  final director = GameDirector.preview(
+    initialState: _freezeFightClock(
+      GameLogic.enterDungeon(
+        _quietHubState().copyWith(
+          homeLayout: HomeLayout.home,
+          homePanelFull: false,
+        ),
+      ),
+    ),
+  );
+  await _bootFightQuiet(director);
   return director;
 }
 
 Future<GameDirector> fightGoldenDirector() async {
   final base = GameLogic.createInitialState(now: shellGoldenNow);
   final director = GameDirector.preview(
-    initialState: base.copyWith(
-      highestFloorCleared: 1,
-      bossVictories: 1,
-      vfxQuality: VfxQuality.minimal,
-      seenChangelogVersion: MetaSystems.currentVersion,
-      metaDepth: base.metaDepth.copyWith(
-        lifetimeFloorClears: 1,
-        reviewPrompted: true,
+    initialState: _freezeFightClock(
+      base.copyWith(
+        highestFloorCleared: 1,
+        bossVictories: 1,
+        vfxQuality: VfxQuality.minimal,
+        seenChangelogVersion: MetaSystems.currentVersion,
+        metaDepth: base.metaDepth.copyWith(
+          lifetimeFloorClears: 1,
+          reviewPrompted: true,
+        ),
+        seenTips: const [
+          'first_run',
+          'hub_enter',
+          'godhand',
+          'farm_push',
+          'kit_abilities',
+          'bag',
+          'forge',
+          'sanctuary',
+        ],
       ),
-      seenTips: const [
-        'first_run',
-        'hub_enter',
-        'godhand',
-        'farm_push',
-        'kit_abilities',
-        'bag',
-        'forge',
-        'sanctuary',
-      ],
     ),
   );
-  await director.boot();
+  await _bootFightQuiet(director);
   director.enterDungeon();
   return director;
+}
+
+/// Fixed floor plus a melee hit, a dead foe, and a gold floater.
+/// Welcome Back stays on its own golden.
+Future<GameDirector> fightHitGoldenDirector({
+  VfxQuality vfx = VfxQuality.full,
+}) async {
+  final prior = GameLogic.random;
+  GameLogic.random = Random(7);
+  try {
+    final base = GameLogic.createInitialState(now: shellGoldenNow);
+    final director = GameDirector.preview(
+      initialState: _freezeFightClock(
+        base.copyWith(
+          homeLayout: HomeLayout.home,
+          homePanelFull: true,
+          vfxQuality: vfx,
+          seenChangelogVersion: MetaSystems.currentVersion,
+          metaDepth: base.metaDepth.copyWith(reviewPrompted: true),
+          seenTips: const [
+            'first_run',
+            'hub_enter',
+            'godhand',
+            'farm_push',
+            'kit_abilities',
+            'bag',
+            'forge',
+            'sanctuary',
+          ],
+        ),
+      ),
+    );
+    await _bootFightQuiet(director);
+    director.enterDungeon();
+    stageFightHitProof(director);
+    return director;
+  } finally {
+    GameLogic.random = prior;
+  }
+}
+
+/// Pins one hit, one death, and one gold number on the live world.
+void stageFightHitProof(GameDirector director) {
+  final world = director.spatial;
+  if (world == null) return;
+  SpatialActor? hero;
+  for (final h in world.heroes) {
+    if (!h.isPet && h.hp > 0) {
+      hero = h;
+      break;
+    }
+  }
+  if (hero == null) return;
+  hero.hitFlash = 0.12;
+  SpatialActor? foe;
+  for (final e in world.enemies) {
+    if (e.hp > 0 && !e.dormant) {
+      foe = e;
+      break;
+    }
+  }
+  foe ??= world.enemies.isEmpty ? null : world.enemies.first;
+  if (foe != null) {
+    foe
+      ..hp = 0
+      ..x = hero.x + 1.1
+      ..y = hero.y + 0.15;
+    world.bursts.add(
+      SpatialBurst(
+        x: foe.x,
+        y: foe.y,
+        life: 0.45,
+        argb: 0xFFFFC14A,
+        radius: 0.8,
+      ),
+    );
+    world.floaters.add(
+      SpatialFloater(
+        x: foe.x,
+        y: foe.y - 0.35,
+        text: '18',
+        argb: 0xFFFFE8A0,
+        life: 0.7,
+        priority: 1,
+      ),
+    );
+  }
+  world.floaters.add(
+    SpatialFloater(
+      x: hero.x,
+      y: hero.y - 0.7,
+      text: '8g',
+      argb: 0xFFFFD060,
+      life: 0.8,
+      priority: 2,
+    ),
+  );
 }
 
 OfflineProgressResult welcomeBackGoldenSummary(GameState state) {
