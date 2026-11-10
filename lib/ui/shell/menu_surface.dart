@@ -37,6 +37,12 @@ class MenuSurface extends StatefulWidget {
   State<MenuSurface> createState() => _MenuSurfaceState();
 }
 
+/// Home bottom nav already shows CLOSE for these tabs — skip the sheet button.
+bool _homeNavOwnsClose(MenuRoute route) => switch (route) {
+  MenuRoute.gear || MenuRoute.essence || MenuRoute.shop || MenuRoute.map => true,
+  _ => false,
+};
+
 class _MenuSurfaceState extends State<MenuSurface> {
   MenuRoute _lastRoute = MenuRoute.none;
 
@@ -173,6 +179,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
     // Full height above the shared bottom bar — same for every tab so GOLD /
     // SHOP / ESSENCE / KEY / MORE match GEAR (never cover the bar; OverlayScrim
     // lives only inside the Expanded scene stack).
+    final navOwnedClose = widget.home && _homeNavOwnsClose(router.route);
     return OverlayScrim(
       title: homeMenuGrid ? '' : router.title,
       subtitle: homeMenuGrid ? '' : router.jobHintFor(state),
@@ -180,7 +187,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
       gold: state.gold,
       essence: state.essence,
       showEssence: MenuTabs.showCamp(state),
-      showClose: !widget.home,
+      showClose: !navOwnedClose,
       onClose: router.close,
       child: switch (router.route) {
         MenuRoute.gear => _inventoryDock(),
