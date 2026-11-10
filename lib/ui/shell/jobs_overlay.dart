@@ -96,12 +96,9 @@ class JobsOverlay extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ShellLayout.card(
-            padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-            child: ShellLayout.hint(
-              introLine(chainCount: state.metaDepth.jobChainCount),
-              maxLines: 2,
-            ),
+          ShellLayout.hint(
+            introLine(chainCount: state.metaDepth.jobChainCount),
+            maxLines: 1,
           ),
           if (claimable == 0) ...[
             ShellLayout.gap(4),
@@ -111,7 +108,7 @@ class JobsOverlay extends StatelessWidget {
             ),
           ],
           if (claimable > 0) ...[
-            ShellLayout.gap(8),
+            ShellLayout.gap(4),
             GameButton(
               label: claimable == 1
                   ? 'CLAIM QUESTS'
@@ -124,7 +121,7 @@ class JobsOverlay extends StatelessWidget {
           ShellLayout.gap(2),
           for (var i = 0; i < state.missions.length; i++)
             Padding(
-              padding: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.only(bottom: 4),
               child: _questCard(director, state.missions[i], i),
             ),
         ],
@@ -138,85 +135,88 @@ class JobsOverlay extends StatelessWidget {
         (index == MissionBoard.dailySlot || index == MissionBoard.sideSlot) &&
         MissionBoard.canRerollMission(mission, index) &&
         rerollsLeft > 0;
+    final titleStyle = GameTheme.readable(
+      color: switch (mission.tier) {
+        2 => GameTheme.bloodLit,
+        1 => GameTheme.torchHot,
+        _ => GameTheme.parchment,
+      },
+    );
+    final badge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: GameTheme.panelInset,
+        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+        border: Border.all(color: GameTheme.border.withValues(alpha: 0.8)),
+      ),
+      child: Text(
+        _slotBadge(index),
+        style: GameTheme.hint(color: GameTheme.torchHot),
+      ),
+    );
+    if (mission.claimed) {
+      return ShellLayout.card(
+        padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+        child: Row(
+          children: [
+            badge,
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                displayTitle(mission, index),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: titleStyle,
+              ),
+            ),
+            Text(
+              'CLAIMED',
+              style: GameTheme.section(color: GameTheme.mossLit),
+            ),
+          ],
+        ),
+      );
+    }
     return ShellLayout.card(
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
-                decoration: BoxDecoration(
-                  color: GameTheme.panelInset,
-                  borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-                  border: Border.all(
-                    color: GameTheme.border.withValues(alpha: 0.8),
-                  ),
-                ),
-                child: Text(
-                  _slotBadge(index),
-                  style: GameTheme.hint(color: GameTheme.torchHot),
-                ),
-              ),
+              badge,
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   displayTitle(mission, index),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.readable(
-                    color: switch (mission.tier) {
-                      2 => GameTheme.bloodLit,
-                      1 => GameTheme.torchHot,
-                      _ => GameTheme.parchment,
-                    },
-                  ),
+                  style: titleStyle,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
-            'Progress ${mission.progress}/${mission.target}',
+            'Progress ${mission.progress}/${mission.target} · '
+            '${rewardLine(gold: mission.goldReward, essence: mission.essenceReward)}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: GameTheme.section(),
           ),
-          Text(
-            rewardLine(
-              gold: mission.goldReward,
-              essence: mission.essenceReward,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GameTheme.hint(color: GameTheme.torchHot),
-          ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           ClipRRect(
             borderRadius: BorderRadius.circular(GameTheme.radiusSm),
             child: LinearProgressIndicator(
               value: mission.target <= 0
                   ? 0
                   : (mission.progress / mission.target).clamp(0.0, 1.0),
-              minHeight: 10,
+              minHeight: 8,
               backgroundColor: GameTheme.panelInset,
-              color: mission.canClaim || mission.claimed
-                  ? GameTheme.mossLit
-                  : GameTheme.torchHot,
+              color: mission.canClaim ? GameTheme.mossLit : GameTheme.torchHot,
             ),
           ),
-          if (mission.claimed) ...[
-            const SizedBox(height: 2),
-            Text(
-              'CLAIMED',
-              textAlign: TextAlign.right,
-              style: GameTheme.section(color: GameTheme.mossLit),
-            ),
-          ] else if (mission.canClaim) ...[
+          if (mission.canClaim) ...[
             const SizedBox(height: 4),
             Align(
               alignment: Alignment.centerRight,

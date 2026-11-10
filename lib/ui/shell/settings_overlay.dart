@@ -315,6 +315,8 @@ class _SettingsOverlayState extends State<SettingsOverlay>
                 Text(
                   percent,
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  softWrap: false,
                   style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
               ],

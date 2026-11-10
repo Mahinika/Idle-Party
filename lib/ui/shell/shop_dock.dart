@@ -211,13 +211,7 @@ class _ShopDockState extends State<ShopDock> {
             label: 'Show picks only',
             onTap: onToggleAllPacks,
           ),
-        ShellLayout.hint(
-          ShopDock.conveniencePolicyLead(
-            showEssence: MenuTabs.showCamp(state),
-            layout: state.homeLayout,
-          ),
-          maxLines: 1,
-        ),
+        ShellLayout.hint(hint, maxLines: 4),
         ShellLayout.gap(4),
         MenuChrome.fold(
           title: 'How the shop works',
