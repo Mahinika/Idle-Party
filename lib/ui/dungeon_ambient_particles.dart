@@ -3,8 +3,84 @@ part of 'spatial_dungeon_view.dart';
 /// Slow zone motes over the map (snow, embers, spores…). Stateless: every
 /// mote's spot is a pure function of its index and the frame, so there is no
 /// list to tick. Kept sparse and faint — soft fascination, never a distraction.
+/// Cave dust. Minimal VFX and reduced motion leave the floor tiles and
+/// do not start a ticker.
+class DungeonAmbientParticles extends StatefulWidget {
+  const DungeonAmbientParticles({
+    super.key,
+    this.quality = VfxQuality.full,
+    this.disableAnimations = false,
+    this.child,
+  });
+
+  final VfxQuality quality;
+  final bool disableAnimations;
+  final Widget? child;
+
+  @override
+  State<DungeonAmbientParticles> createState() => DungeonAmbientParticlesState();
+}
+
+class DungeonAmbientParticlesState extends State<DungeonAmbientParticles>
+    with SingleTickerProviderStateMixin {
+  AnimationController? controller;
+
+  bool get hasActiveController => controller?.isAnimating ?? false;
+
+  bool get _skipMotion {
+    if (widget.quality == VfxQuality.minimal || widget.disableAnimations) {
+      return true;
+    }
+    return MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(covariant DungeonAmbientParticles oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _sync();
+  }
+
+  void _sync() {
+    if (_skipMotion) {
+      controller?.dispose();
+      controller = null;
+      return;
+    }
+    if (controller != null) return;
+    controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child ?? const SizedBox.expand();
+}
+
 extension _DungeonAmbientParticles on _TileRoomPainter {
+  bool get _ambientMotionOff {
+    if (vfxQuality == VfxQuality.minimal) return true;
+    return WidgetsBinding
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations;
+  }
+
   void paintAmbientParticles(Canvas canvas, Size size) {
+    if (_ambientMotionOff) return;
     final count = switch (vfxQuality) {
       VfxQuality.full => 22,
       VfxQuality.lite => 10,
