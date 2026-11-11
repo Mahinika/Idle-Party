@@ -127,6 +127,10 @@ abstract final class FloaterBannerStack {
     }
 
     for (final members in groups.values) {
+      // Isolated floaters keep their authored Y so fight-hit goldens and
+      // ordinary damage ticks do not jump. Head clearance and view packing
+      // apply only when two or more banners share a cluster.
+      if (members.length < 2) continue;
       members.sort((a, b) {
         final pa = banners[a];
         final pb = banners[b];
