@@ -99,7 +99,10 @@ Offset floaterLabelAnchor({
 }) {
   return speech
       ? Offset(center.dx - width / 2, center.dy - height / 2)
-      : Offset(center.dx + tile * 0.46 - width / 2, center.dy - tile * 0.22);
+      : Offset(
+          center.dx + tile * FloaterBannerStack.labelNudgeXTiles - width / 2,
+          center.dy - tile * FloaterBannerStack.labelAnchorUpTiles,
+        );
 }
 
 /// Screen-space rectangle of a floater label, matching [paintFloaterLabels].
@@ -142,6 +145,9 @@ void paintFloaterLabels({
   required bool showBursts,
   required bool showPriorityFloaters,
   required bool Function(double x, double y, {double pad}) inView,
+  double? minLabelTop,
+  double? maxLabelBottom,
+  List<FloaterReserve> avoid = const [],
 }) {
   final rareLoot = floaters.any((f) => f.priority >= 3);
   final show = showBursts || showPriorityFloaters || rareLoot;
@@ -210,7 +216,12 @@ void paintFloaterLabels({
       );
     }
   }
-  final stackDy = FloaterBannerStack.dyById(stackSpecs);
+  final stackDy = FloaterBannerStack.dyById(
+    stackSpecs,
+    minLabelTop: minLabelTop,
+    maxLabelBottom: maxLabelBottom,
+    avoid: avoid,
+  );
   final bubbleFill = Paint()..style = PaintingStyle.fill;
   final bubbleStroke = Paint()..style = PaintingStyle.stroke;
   for (var i = 0; i < visible.length; i++) {

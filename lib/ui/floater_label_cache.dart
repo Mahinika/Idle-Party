@@ -98,14 +98,8 @@ abstract final class FloaterLabelCache {
       _cache[key] = hit;
       return hit;
     }
-    while (_cache.length >= cap && _cache.isNotEmpty) {
-      final oldest = _cache.keys.firstWhere(
-        (k) => !_usedThisFrame.contains(k),
-        orElse: () => '',
-      );
-      if (oldest.isEmpty) break;
-      _cache.remove(oldest)?.dispose();
-    }
+    // Never dispose mid-frame. A hot key that will be re-touched later in
+    // this frame must stay valid; beginFrame evicts back down to [cap].
     final painter = TextPainter(
       text: TextSpan(
         text: text,

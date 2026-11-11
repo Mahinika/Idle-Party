@@ -223,6 +223,16 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
       showBursts: showBursts,
       showPriorityFloaters: showPriorityFloaters,
       inView: _inView,
+      minLabelTop: camera.camY,
+      maxLabelBottom: camera.camY + camera.visibleRows,
+      avoid: [
+        for (final hero in world.heroes)
+          if (hero.isAlive)
+            FloaterReserve.heroHead(
+              x: hero.picturePoint().x,
+              y: hero.picturePoint().y,
+            ),
+      ],
     );
   }
 }

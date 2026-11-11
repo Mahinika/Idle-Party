@@ -48,7 +48,13 @@ void main() {
         ),
       ];
 
-      final atSpawn = _layout(banners, tile: tile, born: const [0, 1, 2]);
+      final atSpawn = _layout(
+        banners,
+        tile: tile,
+        born: const [0, 1, 2],
+        avoid: [FloaterReserve.heroHead(x: heroX, y: heroY)],
+        minLabelTop: 0,
+      );
       _expectNoPairOverlaps(atSpawn, reason: 'at spawn');
       _expectAboveHeroHead(atSpawn, heroX: heroX, heroY: heroY, tile: tile);
 
@@ -56,6 +62,8 @@ void main() {
         _afterDt(banners, 0.3),
         tile: tile,
         born: const [0, 1, 2],
+        avoid: [FloaterReserve.heroHead(x: heroX, y: heroY)],
+        minLabelTop: 0,
       );
       _expectNoPairOverlaps(later, reason: 'after 0.3s');
       _expectAboveHeroHead(later, heroX: heroX, heroY: heroY, tile: tile);
@@ -196,7 +204,13 @@ void main() {
       );
       expect(world.floaters.where((f) => f.text == 'ELITE DOWN').length, 1);
 
-      final placed = _layout(world.floaters, tile: 32, born: const [0, 1, 2]);
+      final placed = _layout(
+        world.floaters,
+        tile: 32,
+        born: const [0, 1, 2],
+        avoid: [FloaterReserve.heroHead(x: 8, y: 8)],
+        minLabelTop: 0,
+      );
       _expectNoPairOverlaps(placed, reason: 'spawnFloater jitter included');
       _expectAboveHeroHead(placed, heroX: 8, heroY: 8, tile: 32);
     },
@@ -244,7 +258,13 @@ void main() {
           priority: 0,
         ),
       ];
-      final placed = _layout(banners, tile: tile, born: const [0, 1, 2, 3]);
+      final placed = _layout(
+        banners,
+        tile: tile,
+        born: const [0, 1, 2, 3],
+        minLabelTop: viewTop / tile,
+        maxLabelBottom: (viewTop + viewHeight) / tile,
+      );
       final boss = placed.firstWhere((e) => e.floater.text == 'BOSS DOWN');
       expect(boss.dy, 0.0, reason: 'highest priority keeps authored Y');
       expect(
@@ -320,6 +340,9 @@ List<_PlacedBanner> _layout(
   required List<int> born,
   double originX = 0,
   double originY = 0,
+  double? minLabelTop,
+  double? maxLabelBottom,
+  List<FloaterReserve> avoid = const [],
 }) {
   assert(born.length == floaters.length);
   const maxWFactor = 4.4;
@@ -366,7 +389,12 @@ List<_PlacedBanner> _layout(
       );
     }
   }
-  final stackDy = FloaterBannerStack.dyById(specs);
+  final stackDy = FloaterBannerStack.dyById(
+    specs,
+    minLabelTop: minLabelTop,
+    maxLabelBottom: maxLabelBottom,
+    avoid: avoid,
+  );
   final placed = <_PlacedBanner>[];
   for (var i = 0; i < floaters.length; i++) {
     final floater = floaters[i];
@@ -416,13 +444,12 @@ void _expectAboveHeroHead(
   double originY = 0,
 }) {
   // Upper half of the hero's tile — banners must not sit on the head.
-  final head = Rect.fromCenter(
-    center: Offset(
-      originX + heroX * tile,
-      originY + heroY * tile - tile * 0.2,
-    ),
-    width: tile * 0.7,
-    height: tile * 0.55,
+  final box = FloaterReserve.heroHead(x: heroX, y: heroY);
+  final head = Rect.fromLTRB(
+    originX + box.left * tile,
+    originY + box.top * tile,
+    originX + box.right * tile,
+    originY + box.bottom * tile,
   );
   for (final e in placed) {
     expect(
