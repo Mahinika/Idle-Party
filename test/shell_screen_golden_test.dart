@@ -615,10 +615,10 @@ void main() {
       ),
     );
     await pumpGoldenFrames(tester);
-    expect(
-      find.text("Prospector's Bundle"),
-      findsOneWidget,
-    );
+    // The 24h window features a pack Play sells, never the restore-only
+    // starter, and the catalog below does not repeat it.
+    expect(find.text("Prospector's Bundle"), findsNothing);
+    expect(find.text('Ad-free welcome'), findsOneWidget);
   });
 
   testWidgets('SHOP sheet golden A56', (tester) async {
