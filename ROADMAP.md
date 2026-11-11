@@ -1,6 +1,6 @@
 # Idle Party — what to do next
 
-**2026-10-31.** Live on Google Play as **1.13.5 (231)**, submitted 2026-10-28.
+**2026-11-11.** Live on Google Play as **1.13.17 (243)**, released 11 Nov 2026 at 100%.
 This is a short money-first list. The 52-week plan stays in
 `docs/YEAR_ROADMAP.md`. Week jobs stay in `docs/weeks/`. Do not start a
 second program from this file.
@@ -36,19 +36,18 @@ isolate from the old ANR notes.
    grant a consumable again, and it does not stack Ad-free tickets, bag
    slots, or Long Away. Do not add a SKU the Console does not have
    (`perm_scroll_*` and `cinder_pouch` still are not). A new pack needs a
-   Play product before the button can take money. Not in the 1.13.5 Play
-   binary until that build is uploaded.
-4. **Keep the live build stable.** Current main crashes when a room or boss
-   clears: `_clearKeystoneRun` called itself. The 1.13.5 binary on Play
-   does not have that split. This change calls the real helpers. No
-   save-field renames. New fields, if a later change needs one, default
+   Play product before the button can take money. That applied to the 1.13.5
+   Play binary; live Play is now 1.13.17.
+4. **Keep the live build stable.** The `_clearKeystoneRun` self-call on a
+   room or boss clear was fixed after 1.13.5. Live Play is **1.13.17 (243)**.
+   No save-field renames. New fields, if a later change needs one, default
    when missing and survive Ascend the way tickets and shop flags already
    do. Wallet gold still resets on Ascend.
 5. **Then the phone.** Week 46 is “the fight fits the phone.” That is a
    look change and needs a before and after on the A56. Zone identity
    (so the next cave does not look like the last) is the fun after that.
-   Store shots are 1.13.5. The preview video is still 1.13.3. 1.13.7
-   hotfix is within four patches of that film. Recapture Sandy before the
+   Store shots in Play Console are still 1.13.5. The preview video is still
+   1.13.3. Recapture Sandy before the
    next bump or the listing test fails. Do not buy installs.
 
 ## Not this
