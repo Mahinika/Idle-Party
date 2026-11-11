@@ -120,11 +120,15 @@ Rect floaterLabelRect({
   return Rect.fromLTWH(anchor.dx, anchor.dy, width, height);
 }
 
-@visibleForTesting
-void debugResetFloaterCaches() {
+/// Clears paint-only floater hold and label cache. A new fight view must
+/// not inherit the last fight's numbers.
+void resetFloaterPaintState() {
   FloaterLabelCache.reset();
   FloaterHold.reset();
 }
+
+@visibleForTesting
+void debugResetFloaterCaches() => resetFloaterPaintState();
 
 /// Paints floater labels for one frame. Used by the dungeon painter and by
 /// widget tests that drive a [PictureRecorder] or [CustomPaint] canvas.

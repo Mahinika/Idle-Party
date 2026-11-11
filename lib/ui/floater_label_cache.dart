@@ -56,7 +56,8 @@ abstract final class FloaterLabelCache {
   }
 
   /// Disposes every cached painter. Safe to call twice (no double-dispose).
-  @visibleForTesting
+  /// Used when a fight view is created or torn down so the next fight does
+  /// not inherit painters from the last one.
   static void reset() {
     for (final painter in _cache.values) {
       painter.dispose();
