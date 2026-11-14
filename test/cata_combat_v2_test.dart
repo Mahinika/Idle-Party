@@ -163,6 +163,10 @@ void main() {
   });
 
   test('Arms white-hit mastery can tag SWING floaters', () {
+    // 1.13.18 hides proc words by default; the mastery roll is what this
+    // test covers, so turn callout words back on.
+    SpatialCombat.showCalloutWords = true;
+    addTearDown(() => SpatialCombat.showCalloutWords = false);
     final base = GameLogic.createInitialState(now: DateTime(2026, 8, 1));
     final state = base.withActiveParty([
       base.heroes.first.copyWith(

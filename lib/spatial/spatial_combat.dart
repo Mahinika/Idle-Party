@@ -665,8 +665,15 @@ enum SpatialFloaterKind {
   /// Damage / heal / loot numbers.
   combat,
 
-  /// Short speech bark above a hero.
+  /// Short speech bark above a hero. Hidden unless
+  /// [SpatialCombat.showSpeechBarks].
   speech,
+
+  /// Ability / proc / kit name words (SWING, SnD, LIVING BOMB …) and routine
+  /// gold / XP / essence payout text. Hidden unless
+  /// [SpatialCombat.showCalloutWords] — 1.13.18 keeps fights to numbers,
+  /// avoidance words and real events.
+  callout,
 }
 
 class SpatialFloater {
@@ -1115,6 +1122,13 @@ abstract final class SpatialCombat {
   static bool compactNumbers = false;
   static bool alwaysShowEnemyHp = true;
 
+  /// Calmer combat text (1.13.18): fights show damage and heal numbers,
+  /// DODGE / PARRY / BLOCK and event words (BOSS DOWN, LEVEL UP, tells …).
+  /// [SpatialFloaterKind.callout] words and speech barks are dropped at
+  /// spawn unless these are turned on. Bursts, rings and sparks still play.
+  static bool showCalloutWords = false;
+  static bool showSpeechBarks = false;
+
   /// SETTINGS “Hide heal numbers” drops numeric heals only — not tell words.
   static bool suppressHealFloater({required String text, required int argb}) {
     if (!hideHealFloaters) return false;
@@ -1179,6 +1193,8 @@ abstract final class SpatialCombat {
     int priority = 0,
     SpatialFloaterKind kind = SpatialFloaterKind.combat,
   }) {
+    if (kind == SpatialFloaterKind.callout && !showCalloutWords) return;
+    if (kind == SpatialFloaterKind.speech && !showSpeechBarks) return;
     if (suppressHealFloater(text: text, argb: argb)) return;
     if (compactNumbers) {
       text = _compactFloaterText(text);
@@ -3728,15 +3744,16 @@ abstract final class SpatialCombat {
           if (!reducedVfx) {
             spawnSlash(world, from: enemy, to: target, isCrit: false);
           }
-          spawnFloater(
-            world,
-            x: target.x,
-            y: target.y - 0.25,
-            text: '$dmg',
-            argb: floaterDamage,
-            life: 0.65,
-          );
+          // A 0 next to DODGE / PARRY is noise — the avoid word says it.
           if (dmg > 0) {
+            spawnFloater(
+              world,
+              x: target.x,
+              y: target.y - 0.25,
+              text: '$dmg',
+              argb: floaterDamage,
+              life: 0.65,
+            );
             CombatPresence.onPulledAggro(world, target, reducedVfx: reducedVfx);
           }
         }
@@ -4040,6 +4057,7 @@ abstract final class SpatialCombat {
             argb: abilityTagArgb,
             life: 0.55,
             priority: 1,
+            kind: SpatialFloaterKind.callout,
           );
         }
         // Melee and point-blank resolve on the spot. A blocked shot does not
@@ -4353,6 +4371,14 @@ abstract final class SpatialCombat {
                               : _floaterEssence)),
               life: item != null ? 0.42 : (salvaged ? 1.4 : 1.15),
               priority: salvaged || item != null ? 2 : 1,
+              // Bag full and rare+ gear names stay; routine gold / essence
+              // and common / uncommon gear pops are callouts.
+              kind:
+                  salvaged ||
+                      (item != null &&
+                          item.rarity.index >= LootRarity.rare.index)
+                  ? SpatialFloaterKind.combat
+                  : SpatialFloaterKind.callout,
             );
           }
         }
@@ -5119,6 +5145,9 @@ abstract final class SpatialCombat {
         argb: _floaterGear,
         life: 0.42,
         priority: bestRarity >= LootRarity.epic.index ? 3 : 2,
+        kind: bestRarity >= LootRarity.rare.index
+            ? SpatialFloaterKind.combat
+            : SpatialFloaterKind.callout,
       );
     }
     if (payoff.isNotEmpty) {
@@ -5130,6 +5159,7 @@ abstract final class SpatialCombat {
         argb: bestGear != null ? _floaterGear : _floaterGold,
         life: 1.15,
         priority: bestRarity >= LootRarity.epic.index ? 3 : 1,
+        kind: SpatialFloaterKind.callout,
       );
     }
     final next = payout.state;
@@ -5259,6 +5289,7 @@ abstract final class SpatialCombat {
         text: 'TAUNT',
         argb: 0xFFFFAA55,
         life: 0.7,
+        kind: SpatialFloaterKind.callout,
       );
       CombatPresence.onTaunt(world, tank, reducedVfx: reducedVfx);
     }
@@ -6074,6 +6105,7 @@ abstract final class SpatialCombat {
         argb: argb,
         life: 0.5,
         priority: 1,
+        kind: SpatialFloaterKind.callout,
       );
     }
     spawnBurst(
