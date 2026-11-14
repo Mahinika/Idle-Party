@@ -158,6 +158,7 @@ abstract final class KitNamedCasts {
               text: 'SWORD & BOARD',
               argb: 0xFFFFE090,
               life: 0.7,
+              kind: SpatialFloaterKind.callout,
             );
           }
         }
@@ -169,6 +170,7 @@ abstract final class KitNamedCasts {
             text: def.shortLabel,
             argb: 0xFF9AD0FF,
             life: 0.55,
+            kind: SpatialFloaterKind.callout,
           );
         }
         return true;
@@ -224,6 +226,7 @@ abstract final class KitNamedCasts {
             text: def.shortLabel,
             argb: 0xFFFF8866,
             life: 0.7,
+            kind: SpatialFloaterKind.callout,
           );
           SpatialCombat.spawnBurst(
             world,
@@ -249,6 +252,7 @@ abstract final class KitNamedCasts {
             text: def.shortLabel,
             argb: 0xFFFFD070,
             life: 0.75,
+            kind: SpatialFloaterKind.callout,
           );
           SpatialCombat.spawnRing(
             world,
@@ -369,6 +373,7 @@ abstract final class KitNamedCasts {
             text: def.shortLabel,
             argb: 0xFFFF9090,
             life: 0.7,
+            kind: SpatialFloaterKind.callout,
           );
           SpatialCombat.spawnBurst(
             world,
@@ -396,6 +401,7 @@ abstract final class KitNamedCasts {
             text: def.shortLabel,
             argb: 0xFFFFE8A0,
             life: 0.65,
+            kind: SpatialFloaterKind.callout,
           );
           for (final h in world.heroes) {
             if (!h.isAlive) continue;
@@ -438,6 +444,7 @@ abstract final class KitNamedCasts {
             text: 'POWER WORD: SHIELD',
             argb: 0xFF90D0FF,
             life: 0.75,
+            kind: SpatialFloaterKind.callout,
           );
           SpatialCombat.spawnBurst(
             world,
@@ -501,6 +508,7 @@ abstract final class KitNamedCasts {
             text: 'POWER INFUSION',
             argb: 0xFFE0A0FF,
             life: 0.8,
+            kind: SpatialFloaterKind.callout,
           );
           SpatialCombat.spawnRing(
             world,
@@ -678,6 +686,7 @@ abstract final class KitNamedCasts {
             text: 'LIVING BOMB',
             argb: 0xFFFF7030,
             life: 0.55,
+            kind: SpatialFloaterKind.callout,
           );
           SpatialCombat.spawnSpark(
             world,
@@ -998,6 +1007,7 @@ abstract final class KitNamedCasts {
             text: 'KILLING SPREE',
             argb: 0xFFFF6060,
             life: 0.75,
+            kind: SpatialFloaterKind.callout,
           );
         }
         return true;
@@ -1020,6 +1030,7 @@ abstract final class KitNamedCasts {
             text: 'SPRINT',
             argb: 0xFF90FF90,
             life: 0.45,
+            kind: SpatialFloaterKind.callout,
           );
         }
         return true;
@@ -1045,6 +1056,7 @@ abstract final class KitNamedCasts {
             text: 'FLURRY',
             argb: 0xFFFFAA40,
             life: 0.55,
+            kind: SpatialFloaterKind.callout,
           );
         }
         return true;
@@ -1068,6 +1080,7 @@ abstract final class KitNamedCasts {
             text: 'SnD',
             argb: 0xFFFFD070,
             life: 0.5,
+            kind: SpatialFloaterKind.callout,
           );
         }
         return true;
@@ -1094,6 +1107,7 @@ abstract final class KitNamedCasts {
             text: 'KIDNEY',
             argb: 0xFFFF7070,
             life: 0.55,
+            kind: SpatialFloaterKind.callout,
           );
         }
         return true;
