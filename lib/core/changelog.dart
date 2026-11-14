@@ -82,12 +82,34 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.17';
+  static const String currentVersion = '1.13.18';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
       version: currentVersion,
+      date: 'Nov 11, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON. The fight is the home screen.',
+      fixed: <String>[
+        'Fixed a display crash in dungeons when many combat numbers appear at once.',
+        'ELITE DOWN, LEVEL UP, and ABSORB banners no longer overlap.',
+      ],
+      changed: <String>[
+        'Calmer fights: damage and heal numbers, DODGE, PARRY, BLOCK, and big moments stay. Ability names, hero chatter, and gold/XP pops are gone.',
+        'Bottom bar is HEROES, ESSENCE, FIGHT, MAP, and SHOP. MENU is at the top.',
+        'MENU is the list only. SHOP says SCROLLS sit on the fight rail, and gold sits under the fight.',
+        'FORGE, CAMP, and MARKET sit under the fight. A new game starts in Sandy Caverns.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MENU → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. FORGE under the fight does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.13.17',
       date: 'Nov 3, 2026',
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON. The fight is the home screen.',

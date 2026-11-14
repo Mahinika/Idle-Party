@@ -1660,7 +1660,8 @@ abstract final class AbilityEffectRunner {
       world,
       x: enemy.x,
       y: enemy.y - 0.55,
-      text: 'OVERLOAD $dealt',
+      // The number is the payoff; the proc word is dropped (1.13.18).
+      text: '$dealt',
       argb: overloadArgb,
       life: 0.5,
       priority: 1,
@@ -2465,6 +2466,7 @@ abstract final class AbilityEffectRunner {
       argb: argb,
       life: 0.5,
       priority: 1,
+      kind: SpatialFloaterKind.callout,
     );
   }
 
@@ -2645,6 +2647,7 @@ abstract final class AbilityEffectRunner {
           text: 'Solar',
           argb: 0xFFE0C040,
           life: 0.5,
+          kind: SpatialFloaterKind.callout,
         );
       } else if (def.id == AbilityId.starfire) {
         hero.buffTimers['eclipse_arcane'] = 7.0;
@@ -2656,6 +2659,7 @@ abstract final class AbilityEffectRunner {
           text: 'Lunar',
           argb: 0xFFA0C0FF,
           life: 0.5,
+          kind: SpatialFloaterKind.callout,
         );
       }
     }
@@ -2777,6 +2781,7 @@ abstract final class AbilityEffectRunner {
         text: 'RIP',
         argb: 0xFFC05050,
         life: 0.45,
+        kind: SpatialFloaterKind.callout,
       );
     }
   }
@@ -2901,6 +2906,7 @@ abstract final class AbilityEffectRunner {
       text: label.toUpperCase(),
       argb: 0xFF90C0FF,
       life: 0.55,
+      kind: SpatialFloaterKind.callout,
     );
   }
 

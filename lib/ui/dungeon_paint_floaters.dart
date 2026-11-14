@@ -213,177 +213,26 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
       }
     }
 
-    final rareLoot = world.floaters.any((f) => f.priority >= 3);
-    if (showBursts || showPriorityFloaters || rareLoot) {
-      _FloaterHold.sync(
-        floaters: world.floaters,
-        frame: visualFrame,
-        show: true,
-      );
-      final maxW = tile * 4.4;
-      for (final floater in _FloaterHold.live.values) {
-        final rare = floater.priority >= 3;
-        if (!showBursts && !showPriorityFloaters && !rare) continue;
-        if (!showBursts && floater.priority < 2) continue;
-        if (!_inView(floater.x, floater.y, pad: 0.5)) continue;
-        final speech = floater.speech;
-        final age = (visualFrame - floater.born) / floater.span;
-        final alpha = (1 - age).clamp(0.0, 1.0);
-        final size =
-            tile *
-            (speech ? 0.28 : 0.32) *
-            SpatialCombat.floaterReadScale(floater.priority);
-        final snapped = (alpha * 10).round() / 10.0;
-        final color = Color(floater.argb).withValues(alpha: snapped);
-        final outline = GameTheme.lootInkShadow.withValues(alpha: snapped * 0.9);
-        final tp = _FloaterLabels.of(
-          text: floater.text,
-          size: math.max(GameTheme.hudPixel, size),
-          color: color,
-          maxWidth: maxW,
-        );
-        final tpOutline = _FloaterLabels.of(
-          text: floater.text,
-          size: math.max(GameTheme.hudPixel, size),
-          color: outline,
-          maxWidth: maxW,
-        );
-        final lift = rare ? 1.35 : 0.0;
-        final c = center(floater.x, floater.y - (speech ? 0.55 : 0) - lift);
-        if (speech) {
-          final padX = tile * 0.12;
-          final padY = tile * 0.06;
-          final bubble = RRect.fromRectAndRadius(
-            Rect.fromLTWH(
-              c.dx - tp.width / 2 - padX,
-              c.dy - tp.height / 2 - padY,
-              tp.width + padX * 2,
-              tp.height + padY * 2,
+    paintFloaterLabels(
+      canvas: canvas,
+      tile: tile,
+      originX: originX,
+      originY: originY,
+      floaters: world.floaters,
+      visualFrame: visualFrame,
+      showBursts: showBursts,
+      showPriorityFloaters: showPriorityFloaters,
+      inView: _inView,
+      minLabelTop: camera.camY,
+      maxLabelBottom: camera.camY + camera.visibleRows,
+      avoid: [
+        for (final hero in world.heroes)
+          if (hero.isAlive)
+            FloaterReserve.heroHead(
+              x: hero.picturePoint().x,
+              y: hero.picturePoint().y,
             ),
-            Radius.circular(tile * 0.12),
-          );
-          _TileRoomPainter._fillPaint.color = const Color(
-            0xCC1A1420,
-          ).withValues(alpha: alpha);
-          canvas.drawRRect(bubble, _TileRoomPainter._fillPaint);
-          _TileRoomPainter._strokePaint
-            ..color = Color(floater.argb).withValues(alpha: alpha * 0.55)
-            ..strokeWidth = math.max(1.0, tile * 0.03);
-          canvas.drawRRect(bubble, _TileRoomPainter._strokePaint);
-        }
-        final anchor = speech
-            ? Offset(c.dx - tp.width / 2, c.dy - tp.height / 2)
-            : Offset(c.dx + tile * 0.46 - tp.width / 2, c.dy - tile * 0.22);
-        for (final off in const [
-          Offset(-1, 0),
-          Offset(1, 0),
-          Offset(0, -1),
-          Offset(0, 1),
-        ]) {
-          tpOutline.paint(canvas, anchor + off);
-        }
-        tp.paint(canvas, anchor);
-      }
-    } else {
-      _FloaterHold.sync(floaters: const [], frame: visualFrame, show: false);
-    }
-  }
-}
-
-class _HeldFloater {
-  _HeldFloater({
-    required this.born,
-    required this.span,
-    required this.text,
-    required this.argb,
-    required this.priority,
-    required this.speech,
-    required this.x,
-    required this.y,
-  });
-
-  final int born;
-  final int span;
-  final String text;
-  final int argb;
-  final int priority;
-  final bool speech;
-  double x;
-  double y;
-}
-
-/// Keeps a number on screen for its authored life when 2× eats the sim timer.
-abstract final class _FloaterHold {
-  static final Map<int, _HeldFloater> live = {};
-
-  static void sync({
-    required List<SpatialFloater> floaters,
-    required int frame,
-    required bool show,
-  }) {
-    if (!show) {
-      live.clear();
-      return;
-    }
-    final seen = <int>{};
-    for (final floater in floaters) {
-      final id = identityHashCode(floater);
-      seen.add(id);
-      final held = live[id];
-      if (held == null) {
-        live[id] = _HeldFloater(
-          born: frame,
-          span: math.max(8, (floater.life * 60).round()),
-          text: floater.text,
-          argb: floater.argb,
-          priority: floater.priority,
-          speech: floater.kind == SpatialFloaterKind.speech,
-          x: floater.x,
-          y: floater.y,
-        );
-      } else {
-        held.x = floater.x;
-        held.y = floater.y;
-      }
-    }
-    live.removeWhere((id, held) {
-      if (seen.contains(id)) return false;
-      return frame - held.born >= held.span;
-    });
-  }
-}
-
-/// Layout cache for damage numbers. One painter per text, so two floaters
-/// in the same frame cannot overwrite each other.
-abstract final class _FloaterLabels {
-  static const int _cap = 24;
-  static final Map<String, TextPainter> _cache = {};
-
-  static TextPainter of({
-    required String text,
-    required double size,
-    required Color color,
-    required double maxWidth,
-  }) {
-    final key =
-        '${size.toStringAsFixed(2)}|${color.toARGB32()}|'
-        '${maxWidth.toStringAsFixed(1)}|$text';
-    final hit = _cache[key];
-    if (hit != null) return hit;
-    if (_cache.length >= _cap) {
-      for (final painter in _cache.values) {
-        painter.dispose();
-      }
-      _cache.clear();
-    }
-    final painter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: GameTheme.pixelCached(size: size, color: color),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: maxWidth);
-    _cache[key] = painter;
-    return painter;
+      ],
+    );
   }
 }

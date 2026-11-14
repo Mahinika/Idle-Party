@@ -56,6 +56,7 @@ GameState roomHappeningTick(SpatialWorld world, GameState state) {
           argb: SpatialCombat._floaterGold,
           life: 1.05,
           priority: 2,
+          kind: SpatialFloaterKind.callout,
         );
       }
       break;
