@@ -54,6 +54,10 @@ void main() {
   });
 
   test('taunt bark uses speech floater when VFX on', () {
+    // 1.13.18 hides speech barks by default; this test covers the bark
+    // itself, so turn barks back on.
+    SpatialCombat.showSpeechBarks = true;
+    addTearDown(() => SpatialCombat.showSpeechBarks = false);
     final director = GameDirector.preview();
     var state = GameLogic.enterDungeon(
       director.state.copyWith(reducedVfx: false),

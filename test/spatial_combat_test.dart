@@ -366,6 +366,10 @@ void main() {
   });
 
   test('kills spawn ground loot and combat floaters', () {
+    // 1.13.18 hides callout words (payout / pickup / proc text) by default;
+    // this test covers the pop pipeline, so turn them back on.
+    SpatialCombat.showCalloutWords = true;
+    addTearDown(() => SpatialCombat.showCalloutWords = false);
     final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     var world = SpatialCombat.build(state);
     // Room chests seed gold pouches on build — clear so kill drops are alone.
@@ -708,6 +712,10 @@ void main() {
   });
 
   test('kill payout still grants gold and XP', () {
+    // 1.13.18 hides callout words (payout / pickup / proc text) by default;
+    // this test covers the pop pipeline, so turn them back on.
+    SpatialCombat.showCalloutWords = true;
+    addTearDown(() => SpatialCombat.showCalloutWords = false);
     final state = GameLogic.createInitialState(now: DateTime(2026, 8, 19));
     final world = SpatialCombat.build(state);
     final enemy = world.enemies.first;
