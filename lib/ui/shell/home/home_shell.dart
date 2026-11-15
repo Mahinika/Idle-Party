@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/first_climb_coach.dart';
 import '../../../core/return_week.dart';
 import '../../../core/game_director.dart';
-import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
 import '../../../core/hub_chase.dart';
 import '../../../core/menu_alerts.dart';
@@ -166,18 +165,18 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
-  /// First fight and first vault claim. One line, and CLAIM while the
-  /// party is still in the cave. Camp already has CLAIM VAULT.
+  /// First fight and return-week coach line. CLAIM for the vault sits in
+  /// the top row (HomeTopBar). Camp already has CLAIM VAULT.
   Widget _climbRow(GameState state, {required bool sheet}) {
     final climb = FirstClimbCoach.line(state, inDungeon: state.inDungeon);
     // Keep this row mounted while the first climb is on screen. Removing it
     // in the same build that opens HEROES marks the top bar dirty.
     if (sheet && climb == null) return const SizedBox.shrink();
-    // Ready vault in the cave: one row, title and shelf, then CLAIM. The top
-    // bar drops its chase line for this, and ReturnWeek's "Claim CAMP" is
-    // the same news, so it does not get a row of its own.
-    final vault = HomeClaimRow.vaultLine(state, sheet: sheet);
-    if (vault != null) return _claimLine(vault);
+    // Ready vault in the cave: CLAIM sits in the top row next to gold and
+    // owns the chase, so ReturnWeek's "Claim CAMP" gets no row of its own.
+    if (climb == null && HomeClaimRow.vaultLine(state) != null) {
+      return const SizedBox.shrink();
+    }
     final back = climb == null && ReturnWeek.active(state)
         ? ReturnWeek.coachLine(state)
         : null;
@@ -191,83 +190,17 @@ class _HomeShellState extends State<HomeShell> {
     // rows from the cave. A real first-climb tip stays, even when it matches.
     final duplicateCoach = climb == null && _duplicatesChaseLine(text, state);
     final shown = duplicateCoach ? null : text;
-    final showClaim = state.inDungeon && GameLogic.canClaimDailyVault(state);
-    if (shown == null && !showClaim) return const SizedBox.shrink();
+    // CLAIM itself lives in the top row (HomeTopBar).
+    if (shown == null) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
-      child: Row(
-        children: [
-          if (shown != null)
-            Expanded(
-              child: Text(
-                shown,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.hint(color: GameTheme.torchHot),
-              ),
-            ),
-          if (showClaim) ...[
-            if (shown != null) const SizedBox(width: 6),
-            _claimChip(),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _claimLine(String text) {
-    return Padding(
-      key: const ValueKey('home-vault-claim-row'),
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              text,
-              maxLines: 1,
-              softWrap: false,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.hint(color: GameTheme.torchHot),
-            ),
-          ),
-          const SizedBox(width: 6),
-          _claimChip(),
-        ],
-      ),
-    );
-  }
-
-  Widget _claimChip() {
-    return WebClickScope(
-      label: 'CLAIM',
-      onPressed: director.claimDailyVault,
-      child: Semantics(
-        button: true,
-        label: 'Claim the daily vault.',
-        child: InkWell(
-          onTap: director.claimDailyVault,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              minWidth: GameTheme.minTouch,
-              minHeight: GameTheme.minTouch,
-            ),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: GameTheme.hudFarmGreen,
-                borderRadius: BorderRadius.circular(3),
-                border: Border.all(color: GameTheme.clear),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Center(
-                  child: Text(
-                    'CLAIM',
-                    style: GameTheme.hint(color: GameTheme.clear),
-                  ),
-                ),
-              ),
-            ),
-          ),
+      child: SizedBox(
+        width: double.infinity,
+        child: Text(
+          shown,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.hint(color: GameTheme.torchHot),
         ),
       ),
     );

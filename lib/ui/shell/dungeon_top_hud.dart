@@ -119,6 +119,28 @@ String _modeChipWord(String label) {
   return label;
 }
 
+/// Home fight: the floor line sits at the top of the cave (top 2). Corner
+/// chrome under home chrome starts below it instead of below the cutout,
+/// which [HomeTopBar] already covers. Hold box and DPS chip included.
+double homePlaceLineClearance(BuildContext context) {
+  final scaler = MediaQuery.textScalerOf(context);
+  double lineOf(TextStyle style) {
+    final tp = TextPainter(
+      text: TextSpan(text: 'F1 · 9 next', style: style),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    final h = tp.height;
+    tp.dispose();
+    return h;
+  }
+
+  final hint = lineOf(GameTheme.hint()) + 8; // HOLD box: 3 + 3 pad, 1 + 1 border
+  final chip = lineOf(GameTheme.combat()) + 4;
+  return 2 + (hint > chip ? hint : chip) + 2;
+}
+
 class DungeonTopHud extends StatelessWidget {
   const DungeonTopHud({
     super.key,

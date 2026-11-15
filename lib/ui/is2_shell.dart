@@ -206,32 +206,39 @@ class _Is2ShellState extends State<Is2Shell> {
           ),
         ),
         MenuChrome.playSafeArea(
-          top: true,
-          child: Column(
-            children: [
-              KeyedSubtree(
-                key: _topHudKey,
-                child: _Is2FightTopBar(
-                  director: d,
-                  router: router,
-                  homeChrome: widget.homeChrome,
-                  onMeasured: _readTopChrome,
+          // Home chrome: HomeTopBar above this view already covers the
+          // cutout. Clear the floor line instead of paying the inset twice.
+          top: !widget.homeChrome,
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: widget.homeChrome ? homePlaceLineClearance(context) : 0,
+            ),
+            child: Column(
+              children: [
+                KeyedSubtree(
+                  key: _topHudKey,
+                  child: _Is2FightTopBar(
+                    director: d,
+                    router: router,
+                    homeChrome: widget.homeChrome,
+                    onMeasured: _readTopChrome,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: _Is2CombatCornerChrome(
-                  director: d,
-                  router: router,
-                  homeChrome: widget.homeChrome,
-                  dpsMeterOpen: _dpsMeterOpen,
-                  onDpsOpenChanged: (open) {
-                    if (_dpsMeterOpen == open) return;
-                    setState(() => _dpsMeterOpen = open);
-                  },
-                  partyStripHeight: (ctx) => _partyStripHeight(ctx, d),
+                Expanded(
+                  child: _Is2CombatCornerChrome(
+                    director: d,
+                    router: router,
+                    homeChrome: widget.homeChrome,
+                    dpsMeterOpen: _dpsMeterOpen,
+                    onDpsOpenChanged: (open) {
+                      if (_dpsMeterOpen == open) return;
+                      setState(() => _dpsMeterOpen = open);
+                    },
+                    partyStripHeight: (ctx) => _partyStripHeight(ctx, d),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         if (router.isOpen)
