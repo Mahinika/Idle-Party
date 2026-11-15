@@ -114,12 +114,14 @@ class FightSeam extends StatelessWidget {
                   ),
                   if (hideRails && seamFitsExtras) ...[
                     const SizedBox(width: 4),
+                    // Opens the MENU list (quests, scrolls, vault,
+                    // settings) that the hidden rails would show.
                     _tap(
-                      label: 'MORE menu',
+                      label: 'Extras: quests, scrolls, and settings',
                       onTap: () => router.open(MenuRoute.more),
                       minHeight: GameTheme.minTouch,
                       child: Text(
-                        'MORE',
+                        'EXTRAS',
                         style: GameTheme.readable(color: GameTheme.torchHot),
                       ),
                     ),

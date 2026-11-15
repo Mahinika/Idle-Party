@@ -2,26 +2,29 @@ import '../../../core/first_climb_coach.dart';
 import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
 import '../../../core/hub_chase.dart';
-import '../../../core/menu_router.dart';
 import '../../../core/return_week.dart';
 
-/// The one home row that owns a ready daily vault in the cave.
+/// The daily vault CLAIM on the home fight.
 ///
-/// The top bar and the coach row used to say the same thing twice
-/// ("Claim Daily Vault" and "Claim CAMP"). When this returns text, the
-/// coach row paints it next to CLAIM and the top bar drops its chase line.
+/// CLAIM sits in the top resource row, next to gold. When the vault is the
+/// chase, that chip says it all, so the top bar drops its chase line and no
+/// coach row ("Claim CAMP") is mounted under it.
 abstract final class HomeClaimRow {
-  /// Same rule as the home shell: a sheet over the fight hides the row.
-  static bool sheetOpen(GameState state, MenuRoute route) {
-    final interceptGold = state.inDungeon && route == MenuRoute.gold;
-    return route != MenuRoute.none && !interceptGold;
+  /// CLAIM chip in the top row: in the cave with the vault ready.
+  static bool showChip(GameState state) =>
+      state.inDungeon && GameLogic.canClaimDailyVault(state);
+
+  /// "Daily Vault · CAMP" for the chip's tooltip and semantics.
+  static String chipHint(GameState state) {
+    if (!ReturnWeek.active(state)) return 'Daily Vault';
+    final shelf = ReturnWeek.shelf(GameLogic.checkInPayout(state));
+    return 'Daily Vault · $shelf';
   }
 
-  /// "Claim Daily Vault · CAMP", or null when the vault row is not up.
-  /// The first climb keeps its own line.
-  static String? vaultLine(GameState state, {required bool sheet}) {
-    if (sheet || !state.inDungeon) return null;
-    if (!GameLogic.canClaimDailyVault(state)) return null;
+  /// "Claim Daily Vault · CAMP" when the chip owns the vault chase, else
+  /// null. The first climb keeps its own line under the bar.
+  static String? vaultLine(GameState state) {
+    if (!showChip(state)) return null;
     if (FirstClimbCoach.line(state, inDungeon: true) != null) return null;
     final chase = HubChase.forState(state);
     if (chase.kind != HubChaseKind.claimDailyVault) return null;
