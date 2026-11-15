@@ -16,6 +16,7 @@ import '../../web_click_bridge.dart';
 import '../dungeon_party_hud.dart';
 import '../shell_common.dart';
 import 'director_select.dart';
+import 'home_claim_row.dart';
 
 /// AL, essence, gold, a context currency, speed, and MENU.
 class HomeTopBar extends StatelessWidget {
@@ -40,7 +41,8 @@ class HomeTopBar extends StatelessWidget {
             return '${s.ascensionLevel}|${s.essence}|${s.gold}|${s.combatPace}|'
                 '${s.metaDepth.adTickets}|${s.metaDepth.cinders}|'
                 '${s.metaDepth.embers}|${s.hardmodeLevel}|$chase|'
-                '${s.keystoneRunActive}|${s.keystoneTimerMs}';
+                '${s.keystoneRunActive}|${s.keystoneTimerMs}|'
+                '${HomeClaimRow.vaultLine(s, sheet: HomeClaimRow.sheetOpen(s, router.route))}';
           },
           builder: (context, state) =>
               _bar(context, state, router.route, router.essencePanel),
@@ -64,6 +66,13 @@ class HomeTopBar extends StatelessWidget {
     final third = _third(context, state, route, essencePanel);
     final compactTop =
         state.homeLayout == HomeLayout.home && state.inDungeon;
+    // The vault row under the bar already says it, next to CLAIM.
+    final vaultRowOwnsChase = compactTop &&
+        HomeClaimRow.vaultLine(
+              state,
+              sheet: HomeClaimRow.sheetOpen(state, route),
+            ) !=
+            null;
     // Stone fills the cutout. The words start below it.
     final topInset = MenuChrome.systemTopInset(context);
     return Material(
@@ -130,7 +139,9 @@ class HomeTopBar extends StatelessWidget {
                 ),
               ],
             ),
-            if (compactTop) ...[
+            if (compactTop && vaultRowOwnsChase)
+              const SizedBox.shrink()
+            else if (compactTop) ...[
               const SizedBox(height: 2),
               Text(
                 chase,

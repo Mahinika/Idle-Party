@@ -126,7 +126,9 @@ class FightSeam extends StatelessWidget {
                   ],
                   const SizedBox(width: 4),
                   _tap(
-                    label: state.homePanelFull ? 'TALL' : 'FORGE',
+                    label: state.homePanelFull
+                        ? 'Show the forge menu'
+                        : 'Hide the forge panel',
                     onTap: () =>
                         director.setHomePanelFull(!state.homePanelFull),
                     minHeight: GameTheme.minTouch,
@@ -144,7 +146,9 @@ class FightSeam extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        state.homePanelFull ? 'TALL' : 'FORGE',
+                        // Says what the tap does: HIDE folds the panel
+                        // away, MENU brings it back.
+                        state.homePanelFull ? 'MENU' : 'HIDE',
                         style: GameTheme.readable(color: GameTheme.parchmentDim),
                       ),
                     ),
