@@ -268,13 +268,13 @@ void main() {
     expect(find.text('TALL'), findsNothing);
     // The mode line under the seam is gone; the toggle keeps it as a hint.
     expect(find.text('FARM loops. PUSH climbs.'), findsNothing);
-    expect(find.text('Repeat loots. Next goes deeper.'), findsNothing);
+    expect(find.text('Repeat this floor for loot. Next goes deeper.'), findsNothing);
     expect(
       find.byWidgetPredicate(
         (w) =>
             w is Semantics &&
             (w.properties.hint == 'FARM loops. PUSH climbs.' ||
-                w.properties.hint == 'Repeat loots. Next goes deeper.'),
+                w.properties.hint == 'Repeat this floor for loot. Next goes deeper.'),
       ),
       findsOneWidget,
     );

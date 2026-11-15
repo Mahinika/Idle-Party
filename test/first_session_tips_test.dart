@@ -302,7 +302,7 @@ void main() {
     );
     expect(
       FirstSessionTips.lineFor(state, CoachTarget.farmPush, inDungeon: true),
-      'Repeat loots. Next goes deeper.',
+      'Repeat this floor for loot. Next goes deeper.',
     );
   });
 }

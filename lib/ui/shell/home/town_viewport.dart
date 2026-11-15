@@ -197,6 +197,7 @@ class _TownViewportState extends State<TownViewport> {
     final label = plan.label ?? 'ENTER';
     final cave = DungeonCatalog.byId(state.dungeonId).name;
     final al = state.ascensionLevel;
+    final enterCopy = townEnterCardCopy(ascensionLevel: al, cave: cave);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -210,15 +211,16 @@ class _TownViewportState extends State<TownViewport> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (enterCopy.hint != null)
+                  Text(
+                    enterCopy.hint!,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.hint(),
+                  ),
                 Text(
-                  townProgressLine(ascensionLevel: al, cave: cave),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.hint(),
-                ),
-                Text(
-                  cave,
+                  enterCopy.title,
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -802,6 +804,22 @@ String townProgressLine({required int ascensionLevel, required String cave}) {
   }
   final look = ascensionLevel >= 1 ? 'Stone town' : 'Timber town';
   return '$look · $cave';
+}
+
+/// Copy above ENTER. The cave name appears once.
+///
+/// Below the pennant tier the progress line already includes [cave], so
+/// that line is the title. At the pennant tier the hint is the banner
+/// line and the title is [cave].
+({String? hint, String title}) townEnterCardCopy({
+  required int ascensionLevel,
+  required String cave,
+}) {
+  final progress = townProgressLine(ascensionLevel: ascensionLevel, cave: cave);
+  if (TownTier.showPennants(ascensionLevel)) {
+    return (hint: progress, title: cave);
+  }
+  return (hint: null, title: progress);
 }
 
 /// What the town square paints. Gold is not in here, so a wallet tick

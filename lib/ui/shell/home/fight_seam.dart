@@ -42,7 +42,7 @@ class FightSeam extends StatelessWidget {
     final farmLabel = plain ? 'Repeat' : 'FARM';
     final pushLabel = plain ? 'Next' : 'PUSH';
     final modeHint = plain
-        ? 'Repeat loots. Next goes deeper.'
+        ? 'Repeat this floor for loot. Next goes deeper.'
         : 'FARM loops. PUSH climbs.';
     final osScale =
         WidgetsBinding.instance.platformDispatcher.textScaleFactor;

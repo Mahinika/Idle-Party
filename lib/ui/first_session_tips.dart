@@ -51,7 +51,7 @@ class FirstSessionTips extends StatelessWidget {
     (
       id: 'farm_push',
       title: 'Repeat / Next',
-      body: 'Repeat loots. Next goes deeper.',
+      body: 'Repeat this floor for loot. Next goes deeper.',
     ),
     (
       id: 'kit_abilities',
@@ -127,7 +127,7 @@ class FirstSessionTips extends StatelessWidget {
   /// FARM/PUSH labels match the dungeon mode chips when jargon is on.
   static String _farmPushLine(GameState s) {
     if (GameLogic.plainPlayerChrome(s)) {
-      return 'Repeat loots. Next goes deeper.';
+      return 'Repeat this floor for loot. Next goes deeper.';
     }
     return 'FARM loops loot. PUSH climbs.';
   }
