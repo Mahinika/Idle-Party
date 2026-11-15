@@ -266,6 +266,18 @@ void main() {
     expect(find.text('HIDE'), findsOneWidget);
     expect(find.text('MENU', skipOffstage: false), findsNothing);
     expect(find.text('TALL'), findsNothing);
+    // The mode line under the seam is gone; the toggle keeps it as a hint.
+    expect(find.text('FARM loops. PUSH climbs.'), findsNothing);
+    expect(find.text('Repeat loots. Next goes deeper.'), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is Semantics &&
+            (w.properties.hint == 'FARM loops. PUSH climbs.' ||
+                w.properties.hint == 'Repeat loots. Next goes deeper.'),
+      ),
+      findsOneWidget,
+    );
     expect(
       find.bySemanticsLabel(RegExp('^Hide the forge panel')),
       findsOneWidget,
