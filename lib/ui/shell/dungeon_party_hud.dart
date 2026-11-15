@@ -393,7 +393,35 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
             padding: const EdgeInsets.fromLTRB(4, 2, 4, 3),
             child: SizedBox(
               height: lineHeight,
-              child: Row(
+              child: LayoutBuilder(
+                builder: (context, box) {
+                  // The lead (selected) hero keeps the whole name. The
+                  // others share what is left and may shorten.
+                  final lead = widget.selectedHeroIndex >= 0 &&
+                          widget.selectedHeroIndex < heroCount
+                      ? widget.selectedHeroIndex
+                      : 0;
+                  final leadWidth = heroCount <= 1
+                      ? null
+                      : math.min(
+                          _HomePartyChip.naturalWidth(
+                            context,
+                            party[lead],
+                            selected: widget.selectedHeroIndex == lead,
+                            dense: denseParty,
+                          ),
+                          box.maxWidth * 0.5,
+                        );
+                  Widget chip(int i) => _homeHeroTap(
+                        i: i,
+                        party: party,
+                        plainEnglish: plainEnglish,
+                        world: world,
+                        state: state,
+                        rowHeight: lineHeight,
+                        dense: denseParty,
+                      );
+                  return Row(
                 children: [
                   for (var i = 0; i < heroCount; i++) ...[
                     if (i > 0)
@@ -403,17 +431,10 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                         margin: const EdgeInsets.symmetric(horizontal: 1),
                         color: GameTheme.border.withValues(alpha: 0.35),
                       ),
-                    Expanded(
-                      child: _homeHeroTap(
-                        i: i,
-                        party: party,
-                        plainEnglish: plainEnglish,
-                        world: world,
-                        state: state,
-                        rowHeight: lineHeight,
-                        dense: denseParty,
-                      ),
-                    ),
+                    if (i == lead && leadWidth != null)
+                      SizedBox(width: leadWidth, child: chip(i))
+                    else
+                      Expanded(child: chip(i)),
                   ],
                   if (showFlask)
                     DungeonFlaskButton(
@@ -422,6 +443,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                       compact: true,
                     ),
                 ],
+                  );
+                },
               ),
             ),
           ),
@@ -1082,6 +1105,40 @@ class _HomePartyChip extends StatelessWidget {
   final SpatialActor? spatial;
   final bool dense;
   final bool demonForm;
+
+  /// Width that shows the whole name, level, and role without cutting.
+  static double naturalWidth(
+    BuildContext context,
+    PartyHero hero, {
+    required bool selected,
+    required bool dense,
+  }) {
+    final scaler = MediaQuery.textScalerOf(context);
+    double w(String text, TextStyle style, TextScaler s) {
+      final tp = TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: TextDirection.ltr,
+        textScaler: s,
+        maxLines: 1,
+      )..layout();
+      final out = tp.width;
+      tp.dispose();
+      return out;
+    }
+
+    final role = hero.spec.roleTag.plainLabel;
+    final named = hero.name.trim().isNotEmpty;
+    final who = named ? hero.name.trim() : role;
+    final nameRow = w(who, GameTheme.combat(), scaler) +
+        (selected ? 2 + 8 : 0) +
+        w(' L${hero.level}', GameTheme.readable(), scaler);
+    final roleRow = named
+        ? w(role, GameTheme.combat(), TextScaler.noScaling) + 3 + 12
+        : 12.0;
+    final doll = dense ? 18.0 : 20.0;
+    // 1 + 1 padding, 1 + 1 border, doll, 2 gap, 1 rounding slack.
+    return 4 + doll + 2 + math.max(nameRow, roleRow) + 1;
+  }
 
   @override
   Widget build(BuildContext context) {

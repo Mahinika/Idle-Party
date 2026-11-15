@@ -17,6 +17,7 @@ import '../dungeon_party_hud.dart';
 import '../shell_common.dart';
 import 'director_select.dart';
 import 'home_claim_row.dart';
+import 'home_room_phase.dart';
 
 /// AL, essence, gold, a context currency, speed, and MENU.
 class HomeTopBar extends StatelessWidget {
@@ -254,27 +255,41 @@ class HomeTopBar extends StatelessWidget {
               ),
               child: Align(
                 alignment: Alignment.topCenter,
-                child: _art(DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: GameTheme.hudFarmGreen,
-                    borderRadius: BorderRadius.circular(3),
-                    border: Border.all(color: GameTheme.clear),
+                // Mid-room CLAIM goes quiet (gold outline) so the fight
+                // stays the loudest thing. Full green between rooms.
+                child: HomeRoomPhaseBuilder(
+                  director: director,
+                  builder: (context, phase) => _art(
+                    _claimFace(muted: phase != HomeRoomPhase.between),
+                    artH,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    child: Text(
-                      'CLAIM',
-                      maxLines: 1,
-                      softWrap: false,
-                      style: GameTheme.hint(color: GameTheme.clear),
-                    ),
-                  ),
-                ), artH),
+                ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget _claimFace({required bool muted}) {
+    return DecoratedBox(
+      key: ValueKey(muted ? 'home-top-claim-muted' : 'home-top-claim-ready'),
+      decoration: BoxDecoration(
+        color: muted ? Colors.transparent : GameTheme.hudFarmGreen,
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(
+          color: muted ? GameTheme.torch : GameTheme.clear,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        child: Text(
+          'CLAIM',
+          maxLines: 1,
+          softWrap: false,
+          style: GameTheme.hint(
+            color: muted ? GameTheme.torch : GameTheme.clear,
           ),
         ),
       ),

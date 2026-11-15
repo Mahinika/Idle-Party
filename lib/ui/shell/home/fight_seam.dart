@@ -82,12 +82,13 @@ class FightSeam extends StatelessWidget {
                           ? 'Long-press the fight, or tap the fist'
                           : 'God Hand — long-press the fight or tap the fist',
                       child: SizedBox(
-                        width: GameTheme.minTouch,
                         height: GameTheme.minTouch,
                         child: GodHandRing(
                           cooldown: world.godHandCooldown,
                           maxCooldown: state.godHandCooldownSeconds,
                           dense: true,
+                          // A word on the idle fist so it reads as a button.
+                          caption: plain ? 'Smash' : 'SMASH',
                           readyLabel: plain
                               ? 'Long-press the fight, or tap the fist'
                               : null,
@@ -120,7 +121,15 @@ class FightSeam extends StatelessWidget {
                     ),
                   ),
                   if (hideRails && seamFitsExtras) ...[
-                    const SizedBox(width: 4),
+                    // A clear break so LEAVE is never hit for EXTRAS.
+                    const SizedBox(width: 6),
+                    Container(
+                      key: const ValueKey('seam-leave-divider'),
+                      width: 1,
+                      height: 22,
+                      color: GameTheme.border.withValues(alpha: 0.7),
+                    ),
+                    const SizedBox(width: 6),
                     // Opens the MENU list (quests, scrolls, vault,
                     // settings) that the hidden rails would show.
                     _tap(

@@ -20,6 +20,7 @@ import 'home_claim_row.dart';
 import 'home_gold_dock.dart';
 import 'home_nav_bar.dart';
 import 'home_prompts.dart';
+import 'home_room_phase.dart';
 import 'home_top_bar.dart';
 import 'town_viewport.dart';
 import 'upgrade_panel.dart';
@@ -146,8 +147,16 @@ class _HomeShellState extends State<HomeShell> {
                         ),
                       ),
                     ),
+                  // FORGE / CAMP / MARKET step aside mid-room so the fight
+                  // gets the rows. MENU and the tabs still reach them.
                   if (showPanel && full)
-                    HomeGoldDock(director: director, router: router),
+                    HomeRoomPhaseBuilder(
+                      director: director,
+                      builder: (context, phase) => _roomStepAside(
+                        hidden: phase == HomeRoomPhase.underway,
+                        child: HomeGoldDock(director: director, router: router),
+                      ),
+                    ),
                 ],
               ),
               if (sheet) _sheet(),
@@ -192,7 +201,7 @@ class _HomeShellState extends State<HomeShell> {
     final shown = duplicateCoach ? null : text;
     // CLAIM itself lives in the top row (HomeTopBar).
     if (shown == null) return const SizedBox.shrink();
-    return Padding(
+    final line = Padding(
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
       child: SizedBox(
         width: double.infinity,
@@ -204,7 +213,36 @@ class _HomeShellState extends State<HomeShell> {
         ),
       ),
     );
+    if (!state.inDungeon) return line;
+    // Once a room is underway the floor line is the only line over the
+    // cave. The coach line comes back between rooms.
+    return HomeRoomPhaseBuilder(
+      director: director,
+      builder: (context, phase) => _roomStepAside(
+        hidden: phase == HomeRoomPhase.underway,
+        child: line,
+      ),
+    );
   }
+
+  /// Folds [child] away (fade + collapse) while a room is underway.
+  static Widget _roomStepAside({required bool hidden, required Widget child}) {
+    return ClipRect(
+      child: AnimatedSize(
+        duration: _stepAsideTime,
+        alignment: Alignment.topCenter,
+        child: AnimatedOpacity(
+          duration: _stepAsideTime,
+          opacity: hidden ? 0 : 1,
+          child: hidden
+              ? const SizedBox(width: double.infinity, height: 0)
+              : child,
+        ),
+      ),
+    );
+  }
+
+  static const Duration _stepAsideTime = Duration(milliseconds: 220);
 
   bool get _showBack =>
       router.homeAtSub || router.route == MenuRoute.key;

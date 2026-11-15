@@ -1099,6 +1099,7 @@ class GodHandRing extends StatelessWidget {
     this.readyLabel,
     this.coolingLabel,
     this.dense = false,
+    this.caption,
   });
   final double cooldown;
 
@@ -1115,6 +1116,10 @@ class GodHandRing extends StatelessWidget {
 
   /// Phone top HUD: slightly smaller so FARM + gold + floor fit without overflow.
   final bool dense;
+
+  /// Short word next to the ready fist (home seam). Hidden while cooling,
+  /// when the ring shows the seconds left.
+  final String? caption;
 
   @override
   Widget build(BuildContext context) {
@@ -1151,7 +1156,10 @@ class GodHandRing extends StatelessWidget {
               label: label,
               onTap: action,
               excludeSemantics: true,
-              child: SizedBox(
+              child: _withCaption(
+                ready ? caption : null,
+                color,
+                SizedBox(
                 width: box,
                 height: box,
                 child: Center(
@@ -1196,10 +1204,30 @@ class GodHandRing extends StatelessWidget {
                   ),
                 ),
               ),
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  static Widget _withCaption(String? caption, Color color, Widget ring) {
+    if (caption == null) return ring;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ring,
+        Padding(
+          padding: const EdgeInsets.only(right: 4),
+          child: Text(
+            caption,
+            maxLines: 1,
+            softWrap: false,
+            style: GameTheme.readable(color: color),
+          ),
+        ),
+      ],
     );
   }
 }
