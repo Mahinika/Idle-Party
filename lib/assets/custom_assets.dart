@@ -329,7 +329,8 @@ abstract final class CustomAssets {
   static const String townNameplate = '$_townRoot/nameplate.png';
   static const String townPennants = '$_townRoot/pennants.png';
   static const String townLanterns = '$_townRoot/lanterns.png';
-  static const String townWell = '$_townRoot/well.png';
+  /// Central campfire on the square (autumn dusk). Same rect the well used.
+  static const String townCampfire = '$_townRoot/campfire.png';
   static const String townVaultShut = '$_townRoot/vault_shut.png';
   static const String townVaultOpen = '$_townRoot/vault_open.png';
 
@@ -363,7 +364,7 @@ abstract final class CustomAssets {
     townNameplate,
     townPennants,
     townLanterns,
-    townWell,
+    townCampfire,
     townVaultShut,
     townVaultOpen,
     for (var t = 0; t < 3; t++) ...[

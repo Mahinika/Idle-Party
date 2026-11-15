@@ -21,57 +21,57 @@ LOGICAL_H = CELL_H // 2
 PLANT_W = 64
 PLANT_H = 52
 
-# Spring lawn. Dark to light. Upper-left is the light.
+# Autumn litter and dry grass. Dark to light. Upper-left is the light.
 GRASS = [
-    (22, 78, 34),
-    (34, 112, 40),
-    (46, 142, 46),
-    (62, 168, 54),
-    (86, 186, 64),
-    (118, 204, 78),
-    (158, 214, 96),
-    (198, 220, 118),
+    (30, 22, 30),
+    (46, 32, 36),
+    (70, 46, 38),
+    (98, 62, 40),
+    (130, 82, 44),
+    (164, 108, 52),
+    (198, 140, 66),
+    (226, 176, 96),
 ]
 CLOVER = [
-    (28, 96, 62),
-    (42, 128, 78),
-    (64, 158, 96),
-    (96, 184, 120),
+    (92, 30, 26),
+    (140, 44, 30),
+    (188, 72, 36),
+    (226, 112, 54),
 ]
 SUN = [
-    (176, 196, 64),
-    (198, 210, 78),
-    (220, 214, 96),
-    (236, 224, 120),
+    (150, 96, 24),
+    (196, 140, 40),
+    (232, 184, 72),
+    (248, 214, 120),
 ]
 DIRT = [
-    (96, 62, 36),
-    (128, 84, 48),
-    (162, 112, 64),
-    (196, 146, 90),
-    (224, 182, 124),
+    (56, 36, 32),
+    (80, 54, 42),
+    (108, 76, 54),
+    (138, 102, 72),
+    (168, 130, 96),
 ]
 STONE = [
-    (78, 68, 56),
-    (112, 98, 82),
-    (148, 132, 110),
-    (182, 166, 142),
-    (214, 200, 176),
-    (236, 226, 208),
+    (50, 42, 44),
+    (70, 60, 60),
+    (92, 80, 78),
+    (116, 102, 96),
+    (140, 124, 114),
+    (164, 148, 134),
 ]
 STONE_GREY = [
-    (72, 78, 82),
-    (104, 112, 116),
-    (140, 148, 152),
-    (176, 184, 186),
-    (210, 216, 214),
-    (232, 236, 232),
+    (44, 44, 52),
+    (62, 62, 72),
+    (84, 82, 92),
+    (108, 104, 112),
+    (132, 126, 132),
+    (156, 150, 152),
 ]
 MOSS = [
-    (24, 72, 44),
-    (36, 104, 58),
-    (52, 136, 72),
-    (78, 164, 90),
+    (52, 44, 26),
+    (78, 62, 30),
+    (108, 80, 34),
+    (140, 100, 40),
 ]
 
 
@@ -352,7 +352,7 @@ def _flower(pix: Pix, x: int, y: int, kind: int) -> None:
     pix.put_wrap(x, y + 3, GRASS[0])
 
 
-MORTAR = (58, 86, 48)
+MORTAR = (30, 24, 34)
 
 
 def _mortar(pix: Pix) -> None:
@@ -362,14 +362,19 @@ def _mortar(pix: Pix) -> None:
 
 
 def _bloom_bed(pix: Pix, x: int, y: int, kinds: tuple[tuple[int, int], ...]) -> None:
-    """A small grass bed, then a few blooms. One cluster, not a sprinkle."""
-    for dy in range(-7, 9):
+    """A drift of fallen leaves where the street meets the square."""
+    leaves = (CLOVER, SUN, GRASS[3:7])
+    for dy in range(-6, 8):
         for dx in range(-12, 13):
             if (dx * dx) / 130 + (dy * dy) / 42 > 1:
                 continue
-            pix.put(x + dx, y + dy, GRASS[4] if dy < 2 else GRASS[3])
-    for dx, kind in kinds:
-        _flower(pix, x + dx, y, kind)
+            h = _hash(x + dx, y + dy)
+            ramp = leaves[h % 3]
+            tone = 1 + (1 if dy < 1 else 0) + (1 if dx < -3 and dy < 0 else 0)
+            if h % 5 == 0:
+                tone -= 1
+            pix.put(x + dx, y + dy, ramp[clamp(tone, len(ramp))])
+    del kinds
 
 
 def path() -> Image.Image:
@@ -486,12 +491,12 @@ def _cobble(pix: Pix, x: int, y: int, w: int, h: int, kind: int) -> None:
     # DIRT is shorter; cobbles of kind 2 use the warm dirt ramp as sandstone.
     if kind % 3 == 2:
         ramp = (
-            (120, 86, 52),
-            (156, 116, 72),
-            (188, 148, 100),
-            (214, 178, 132),
-            (232, 204, 164),
-            (246, 226, 196),
+            (62, 44, 40),
+            (86, 62, 52),
+            (112, 82, 66),
+            (136, 104, 84),
+            (160, 126, 102),
+            (182, 150, 122),
         )
     for yy in range(h):
         inset = 1 if yy == 0 or yy == h - 1 else 0

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Idle Party town art. Owned daylight pixel town.
+"""Idle Party town art. Owned autumn-dusk pixel town (owner target B).
 
 The square is painted in the same material language as the heroes and the
 hub scene: cut stone, wood grain, tile courses, cloth folds, iron rivets.
@@ -26,58 +26,59 @@ ROOT = TOOL_DIR.parent
 if str(TOOL_DIR) not in sys.path:
     sys.path.insert(0, str(TOOL_DIR))
 import town_life_art as life_art  # noqa: E402
+import town_autumn_art as autumn  # noqa: E402
 
 INK = (32, 22, 18, 255)
 
 # Ramps run dark → light. Index picks a cluster, not a smooth blend.
 STONE = [
-    (58, 50, 44),
-    (86, 76, 66),
-    (118, 106, 92),
-    (154, 140, 122),
-    (188, 174, 154),
-    (220, 208, 188),
+    (40, 42, 52),
+    (58, 62, 74),
+    (80, 84, 96),
+    (104, 108, 120),
+    (132, 134, 144),
+    (162, 162, 168),
 ]
 TIMBER = [
-    (48, 28, 16),
-    (78, 46, 26),
-    (112, 68, 36),
-    (148, 96, 52),
-    (184, 128, 72),
-    (214, 164, 108),
+    (36, 22, 16),
+    (60, 36, 22),
+    (88, 54, 30),
+    (118, 76, 42),
+    (150, 104, 60),
+    (182, 138, 90),
 ]
 PLASTER = [
-    (132, 108, 84),
-    (168, 146, 116),
-    (198, 176, 146),
-    (222, 204, 176),
-    (238, 226, 204),
-    (248, 240, 226),
+    (112, 102, 90),
+    (138, 126, 110),
+    (162, 148, 126),
+    (184, 170, 146),
+    (204, 190, 164),
+    (222, 210, 184),
 ]
 TILE = [
-    (92, 36, 32),
-    (128, 48, 40),
-    (164, 64, 48),
-    (192, 88, 60),
-    (214, 118, 78),
-    (232, 156, 108),
+    (58, 24, 28),
+    (84, 34, 34),
+    (112, 46, 40),
+    (140, 60, 46),
+    (166, 82, 56),
+    (192, 110, 74),
 ]
 SLATE = [
-    (48, 56, 64),
-    (70, 80, 90),
-    (96, 108, 118),
-    (126, 138, 148),
-    (158, 170, 178),
-    (196, 206, 212),
+    (40, 24, 28),
+    (58, 32, 34),
+    (80, 42, 40),
+    (104, 56, 48),
+    (130, 74, 60),
+    (156, 96, 76),
 ]
 LEAF = [
-    (22, 52, 28),
-    (32, 78, 36),
-    (46, 104, 44),
-    (64, 132, 52),
-    (92, 158, 64),
-    (132, 184, 86),
-    (176, 206, 112),
+    (40, 40, 22),
+    (62, 58, 26),
+    (90, 74, 30),
+    (124, 90, 34),
+    (162, 104, 38),
+    (200, 128, 48),
+    (232, 164, 70),
 ]
 GRASS = [
     (36, 78, 40),
@@ -566,10 +567,10 @@ def flower_box(pix: Pix, x: int, y: int) -> None:
     pix.rect(x, y, 16, 1, TIMBER[4])
     pix.rect(x, y + 4, 16, 1, TIMBER[0])
     blooms = (
-        (2, (196, 72, 78)),
-        (6, (232, 186, 72)),
-        (9, (236, 236, 220)),
-        (12, (186, 96, 150)),
+        (2, (214, 110, 34)),
+        (6, (232, 176, 60)),
+        (9, (176, 48, 36)),
+        (12, (226, 124, 38)),
     )
     for bx, col in blooms:
         pix.put(x + bx, y - 1, col)
@@ -720,6 +721,8 @@ def generate_forge(tier: int) -> Image.Image:
     pix.put(77, 98, TIMBER[3])
     window(pix, 66, 88, 10, 12, curtains=False)
     flower_box(pix, 18, 126)
+    autumn.pumpkin(pix, 104, 140, 12, 9, lit=True)
+    autumn.pumpkin(pix, 4, 142, 10, 7)
     if tier >= 2:
         banner(pix, 34, 48, 26, ROSE, "anvil")
         pix.rect(20, 80, 80, 2, GOLD[3])
@@ -768,6 +771,8 @@ def generate_market(tier: int) -> Image.Image:
     pix.rect(24, 108, 8, 8, CREAM[2])
     pix.rect(25, 108, 6, 2, CREAM[4])
     pix.put(27, 107, TIMBER[1])
+    autumn.pumpkin(pix, 2, 124, 12, 9, lit=True)
+    autumn.pumpkin(pix, 106, 126, 11, 8)
     if tier >= 1:
         pix.rect(36, 64, 3, 12, GOLD[3])
         pix.put(37, 66, GOLD[5])
@@ -815,6 +820,8 @@ def generate_inn(tier: int) -> Image.Image:
     pix.rect(70, 116, 4, 5, IRON[2])
     pix.put(71, 117, AMBER[5])
     pix.put(72, 118, EMBER[5])
+    autumn.pumpkin(pix, 20, 140, 13, 10, lit=True)
+    autumn.pumpkin(pix, 98, 146, 10, 7)
     if tier >= 2:
         banner(pix, 48, 36, 24, ROSE, "mug")
         pix.rect(16, 66, 90, 2, GOLD[3])
@@ -838,6 +845,14 @@ def generate_guild(tier: int) -> Image.Image:
     # Merlons sit on the turret tops. A gap here reads as floating blocks.
     battlement(pix, 16, 62, 32)
     battlement(pix, 108, 70, 32)
+    # Central keep tower behind the hall roof, like the target's stone tower.
+    stone_wall(pix, 64, 14, 28, 80, seed=7)
+    pix.rect(64, 14, 28, 1, STONE[5])
+    for y in range(0, 16):
+        half = 2 + (y * 15) // 16
+        tile_span(pix, y, 78 - half, 78 + half, y, TILE)
+    pix.rect(77, 0, 2, 2, GOLD[4])
+    window(pix, 73, 22, 10, 11, curtains=False)
     if tier == 0:
         gable(pix, (78, 40), (40, 100), (116, 96), TILE)
     else:
@@ -864,6 +879,8 @@ def generate_guild(tier: int) -> Image.Image:
     for mx, my in ((20, 150), (22, 152), (24, 149), (19, 146)):
         pix.put(mx, my, LEAF[2])
         pix.put(mx + 1, my, LEAF[3])
+    autumn.pumpkin(pix, 32, 156, 14, 10, lit=True)
+    autumn.pumpkin(pix, 112, 158, 12, 8)
     if tier >= 2:
         banner(pix, 22, 78, 32, ROSE, "sword")
         banner(pix, 118, 86, 28, WOOL, "sword")
@@ -1007,25 +1024,25 @@ def trunk(pix: Pix, x: int, y: int, w: int, h: int) -> None:
 
 # Extra canopy colors. The shared LEAF ramp stays for building moss.
 CANOPY = [
-    (14, 42, 24),
-    (22, 64, 32),
-    (32, 92, 40),
-    (46, 122, 48),
-    (68, 152, 58),
-    (98, 176, 72),
-    (138, 198, 92),
-    (176, 214, 118),
-    (206, 220, 140),
-    (168, 196, 86),
-    (86, 140, 92),
-    (48, 100, 78),
+    (52, 18, 22),
+    (84, 26, 24),
+    (122, 38, 26),
+    (160, 56, 28),
+    (196, 82, 32),
+    (222, 114, 40),
+    (240, 150, 56),
+    (250, 186, 84),
+    (252, 214, 130),
+    (212, 132, 44),
+    (150, 60, 40),
+    (100, 34, 34),
 ]
 BLOSSOM = [
-    (120, 48, 72),
-    (176, 86, 112),
-    (214, 130, 150),
-    (240, 180, 186),
-    (255, 220, 214),
+    (150, 90, 20),
+    (206, 140, 40),
+    (240, 186, 70),
+    (252, 220, 120),
+    (255, 240, 180),
 ]
 APPLE = [(120, 24, 28), (168, 36, 36), (206, 64, 52), (236, 120, 96)]
 BIRD = [(36, 36, 48), (72, 78, 96), (186, 150, 64), (240, 210, 120)]
@@ -1073,8 +1090,8 @@ def generate_tree_round() -> Image.Image:
     pix = Pix(80, 100)
     trunk(pix, 34, 64, 10, 28)
     # Moss and a second bark tone so the trunk is not one brown bar.
-    pix.rect(36, 70, 2, 16, (86, 110, 64))
-    pix.put(38, 78, (140, 168, 96))
+    pix.rect(36, 70, 2, 16, (70, 46, 40))
+    pix.put(38, 78, (120, 84, 60))
     pix.put(35, 86, (160, 120, 72))
     pix.put(41, 74, TIMBER[5])
     specs = (
@@ -1111,8 +1128,8 @@ def generate_tree_round() -> Image.Image:
 def generate_tree_tall() -> Image.Image:
     pix = Pix(48, 112)
     trunk(pix, 20, 78, 8, 26)
-    pix.rect(22, 84, 2, 12, (78, 108, 62))
-    pix.put(23, 90, (150, 176, 110))
+    pix.rect(22, 84, 2, 12, (66, 44, 38))
+    pix.put(23, 90, (118, 82, 58))
     pix.put(21, 96, TIMBER[0])
     layers = (
         (24, 86, 16, 7, 2),
@@ -1220,7 +1237,7 @@ def generate_backdrop() -> Image.Image:
 
 
 def generate_sheet() -> Image.Image:
-    sheet = Image.new("RGBA", (680, 640), (186, 206, 196, 255))
+    sheet = Image.new("RGBA", (680, 640), (70, 40, 80, 255))
     kinds = (
         ("FORGE", generate_forge),
         ("MARKET", generate_market),
@@ -1231,8 +1248,8 @@ def generate_sheet() -> Image.Image:
         for tier in range(3):
             sprite = fn(tier)
             sheet.paste(sprite, (12 + col * 166, 16 + tier * 188), sprite)
-    sheet.paste(generate_vault(False), (12, 560), generate_vault(False))
-    sheet.paste(generate_well(), (110, 560), generate_well())
+    sheet.paste(autumn.vault_door(False), (12, 560), autumn.vault_door(False))
+    sheet.paste(autumn.campfire(), (110, 560), autumn.campfire())
     return sheet
 
 
@@ -1300,39 +1317,42 @@ def main() -> int:
     args = parser.parse_args()
     ASSETS_DIR.mkdir(parents=True, exist_ok=True)
 
+    autumn.add_emissive(AMBER[2:] + EMBER[3:])
+    grade = autumn.dusk_grade
     assets: list[tuple[str, Image.Image]] = [
-        ("backdrop.png", generate_backdrop()),
-        ("ground.png", generate_ground()),
-        ("path.png", generate_path()),
-        ("approach.png", life_art.approach()),
-        ("tree_round.png", generate_tree_round()),
-        ("tree_tall.png", generate_tree_tall()),
-        ("flowers.png", generate_flowers()),
-        ("shrub.png", life_art.shrub()),
-        ("wild.png", life_art.wild()),
-        ("herbs.png", life_art.herbs()),
-        ("worn.png", life_art.worn()),
-        ("meadow.png", life_art.meadow()),
-        ("thicket.png", life_art.thicket()),
-        ("scuff.png", life_art.scuff()),
-        ("contact.png", life_art.contact()),
+        ("backdrop.png", autumn.backdrop()),
+        ("ground.png", autumn.ground()),
+        ("path.png", grade(life_art.path())),
+        ("path_b.png", grade(life_art.path_alt())),
+        ("approach.png", grade(life_art.approach())),
+        ("tree_round.png", grade(generate_tree_round())),
+        ("tree_tall.png", grade(generate_tree_tall())),
+        ("flowers.png", grade(autumn.pumpkin_patch())),
+        ("shrub.png", grade(autumn.autumn_bush())),
+        ("wild.png", grade(autumn.corn_sheaf())),
+        ("herbs.png", grade(autumn.hay_and_basket())),
+        ("worn.png", grade(life_art.worn())),
+        ("meadow.png", grade(autumn.harvest_pile())),
+        ("thicket.png", grade(autumn.lamp_and_bramble())),
+        ("scuff.png", grade(autumn.leaf_scatter())),
+        ("contact.png", autumn.contact()),
         ("nameplate.png", life_art.nameplate()),
-        ("pennants.png", life_art.pennants()),
+        ("pennants.png", autumn.leaf_pennants()),
         ("lanterns.png", life_art.lanterns()),
-        ("folk.png", generate_folk()),
+        ("folk.png", grade(generate_folk(), 0.8)),
         ("alert.png", life_art.alert()),
-        ("well.png", generate_well()),
-        ("vault_shut.png", generate_vault(False)),
-        ("vault_open.png", generate_vault(True)),
+        ("campfire.png", autumn.campfire()),
+        ("vault_shut.png", grade(autumn.vault_door(False))),
+        ("vault_open.png", grade(autumn.vault_door(True))),
         ("buildings_sheet.png", generate_sheet()),
     ]
     for t in range(3):
         assets.extend(
             [
-                (f"forge_t{t}.png", generate_forge(t)),
-                (f"market_t{t}.png", generate_market(t)),
-                (f"inn_t{t}.png", generate_inn(t)),
-                (f"guild_t{t}.png", generate_guild(t)),
+                (f"forge_t{t}.png", grade(generate_forge(t))),
+                (f"market_t{t}.png", grade(generate_market(t))),
+                (f"inn_t{t}.png", grade(generate_inn(t))),
+                (f"guild_t{t}.png", grade(generate_guild(t))),
             ]
         )
 
@@ -1357,7 +1377,7 @@ def main() -> int:
     paste(preview, by_name["tree_tall.png"], (312, 188))
     paste(preview, by_name["guild_t1.png"], (8, 210))
     paste(preview, by_name["vault_shut.png"], (262, 250))
-    paste(preview, by_name["well.png"], (156, 292))
+    paste(preview, by_name["campfire.png"], (156, 292))
     paste(preview, by_name["forge_t1.png"], (4, 360))
     paste(preview, by_name["market_t1.png"], (120, 376))
     paste(preview, by_name["inn_t1.png"], (236, 356))

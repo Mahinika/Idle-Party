@@ -15,6 +15,7 @@ import '../../../core/town_access.dart';
 import '../../../models/dungeon_def.dart';
 import '../../../models/hero.dart';
 import '../../../models/town_building.dart';
+import 'town_ambience.dart';
 import 'town_life.dart';
 import 'town_scene.dart';
 import '../../chase_bind.dart';
@@ -312,7 +313,14 @@ class _TownSquare extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        const Positioned.fill(child: _TownBackdrop()),
+        // Skyline sits on the square's top edge on every screen height.
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          height: layout.grassTop + 2,
+          child: const ClipRect(child: _TownBackdrop()),
+        ),
         Positioned(
           left: 0,
           right: 0,
@@ -357,7 +365,7 @@ class _TownSquare extends StatelessWidget {
             ),
         _building(layout.guild, guild, guild.assetPath(tier)),
         _building(layout.vault, vault, vaultPath),
-        _sprite(layout.well, CustomAssets.townWell),
+        _sprite(layout.well, CustomAssets.townCampfire),
         Positioned.fill(
           child: TownFolkLayer(
             motion: motion && layout.folkScale > 0,
@@ -409,6 +417,14 @@ class _TownSquare extends StatelessWidget {
             height: 22,
             child: IgnorePointer(child: _TownPennants()),
           ),
+        // Leaves, campfire glow, and mist. Under the name chips.
+        Positioned.fill(
+          child: TownAmbienceLayer(
+            motion: motion,
+            fire: layout.well,
+            mistTop: layout.lane.top,
+          ),
+        ),
         for (final (label, rect) in labels) _nameChip(label, rect),
       ],
     );
@@ -575,7 +591,7 @@ class _TownBackdrop extends StatelessWidget {
     return Image.asset(
       CustomAssets.townBackdrop,
       fit: BoxFit.fitWidth,
-      alignment: Alignment.topCenter,
+      alignment: Alignment.bottomCenter,
       filterQuality: FilterQuality.none,
       excludeFromSemantics: true,
     );
