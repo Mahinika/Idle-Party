@@ -126,7 +126,7 @@ double homePlaceLineClearance(BuildContext context) {
   final scaler = MediaQuery.textScalerOf(context);
   double lineOf(TextStyle style) {
     final tp = TextPainter(
-      text: TextSpan(text: 'F1 · 9 next', style: style),
+      text: TextSpan(text: 'Floor 1 · 9 ahead', style: style),
       textDirection: TextDirection.ltr,
       textScaler: scaler,
       maxLines: 1,
@@ -484,7 +484,9 @@ class DungeonTopHud extends StatelessWidget {
               ? 'WIPED · End → hub'
               : 'WIPED · Retry / Hub')
         : awaitingExit
-        ? '$zoneShort · F$floor · GO stairs'
+        ? (placeLineOnly
+              ? 'Floor $floor · GO stairs'
+              : '$zoneShort · F$floor · GO stairs')
         : state.inGauntlet
         ? () {
             String? bossName;
@@ -509,7 +511,7 @@ class DungeonTopHud extends StatelessWidget {
         : state.inWorldBoss
         ? AshenCrown.kitByDungeonId(state.dungeonId).roomLine
         : placeLineOnly
-        ? 'F$floor$keyBit$fightBit'
+        ? 'Floor $floor$keyBit${_homeFightBit(bossBit, world)}'
         : '$zoneShort · F$floor$keyBit$fightBit';
     if (placeLineOnly) {
       final holdLine = awaitingExit &&
@@ -1156,6 +1158,19 @@ class _DismissDialogOnLeaveState extends State<DismissDialogOnLeave> {
 }
 
 /// First climb only: say the boss is this floor or the next one.
+/// Home floor line tail in plain words: the boss, or how many foes still
+/// wait further in. Pack job words stay on the classic HUD.
+String _homeFightBit(String bossBit, SpatialWorld? world) {
+  if (bossBit == ' · BOSS') return ' · Boss here';
+  if (bossBit == ' · BOSS NEXT') return ' · Boss next floor';
+  if (world == null || world.awaitingExit) return '';
+  var ahead = 0;
+  for (final e in world.enemies) {
+    if (e.dormant && e.isAlive) ahead++;
+  }
+  return ahead > 0 ? ' · $ahead ahead' : '';
+}
+
 String _firstBossBit(GameState state, int floor) {
   if (!GameLogic.firstBossPending(state)) return '';
   if (state.inGauntlet || state.inAnyRiftMode || state.inWorldBoss) return '';

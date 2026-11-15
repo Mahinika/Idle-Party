@@ -98,6 +98,7 @@ abstract final class ChangelogCatalog {
       changed: <String>[
         'Calmer fights: damage and heal numbers, DODGE, PARRY, BLOCK, and big moments stay. Ability names, hero chatter, and gold/XP pops are gone.',
         'A shorter top bar and no hint line under FARM/PUSH give the fight more room. A ready daily vault is a CLAIM chip next to gold. The buttons next to LEAVE say EXTRAS and HIDE or MENU.',
+        'Once a room is underway, FORGE, CAMP, and MARKET and the coach line step aside for the fight; they come back between rooms. The fist says SMASH, and the floor line reads like "Floor 1 · 8 ahead".',
         'Bottom bar is HEROES, ESSENCE, FIGHT, MAP, and SHOP. MENU is at the top.',
         'MENU is the list only. SHOP says SCROLLS sit on the fight rail, and gold sits under the fight.',
         'FORGE, CAMP, and MARKET sit under the fight. A new game starts in Sandy Caverns.',

@@ -395,6 +395,55 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
               height: lineHeight,
               child: Row(
                 children: [
+                  Expanded(
+                    child: LayoutBuilder(
+                builder: (context, box) {
+                  // The lead (selected) hero keeps the whole name. The
+                  // others share what is left and may shorten.
+                  final lead = widget.selectedHeroIndex >= 0 &&
+                          widget.selectedHeroIndex < heroCount
+                      ? widget.selectedHeroIndex
+                      : 0;
+                  double? leadWidth;
+                  if (heroCount > 1) {
+                    // Others keep room for a first letter, level, and role
+                    // so their rows never overflow.
+                    var others = 0.0;
+                    for (var i = 0; i < heroCount; i++) {
+                      if (i == lead) continue;
+                      others += _HomePartyChip.naturalWidth(
+                            context,
+                            party[i],
+                            selected: widget.selectedHeroIndex == i,
+                            dense: denseParty,
+                            shortName: true,
+                          ) +
+                          3;
+                    }
+                    final fair = (box.maxWidth - 3 * (heroCount - 1)) /
+                        heroCount;
+                    final want = _HomePartyChip.naturalWidth(
+                      context,
+                      party[lead],
+                      selected: widget.selectedHeroIndex == lead,
+                      dense: denseParty,
+                    );
+                    leadWidth = math.max(
+                      fair,
+                      math.min(want, box.maxWidth - others),
+                    );
+                  }
+                  Widget chip(int i) => _homeHeroTap(
+                        i: i,
+                        party: party,
+                        plainEnglish: plainEnglish,
+                        world: world,
+                        state: state,
+                        rowHeight: lineHeight,
+                        dense: denseParty,
+                      );
+                  return Row(
+                children: [
                   for (var i = 0; i < heroCount; i++) ...[
                     if (i > 0)
                       Container(
@@ -403,18 +452,16 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                         margin: const EdgeInsets.symmetric(horizontal: 1),
                         color: GameTheme.border.withValues(alpha: 0.35),
                       ),
-                    Expanded(
-                      child: _homeHeroTap(
-                        i: i,
-                        party: party,
-                        plainEnglish: plainEnglish,
-                        world: world,
-                        state: state,
-                        rowHeight: lineHeight,
-                        dense: denseParty,
-                      ),
-                    ),
+                    if (i == lead && leadWidth != null)
+                      SizedBox(width: leadWidth, child: chip(i))
+                    else
+                      Expanded(child: chip(i)),
                   ],
+                ],
+                  );
+                },
+                    ),
+                  ),
                   if (showFlask)
                     DungeonFlaskButton(
                       director: widget.director,
@@ -1082,6 +1129,45 @@ class _HomePartyChip extends StatelessWidget {
   final SpatialActor? spatial;
   final bool dense;
   final bool demonForm;
+
+  /// Width that shows the whole name, level, and role without cutting.
+  /// [shortName]: the smallest width that still shows a first letter.
+  static double naturalWidth(
+    BuildContext context,
+    PartyHero hero, {
+    required bool selected,
+    required bool dense,
+    bool shortName = false,
+  }) {
+    final scaler = MediaQuery.textScalerOf(context);
+    double w(String text, TextStyle style, TextScaler s) {
+      final tp = TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: TextDirection.ltr,
+        textScaler: s,
+        maxLines: 1,
+      )..layout();
+      final out = tp.width;
+      tp.dispose();
+      return out;
+    }
+
+    final role = hero.spec.roleTag.plainLabel;
+    final named = hero.name.trim().isNotEmpty;
+    var who = named ? hero.name.trim() : role;
+    if (shortName && who.isNotEmpty) who = '${who.substring(0, 1)}\u2026';
+    final nameRow = w(who, GameTheme.combat(), scaler) +
+        (selected ? 2 + 8 : 0) +
+        w(' L${hero.level}', GameTheme.readable(), scaler);
+    // A short HP bar is enough on a shortened chip.
+    final bar = shortName ? 6.0 : 12.0;
+    final roleRow = named
+        ? w(role, GameTheme.combat(), TextScaler.noScaling) + 3 + bar
+        : bar;
+    final doll = dense ? 18.0 : 20.0;
+    // 1 + 1 padding, 1 + 1 border, doll, 2 gap, then rounding slack.
+    return 4 + doll + 2 + math.max(nameRow, roleRow) + (shortName ? 2 : 4);
+  }
 
   @override
   Widget build(BuildContext context) {
