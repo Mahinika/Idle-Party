@@ -71,7 +71,7 @@ void main() {
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
     expect(find.textContaining('+'), findsWidgets);
     expect(find.bySemanticsLabel(RegExp(r'Sandy Caverns')), findsWidgets);
-    expect(find.text('Sandy Caverns'), findsOneWidget);
+    expect(find.textContaining('Sandy Caverns'), findsWidgets);
     expect(find.text('GEAR'), findsOneWidget);
     expect(find.text('GOLD'), findsNothing);
     expect(find.text('SHOP'), findsNothing);

@@ -119,6 +119,32 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('town square hides the VAULT rail chip; a run keeps it',
+      (tester) async {
+    final townDirector = GameDirector.preview(initialState: vaultReady());
+    final townRouter = MenuRouter();
+    addTearDown(townDirector.dispose);
+    addTearDown(townRouter.dispose);
+    await pumpShell(tester, townDirector, townRouter);
+    expect(find.text('VAULT'), findsOneWidget);
+    expect(
+      FightSeamRails.visibleEntries(townDirector.state, townDirector)
+          .map((e) => e.id),
+      isNot(contains('vault')),
+    );
+
+    final runDirector = GameDirector.preview(
+      initialState: vaultReady().copyWith(inDungeon: true),
+    );
+    addTearDown(runDirector.dispose);
+    expect(
+      FightSeamRails.visibleEntries(runDirector.state, runDirector)
+          .map((e) => e.id),
+      contains('vault'),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('first-game buildings stay locked and can reopen', (tester) async {
     final director = GameDirector.preview(initialState: quietTown());
     final router = MenuRouter();

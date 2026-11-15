@@ -2,8 +2,10 @@
 ///
 /// [HomeCatalog.entries] still *defines* WATCH, WISP, and menu mirrors of
 /// rail shortcuts (tests lock the catalog). [HomeCatalog.of] drops duplicates
-/// so each feature has one home: rails keep SCROLLS / QUESTS / VAULT / DAILY;
-/// MENU keeps PATCH NOTES, SETTINGS, INFO, GUIDES, CRAFT, REDEEM, FLOORS.
+/// so each feature has one home: rails keep SCROLLS / QUESTS / DAILY;
+/// the labeled town building is the VAULT home on the square (the rail
+/// chip is only visible in a run). MENU keeps PATCH NOTES, SETTINGS,
+/// INFO, GUIDES, CRAFT, REDEEM, FLOORS.
 abstract final class TownNavPolicy {
   /// Duplicate shortcuts that open the SCROLLS / powerups sheet.
   static const Set<String> duplicatePowerupIds = {

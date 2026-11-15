@@ -75,6 +75,26 @@ void main() {
     });
   });
 
+  group('ENTER card copy', () {
+    test('names the cave once below the pennant tier', () {
+      final timber = townEnterCardCopy(ascensionLevel: 0, cave: 'Sandy Caverns');
+      expect(timber.hint, isNull);
+      expect(timber.title, 'Timber town · Sandy Caverns');
+      final stone = townEnterCardCopy(ascensionLevel: 1, cave: 'Sandy Caverns');
+      expect(stone.hint, isNull);
+      expect(stone.title, 'Stone town · Sandy Caverns');
+      final banners = townEnterCardCopy(ascensionLevel: 5, cave: 'Sandy Caverns');
+      expect(banners.hint, isNull);
+      expect(banners.title, 'Stone town · Sandy Caverns');
+    });
+
+    test('keeps the banner hint and cave title at the pennant tier', () {
+      final copy = townEnterCardCopy(ascensionLevel: 10, cave: 'Sandy Caverns');
+      expect(copy.hint, TownTier.progressLine(10));
+      expect(copy.title, 'Sandy Caverns');
+    });
+  });
+
   group('TownAccess', () {
     test('new game locks craft, market, roster, quests, vault claim', () {
       final s = newTown();

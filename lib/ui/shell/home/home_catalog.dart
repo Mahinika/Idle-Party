@@ -110,8 +110,12 @@ abstract final class HomeCatalog {
       order: 20,
       icon: UiIcon.chest,
       label: 'VAULT',
+      // Town square already has a labeled VAULT building. Keep this
+      // rail chip for in-run only, when the building is off-screen.
       visible: (s, _) =>
-          GameLogic.showDailyVault(s) && !s.metaDepth.dailyVaultClaimed,
+          s.inDungeon &&
+          GameLogic.showDailyVault(s) &&
+          !s.metaDepth.dailyVaultClaimed,
       badge: (s) =>
           s.metaDepth.dailyVaultClears >= GameLogic.dailyVaultClearTarget,
       open: _openVault,
