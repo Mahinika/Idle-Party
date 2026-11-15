@@ -17,6 +17,7 @@ import '../menu_surface.dart';
 import 'director_select.dart';
 import 'fight_seam.dart';
 import 'fight_viewport.dart';
+import 'home_claim_row.dart';
 import 'home_gold_dock.dart';
 import 'home_nav_bar.dart';
 import 'home_prompts.dart';
@@ -172,6 +173,11 @@ class _HomeShellState extends State<HomeShell> {
     // Keep this row mounted while the first climb is on screen. Removing it
     // in the same build that opens HEROES marks the top bar dirty.
     if (sheet && climb == null) return const SizedBox.shrink();
+    // Ready vault in the cave: one row, title and shelf, then CLAIM. The top
+    // bar drops its chase line for this, and ReturnWeek's "Claim CAMP" is
+    // the same news, so it does not get a row of its own.
+    final vault = HomeClaimRow.vaultLine(state, sheet: sheet);
+    if (vault != null) return _claimLine(vault);
     final back = climb == null && ReturnWeek.active(state)
         ? ReturnWeek.coachLine(state)
         : null;
@@ -204,6 +210,28 @@ class _HomeShellState extends State<HomeShell> {
             if (shown != null) const SizedBox(width: 6),
             _claimChip(),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _claimLine(String text) {
+    return Padding(
+      key: const ValueKey('home-vault-claim-row'),
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              text,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.hint(color: GameTheme.torchHot),
+            ),
+          ),
+          const SizedBox(width: 6),
+          _claimChip(),
         ],
       ),
     );

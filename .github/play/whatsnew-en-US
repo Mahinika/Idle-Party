@@ -1,2 +1,3 @@
 Fixed a display crash in dungeons; combat banners no longer overlap.
 Calmer fights: damage and heal numbers stay, ability names and chatter are gone.
+Daily vault fits on one row; the panel button next to LEAVE now says HIDE or MENU.
