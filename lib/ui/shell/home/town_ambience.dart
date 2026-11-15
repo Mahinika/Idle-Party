@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../game_theme.dart';
+
 /// Autumn dusk life over the town square: falling leaves, a campfire glow
 /// that breathes, and low mist. One painter, a dozen rects and three
 /// gradients a frame. The ticker stops when motion is off, the route is
@@ -16,11 +18,11 @@ abstract final class TownAmbience {
   static const leafCount = 14;
 
   static const leafColors = <Color>[
-    Color(0xFFC43A24),
-    Color(0xFFEC8E30),
-    Color(0xFFF0C450),
-    Color(0xFF92221E),
-    Color(0xFFDE6A2C),
+    GameTheme.townLeafRed,
+    GameTheme.townLeafOrange,
+    GameTheme.townLeafGold,
+    GameTheme.townLeafMaroon,
+    GameTheme.townLeafRust,
   ];
 }
 
@@ -168,8 +170,8 @@ class _AmbiencePainter extends CustomPainter {
       canvas.drawOval(
         rect,
         Paint()
-          ..shader = const RadialGradient(
-            colors: [Color(0x40CFC0E6), Color(0x00CFC0E6)],
+          ..shader = RadialGradient(
+            colors: [GameTheme.townMist, GameTheme.townMist.withAlpha(0)],
           ).createShader(rect),
       );
     }
@@ -181,21 +183,24 @@ class _AmbiencePainter extends CustomPainter {
         0.5 +
         0.3 * math.sin(t * math.pi * 2 * 9) +
         0.2 * math.sin(t * math.pi * 2 * 23);
-    final r = fire.width * (1.5 + 0.12 * breath);
+    final r = fire.width * (2.6 + 0.15 * breath);
     final center = Offset(fire.center.dx, fire.top + fire.height * 0.62);
     final rect = Rect.fromCircle(center: center, radius: r);
-    final a = (0x30 + (0x18 * breath)).round().clamp(0, 255);
+    final a = (0x2C + (0x14 * breath)).round().clamp(0, 255);
     canvas.drawCircle(
       center,
       r,
       Paint()
         ..blendMode = BlendMode.screen
         ..shader = RadialGradient(
-          colors: [Color.fromARGB(a, 255, 150, 60), const Color(0x00FF9630)],
+          colors: [
+            GameTheme.townFireGlow.withAlpha(a),
+            GameTheme.townFireGlow.withAlpha(0),
+          ],
         ).createShader(rect),
     );
     // Two sparks climb out of the flame.
-    final spark = Paint()..color = const Color(0xFFFFD27A);
+    final spark = Paint()..color = GameTheme.townSpark;
     for (var k = 0; k < 2; k++) {
       final u = (t * (11 + k * 4) + k * 0.5) % 1.0;
       final sx = center.dx + math.sin((u + k) * math.pi * 3) * 6 + (k * 8 - 4);
@@ -211,7 +216,7 @@ class _AmbiencePainter extends CustomPainter {
 
   void _leaves(Canvas canvas, Size size, double t) {
     final paint = Paint();
-    final shade = Paint()..color = const Color(0x66200E18);
+    final shade = Paint()..color = GameTheme.townLeafShade;
     for (var i = 0; i < TownAmbience.leafCount; i++) {
       final leaf = townLeafAt(i, t, size);
       final w = leaf.wide ? 4.0 : 2.0;

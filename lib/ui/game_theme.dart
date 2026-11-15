@@ -18,6 +18,17 @@ abstract final class GameTheme {
   static const Color panel = Color(0xFF182028);
   static const Color panelInset = Color(0xFF0F141C);
 
+  // Town autumn dusk ambience (TownAmbienceLayer).
+  static const Color townLeafRed = Color(0xFFC43A24);
+  static const Color townLeafOrange = Color(0xFFEC8E30);
+  static const Color townLeafGold = Color(0xFFF0C450);
+  static const Color townLeafMaroon = Color(0xFF92221E);
+  static const Color townLeafRust = Color(0xFFDE6A2C);
+  static const Color townLeafShade = Color(0x66200E18);
+  static const Color townMist = Color(0x40CFC0E6);
+  static const Color townFireGlow = Color(0xFFFF9630);
+  static const Color townSpark = Color(0xFFFFD27A);
+
   /// Loot border colors (bag slots, gear rows).
   static const Color rarityCommon = Color(0xFF5A5040);
   static const Color rarityUncommon = Color(0xFF70C050);
