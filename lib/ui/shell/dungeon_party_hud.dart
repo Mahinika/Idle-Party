@@ -393,7 +393,10 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
             padding: const EdgeInsets.fromLTRB(4, 2, 4, 3),
             child: SizedBox(
               height: lineHeight,
-              child: LayoutBuilder(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: LayoutBuilder(
                 builder: (context, box) {
                   // The lead (selected) hero keeps the whole name. The
                   // others share what is left and may shorten.
@@ -401,17 +404,35 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                           widget.selectedHeroIndex < heroCount
                       ? widget.selectedHeroIndex
                       : 0;
-                  final leadWidth = heroCount <= 1
-                      ? null
-                      : math.min(
-                          _HomePartyChip.naturalWidth(
+                  double? leadWidth;
+                  if (heroCount > 1) {
+                    // Others keep room for a first letter, level, and role
+                    // so their rows never overflow.
+                    var others = 0.0;
+                    for (var i = 0; i < heroCount; i++) {
+                      if (i == lead) continue;
+                      others += _HomePartyChip.naturalWidth(
                             context,
-                            party[lead],
-                            selected: widget.selectedHeroIndex == lead,
+                            party[i],
+                            selected: widget.selectedHeroIndex == i,
                             dense: denseParty,
-                          ),
-                          box.maxWidth * 0.5,
-                        );
+                            shortName: true,
+                          ) +
+                          3;
+                    }
+                    final fair = (box.maxWidth - 3 * (heroCount - 1)) /
+                        heroCount;
+                    final want = _HomePartyChip.naturalWidth(
+                      context,
+                      party[lead],
+                      selected: widget.selectedHeroIndex == lead,
+                      dense: denseParty,
+                    );
+                    leadWidth = math.max(
+                      fair,
+                      math.min(want, box.maxWidth - others),
+                    );
+                  }
                   Widget chip(int i) => _homeHeroTap(
                         i: i,
                         party: party,
@@ -436,6 +457,11 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                     else
                       Expanded(child: chip(i)),
                   ],
+                ],
+                  );
+                },
+                    ),
+                  ),
                   if (showFlask)
                     DungeonFlaskButton(
                       director: widget.director,
@@ -443,8 +469,6 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                       compact: true,
                     ),
                 ],
-                  );
-                },
               ),
             ),
           ),
@@ -1107,11 +1131,13 @@ class _HomePartyChip extends StatelessWidget {
   final bool demonForm;
 
   /// Width that shows the whole name, level, and role without cutting.
+  /// [shortName]: the smallest width that still shows a first letter.
   static double naturalWidth(
     BuildContext context,
     PartyHero hero, {
     required bool selected,
     required bool dense,
+    bool shortName = false,
   }) {
     final scaler = MediaQuery.textScalerOf(context);
     double w(String text, TextStyle style, TextScaler s) {
@@ -1128,16 +1154,19 @@ class _HomePartyChip extends StatelessWidget {
 
     final role = hero.spec.roleTag.plainLabel;
     final named = hero.name.trim().isNotEmpty;
-    final who = named ? hero.name.trim() : role;
+    var who = named ? hero.name.trim() : role;
+    if (shortName && who.isNotEmpty) who = '${who.substring(0, 1)}\u2026';
     final nameRow = w(who, GameTheme.combat(), scaler) +
         (selected ? 2 + 8 : 0) +
         w(' L${hero.level}', GameTheme.readable(), scaler);
+    // A short HP bar is enough on a shortened chip.
+    final bar = shortName ? 6.0 : 12.0;
     final roleRow = named
-        ? w(role, GameTheme.combat(), TextScaler.noScaling) + 3 + 12
-        : 12.0;
+        ? w(role, GameTheme.combat(), TextScaler.noScaling) + 3 + bar
+        : bar;
     final doll = dense ? 18.0 : 20.0;
-    // 1 + 1 padding, 1 + 1 border, doll, 2 gap, 1 rounding slack.
-    return 4 + doll + 2 + math.max(nameRow, roleRow) + 1;
+    // 1 + 1 padding, 1 + 1 border, doll, 2 gap, then rounding slack.
+    return 4 + doll + 2 + math.max(nameRow, roleRow) + (shortName ? 2 : 4);
   }
 
   @override

@@ -30,6 +30,10 @@ class FightSeam extends StatelessWidget {
   /// FULL height: drop the horizontal chip rail — MENU / nav still reach extras.
   final bool hideRails;
 
+  /// Above this text scale the fist drops its SMASH word so FARM / PUSH
+  /// keep their full labels.
+  static const double fistWordMaxScale = 1.2;
+
   @override
   Widget build(BuildContext context) {
     final state = director.state;
@@ -43,6 +47,8 @@ class FightSeam extends StatelessWidget {
     final osScale =
         WidgetsBinding.instance.platformDispatcher.textScaleFactor;
     final seamFitsExtras = osScale <= GameTheme.typeScaleMax;
+    final fistWordFits =
+        MediaQuery.textScalerOf(context).scale(1) <= fistWordMaxScale;
     return Material(
       color: GameTheme.panel,
       child: Column(
@@ -88,7 +94,11 @@ class FightSeam extends StatelessWidget {
                           maxCooldown: state.godHandCooldownSeconds,
                           dense: true,
                           // A word on the idle fist so it reads as a button.
-                          caption: plain ? 'Smash' : 'SMASH',
+                          // Big type has no room for it next to FARM/PUSH;
+                          // the label and tooltip still name it.
+                          caption: fistWordFits
+                              ? (plain ? 'Smash' : 'SMASH')
+                              : null,
                           readyLabel: plain
                               ? 'Long-press the fight, or tap the fist'
                               : null,
