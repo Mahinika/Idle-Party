@@ -55,15 +55,22 @@ class FightSeam extends StatelessWidget {
                 children: [
                   Expanded(
                     flex: 3,
-                    child: MenuChrome.segmented(
-                      dense: true,
-                      labels: [farmLabel, pushLabel],
-                      selectedIndex:
-                          state.dungeonMode == DungeonMode.farm ? 0 : 1,
-                      onSelect: (i) => _setMode(
-                        context,
-                        i == 0 ? DungeonMode.farm : DungeonMode.push,
-                        plain,
+                    // The "FARM loops. PUSH climbs." line under the seam
+                    // is gone (the fight gets the row). Screen readers
+                    // still hear it as the toggle's hint; GUIDES explains.
+                    child: Semantics(
+                      container: true,
+                      hint: modeHint,
+                      child: MenuChrome.segmented(
+                        dense: true,
+                        labels: [farmLabel, pushLabel],
+                        selectedIndex:
+                            state.dungeonMode == DungeonMode.farm ? 0 : 1,
+                        onSelect: (i) => _setMode(
+                          context,
+                          i == 0 ? DungeonMode.farm : DungeonMode.push,
+                          plain,
+                        ),
                       ),
                     ),
                   ),
@@ -158,16 +165,6 @@ class FightSeam extends StatelessWidget {
                 ],
               ),
           ),
-          if (seamFitsExtras)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-              child: Text(
-                modeHint,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
-              ),
-            ),
           ShellLayout.divider(),
           PartyCornerHud(
               director: director,
