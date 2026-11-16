@@ -56,7 +56,7 @@ abstract final class UiIcon {
   static const List<String> goldDockSegment = [forge, camp, market];
 }
 
-enum UiGlyph { add, remove, close, prev, next, scroll, wisp }
+enum UiGlyph { add, remove, close, prev, next, scroll, wisp, lock }
 
 /// Pixel mark: a [UiIcon] sprite or a [UiGlyph] painted in-theme.
 class GameIcon extends StatelessWidget {
@@ -105,6 +105,7 @@ class GameIcon extends StatelessWidget {
         UiGlyph.next => _kNext,
         UiGlyph.scroll => _kScroll,
         UiGlyph.wisp => _kWisp,
+        UiGlyph.lock => _kLock,
       };
 }
 
@@ -201,6 +202,19 @@ class _GlyphPainter extends CustomPainter {
 }
 
 // `#` = lit pixel. Keep marks chunky so they sit next to custom PNG icons.
+/// Padlock for a tab that is not open yet.
+const _kLock = <String>[
+  '...###...',
+  '..#...#..',
+  '..#...#..',
+  '..#...#..',
+  '#########',
+  '#########',
+  '####.####',
+  '####.####',
+  '#########',
+];
+
 const _kAdd = <String>[
   '....#....',
   '....#....',

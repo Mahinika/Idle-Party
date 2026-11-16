@@ -5,6 +5,7 @@ import '../../../core/game_state.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
 import '../../menu_chrome.dart';
+import '../../chunky_face.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../web_click_bridge.dart';
@@ -34,42 +35,129 @@ class HomeNavBar extends StatelessWidget {
     // Keep the labels above the gesture inset without stacking a full extra
     // bar on a short phone. A tall bar already has room for the inset.
     final labelH = grown - inset > 40 ? grown - inset : 40.0;
+    final fightD = HomeNavBar.fightDiameter(scale);
     return Material(
       color: GameTheme.stoneDeep,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-        height: labelH,
-        child: Row(
-          children: [
-            Expanded(child: _tab(MenuRoute.gear, 'HEROES', UiIcon.gear)),
-            Expanded(
-              child: essence
-                  ? _tab(MenuRoute.essence, 'ESSENCE', UiIcon.essence)
-                  : const SizedBox.shrink(),
+            height: labelH,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        top: BorderSide(color: GameTheme.buyGreyEdge, width: 2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _tab(MenuRoute.gear, 'HEROES', UiIcon.gear),
+                        ),
+                        Expanded(
+                          child: essence
+                              ? _tab(
+                                  MenuRoute.essence,
+                                  'ESSENCE',
+                                  UiIcon.essence,
+                                )
+                              : _locked('ESSENCE', _essenceHint()),
+                        ),
+                        // The round FIGHT sits over this slot.
+                        const Expanded(child: SizedBox.shrink()),
+                        Expanded(
+                          child: map
+                              ? _tab(
+                                  MenuRoute.map,
+                                  'MAP',
+                                  UiIcon.map,
+                                  timer: _mapTimer(),
+                                )
+                              : _locked('MAP', _bossHint),
+                        ),
+                        Expanded(
+                          child: shop
+                              ? _tab(MenuRoute.shop, 'SHOP', UiIcon.shop)
+                              : _locked('SHOP', _bossHint),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  // Rise over the bar. The rim may dip into the gesture
+                  // inset a little; the FIGHT label stays above it.
+                  top: labelH + 10 - fightD < -HomeNavBar.fightLift
+                      ? labelH + 10 - fightD
+                      : -HomeNavBar.fightLift,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: SizedBox(
+                      width: fightD,
+                      height: fightD,
+                      child: _fight(),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            Expanded(child: _fight()),
-            Expanded(
-              child: map
-                  ? _tab(
-                      MenuRoute.map,
-                      'MAP',
-                      UiIcon.map,
-                      timer: _mapTimer(),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            Expanded(
-              child: shop
-                  ? _tab(MenuRoute.shop, 'SHOP', UiIcon.shop)
-                  : const SizedBox.shrink(),
-            ),
-          ],
-        ),
           ),
           SizedBox(height: inset),
         ],
+      ),
+    );
+  }
+
+  /// FIGHT rises this far above the bar.
+  static const double fightLift = 14;
+
+  /// About 68 dp; grows only past the in-app text ceiling (raw OS scale).
+  static double fightDiameter(double textScale) {
+    const base = 68.0;
+    if (textScale <= GameTheme.typeScaleMax) return base;
+    return base * textScale / GameTheme.typeScaleMax;
+  }
+
+  static const String _bossHint = 'Boss F2';
+
+  String _essenceHint() =>
+      MenuTabs.showGold(state) ? '1st essence' : _bossHint;
+
+  /// A padlock and what opens it, so the slot is never blank.
+  Widget _locked(String label, String hint) {
+    return Semantics(
+      label: '$label locked · $hint',
+      excludeSemantics: true,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+        child: Opacity(
+          opacity: 0.75,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const GameIcon.glyph(
+                UiGlyph.lock,
+                size: 18,
+                color: GameTheme.buyGreyText,
+              ),
+              const SizedBox(height: 3),
+              Flexible(
+                child: Text(
+                  hint,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.hint(color: GameTheme.buyGreyText),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -83,26 +171,53 @@ class HomeNavBar extends StatelessWidget {
 
   Widget _fight() {
     final open = router.route != MenuRoute.none;
-    return _button(
+    final tone = open ? ChunkyTone.stone : ChunkyTone.gold;
+    final (top, bottom, shine, edge) = ChunkyFace.colorsFor(tone);
+    final ink = open ? GameTheme.parchment : ChunkyFace.textOn(tone);
+    return WebClickScope(
       label: 'FIGHT',
-      semantics: 'FIGHT',
-      selected: !open,
-      onTap: router.close,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          GameIcon.asset(UiIcon.sword, size: 24),
-          const SizedBox(height: 2),
-          Flexible(
-            child: Text(
-              'FIGHT',
-              maxLines: 2,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.readable(color: open ? GameTheme.parchment : GameTheme.torchHot),
+      onPressed: router.close,
+      child: Semantics(
+        button: true,
+        selected: !open,
+        label: 'FIGHT',
+        child: Material(
+          type: MaterialType.transparency,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: router.close,
+            customBorder: const CircleBorder(),
+            child: Ink(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [shine, top, bottom],
+                  stops: const [0, 0.18, 1],
+                ),
+                border: Border.all(
+                  color: open ? edge : GameTheme.torchHot,
+                  width: 3,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GameIcon.asset(UiIcon.sword, size: 24),
+                  Text(
+                    'FIGHT',
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.readable(color: ink),
+                  ),
+                ],
+              ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -211,17 +326,18 @@ class HomeNavBar extends StatelessWidget {
             constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
             child: AnimatedContainer(
             duration: const Duration(milliseconds: 120),
+            // The frame paints over the slot so the label keeps its width.
             decoration: BoxDecoration(
               color: selected
-                  ? GameTheme.torch.withValues(alpha: 0.12)
+                  ? GameTheme.torch.withValues(alpha: 0.16)
                   : Colors.transparent,
-              border: Border(
-                top: BorderSide(
-                  color: selected
-                      ? GameTheme.torchHot
-                      : Colors.transparent,
-                  width: 2,
-                ),
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            ),
+            foregroundDecoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              border: Border.all(
+                color: selected ? GameTheme.torchHot : Colors.transparent,
+                width: 2,
               ),
             ),
             child: Center(
