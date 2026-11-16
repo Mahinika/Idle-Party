@@ -94,18 +94,20 @@ GameDirector homeShellFullGoldenDirector() {
 }
 
 Future<GameDirector> homeShellFullFightGoldenDirector() async {
-  final director = GameDirector.preview(
-    initialState: _freezeFightClock(
-      GameLogic.enterDungeon(
-        _quietHubState().copyWith(
-          homeLayout: HomeLayout.home,
-          homePanelFull: true,
+  return withShellGoldenWeek(() async {
+    final director = GameDirector.preview(
+      initialState: _freezeFightClock(
+        GameLogic.enterDungeon(
+          _quietHubState().copyWith(
+            homeLayout: HomeLayout.home,
+            homePanelFull: true,
+          ),
         ),
       ),
-    ),
-  );
-  await _bootFightQuiet(director);
-  return director;
+    );
+    await _bootFightQuiet(director);
+    return director;
+  });
 }
 
 GameDirector goldSheetGoldenDirector() {
@@ -171,6 +173,23 @@ GameDirector settingsGoldenDirector() => hubGoldenDirector();
 
 /// ISO week pinned so KEY sheet goldens do not drift with the calendar.
 const String shellGoldenWeeklyKey = '2026-W46';
+
+/// Last day of [shellGoldenWeeklyKey], the week the existing fight goldens
+/// were generated. `boot` and `enterDungeon` roll the weekly contract from
+/// the machine clock, so fight shots must pin that clock or they drift
+/// every Monday.
+final DateTime shellGoldenWeekNow = DateTime.utc(2026, 11, 15, 12);
+
+/// Pins [GameLogic.debugNow] for fight golden setup, then restores it.
+Future<T> withShellGoldenWeek<T>(Future<T> Function() body) async {
+  final prior = GameLogic.debugNow;
+  GameLogic.debugNow = shellGoldenWeekNow;
+  try {
+    return await body();
+  } finally {
+    GameLogic.debugNow = prior;
+  }
+}
 
 GameState endgamePartyGoldenState() {
   final base = _quietHubState().copyWith(
@@ -262,68 +281,36 @@ Future<void> _bootFightQuiet(GameDirector director) async {
 }
 
 Future<GameDirector> homeShellFightGoldenDirector() async {
-  final director = GameDirector.preview(
-    initialState: _freezeFightClock(
-      GameLogic.enterDungeon(
-        _quietHubState().copyWith(
-          homeLayout: HomeLayout.home,
-          homePanelFull: false,
+  return withShellGoldenWeek(() async {
+    final director = GameDirector.preview(
+      initialState: _freezeFightClock(
+        GameLogic.enterDungeon(
+          _quietHubState().copyWith(
+            homeLayout: HomeLayout.home,
+            homePanelFull: false,
+          ),
         ),
       ),
-    ),
-  );
-  await _bootFightQuiet(director);
-  return director;
+    );
+    await _bootFightQuiet(director);
+    return director;
+  });
 }
 
 Future<GameDirector> fightGoldenDirector() async {
-  final base = GameLogic.createInitialState(now: shellGoldenNow);
-  final director = GameDirector.preview(
-    initialState: _freezeFightClock(
-      base.copyWith(
-        highestFloorCleared: 1,
-        bossVictories: 1,
-        vfxQuality: VfxQuality.minimal,
-        seenChangelogVersion: MetaSystems.currentVersion,
-        metaDepth: base.metaDepth.copyWith(
-          lifetimeFloorClears: 1,
-          reviewPrompted: true,
-        ),
-        seenTips: const [
-          'first_run',
-          'hub_enter',
-          'godhand',
-          'farm_push',
-          'kit_abilities',
-          'bag',
-          'forge',
-          'sanctuary',
-        ],
-      ),
-    ),
-  );
-  await _bootFightQuiet(director);
-  director.enterDungeon();
-  return director;
-}
-
-/// Fixed floor plus a melee hit, a dead foe, and a gold floater.
-/// Welcome Back stays on its own golden.
-Future<GameDirector> fightHitGoldenDirector({
-  VfxQuality vfx = VfxQuality.full,
-}) async {
-  final prior = GameLogic.random;
-  GameLogic.random = Random(7);
-  try {
+  return withShellGoldenWeek(() async {
     final base = GameLogic.createInitialState(now: shellGoldenNow);
     final director = GameDirector.preview(
       initialState: _freezeFightClock(
         base.copyWith(
-          homeLayout: HomeLayout.home,
-          homePanelFull: true,
-          vfxQuality: vfx,
+          highestFloorCleared: 1,
+          bossVictories: 1,
+          vfxQuality: VfxQuality.minimal,
           seenChangelogVersion: MetaSystems.currentVersion,
-          metaDepth: base.metaDepth.copyWith(reviewPrompted: true),
+          metaDepth: base.metaDepth.copyWith(
+            lifetimeFloorClears: 1,
+            reviewPrompted: true,
+          ),
           seenTips: const [
             'first_run',
             'hub_enter',
@@ -339,11 +326,49 @@ Future<GameDirector> fightHitGoldenDirector({
     );
     await _bootFightQuiet(director);
     director.enterDungeon();
-    stageFightHitProof(director);
     return director;
-  } finally {
-    GameLogic.random = prior;
-  }
+  });
+}
+
+/// Fixed floor plus a melee hit, a dead foe, and a gold floater.
+/// Welcome Back stays on its own golden.
+Future<GameDirector> fightHitGoldenDirector({
+  VfxQuality vfx = VfxQuality.full,
+}) async {
+  return withShellGoldenWeek(() async {
+    final prior = GameLogic.random;
+    GameLogic.random = Random(7);
+    try {
+      final base = GameLogic.createInitialState(now: shellGoldenNow);
+      final director = GameDirector.preview(
+        initialState: _freezeFightClock(
+          base.copyWith(
+            homeLayout: HomeLayout.home,
+            homePanelFull: true,
+            vfxQuality: vfx,
+            seenChangelogVersion: MetaSystems.currentVersion,
+            metaDepth: base.metaDepth.copyWith(reviewPrompted: true),
+            seenTips: const [
+              'first_run',
+              'hub_enter',
+              'godhand',
+              'farm_push',
+              'kit_abilities',
+              'bag',
+              'forge',
+              'sanctuary',
+            ],
+          ),
+        ),
+      );
+      await _bootFightQuiet(director);
+      director.enterDungeon();
+      stageFightHitProof(director);
+      return director;
+    } finally {
+      GameLogic.random = prior;
+    }
+  });
 }
 
 /// Pins one hit, one death, and one gold number on the live world.

@@ -37,7 +37,7 @@ String _seasonLabel(DateTime utc) =>
     '${GameLogic.isoWeekKey(utc)} · ${GameLogic.isoMonthKey(utc)}';
 
 GameState _ensureWeeklyContract(GameState state, {DateTime? now}) {
-  final t = (now ?? DateTime.now()).toUtc();
+  final t = GameLogic._clock(now).toUtc();
   final key = GameLogic.isoWeekKey(t);
   final season = GameLogic.seasonLabel(t);
   var next = GameLogic.ensureLeaderboardSeason(state, now: t);

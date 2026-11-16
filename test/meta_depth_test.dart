@@ -209,6 +209,24 @@ void main() {
     expect(state.metaDepth.dailyVaultClears, 1);
   });
 
+  test('debugNow pins weekly contract off the machine clock', () {
+    final prior = GameLogic.debugNow;
+    GameLogic.debugNow = DateTime.utc(2026, 11, 15, 12);
+    try {
+      final state = GameLogic.ensureWeeklyContract(
+        GameLogic.createInitialState(now: DateTime.utc(2026, 8, 22, 14)),
+      );
+      expect(state.metaDepth.weeklyKey, '2026-W46');
+      final override = GameLogic.ensureWeeklyContract(
+        GameLogic.createInitialState(now: DateTime.utc(2026, 8, 22, 14)),
+        now: DateTime.utc(2026, 11, 16, 12),
+      );
+      expect(override.metaDepth.weeklyKey, '2026-W47');
+    } finally {
+      GameLogic.debugNow = prior;
+    }
+  });
+
   test('createEnemyGroup glass modifier shrinks HP and boosts ATK', () {
     const room = DungeonRoom(
       floorNumber: 3,
