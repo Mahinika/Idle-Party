@@ -164,6 +164,9 @@ abstract final class GameTheme {
   /// Tight HUD corners (not menu [radiusSm]).
   static const double radiusHud = 4;
 
+  /// HUD currency capsules.
+  static const double radiusPill = 12;
+
   /// Cross-platform comfort floor (Apple HIG / WCAG 2.5.5 AAA).
   static const double minTouch = 44;
 

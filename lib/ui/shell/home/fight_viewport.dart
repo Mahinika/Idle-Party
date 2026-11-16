@@ -48,6 +48,7 @@ class FightViewport extends StatelessWidget {
               state: director.state,
               director: director,
               placeLineOnly: true,
+              placeLineDps: false,
               onOpenSettings: () {},
               onOpenContracts: () {},
               onFloorLineTap: (ctx) => showFloorJumpSheet(ctx, director),

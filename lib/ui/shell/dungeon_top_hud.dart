@@ -131,6 +131,7 @@ class DungeonTopHud extends StatelessWidget {
     this.onOpenForge,
     this.onOpenParty,
     this.placeLineOnly = false,
+    this.placeLineDps = true,
     this.onFloorLineTap,
   });
 
@@ -145,6 +146,9 @@ class DungeonTopHud extends StatelessWidget {
 
   /// Home fight already has FARM / PUSH. This paints only the floor line.
   final bool placeLineOnly;
+
+  /// DPS chip after the floor line. Off when the home HUD shows DPS.
+  final bool placeLineDps;
 
   /// Opens the floor jump sheet on the home layout.
   final void Function(BuildContext context)? onFloorLineTap;
@@ -499,7 +503,7 @@ class DungeonTopHud extends StatelessWidget {
               elapsed: world.combatElapsed,
             )
           : null;
-      final showDps =
+      final showDps = placeLineDps &&
           snap != null && !snap.isEmpty && snap.chipLabel != '0 DPS';
       final lineColor = awaitingExit || state.isPartyDefeated
           ? GameTheme.clear
