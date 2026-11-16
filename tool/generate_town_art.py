@@ -1236,21 +1236,33 @@ def generate_backdrop() -> Image.Image:
     return pix.image()
 
 
+# Imported here, after Pix and the shared helpers exist (it builds on them).
+import town_buildings_art as buildings  # noqa: E402
+
+# Round 2 facades are drawn in dusk colors already; a lighter grade keeps
+# the warm window spill from going muddy.
+BUILDING_GRADE = 0.5
+
+
 def generate_sheet() -> Image.Image:
-    sheet = Image.new("RGBA", (680, 640), (70, 40, 80, 255))
-    kinds = (
-        ("FORGE", generate_forge),
-        ("MARKET", generate_market),
-        ("INN", generate_inn),
-        ("GUILD", generate_guild),
-    )
-    for col, (_name, fn) in enumerate(kinds):
+    """Review sheet: three tiers of each facade, then vault and campfire."""
+    sheet = Image.new("RGBA", (640, 720), (70, 40, 80, 255))
+    kinds = (buildings.forge, buildings.market, buildings.inn, buildings.guild)
+    x = 8
+    for fn in kinds:
+        width = 0
         for tier in range(3):
             sprite = fn(tier)
-            sheet.paste(sprite, (12 + col * 166, 16 + tier * 188), sprite)
-    sheet.paste(autumn.vault_door(False), (12, 560), autumn.vault_door(False))
-    sheet.paste(autumn.campfire(), (110, 560), autumn.campfire())
-    return sheet
+            sheet.paste(sprite, (x, 8 + tier * 190), sprite)
+            width = max(width, sprite.width)
+        x += width + 8
+    shut = buildings.vault(False)
+    opened = buildings.vault(True)
+    sheet.paste(shut, (8, 588), shut)
+    sheet.paste(opened, (128, 588), opened)
+    fire = autumn.campfire()
+    sheet.paste(fire, (248, 620), fire)
+    return autumn.dusk_grade(sheet, BUILDING_GRADE)
 
 
 README = """# Town assets
@@ -1263,7 +1275,7 @@ autumn dusk (`docs/art/TOWN_AUTUMN_DUSK.md`, owner pick B).
 | Field | Value |
 |-------|--------|
 | Author | Idle Party (this repository) |
-| Tool | `tool/generate_town_art.py` + `tool/town_autumn_art.py` + `tool/town_life_art.py` |
+| Tool | `tool/generate_town_art.py` + `tool/town_buildings_art.py` + `tool/town_autumn_art.py` + `tool/town_life_art.py` |
 | Method | Hand-placed pixel materials (stone courses, tile rows, cloth folds, leaves, pumpkins, chibi townsfolk). No foreign packs. |
 | External packs | None |
 | License | Same as the rest of `assets/custom/` — original game art |
@@ -1292,8 +1304,10 @@ python3 tool/generate_town_art.py
 | Light | Upper-left on materials; warm point lights (windows, fire, lanterns) |
 | Sky | Purple to ember bands, far skyline pinned to the square's top edge |
 | Ground | Dark dusk cobbles, 64×64, seamless, fallen leaves |
-| Roofs | Individual tiles. Dark red tile; guild tower spire |
-| Windows | Amber glass, wood mullions, kept lit by the grade |
+| Roofs | Individual staggered tiles, sky-lit upper courses, shaded hip side and eaves |
+| Facades | Half-timbering (posts, rails, braces) over stone ground floors |
+| Windows | Amber glass, wood mullions, kept lit by the grade; warm spill baked on the wall |
+| Lights | Wall lanterns on iron brackets, forge mouth, ajar doors (baked spill) |
 | People | Smith, courier, and gardener. Idle + 4 walk frames |
 | Scale | `FilterQuality.none`. Folk are authored for the 48×56 yard |
 
@@ -1318,8 +1332,8 @@ python3 tool/generate_town_art.py
 | contact.png | Shade under a wall |
 | folk.png | 3 people × 5 frames, 96×112 cells |
 | campfire.png | Stone-ring campfire at the square's center |
-| forge / market / inn / guild `_t0..t2` | Facades |
-| vault_shut.png / vault_open.png | Round iron vault door in a stone arch |
+| forge / market / inn / guild `_t0..t2` | Facades, 108×150 / 108×132 / 108×156 / 172×184 (1:1 at 360 dp) |
+| vault_shut.png / vault_open.png | Stone strongroom with the round iron door, 112×116 |
 """
 
 
@@ -1354,17 +1368,17 @@ def main() -> int:
         ("folk.png", grade(generate_folk(), 0.8)),
         ("alert.png", life_art.alert()),
         ("campfire.png", autumn.campfire()),
-        ("vault_shut.png", grade(autumn.vault_door(False))),
-        ("vault_open.png", grade(autumn.vault_door(True))),
+        ("vault_shut.png", grade(buildings.vault(False), BUILDING_GRADE)),
+        ("vault_open.png", grade(buildings.vault(True), BUILDING_GRADE)),
         ("buildings_sheet.png", generate_sheet()),
     ]
     for t in range(3):
         assets.extend(
             [
-                (f"forge_t{t}.png", grade(generate_forge(t))),
-                (f"market_t{t}.png", grade(generate_market(t))),
-                (f"inn_t{t}.png", grade(generate_inn(t))),
-                (f"guild_t{t}.png", grade(generate_guild(t))),
+                (f"forge_t{t}.png", grade(buildings.forge(t), BUILDING_GRADE)),
+                (f"market_t{t}.png", grade(buildings.market(t), BUILDING_GRADE)),
+                (f"inn_t{t}.png", grade(buildings.inn(t), BUILDING_GRADE)),
+                (f"guild_t{t}.png", grade(buildings.guild(t), BUILDING_GRADE)),
             ]
         )
 
@@ -1387,12 +1401,12 @@ def main() -> int:
     paste(preview, by_name["shrub.png"], (300, 246))
     paste(preview, by_name["tree_round.png"], (0, 200))
     paste(preview, by_name["tree_tall.png"], (312, 188))
-    paste(preview, by_name["guild_t1.png"], (8, 210))
-    paste(preview, by_name["vault_shut.png"], (262, 250))
-    paste(preview, by_name["campfire.png"], (156, 292))
-    paste(preview, by_name["forge_t1.png"], (4, 360))
-    paste(preview, by_name["market_t1.png"], (120, 376))
-    paste(preview, by_name["inn_t1.png"], (236, 356))
+    paste(preview, by_name["guild_t1.png"], (6, 128))
+    paste(preview, by_name["vault_shut.png"], (242, 196))
+    paste(preview, by_name["campfire.png"], (182, 244))
+    paste(preview, by_name["forge_t1.png"], (10, 370))
+    paste(preview, by_name["market_t1.png"], (126, 388))
+    paste(preview, by_name["inn_t1.png"], (242, 364))
     folk = by_name["folk.png"]
     for person, fx in ((0, 24), (1, 280), (2, 156)):
         cell = folk.crop(

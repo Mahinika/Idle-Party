@@ -8,7 +8,7 @@ autumn dusk (`docs/art/TOWN_AUTUMN_DUSK.md`, owner pick B).
 | Field | Value |
 |-------|--------|
 | Author | Idle Party (this repository) |
-| Tool | `tool/generate_town_art.py` + `tool/town_autumn_art.py` + `tool/town_life_art.py` |
+| Tool | `tool/generate_town_art.py` + `tool/town_buildings_art.py` + `tool/town_autumn_art.py` + `tool/town_life_art.py` |
 | Method | Hand-placed pixel materials (stone courses, tile rows, cloth folds, leaves, pumpkins, chibi townsfolk). No foreign packs. |
 | External packs | None |
 | License | Same as the rest of `assets/custom/` — original game art |
@@ -37,8 +37,10 @@ python3 tool/generate_town_art.py
 | Light | Upper-left on materials; warm point lights (windows, fire, lanterns) |
 | Sky | Purple to ember bands, far skyline pinned to the square's top edge |
 | Ground | Dark dusk cobbles, 64×64, seamless, fallen leaves |
-| Roofs | Individual tiles. Dark red tile; guild tower spire |
-| Windows | Amber glass, wood mullions, kept lit by the grade |
+| Roofs | Individual staggered tiles, sky-lit upper courses, shaded hip side and eaves |
+| Facades | Half-timbering (posts, rails, braces) over stone ground floors |
+| Windows | Amber glass, wood mullions, kept lit by the grade; warm spill baked on the wall |
+| Lights | Wall lanterns on iron brackets, forge mouth, ajar doors (baked spill) |
 | People | Smith, courier, and gardener. Idle + 4 walk frames |
 | Scale | `FilterQuality.none`. Folk are authored for the 48×56 yard |
 
@@ -63,5 +65,5 @@ python3 tool/generate_town_art.py
 | contact.png | Shade under a wall |
 | folk.png | 3 people × 5 frames, 96×112 cells |
 | campfire.png | Stone-ring campfire at the square's center |
-| forge / market / inn / guild `_t0..t2` | Facades |
-| vault_shut.png / vault_open.png | Round iron vault door in a stone arch |
+| forge / market / inn / guild `_t0..t2` | Facades, 108×150 / 108×132 / 108×156 / 172×184 (1:1 at 360 dp) |
+| vault_shut.png / vault_open.png | Stone strongroom with the round iron door, 112×116 |

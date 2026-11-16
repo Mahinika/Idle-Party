@@ -1,13 +1,14 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-/// Sprite pixel sizes from `tool/generate_town_art.py`.
+/// Sprite pixel sizes from `tool/town_buildings_art.py`. Authored at the
+/// A56 draw size (360 dp wide), so they paint 1:1 there.
 abstract final class TownSpriteSize {
-  static const forge = Size(120, 156);
-  static const market = Size(120, 140);
-  static const inn = Size(120, 160);
-  static const guild = Size(156, 176);
-  static const vault = Size(88, 104);
+  static const forge = Size(108, 150);
+  static const market = Size(108, 132);
+  static const inn = Size(108, 156);
+  static const guild = Size(172, 184);
+  static const vault = Size(112, 116);
   static const well = Size(56, 68);
 }
 
@@ -90,7 +91,7 @@ class TownSceneLayout {
     final minYard = h >= 420 ? 58.0 : (h >= 320 ? 28.0 : 0.0);
 
     var frontW = math.min(108.0, (w - 32) / 3);
-    var guildW = math.min(136.0, w * 0.38);
+    var guildW = math.min(172.0, w * 0.48);
     if (frontW < 8) frontW = 8;
     if (guildW < 8) guildW = 8;
     final fullInn =
@@ -140,7 +141,7 @@ class TownSceneLayout {
     final backBottom = frontTop - yard;
     final guild = Rect.fromLTWH(6, backBottom - gh, gw, gh);
 
-    var vaultW = math.min(84.0, w * 0.24) * math.max(0.7, scale);
+    var vaultW = math.min(112.0, w * 0.31) * math.max(0.7, scale);
     var vaultH =
         vaultW * TownSpriteSize.vault.height / TownSpriteSize.vault.width;
     if (vaultH > gh) {
@@ -155,15 +156,17 @@ class TownSceneLayout {
       vaultH,
     );
 
-    var wellW = (h < 380 ? 34.0 : 44.0) * math.max(0.75, scale);
+    var wellW = (h < 380 ? 34.0 : 50.0) * math.max(0.75, scale);
     var wellH = wellW * TownSpriteSize.well.height / TownSpriteSize.well.width;
     final gapW = vault.left - guild.right;
     if (wellW > gapW - 8) {
       wellW = math.max(24.0, gapW - 8);
       wellH = wellW * TownSpriteSize.well.height / TownSpriteSize.well.width;
     }
+    // Centered in the gap between guild and vault, not on the phone's
+    // midline: the guild is wider than the vault.
     final well = Rect.fromLTWH(
-      (w - wellW) / 2,
+      guild.right + (gapW - wellW) / 2,
       backBottom - wellH,
       wellW,
       wellH,
@@ -190,12 +193,16 @@ class TownSceneLayout {
       folkScale = 1;
     }
 
-    final canopy = math.max(0.0, (backBottom - gh) - 48);
+    // The cobbles start part way up the back row, so the tower and roofs
+    // stand against the dusk sky instead of on a flat cobble field.
+    final horizon = math.max(0.0, backBottom - gh * 0.45);
+    // Crowns stand on the horizon behind the back row.
+    final canopy = math.max(0.0, horizon + 14 - 102);
     // Two canopies, both fully on the phone. The left one used to start at x=-6.
     final trees = <Rect>[
       Rect.fromLTWH(0, canopy, 78, 102),
       // Pine sits a row lower so the crown clears the top bar.
-      Rect.fromLTWH(w - 58, math.max(12.0, canopy + 20), 58, 96),
+      Rect.fromLTWH(w - 58, math.max(12.0, horizon + 14 - 96), 58, 96),
     ];
 
     final plantings = <TownPlanting>[
@@ -233,7 +240,7 @@ class TownSceneLayout {
         Rect.fromLTWH(well.center.dx - 16, spurTop, 32, spurBottom - spurTop),
       );
     }
-    final grass = math.max(0.0, backBottom - gh - 6);
+    final grass = horizon;
     plantings.add(
       TownPlanting(Rect.fromLTWH(w * 0.34, grass + 2, 104, 52), 'meadow'),
     );
@@ -256,19 +263,33 @@ class TownSceneLayout {
       plantings.add(TownPlanting(Rect.fromLTWH(x, grass - 6, 32, 26), 'shrub'));
     }
     // Clusters at the lawn edges and beside the spur. Not on the doors.
-    plantings.add(TownPlanting(Rect.fromLTWH(4, grass + 16, 40, 32), 'flowers'));
+    plantings.add(
+      TownPlanting(Rect.fromLTWH(4, grass + 16, 40, 32), 'flowers'),
+    );
     plantings.add(TownPlanting(Rect.fromLTWH(34, grass + 30, 34, 28), 'herbs'));
-    plantings.add(TownPlanting(Rect.fromLTWH(w - 42, grass + 18, 38, 30), 'wild'));
+    plantings.add(
+      TownPlanting(Rect.fromLTWH(w - 42, grass + 18, 38, 30), 'wild'),
+    );
     if (lane.height >= 70) {
-      plantings.add(TownPlanting(Rect.fromLTWH(6, lane.top + 6, 40, 32), 'shrub'));
-      plantings.add(TownPlanting(Rect.fromLTWH(w - 46, lane.top + 14, 40, 32), 'flowers'));
+      plantings.add(
+        TownPlanting(Rect.fromLTWH(6, lane.top + 6, 40, 32), 'shrub'),
+      );
+      plantings.add(
+        TownPlanting(Rect.fromLTWH(w - 46, lane.top + 14, 40, 32), 'flowers'),
+      );
       if (approaches.isNotEmpty) {
         final spur = approaches.first;
         plantings.add(
-          TownPlanting(Rect.fromLTWH(spur.left - 34, spur.top + 6, 30, 26), 'wild'),
+          TownPlanting(
+            Rect.fromLTWH(spur.left - 34, spur.top + 6, 30, 26),
+            'wild',
+          ),
         );
         plantings.add(
-          TownPlanting(Rect.fromLTWH(spur.right + 4, spur.top + 16, 30, 26), 'herbs'),
+          TownPlanting(
+            Rect.fromLTWH(spur.right + 4, spur.top + 16, 30, 26),
+            'herbs',
+          ),
         );
       }
     }
@@ -328,7 +349,7 @@ class TownSceneLayout {
       plantings: plantings,
       thresholds: thresholds,
       contacts: contacts,
-      grassTop: math.max(0, backBottom - gh - 6),
+      grassTop: horizon,
     );
   }
 }

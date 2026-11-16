@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import '../../game_theme.dart';
 
 /// Autumn dusk life over the town square: falling leaves, a campfire glow
-/// that breathes, and low mist. One painter, a dozen rects and three
-/// gradients a frame. The ticker stops when motion is off, the route is
+/// that breathes, a forge-mouth flicker, and low mist. One painter, a dozen
+/// rects and about ten gradients a frame. The ticker stops when motion is off, the route is
 /// offstage ([TickerMode]), or the app is backgrounded; then one still
 /// frame is painted.
 abstract final class TownAmbience {
@@ -50,9 +50,13 @@ class TownAmbienceLayer extends StatefulWidget {
     required this.motion,
     required this.fire,
     required this.mistTop,
+    this.hearth,
   });
 
   final bool motion;
+
+  /// Forge fire mouth, in square coordinates. Gets its own flicker.
+  final Offset? hearth;
 
   /// Campfire sprite rect. The glow centers on its flame.
   final Rect fire;
@@ -126,6 +130,7 @@ class _TownAmbienceLayerState extends State<TownAmbienceLayer>
             clock: _clock,
             fire: widget.fire,
             mistTop: widget.mistTop,
+            hearth: widget.hearth,
           ),
           child: const SizedBox.expand(),
         ),
@@ -139,11 +144,13 @@ class _AmbiencePainter extends CustomPainter {
     required this.clock,
     required this.fire,
     required this.mistTop,
+    required this.hearth,
   }) : super(repaint: clock);
 
   final AnimationController? clock;
   final Rect fire;
   final double mistTop;
+  final Offset? hearth;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -159,13 +166,32 @@ class _AmbiencePainter extends CustomPainter {
     final top = mistTop.clamp(0.0, size.height);
     final band = size.height - top;
     if (band < 24) return;
-    for (var i = 0; i < 3; i++) {
-      final drift = math.sin((t + i / 3) * math.pi * 2) * 18;
-      final cy = top + band * (0.22 + i * 0.3);
+    // Fog that pools at the foot of the back row, behind the fire.
+    for (var i = 0; i < 2; i++) {
+      final drift = math.sin((t + i / 2) * math.pi * 2) * 14;
       final rect = Rect.fromCenter(
-        center: Offset(size.width * (0.2 + i * 0.3) + drift, cy),
+        center: Offset(size.width * (0.28 + i * 0.46) + drift, top - 6),
+        width: size.width * 0.8,
+        height: 40,
+      );
+      canvas.drawOval(
+        rect,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [GameTheme.townMistLow, GameTheme.townMistLow.withAlpha(0)],
+          ).createShader(rect),
+      );
+    }
+    // Low banks in the yard and along the shop fronts' feet. Kept off the
+    // facades so the windows stay readable.
+    const rows = [0.1, 0.16, 0.76, 0.82];
+    for (var i = 0; i < rows.length; i++) {
+      final drift = math.sin((t + i / 4) * math.pi * 2) * 18;
+      final cy = top + band * rows[i];
+      final rect = Rect.fromCenter(
+        center: Offset(size.width * (i.isEven ? 0.26 : 0.74) + drift, cy),
         width: size.width * 0.9,
-        height: 44,
+        height: 50,
       );
       canvas.drawOval(
         rect,
@@ -183,10 +209,11 @@ class _AmbiencePainter extends CustomPainter {
         0.5 +
         0.3 * math.sin(t * math.pi * 2 * 9) +
         0.2 * math.sin(t * math.pi * 2 * 23);
-    final r = fire.width * (2.6 + 0.15 * breath);
     final center = Offset(fire.center.dx, fire.top + fire.height * 0.62);
+    // Wide warm wash over the square and the facades around the fire.
+    final r = fire.width * (3.6 + 0.2 * breath);
     final rect = Rect.fromCircle(center: center, radius: r);
-    final a = (0x2C + (0x14 * breath)).round().clamp(0, 255);
+    final a = (0x5C + (0x20 * breath)).round().clamp(0, 255);
     canvas.drawCircle(
       center,
       r,
@@ -199,6 +226,44 @@ class _AmbiencePainter extends CustomPainter {
           ],
         ).createShader(rect),
     );
+    // A flat pool of light on the cobbles under the fire.
+    final pool = Rect.fromCenter(
+      center: Offset(center.dx, fire.bottom - 4),
+      width: fire.width * 4.2,
+      height: fire.width * 1.3,
+    );
+    canvas.drawOval(
+      pool,
+      Paint()
+        ..blendMode = BlendMode.screen
+        ..shader = RadialGradient(
+          colors: [
+            GameTheme.townFirePool.withAlpha((0x70 + 0x1C * breath).round()),
+            GameTheme.townFirePool.withAlpha(0),
+          ],
+        ).createShader(pool),
+    );
+    final h = hearth;
+    if (h != null) {
+      final flick =
+          0.5 +
+          0.5 *
+              math.sin(t * math.pi * 2 * 13 + 1.3) *
+              math.sin(t * math.pi * 2 * 5);
+      final hr = 30.0 + 4 * flick;
+      canvas.drawCircle(
+        h,
+        hr,
+        Paint()
+          ..blendMode = BlendMode.screen
+          ..shader = RadialGradient(
+            colors: [
+              GameTheme.townFireGlow.withAlpha((0x46 + 0x20 * flick).round()),
+              GameTheme.townFireGlow.withAlpha(0),
+            ],
+          ).createShader(Rect.fromCircle(center: h, radius: hr)),
+      );
+    }
     // Two sparks climb out of the flame.
     final spark = Paint()..color = GameTheme.townSpark;
     for (var k = 0; k < 2; k++) {
@@ -222,7 +287,10 @@ class _AmbiencePainter extends CustomPainter {
       final w = leaf.wide ? 4.0 : 2.0;
       final h = leaf.wide ? 2.0 : 3.0;
       paint.color = TownAmbience.leafColors[leaf.color];
-      canvas.drawRect(Rect.fromLTWH(leaf.at.dx + 1, leaf.at.dy + 1, w, h), shade);
+      canvas.drawRect(
+        Rect.fromLTWH(leaf.at.dx + 1, leaf.at.dy + 1, w, h),
+        shade,
+      );
       canvas.drawRect(Rect.fromLTWH(leaf.at.dx, leaf.at.dy, w, h), paint);
     }
   }
@@ -231,5 +299,6 @@ class _AmbiencePainter extends CustomPainter {
   bool shouldRepaint(_AmbiencePainter oldDelegate) =>
       oldDelegate.clock != clock ||
       oldDelegate.fire != fire ||
-      oldDelegate.mistTop != mistTop;
+      oldDelegate.mistTop != mistTop ||
+      oldDelegate.hearth != hearth;
 }

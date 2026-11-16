@@ -313,59 +313,70 @@ class _TownSquare extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Skyline sits on the square's top edge on every screen height.
-        Positioned(
-          left: 0,
-          right: 0,
-          top: 0,
-          height: layout.grassTop + 2,
-          child: const ClipRect(child: _TownBackdrop()),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          top: layout.grassTop,
-          bottom: 0,
-          child: Image.asset(
-            CustomAssets.townGround,
-            // Native pixels. scaleDown would shrink a tile that is larger
-            // than the lawn and bring the repeat back.
-            fit: BoxFit.none,
-            repeat: ImageRepeat.repeat,
-            alignment: Alignment.topLeft,
-            filterQuality: FilterQuality.none,
-            excludeFromSemantics: true,
-          ),
-        ),
-        for (final spur in layout.approaches) _approach(spur),
-        for (final street in layout.streets) _street(street),
-        for (final shade in layout.contacts)
-          _sprite(
-            shade,
-            CustomAssets.townContact,
-            fit: BoxFit.contain,
-            align: Alignment.bottomCenter,
-          ),
-        for (final tree in layout.trees)
-          _sprite(
-            tree,
-            tree.width > 60
-                ? CustomAssets.townTreeRound
-                : CustomAssets.townTreeTall,
-            fit: BoxFit.contain,
-            align: Alignment.bottomCenter,
-          ),
-        for (final planting in layout.plantings)
-          if (!_coversLabel(planting.rect, labels))
-            _sprite(
-              planting.rect,
-              _plantingAsset(planting.asset),
-              fit: BoxFit.contain,
-              align: Alignment.bottomCenter,
+        // Static back layers: sky, cobbles, trees, back row, campfire.
+        // One repaint boundary, so folk, leaves and glow never re-record them.
+        Positioned.fill(
+          child: RepaintBoundary(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Skyline sits on the square's top edge on every screen height.
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  height: layout.grassTop + 2,
+                  child: const ClipRect(child: _TownBackdrop()),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: layout.grassTop,
+                  bottom: 0,
+                  child: Image.asset(
+                    CustomAssets.townGround,
+                    // Native pixels. scaleDown would shrink a tile that is larger
+                    // than the lawn and bring the repeat back.
+                    fit: BoxFit.none,
+                    repeat: ImageRepeat.repeat,
+                    alignment: Alignment.topLeft,
+                    filterQuality: FilterQuality.none,
+                    excludeFromSemantics: true,
+                  ),
+                ),
+                for (final spur in layout.approaches) _approach(spur),
+                for (final street in layout.streets) _street(street),
+                for (final shade in layout.contacts)
+                  _sprite(
+                    shade,
+                    CustomAssets.townContact,
+                    fit: BoxFit.contain,
+                    align: Alignment.bottomCenter,
+                  ),
+                for (final tree in layout.trees)
+                  _sprite(
+                    tree,
+                    tree.width > 60
+                        ? CustomAssets.townTreeRound
+                        : CustomAssets.townTreeTall,
+                    fit: BoxFit.contain,
+                    align: Alignment.bottomCenter,
+                  ),
+                for (final planting in layout.plantings)
+                  if (!_coversLabel(planting.rect, labels))
+                    _sprite(
+                      planting.rect,
+                      _plantingAsset(planting.asset),
+                      fit: BoxFit.contain,
+                      align: Alignment.bottomCenter,
+                    ),
+                _building(layout.guild, guild, guild.assetPath(tier)),
+                _building(layout.vault, vault, vaultPath),
+                _sprite(layout.well, CustomAssets.townCampfire),
+              ],
             ),
-        _building(layout.guild, guild, guild.assetPath(tier)),
-        _building(layout.vault, vault, vaultPath),
-        _sprite(layout.well, CustomAssets.townCampfire),
+          ),
+        ),
         Positioned.fill(
           child: TownFolkLayer(
             motion: motion && layout.folkScale > 0,
@@ -423,6 +434,11 @@ class _TownSquare extends StatelessWidget {
             motion: motion,
             fire: layout.well,
             mistTop: layout.lane.top,
+            // Fire mouth of the forge sprite (22, 118 of 108×150).
+            hearth: Offset(
+              layout.front[0].left + layout.front[0].width * 22 / 108,
+              layout.front[0].top + layout.front[0].height * 118 / 150,
+            ),
           ),
         ),
         for (final (label, rect) in labels) _nameChip(label, rect),
