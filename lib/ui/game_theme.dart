@@ -109,6 +109,33 @@ abstract final class GameTheme {
   static const Color buttonDisabledText = Color(0xFF5A6270);
   static const Color buttonDisabledBorder = buttonGreyTop;
 
+  /// Buy semantics (Brick-style layout). Few colors, one meaning each:
+  /// gold = buy / can afford, grey = locked / cannot afford, rose = the
+  /// picked toggle (×1 / ×10 / MAX), purple = level and progress, green =
+  /// the gain a buy gives, red = leave / danger.
+  static const Color buyGoldTop = Color(0xFFF2C55A);
+  static const Color buyGoldBottom = Color(0xFFB07A22);
+  static const Color buyGoldShine = Color(0xFFFFE6A0);
+  static const Color buyGoldEdge = Color(0xFF3A2408);
+  static const Color buyGoldText = Color(0xFF2A1906);
+  static const Color buyGreyTop = Color(0xFF353E4A);
+  static const Color buyGreyBottom = Color(0xFF222932);
+  static const Color buyGreyShine = Color(0xFF48525F);
+  static const Color buyGreyEdge = Color(0xFF07090D);
+  static const Color buyGreyText = Color(0xFF98A0AC);
+  static const Color toggleOnTop = Color(0xFFF4A3C8);
+  static const Color toggleOnBottom = Color(0xFFC25A8E);
+  static const Color toggleOnText = Color(0xFF2A0C1C);
+  static const Color toggleOnShine = Color(0xFFFFD6E8);
+  static const Color chunkyStoneTop = Color(0xFF2C3644);
+  static const Color chunkyStoneBottom = Color(0xFF19202A);
+  static const Color boostOrangeTop = Color(0xFFF5A04A);
+  static const Color boostOrangeBottom = Color(0xFFC0601E);
+  static const Color levelAccent = Color(0xFF9466F0);
+  static const Color levelAccentDeep = Color(0xFF3A2466);
+  static const Color gainGreen = Color(0xFF86E39A);
+  static const Color chunkyShadow = Color(0xCC000000);
+
   /// GEAR doll wash + bag UP/BEST chip.
   static const Color dollGlow = Color(0x5540A090);
   static const Color mossChip = Color(0xEE1E4030);

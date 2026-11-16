@@ -88,18 +88,6 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
 
   String _essencePriceLabel(int cost) => '$cost essence';
 
-  String _bulkEssenceLabel(int buyN, int bulkCost, String track, GameState state) {
-    if (track == 'gold') {
-      final hubNow = GoldIncome.hubGoldPerMinute(state);
-      final hubAfter = GoldIncome.hubGoldPerMinuteAtGoldLevel(
-        state,
-        _levelOf(state, track) + buyN,
-      );
-      return '+${hubAfter - hubNow}g · $bulkCost essence';
-    }
-    return '$buyN · $bulkCost essence';
-  }
-
   static const _tracks = <String>[
     'gold',
     'power',
@@ -322,6 +310,15 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     );
   }
 
+  static String _trackIcon(String track) => switch (track) {
+    'gold' => UiIcon.gold,
+    'power' => UiIcon.sword,
+    'vitality' => UiIcon.heart,
+    'defense' => UiIcon.shieldRound,
+    'xp' => UiIcon.star,
+    _ => UiIcon.campfire,
+  };
+
   static String _trackTitle(String track) => switch (track) {
     'gold' => 'Gold Find',
     'power' => 'War Altar (Attack)',
@@ -377,11 +374,6 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     final level = _levelOf(state, track);
     final prestige = _prestigeOf(state, track);
     final cost = GameLogic.sanctuaryCost(level);
-    final currentBonus = GameLogic.sanctuaryBonusLabel(
-      track,
-      level,
-      prestige: prestige,
-    );
     final maxForTrack = GameLogic.sanctuaryBulkAffordableLevels(state, track);
     // clamp(1, 0) throws when this track costs more than the wallet.
     final buyN = maxForTrack < 1 ? 1 : buyLevels.clamp(1, maxForTrack);
@@ -404,77 +396,54 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       detail = 'Speeds hub AFK essence';
     }
 
-    if (_compactPrice) {
-      detail = null;
+    if (_compactPrice || !canAffordOne) {
+      detail = canAffordOne
+          ? null
+          : 'Need ${cost - state.essence} more essence';
     }
 
-    late final Widget trailing;
-    if (_compactPrice) {
-      if (buyN > 1 && maxForTrack >= buyN) {
-        final bulkCost = GameLogic.sanctuaryBulkCost(state, track, buyN);
-        final label = _bulkEssenceLabel(buyN, bulkCost, track, state);
-        trailing = PowerUpgradePriceChip(
-          label: label,
-          primary: recommended,
-          onPressed: () {
-            director.upgradeSanctuaryBulk(track, maxLevels: buyN);
-            setState(() {});
-          },
-        );
-      } else {
-        trailing = PowerUpgradePriceChip(
-          label: _essencePriceLabel(cost),
-          primary: recommended && canAffordOne,
-          onPressed: canAffordOne
-              ? () {
-                  director.upgradeSanctuary(track);
-                  setState(() {});
-                }
-              : null,
-        );
-      }
-    } else if (buyN > 1) {
-      final bulkCost = GameLogic.sanctuaryBulkCost(state, track, buyN);
-      final target = level + buyN;
-      final label = track == 'gold'
+    final bulk = buyN > 1 && maxForTrack >= buyN;
+    final price = bulk ? GameLogic.sanctuaryBulkCost(state, track, buyN) : cost;
+    final live = bulk || canAffordOne;
+    final trailing = PowerUpgradePriceChip(
+      label: _essencePriceLabel(price),
+      primary: recommended && live,
+      quantity: live ? (bulk ? buyN : 1) : null,
+      onPressed: bulk
           ? () {
-              final hubNow = GoldIncome.hubGoldPerMinute(state);
-              final hubAfter =
-                  GoldIncome.hubGoldPerMinuteAtGoldLevel(state, target);
-              return '+${hubAfter - hubNow}g/min · $bulkCost essence';
-            }()
-          : 'Buy $buyN · $bulkCost essence';
-      trailing = PowerUpgradePriceChip(
-        label: label,
-        primary: true,
-        onPressed: () {
-          director.upgradeSanctuaryBulk(track, maxLevels: buyN);
-          setState(() {});
-        },
-      );
-    } else {
-      trailing = PowerUpgradePriceChip(
-        label: _essencePriceLabel(cost),
-        primary: canAffordOne && recommended,
-        onPressed: canAffordOne
-            ? () {
-                director.upgradeSanctuary(track);
-                setState(() {});
-              }
-            : null,
-      );
-    }
-
-    final subtitle = _compactPrice
-        ? 'Lv$level · $currentBonus'
-        : 'Lv$level · $currentBonus'
-            '${prestige > 0 ? ' · P$prestige' : ''}';
-
+              director.upgradeSanctuaryBulk(track, maxLevels: buyN);
+              setState(() {});
+            }
+          : canAffordOne
+          ? () {
+              director.upgradeSanctuary(track);
+              setState(() {});
+            }
+          : null,
+    );
+    final buys = bulk ? buyN : 1;
+    final keep = prestige * GameLogic.sanctuaryPrestigeKeepAmount(track);
+    final now = GameLogic.sanctuaryTrackBonusAt(track, level) + keep;
+    final next = GameLogic.sanctuaryTrackBonusAt(track, level + buys) + keep;
+    final (unit, unitNext) = switch (track) {
+      'gold' => ('% find', '%'),
+      'power' => (' AP', ''),
+      'vitality' => (' STA', ''),
+      'defense' => (' Armor', ''),
+      'xp' => ('% XP', '%'),
+      _ => ('', ''),
+    };
+    final lv = prestige > 0 ? 'Lv$level P$prestige' : 'Lv$level';
     return PowerUpgradeRow(
       accent: _trackAccent(track),
+      leading: UpgradeIconTile(
+        icon: _trackIcon(track),
+        accent: _trackAccent(track),
+      ),
       title: _trackTitle(track),
       tag: recommended ? 'BEST' : null,
-      subtitle: subtitle,
+      subtitle: '$lv · +$now$unit',
+      gainNext: '+$next$unitNext',
       detail: detail,
       selected: recommended,
       dense: true,
