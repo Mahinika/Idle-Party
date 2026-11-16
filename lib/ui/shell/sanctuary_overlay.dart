@@ -26,8 +26,13 @@ class SanctuaryOverlay extends StatefulWidget {
     this.inlineUnderFight = false,
     this.expandedTrackList = false,
     this.onOpenAdFree,
+    this.qty,
   });
   final GameDirector director;
+
+  /// Set when the home panel header owns ×1 / ×10 / MAX. The body then
+  /// skips its own selector.
+  final BuyQty? qty;
   final bool inlineUnderFight;
 
   /// Bounded height (SPLIT panel or FORGE/CAMP sheet): scroll all tracks.
@@ -42,7 +47,9 @@ class SanctuaryOverlay extends StatefulWidget {
 
 class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
   /// Shared buy size for every CAMP row: ×1 / ×10 / MAX. Not saved.
-  BuyQty _qty = BuyQty.one;
+  BuyQty _ownQty = BuyQty.one;
+
+  BuyQty get _qty => widget.qty ?? _ownQty;
 
   /// Most levels one MAX tap buys on a track (same per-level price).
   static const int _campTapCap = 99;
@@ -212,6 +219,40 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     final effectiveBuy = _buyLevels.clamp(1, buyCap);
     final pick = GameLogic.recommendedSanctuaryTrack(state);
 
+    final watchFree =
+        GameLogic.campAdClaimsToday(state) < GameLogic.campAdDailyCap;
+    final watchChip = watchFree
+        ? MenuChrome.chip(
+            label: state.metaDepth.adFree ? 'Free level' : 'Watch · free level',
+            selected: true,
+            onTap: () => director.watchCampAd(),
+          )
+        : null;
+    final cards = [
+      for (final track in _tracks)
+        _campTrackCard(state, track, effectiveBuy, recommended: track == pick),
+    ];
+    const listPad = EdgeInsets.fromLTRB(
+      ShellLayout.sheetHorizontal,
+      4,
+      ShellLayout.sheetHorizontal,
+      8,
+    );
+    if (widget.qty != null) {
+      // The header owns ×1 / ×10 / MAX: every row here is a buy row,
+      // and the free-level chip scrolls with them.
+      return ListView(
+        primary: false,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: listPad,
+        children: [
+          if (watchChip != null)
+            Align(alignment: Alignment.centerLeft, child: watchChip),
+          _adFreeLine(state),
+          ...cards,
+        ],
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -226,18 +267,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
                 spacing: 6,
                 runSpacing: 4,
                 crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  _qtyToggle(),
-                  if (GameLogic.campAdClaimsToday(state) <
-                      GameLogic.campAdDailyCap)
-                    MenuChrome.chip(
-                      label: state.metaDepth.adFree
-                          ? 'Free level'
-                          : 'Watch · free level',
-                      selected: true,
-                      onTap: () => director.watchCampAd(),
-                    ),
-                ],
+                children: [_qtyToggle(), ?watchChip],
               ),
               _adFreeLine(state),
             ],
@@ -247,21 +277,8 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
           child: ListView(
             primary: false,
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(
-              ShellLayout.sheetHorizontal,
-              4,
-              ShellLayout.sheetHorizontal,
-              8,
-            ),
-            children: [
-              for (final track in _tracks)
-                _campTrackCard(
-                  state,
-                  track,
-                  effectiveBuy,
-                  recommended: track == pick,
-                ),
-            ],
+            padding: listPad,
+            children: cards,
           ),
         ),
       ],
@@ -354,7 +371,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
   Widget _qtyToggle() {
     return BuyQtyToggle(
       value: _qty,
-      onChanged: (q) => setState(() => _qty = q),
+      onChanged: (q) => setState(() => _ownQty = q),
     );
   }
 

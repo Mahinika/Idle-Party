@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
+import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
+import '../../chunky_face.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
-import '../../menu_chrome.dart';
+import '../../web_click_bridge.dart';
+import '../buy_qty_toggle.dart';
 import '../forge_overlay.dart';
 import '../market_overlay.dart';
 import '../sanctuary_overlay.dart';
@@ -41,6 +44,18 @@ class UpgradePanel extends StatefulWidget {
 
 class _UpgradePanelState extends State<UpgradePanel> {
   _Panel _mode = _Panel.forge;
+
+  /// One ×1 / ×10 / MAX pick for FORGE and CAMP under the fight. Not saved.
+  BuyQty _qty = BuyQty.one;
+
+  /// FORGE MAX slice (long-press MAX). 100% is the plain MAX.
+  ForgeGoldSpendMode _slice = ForgeGoldSpendMode.pct100;
+
+  ForgeGoldSpendMode get _forgeMode => switch (_qty) {
+    BuyQty.one => ForgeGoldSpendMode.one,
+    BuyQty.ten => ForgeGoldSpendMode.x10,
+    BuyQty.max => _slice,
+  };
 
   @override
   void initState() {
@@ -82,20 +97,23 @@ class _UpgradePanelState extends State<UpgradePanel> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final headerCap = constraints.maxHeight.isFinite
-              ? constraints.maxHeight * 0.42
+              ? constraints.maxHeight * 0.5
               : null;
           return Column(
             children: [
               if (!embedded)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
-                  child: MenuChrome.segmented(
-                    dense: true,
-                    labels: const ['FORGE', 'CAMP', 'MARKET'],
-                    icons: UiIcon.goldDockSegment,
-                    selectedIndex: _mode.index,
-                    onSelect: (i) => setState(() => _mode = _Panel.values[i]),
-                    maxHeight: headerCap == null ? null : headerCap - 10,
+                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 2),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: headerCap == null
+                          ? double.infinity
+                          : headerCap.clamp(
+                              GameTheme.minTouch,
+                              double.infinity,
+                            ),
+                    ),
+                    child: _header(open),
                   ),
                 ),
               Expanded(child: _body(state, open, active, embedded)),
@@ -123,14 +141,103 @@ class _UpgradePanelState extends State<UpgradePanel> {
           inlineUnderFight: inline,
           expandedTrackList: embedded,
           onOpenAdFree: _openAdFreeShop,
+          qty: embedded ? null : _qty,
         );
       case _Panel.forge:
         return ForgeOverlay(
           director: widget.director,
           inlineUnderFight: inline,
           expandedTrackList: embedded,
+          spendMode: embedded ? null : _forgeMode,
         );
     }
+  }
+
+  /// One row: FORGE · CAMP · MARKET as icon tabs, then ×1 / ×10 / MAX.
+  Widget _header(bool open) {
+    final showQty = open && _mode != _Panel.market;
+    return Row(
+      children: [
+        for (final p in _Panel.values) ...[
+          if (p.index > 0) const SizedBox(width: 4),
+          Expanded(child: _tab(p)),
+        ],
+        if (showQty) ...[
+          const SizedBox(width: 8),
+          BuyQtyToggle(
+            value: _qty,
+            maxLabel: _mode == _Panel.forge
+                ? ForgeOverlay.maxLabelFor(_forgeMode)
+                : 'MAX',
+            onChanged: (q) => setState(() {
+              _qty = q;
+              if (q == BuyQty.max) _slice = ForgeGoldSpendMode.pct100;
+            }),
+            onMaxLongPress: _mode == _Panel.forge ? _pickSlice : null,
+          ),
+        ],
+      ],
+    );
+  }
+
+  void _pickSlice() {
+    ForgeOverlay.pickWalletSlice(context, _forgeMode).then((mode) {
+      if (mode == null || !mounted) return;
+      setState(() {
+        _qty = BuyQty.max;
+        _slice = mode;
+      });
+    });
+  }
+
+  static const _tabLabels = ['FORGE', 'CAMP', 'MARKET'];
+
+  Widget _tab(_Panel p) {
+    final selected = _mode == p;
+    final label = _tabLabels[p.index];
+    void select() => setState(() => _mode = p);
+    final ink = selected ? GameTheme.torchHot : GameTheme.parchmentDim;
+    return WebClickScope(
+      label: label,
+      onPressed: select,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        excludeSemantics: true,
+        onTap: select,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: select,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: ChunkyFace(
+              tone: ChunkyTone.stone,
+              raised: !selected,
+              highlight: selected,
+              minHeight: GameTheme.primaryTouch,
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GameIcon.asset(
+                    UiIcon.goldDockSegment[p.index],
+                    size: 18,
+                    color: selected ? null : GameTheme.parchmentDim,
+                  ),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.hint(color: ink),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _openAdFreeShop() {

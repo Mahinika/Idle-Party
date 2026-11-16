@@ -112,13 +112,14 @@ class _HomeShellState extends State<HomeShell> {
               Column(
                 children: [
                   Expanded(
-                    flex: showPanel ? (full ? 1 : 4) : 5,
+                    flex: showPanel ? (full ? 1 : 3) : 5,
                     child: RepaintBoundary(
                       child: state.inDungeon
                           ? FightViewport(
                               director: director,
                               router: router,
                               onLeave: widget.onLeave,
+                              controls: showPanel,
                             )
                           : TownViewport(director: director, router: router),
                     ),

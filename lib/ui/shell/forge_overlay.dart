@@ -21,8 +21,13 @@ class ForgeOverlay extends StatefulWidget {
     required this.director,
     this.inlineUnderFight = false,
     this.expandedTrackList = false,
+    this.spendMode,
   });
   final GameDirector director;
+
+  /// Set when the home panel header owns ×1 / ×10 / MAX. The body then
+  /// skips its own selector and buys with this mode.
+  final ForgeGoldSpendMode? spendMode;
 
   /// SPLIT home: thin panel under the fight.
   final bool inlineUnderFight;
@@ -126,12 +131,79 @@ class ForgeOverlay extends StatefulWidget {
     return (parts[0], parts[1], soft);
   }
 
+  /// Long-press MAX: 5 / 25 / 50 / 100% of the wallet per tap.
+  static Future<ForgeGoldSpendMode?> pickWalletSlice(
+    BuildContext context,
+    ForgeGoldSpendMode current,
+  ) {
+    return showModalBottomSheet<ForgeGoldSpendMode>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewPaddingOf(ctx).bottom,
+        ),
+        child: Material(
+          color: GameTheme.sheet,
+          borderRadius: MenuChrome.sheetRadius,
+          child: Padding(
+            padding: ShellLayout.sheetPadding,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('MAX · wallet slice', style: GameTheme.section()),
+                ShellLayout.gap(4),
+                ShellLayout.hint(
+                  'Spend that slice of your wallet on one GOLD track.',
+                  maxLines: 2,
+                ),
+                ShellLayout.gap(8),
+                for (final mode in [
+                  ForgeGoldSpendMode.pct5,
+                  ForgeGoldSpendMode.pct25,
+                  ForgeGoldSpendMode.pct50,
+                  ForgeGoldSpendMode.pct100,
+                ])
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: GameButton(
+                      label: mode.chipLabel,
+                      style: current == mode
+                          ? GameButtonStyle.brown
+                          : GameButtonStyle.grey,
+                      primary: current == mode,
+                      onPressed: () => Navigator.pop(ctx, mode),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// MAX face for a spend mode: plain MAX for the wallet, else the slice.
+  static String maxLabelFor(ForgeGoldSpendMode mode) => switch (mode) {
+    ForgeGoldSpendMode.pct5 ||
+    ForgeGoldSpendMode.pct25 ||
+    ForgeGoldSpendMode.pct50 => mode.chipLabel,
+    _ => 'MAX',
+  };
+
   @override
   State<ForgeOverlay> createState() => _ForgeOverlayState();
 }
 
 class _ForgeOverlayState extends State<ForgeOverlay> {
-  ForgeGoldSpendMode _spendMode = ForgeGoldSpendMode.one;
+  ForgeGoldSpendMode _ownMode = ForgeGoldSpendMode.one;
+
+  /// Header-owned mode wins; otherwise this body's own selector.
+  ForgeGoldSpendMode get _spendMode => widget.spendMode ?? _ownMode;
+  set _spendMode(ForgeGoldSpendMode mode) => _ownMode = mode;
+
+  bool get _headerOwnsQty => widget.spendMode != null;
 
   GameDirector get director => widget.director;
 
@@ -223,55 +295,9 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   }
 
   void _openBulkSpendSheet() {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewPaddingOf(ctx).bottom,
-        ),
-        child: Material(
-          color: GameTheme.sheet,
-          borderRadius: MenuChrome.sheetRadius,
-          child: Padding(
-            padding: ShellLayout.sheetPadding,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text('MAX · wallet slice', style: GameTheme.section()),
-                ShellLayout.gap(4),
-                ShellLayout.hint(
-                  'Spend that slice of your wallet on one GOLD track.',
-                  maxLines: 2,
-                ),
-                ShellLayout.gap(8),
-                for (final mode in [
-                  ForgeGoldSpendMode.pct5,
-                  ForgeGoldSpendMode.pct25,
-                  ForgeGoldSpendMode.pct50,
-                  ForgeGoldSpendMode.pct100,
-                ])
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: GameButton(
-                      label: mode.chipLabel,
-                      style: _spendMode == mode
-                          ? GameButtonStyle.brown
-                          : GameButtonStyle.grey,
-                      primary: _spendMode == mode,
-                      onPressed: () {
-                        setState(() => _spendMode = mode);
-                        Navigator.pop(ctx);
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    ForgeOverlay.pickWalletSlice(context, _spendMode).then((mode) {
+      if (mode != null && mounted) setState(() => _spendMode = mode);
+    });
   }
 
   BuyQty get _qty => switch (_spendMode) {
@@ -281,12 +307,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   };
 
   /// MAX face: plain MAX for the whole wallet, else the picked slice.
-  String get _maxLabel => switch (_spendMode) {
-    ForgeGoldSpendMode.pct5 ||
-    ForgeGoldSpendMode.pct25 ||
-    ForgeGoldSpendMode.pct50 => _spendMode.chipLabel,
-    _ => 'MAX',
-  };
+  String get _maxLabel => ForgeOverlay.maxLabelFor(_spendMode);
 
   Widget _spendModeSegmented({required bool dense}) {
     return Align(
@@ -416,19 +437,21 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
       children: [
-        if (farmInline != null || canBuyAny)
+        if (farmInline != null || (canBuyAny && !_headerOwnsQty))
           Padding(
             padding: ShellLayout.seamPadding.copyWith(bottom: 2),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 if (farmInline != null) Expanded(child: farmInline),
-                if (farmInline != null && canBuyAny) const SizedBox(width: 6),
-                if (canBuyAny) Expanded(child: _spendModeSegmented(dense: true)),
+                if (farmInline != null && canBuyAny && !_headerOwnsQty)
+                  const SizedBox(width: 6),
+                if (canBuyAny && !_headerOwnsQty)
+                  Expanded(child: _spendModeSegmented(dense: true)),
               ],
             ),
           )
-        else
+        else if (!canBuyAny)
           Padding(
             padding: ShellLayout.listPadding,
             child: ShellLayout.hint(
