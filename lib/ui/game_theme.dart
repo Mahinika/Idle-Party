@@ -134,6 +134,8 @@ abstract final class GameTheme {
   static const Color levelAccent = Color(0xFF9466F0);
   static const Color levelAccentDeep = Color(0xFF3A2466);
   static const Color gainGreen = Color(0xFF86E39A);
+  /// Dark rim under red (leave / danger) chunky buttons.
+  static const Color chunkyRedEdge = Color(0xFF2A0A06);
   static const Color chunkyShadow = Color(0xCC000000);
 
   /// GEAR doll wash + bag UP/BEST chip.

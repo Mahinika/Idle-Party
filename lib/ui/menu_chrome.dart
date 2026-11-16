@@ -400,15 +400,22 @@ abstract final class MenuChrome {
         final scale = MediaQuery.textScalerOf(context).scale(1);
         final wanted = GameTheme.minTouch * (scale < 1 ? 1.0 : scale);
         final cap = maxHeight;
-        final height = cap == null || cap >= wanted
-            ? wanted
+        // +4: the 2 dp chunky rim sits outside the 44 dp tap rows.
+        final full = wanted + 4;
+        final height = cap == null || cap >= full
+            ? full
             : (cap < 36 ? 36.0 : cap);
         return Container(
       height: height,
+      // Chunky well: dark rim and a hard shadow. The picked segment is
+      // the rose toggle face (one meaning per color, see [ChunkyTone]).
       decoration: BoxDecoration(
         color: GameTheme.panelInset.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-        border: Border.all(color: GameTheme.border.withValues(alpha: 0.75)),
+        border: Border.all(color: GameTheme.buyGreyEdge, width: 2),
+        boxShadow: const [
+          BoxShadow(color: GameTheme.chunkyShadow, offset: Offset(0, 3)),
+        ],
       ),
       clipBehavior: Clip.antiAlias,
       child: Row(
@@ -430,9 +437,22 @@ abstract final class MenuChrome {
                   onTap: () => onSelect(i),
                   excludeSemantics: true,
                   child: Material(
-                    color: i == selectedIndex
-                        ? GameTheme.torch.withValues(alpha: 0.22)
-                        : Colors.transparent,
+                    color: Colors.transparent,
+                    child: Ink(
+                    decoration: i == selectedIndex
+                        ? const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                GameTheme.toggleOnShine,
+                                GameTheme.toggleOnTop,
+                                GameTheme.toggleOnBottom,
+                              ],
+                              stops: [0, 0.08, 1],
+                            ),
+                          )
+                        : null,
                     child: InkWell(
                       onTap: () => onSelect(i),
                       child: icons == null
@@ -442,7 +462,7 @@ abstract final class MenuChrome {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: GameTheme.readable(color: i == selectedIndex
-                                      ? GameTheme.torchHot
+                                      ? GameTheme.toggleOnText
                                       : GameTheme.parchmentDim),
                               ),
                             )
@@ -461,13 +481,14 @@ abstract final class MenuChrome {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: GameTheme.readable(color: i == selectedIndex
-                                            ? GameTheme.torchHot
+                                            ? GameTheme.toggleOnText
                                             : GameTheme.parchmentDim),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
+                    ),
                     ),
                   ),
                 ),
@@ -547,7 +568,14 @@ abstract final class MenuChrome {
         vertical: stacked ? 8 : 4,
       ),
       alignment: Alignment.center,
-      decoration: cardBox(selected: selected, inset: stacked),
+      decoration: onTap == null
+          ? cardBox(selected: selected, inset: stacked)
+          : cardBox(selected: selected, inset: stacked).copyWith(
+              // Tappable chips read as pressable: hard drop shadow.
+              boxShadow: const [
+                BoxShadow(color: GameTheme.chunkyShadow, offset: Offset(0, 2)),
+              ],
+            ),
       child: stacked
           ? Column(mainAxisSize: MainAxisSize.min, children: parts)
           : Row(mainAxisSize: MainAxisSize.min, children: parts),

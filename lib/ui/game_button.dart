@@ -33,7 +33,7 @@ class GameButton extends StatelessWidget {
   /// Long-press / hover hint (phone + accessibility).
   final String? tip;
 
-  ({Color top, Color bottom, Color border, Color text, Color glow})
+  ({Color top, Color bottom, Color border, Color text, Color glow, Color edge})
   get _palette => switch (style) {
     GameButtonStyle.brown => (
       top: GameTheme.buttonBrownTop,
@@ -41,6 +41,7 @@ class GameButton extends StatelessWidget {
       border: GameTheme.borderLit.withValues(alpha: 0.75),
       text: GameTheme.parchment,
       glow: GameTheme.torch.withValues(alpha: 0.22),
+      edge: GameTheme.buyGoldEdge,
     ),
     GameButtonStyle.grey => (
       top: GameTheme.buttonGreyTop,
@@ -48,6 +49,7 @@ class GameButton extends StatelessWidget {
       border: GameTheme.border.withValues(alpha: 0.95),
       text: GameTheme.parchment,
       glow: Colors.transparent,
+      edge: GameTheme.buyGreyEdge,
     ),
     GameButtonStyle.red => (
       top: GameTheme.buttonRedTop,
@@ -55,6 +57,7 @@ class GameButton extends StatelessWidget {
       border: GameTheme.bloodLit.withValues(alpha: 0.85),
       text: GameTheme.torchHot,
       glow: GameTheme.bloodLit.withValues(alpha: 0.2),
+      edge: GameTheme.chunkyRedEdge,
     ),
     GameButtonStyle.ghost => (
       top: GameTheme.panelInset.withValues(alpha: 0.55),
@@ -62,6 +65,7 @@ class GameButton extends StatelessWidget {
       border: GameTheme.border.withValues(alpha: 0.75),
       text: GameTheme.torchHot,
       glow: Colors.transparent,
+      edge: GameTheme.border.withValues(alpha: 0.75),
     ),
   };
 
@@ -105,28 +109,26 @@ class GameButton extends StatelessWidget {
                       GameTheme.buttonDisabledBottom,
                     ],
             ),
+            // Chunky face: dark rim, a hard drop shadow when it can be
+            // pressed, and a light top edge (see [ChunkyFace]).
             border: Border.all(
-              color: enabled
-                  ? palette.border
-                  : GameTheme.buttonDisabledBorder,
-              width: 1.2,
+              color: enabled ? palette.edge : GameTheme.buyGreyEdge,
+              width: 2,
             ),
-            boxShadow: enabled
-                ? [
+            boxShadow: enabled && style != GameButtonStyle.ghost
+                ? const [
                     BoxShadow(
-                      color: palette.glow,
-                      blurRadius: 12,
-                      offset: const Offset(0, 2),
-                    ),
-                    const BoxShadow(
-                      color: GameTheme.shadowSoft,
-                      offset: Offset(0, 4),
-                      blurRadius: 8,
+                      color: GameTheme.chunkyShadow,
+                      offset: Offset(0, 3),
                     ),
                   ]
                 : null,
           ),
-          child: ConstrainedBox(
+          child: _ShineEdge(
+            color: enabled && style != GameButtonStyle.ghost
+                ? palette.border
+                : null,
+            child: ConstrainedBox(
             constraints: BoxConstraints(
               minHeight: dense
                   ? GameTheme.minTouch
@@ -138,6 +140,7 @@ class GameButton extends StatelessWidget {
                     child: Center(child: child),
                   )
                 : Center(child: child),
+          ),
           ),
         ),
       ),
@@ -163,6 +166,32 @@ class GameButton extends StatelessWidget {
         excludeSemantics: true,
         child: tipped,
       ),
+    );
+  }
+}
+
+/// A 2 px light line along the top inside edge. Null [color] paints none.
+class _ShineEdge extends StatelessWidget {
+  const _ShineEdge({required this.color, required this.child});
+
+  final Color? color;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color;
+    if (c == null) return child;
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          left: 3,
+          right: 3,
+          top: 1,
+          height: 2,
+          child: IgnorePointer(child: ColoredBox(color: c)),
+        ),
+      ],
     );
   }
 }
