@@ -10,6 +10,7 @@ import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import 'buy_qty_toggle.dart';
 import 'power_upgrade_row.dart';
 import 'shell_common.dart';
 import 'shell_layout.dart';
@@ -134,9 +135,6 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
 
   GameDirector get director => widget.director;
 
-  bool get _compactPrice =>
-      widget.inlineUnderFight || widget.expandedTrackList;
-
   bool get _scrollAllTracks =>
       widget.inlineUnderFight || widget.expandedTrackList;
 
@@ -241,7 +239,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Bulk spend', style: GameTheme.section()),
+                Text('MAX · wallet slice', style: GameTheme.section()),
                 ShellLayout.gap(4),
                 ShellLayout.hint(
                   'Spend that slice of your wallet on one GOLD track.',
@@ -276,36 +274,35 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     );
   }
 
+  BuyQty get _qty => switch (_spendMode) {
+    ForgeGoldSpendMode.one => BuyQty.one,
+    ForgeGoldSpendMode.x10 => BuyQty.ten,
+    _ => BuyQty.max,
+  };
+
+  /// MAX face: plain MAX for the whole wallet, else the picked slice.
+  String get _maxLabel => switch (_spendMode) {
+    ForgeGoldSpendMode.pct5 ||
+    ForgeGoldSpendMode.pct25 ||
+    ForgeGoldSpendMode.pct50 => _spendMode.chipLabel,
+    _ => 'MAX',
+  };
+
   Widget _spendModeSegmented({required bool dense}) {
-    if (_compactPrice) {
-      return Wrap(
-        spacing: 6,
-        runSpacing: 4,
-        children: [
-          MenuChrome.chip(
-            label: '×1',
-            selected: _spendMode == ForgeGoldSpendMode.one,
-            onTap: () => setState(() => _spendMode = ForgeGoldSpendMode.one),
-          ),
-          MenuChrome.chip(
-            label: 'Bulk',
-            selected: _spendMode != ForgeGoldSpendMode.one,
-            onTap: _openBulkSpendSheet,
-          ),
-        ],
-      );
-    }
-    return MenuChrome.segmented(
-      dense: dense,
-      labels: const ['×1', 'Bulk'],
-      selectedIndex: _spendMode == ForgeGoldSpendMode.one ? 0 : 1,
-      onSelect: (i) {
-        if (i == 0) {
-          setState(() => _spendMode = ForgeGoldSpendMode.one);
-          return;
-        }
-        _openBulkSpendSheet();
-      },
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: BuyQtyToggle(
+        value: _qty,
+        maxLabel: _maxLabel,
+        onChanged: (q) => setState(
+          () => _spendMode = switch (q) {
+            BuyQty.one => ForgeGoldSpendMode.one,
+            BuyQty.ten => ForgeGoldSpendMode.x10,
+            BuyQty.max => ForgeGoldSpendMode.pct100,
+          },
+        ),
+        onMaxLongPress: _openBulkSpendSheet,
+      ),
     );
   }
 
@@ -521,9 +518,12 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
               child: ShellLayout.hint(
-                _spendMode == ForgeGoldSpendMode.one
-                    ? '×1 = one buy · Bulk opens wallet slices'
-                    : 'Bulk ${_spendMode.chipLabel} on each tap',
+                switch (_spendMode) {
+                  ForgeGoldSpendMode.one ||
+                  ForgeGoldSpendMode.x10 =>
+                    '×1 / ×10 buys per tap · MAX spends the wallet · hold MAX for 5–50%',
+                  _ => 'MAX ${_spendMode.chipLabel} of the wallet on each tap',
+                },
                 maxLines: 2,
               ),
             ),

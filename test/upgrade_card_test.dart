@@ -13,14 +13,15 @@ import 'package:idle_party/ui/shell/shell_common.dart';
 /// Brick-style upgrade cards: icon tile, "now › next" in green, a gold buy
 /// face when the wallet covers it and grey when it does not, and a ×N badge.
 void main() {
-  GameState forgeState({required int gold}) => GameLogic.enterDungeon(
-    GameLogic.createInitialState(now: DateTime(2026, 11, 4)),
-  ).copyWith(
-    homeLayout: HomeLayout.home,
-    homePanelFull: false,
-    gold: gold,
-    highestFloorCleared: 2,
-  );
+  GameState forgeState({required int gold}) =>
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime(2026, 11, 4)),
+      ).copyWith(
+        homeLayout: HomeLayout.home,
+        homePanelFull: false,
+        gold: gold,
+        highestFloorCleared: 2,
+      );
 
   Future<GameDirector> pumpForge(WidgetTester tester, GameState state) async {
     final director = GameDirector.preview(initialState: state);
@@ -82,7 +83,12 @@ void main() {
     tester,
   ) async {
     await pumpForge(tester, forgeState(gold: 0));
-    final faces = tester.widgetList<ChunkyFace>(find.byType(ChunkyFace));
+    final faces = tester.widgetList<ChunkyFace>(
+      find.descendant(
+        of: find.byType(PowerUpgradePriceChip),
+        matching: find.byType(ChunkyFace),
+      ),
+    );
     expect(faces, isNotEmpty);
     expect(faces.every((f) => f.tone == ChunkyTone.grey), isTrue);
     expect(find.text('×1'), findsNothing);
@@ -91,8 +97,18 @@ void main() {
 
   testWidgets('the buy face keeps a 76x48 floor', (tester) async {
     await pumpForge(tester, forgeState(gold: 5000));
-    final size = tester.getSize(find.byType(ChunkyFace).first);
-    expect(size.width, greaterThanOrEqualTo(PowerUpgradePriceChip.minFaceWidth));
+    final size = tester.getSize(
+      find
+          .descendant(
+            of: find.byType(PowerUpgradePriceChip),
+            matching: find.byType(ChunkyFace),
+          )
+          .first,
+    );
+    expect(
+      size.width,
+      greaterThanOrEqualTo(PowerUpgradePriceChip.minFaceWidth),
+    );
     expect(size.height, greaterThanOrEqualTo(48));
   });
 

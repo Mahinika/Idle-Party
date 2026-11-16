@@ -14,6 +14,7 @@ import '../game_theme.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 import 'income_overlay.dart';
+import 'buy_qty_toggle.dart';
 import 'power_upgrade_row.dart';
 import 'shell_common.dart';
 import 'shell_layout.dart';
@@ -40,8 +41,18 @@ class SanctuaryOverlay extends StatefulWidget {
 }
 
 class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
-  /// Shared buy size for every CAMP row (#53): 1 / 3 / 5 / max.
-  int _buyLevels = 1;
+  /// Shared buy size for every CAMP row: ×1 / ×10 / MAX. Not saved.
+  BuyQty _qty = BuyQty.one;
+
+  /// Most levels one MAX tap buys on a track (same per-level price).
+  static const int _campTapCap = 99;
+
+  /// Levels one tap asks for; each row clamps to what it can afford.
+  int get _buyLevels => switch (_qty) {
+    BuyQty.one => 1,
+    BuyQty.ten => 10,
+    BuyQty.max => 1 << 20,
+  };
   bool _nudgeLatched = false;
   bool _impressionQueued = false;
 
@@ -108,10 +119,16 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     }
     final maxBulk = campOpen
         ? _tracks
-            .map((t) => GameLogic.sanctuaryBulkAffordableLevels(state, t))
+            .map(
+              (t) => GameLogic.sanctuaryBulkAffordableLevels(
+                state,
+                t,
+                maxLevels: _campTapCap,
+              ),
+            )
             .fold<int>(1, (a, b) => a > b ? a : b)
         : 1;
-    final buyCap = maxBulk.clamp(1, 99);
+    final buyCap = maxBulk.clamp(1, _campTapCap);
     final effectiveBuy = _buyLevels.clamp(1, buyCap);
 
     return Padding(
@@ -146,9 +163,9 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
               ),
             ],
           ),
-          if (campOpen && buyCap > 1) ...[
+          if (campOpen) ...[
             ShellLayout.gap(8),
-            _bulkChooser(buyCap, effectiveBuy),
+            _qtyToggle(),
           ],
           if (campOpen) _adFreeLine(state),
           ShellLayout.gap(8),
@@ -183,9 +200,15 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       );
     }
     final maxBulk = _tracks
-        .map((t) => GameLogic.sanctuaryBulkAffordableLevels(state, t))
+        .map(
+              (t) => GameLogic.sanctuaryBulkAffordableLevels(
+                state,
+                t,
+                maxLevels: _campTapCap,
+              ),
+            )
         .fold<int>(1, (a, b) => a > b ? a : b);
-    final buyCap = maxBulk.clamp(1, 99);
+    final buyCap = maxBulk.clamp(1, _campTapCap);
     final effectiveBuy = _buyLevels.clamp(1, buyCap);
     final pick = GameLogic.recommendedSanctuaryTrack(state);
 
@@ -204,7 +227,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
                 runSpacing: 4,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  if (buyCap > 1) _bulkChooserThin(buyCap, effectiveBuy),
+                  _qtyToggle(),
                   if (GameLogic.campAdClaimsToday(state) <
                       GameLogic.campAdDailyCap)
                     MenuChrome.chip(
@@ -328,40 +351,10 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     _ => track,
   };
 
-  Widget _bulkChooser(int buyCap, int effectiveBuy) {
-    final options = <int>[1];
-    if (buyCap >= 3) options.add(3);
-    if (buyCap >= 5) options.add(5);
-    if (buyCap > 5 && !options.contains(buyCap)) options.add(buyCap);
-    final labels = [
-      for (final n in options) n == buyCap && n > 5 ? 'Max $n' : '$n',
-    ];
-    var selected = options.indexOf(effectiveBuy);
-    if (selected < 0) selected = 0;
-    return MenuChrome.segmented(
-      dense: true,
-      labels: labels,
-      selectedIndex: selected,
-      onSelect: (i) => setState(() => _buyLevels = options[i]),
-    );
-  }
-
-  Widget _bulkChooserThin(int buyCap, int effectiveBuy) {
-    final options = <int>[1];
-    if (buyCap >= 3) options.add(3);
-    if (buyCap >= 5) options.add(5);
-    if (buyCap > 5 && !options.contains(buyCap)) options.add(buyCap);
-    return Wrap(
-      spacing: 6,
-      runSpacing: 4,
-      children: [
-        for (final n in options)
-          MenuChrome.chip(
-            label: n == buyCap && n > 5 ? 'Max $n' : '$n',
-            selected: effectiveBuy == n,
-            onTap: () => setState(() => _buyLevels = n),
-          ),
-      ],
+  Widget _qtyToggle() {
+    return BuyQtyToggle(
+      value: _qty,
+      onChanged: (q) => setState(() => _qty = q),
     );
   }
 
@@ -374,7 +367,11 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     final level = _levelOf(state, track);
     final prestige = _prestigeOf(state, track);
     final cost = GameLogic.sanctuaryCost(level);
-    final maxForTrack = GameLogic.sanctuaryBulkAffordableLevels(state, track);
+    final maxForTrack = GameLogic.sanctuaryBulkAffordableLevels(
+      state,
+      track,
+      maxLevels: _campTapCap,
+    );
     // clamp(1, 0) throws when this track costs more than the wallet.
     final buyN = maxForTrack < 1 ? 1 : buyLevels.clamp(1, maxForTrack);
     final canAffordOne = state.essence >= cost;

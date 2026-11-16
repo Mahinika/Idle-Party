@@ -3673,7 +3673,10 @@ enum PartyUpgradeType {
 }
 
 /// How much wallet gold a FORGE GOLD row spends when tapped.
-enum ForgeGoldSpendMode { one, pct5, pct25, pct50, pct100 }
+/// How much one FORGE tap buys. [x10] is up to ten buys at the usual
+/// per-buy price (fewer when the wallet runs out). Not saved; the forge
+/// opens on [one]. New values are appended, never reordered.
+enum ForgeGoldSpendMode { one, pct5, pct25, pct50, pct100, x10 }
 
 extension ForgeGoldSpendModeLabels on ForgeGoldSpendMode {
   String get chipLabel => switch (this) {
@@ -3682,5 +3685,13 @@ extension ForgeGoldSpendModeLabels on ForgeGoldSpendMode {
     ForgeGoldSpendMode.pct25 => '25%',
     ForgeGoldSpendMode.pct50 => '50%',
     ForgeGoldSpendMode.pct100 => '100%',
+    ForgeGoldSpendMode.x10 => '×10',
+  };
+
+  /// Most buys one tap makes; null means the gold budget is the only cap.
+  int? get maxBuys => switch (this) {
+    ForgeGoldSpendMode.one => 1,
+    ForgeGoldSpendMode.x10 => 10,
+    _ => null,
   };
 }
