@@ -71,6 +71,12 @@ class GameLogic {
   /// Injectable randomness for enemy targeting (seed in tests).
   static Random random = Random();
 
+  /// Test-only clock. Production leaves this null, so callers use [DateTime.now].
+  @visibleForTesting
+  static DateTime? debugNow;
+
+  static DateTime _clock([DateTime? now]) => now ?? debugNow ?? DateTime.now();
+
   static const String warBannerRelic = RelicIds.warBanner;
   static const String godHandFocusRelic = RelicIds.godHandFocus;
   static const String chamberLuckRelic = RelicIds.chamberLuck;
