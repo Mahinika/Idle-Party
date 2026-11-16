@@ -25,9 +25,9 @@ abstract final class GameTheme {
   static const Color townLeafMaroon = Color(0xFF92221E);
   static const Color townLeafRust = Color(0xFFDE6A2C);
   static const Color townLeafShade = Color(0x66200E18);
-  static const Color townMist = Color(0x70D2C6EA);
+  static const Color townMist = Color(0x7CD2C6EA);
   /// Ground fog at the foot of the back row, a little cooler than [townMist].
-  static const Color townMistLow = Color(0x66B8ACDC);
+  static const Color townMistLow = Color(0x74B8ACDC);
   static const Color townFireGlow = Color(0xFFFF9630);
   /// Light pool the fire throws on the cobbles.
   static const Color townFirePool = Color(0xFFFFB450);

@@ -976,7 +976,16 @@ def vault(opened: bool) -> "Image":
     return finish(p).image()
 
 
-def campfire() -> "Image":
-    """56×68 campfire with a warm-lit stone ring and a log seat."""
-    base = autumn.campfire()
-    return base
+def ember_dim(img):
+    """Pull pale street stones down to the warm brown of the square, so the
+    street reads as the same cobbles in shade, not a lilac band.
+    Lit pixels (leaves in glow colors) are kept."""
+    src = img.convert("RGBA")
+    out = []
+    for r, g_, b, a in src.getdata():
+        if a == 0 or (r, g_, b) in autumn.EMISSIVE:
+            out.append((r, g_, b, a))
+            continue
+        out.append((int(r * 0.76), int(g_ * 0.64), int(b * 0.58), a))
+    src.putdata(out)
+    return src
