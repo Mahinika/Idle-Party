@@ -14,6 +14,7 @@ import '../forge_overlay.dart';
 import '../market_overlay.dart';
 import '../sanctuary_overlay.dart';
 import '../shell_layout.dart';
+import 'nav_clearance.dart';
 
 enum HomeGoldPanel { forge, camp, market }
 
@@ -251,7 +252,9 @@ class _UpgradePanelState extends State<UpgradePanel> {
   Widget _locked(GameState state) {
     const lockHint = 'FORGE opens after the first boss (F2).';
     return ListView(
-      padding: ShellLayout.listPadding,
+      padding: ShellLayout.listPadding.copyWith(
+        bottom: ShellLayout.listPadding.bottom + NavClearance.of(context),
+      ),
       children: [
         for (final hero in state.heroes)
           Text(

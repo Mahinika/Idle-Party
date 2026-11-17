@@ -20,6 +20,7 @@ import 'fight_viewport.dart';
 import 'home_gold_dock.dart';
 import 'home_nav_bar.dart';
 import 'home_prompts.dart';
+import 'nav_clearance.dart';
 import 'home_top_bar.dart';
 import 'town_viewport.dart';
 import 'upgrade_panel.dart';
@@ -138,11 +139,14 @@ class _HomeShellState extends State<HomeShell> {
                         child: DirectorSelect<int>(
                           director: director,
                           select: (s) => s.gold + s.essence,
-                          builder: (context, _) => UpgradePanel(
-                            director: director,
-                            router: router,
-                            focusPanel: _goldFocus,
-                            focusGeneration: _goldFocusGen,
+                          builder: (context, _) => NavClearance(
+                            bottom: HomeNavBar.fightOverhang(context),
+                            child: UpgradePanel(
+                              director: director,
+                              router: router,
+                              focusPanel: _goldFocus,
+                              focusGeneration: _goldFocusGen,
+                            ),
                           ),
                         ),
                       ),

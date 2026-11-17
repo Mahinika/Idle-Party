@@ -31,10 +31,9 @@ class HomeNavBar extends StatelessWidget {
     final shop = tabs.contains(MenuRoute.shop);
     final scale = MediaQuery.textScalerOf(context).scale(1);
     final inset = MenuChrome.systemBottomInset(context);
-    final grown = GameTheme.navBarExtent(scale);
     // Keep the labels above the gesture inset without stacking a full extra
     // bar on a short phone. A tall bar already has room for the inset.
-    final labelH = grown - inset > 40 ? grown - inset : 40.0;
+    final labelH = HomeNavBar.labelHeight(context);
     final fightD = HomeNavBar.fightDiameter(scale);
     return Material(
       color: GameTheme.stoneDeep,
@@ -91,9 +90,7 @@ class HomeNavBar extends StatelessWidget {
                 Positioned(
                   // Rise over the bar. The rim may dip into the gesture
                   // inset a little; the FIGHT label stays above it.
-                  top: labelH + 10 - fightD < -HomeNavBar.fightLift
-                      ? labelH + 10 - fightD
-                      : -HomeNavBar.fightLift,
+                  top: -HomeNavBar.fightOverhang(context),
                   left: 0,
                   right: 0,
                   child: Center(
@@ -117,6 +114,21 @@ class HomeNavBar extends StatelessWidget {
   static const double fightLift = 14;
 
   /// About 68 dp; grows only past the in-app text ceiling (raw OS scale).
+  static double labelHeight(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    final inset = MenuChrome.systemBottomInset(context);
+    final grown = GameTheme.navBarExtent(scale);
+    return grown - inset > 40 ? grown - inset : 40.0;
+  }
+
+  /// How far the round FIGHT reaches above the bar. Lists that end at the
+  /// bar pad their last row by this much ([NavClearance]).
+  static double fightOverhang(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    final rise = fightDiameter(scale) - labelHeight(context) - 10;
+    return rise > fightLift ? rise : fightLift;
+  }
+
   static double fightDiameter(double textScale) {
     const base = 68.0;
     if (textScale <= GameTheme.typeScaleMax) return base;

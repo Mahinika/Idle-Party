@@ -13,6 +13,7 @@ import '../equipment_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import 'home/nav_clearance.dart';
 import 'shell_common.dart';
 import 'shell_layout.dart';
 
@@ -87,11 +88,11 @@ class _MarketOverlayState extends State<MarketOverlay> {
         ShellLayout.gap(4),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               ShellLayout.sheetHorizontal,
               0,
               ShellLayout.sheetHorizontal,
-              8,
+              8 + NavClearance.of(context),
             ),
             children: listings.isEmpty
                 ? [

@@ -11,6 +11,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import 'buy_qty_toggle.dart';
+import 'home/nav_clearance.dart';
 import 'power_upgrade_row.dart';
 import 'shell_common.dart';
 import 'shell_layout.dart';
@@ -462,11 +463,11 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
             ),
           ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
             ShellLayout.sheetHorizontal,
             4,
             ShellLayout.sheetHorizontal,
-            8,
+            8 + NavClearance.of(context),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

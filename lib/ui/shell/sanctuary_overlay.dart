@@ -13,6 +13,7 @@ import '../game_icon.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
+import 'home/nav_clearance.dart';
 import 'income_overlay.dart';
 import 'buy_qty_toggle.dart';
 import 'power_upgrade_row.dart';
@@ -232,11 +233,11 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       for (final track in _tracks)
         _campTrackCard(state, track, effectiveBuy, recommended: track == pick),
     ];
-    const listPad = EdgeInsets.fromLTRB(
+    final listPad = EdgeInsets.fromLTRB(
       ShellLayout.sheetHorizontal,
       4,
       ShellLayout.sheetHorizontal,
-      8,
+      8 + NavClearance.of(context),
     );
     if (widget.qty != null) {
       // The header owns ×1 / ×10 / MAX: every row here is a buy row,
