@@ -319,16 +319,15 @@ class CharacterEquipPanel extends StatelessWidget {
                     () {
                       final avg = _avgDisplayItemLevel(hero);
                       final minIl = _minDisplayItemLevel(hero);
-                      final ilBit = avg == null
-                          ? ''
-                          : minIl == null || minIl == avg
-                          ? ' · iLvl $avg'
-                          : ' · iLvl $avg · min $minIl';
-                      return state.isPartyDefeated
-                          ? '$ilBit  ·  WIPED'.replaceFirst(' ·  ·', ' ·')
-                          : '$ilBit  ·  HP '
-                                '${hero.currentHp.clamp(0, maxHp)}/$maxHp'
-                              .replaceFirst(' ·  ·', ' ·');
+                      // Joined parts: the line never starts with a "·".
+                      return [
+                        if (avg != null) 'iLvl $avg',
+                        if (avg != null && minIl != null && minIl != avg)
+                          'min $minIl',
+                        state.isPartyDefeated
+                            ? 'WIPED'
+                            : 'HP ${hero.currentHp.clamp(0, maxHp)}/$maxHp',
+                      ].join('  ·  ');
                     }(),
                     textAlign: TextAlign.center,
                     style: GameTheme.section(color: GameTheme.parchmentDim),

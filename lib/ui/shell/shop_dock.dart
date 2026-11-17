@@ -211,7 +211,8 @@ class _ShopDockState extends State<ShopDock> {
             label: 'Show picks only',
             onTap: onToggleAllPacks,
           ),
-        ShellLayout.hint(hint, maxLines: 4),
+        // Six lines: at the 1.45 text cap four cut the last sentence.
+        ShellLayout.hint(hint, maxLines: 6),
         ShellLayout.gap(4),
         MenuChrome.fold(
           title: 'How the shop works',
