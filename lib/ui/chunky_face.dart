@@ -21,6 +21,7 @@ class ChunkyFace extends StatelessWidget {
     this.minHeight = GameTheme.minTouch,
     this.padding = const EdgeInsets.symmetric(horizontal: 8),
     this.radius = GameTheme.radiusSm,
+    this.edgeColor,
   });
 
   final Widget child;
@@ -35,6 +36,10 @@ class ChunkyFace extends StatelessWidget {
   final double minHeight;
   final EdgeInsets padding;
   final double radius;
+
+  /// Rim override. A secondary pick (the ×N selector) is a stone face with
+  /// a rose rim, so only one filled rose face shows at a time.
+  final Color? edgeColor;
 
   static (Color, Color, Color, Color) colorsFor(ChunkyTone tone) =>
       switch (tone) {
@@ -98,7 +103,7 @@ class ChunkyFace extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
-          color: highlight ? GameTheme.torchHot : edge,
+          color: highlight ? GameTheme.torchHot : (edgeColor ?? edge),
           width: 2,
         ),
         boxShadow: raised

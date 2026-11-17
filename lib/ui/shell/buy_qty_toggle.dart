@@ -7,7 +7,9 @@ import '../web_click_bridge.dart';
 /// How many buys one tap makes. Shared by FORGE and CAMP. Not saved.
 enum BuyQty { one, ten, max }
 
-/// ×1 · ×10 · MAX. The picked one is rose. Long-press MAX for the
+/// ×1 · ×10 · MAX. The picked one has a rose rim and rose text on a
+/// pressed stone face: a secondary pick, so the FORGE/CAMP tab above stays
+/// the one filled rose face on screen. Long-press MAX for the
 /// wallet-slice sheet (FORGE 5/25/50/100%) when [onMaxLongPress] is set.
 class BuyQtyToggle extends StatelessWidget {
   const BuyQtyToggle({
@@ -46,7 +48,8 @@ class BuyQtyToggle extends StatelessWidget {
 
   Widget _button(BuyQty qty, String label, {VoidCallback? longPress}) {
     final selected = value == qty;
-    final tone = selected ? ChunkyTone.rose : ChunkyTone.stone;
+    const tone = ChunkyTone.stone;
+    final textColor = selected ? GameTheme.toggleOnTop : GameTheme.parchmentDim;
     final semantics = qty == BuyQty.max && longPress != null
         ? '$label · hold for wallet slices'
         : label;
@@ -69,6 +72,7 @@ class BuyQtyToggle extends StatelessWidget {
             child: ChunkyFace(
               tone: tone,
               raised: !selected,
+              edgeColor: selected ? GameTheme.toggleOnTop : null,
               minWidth: buttonWidth,
               minHeight: GameTheme.minTouch,
               padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -78,7 +82,7 @@ class BuyQtyToggle extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.button(
                   size: GameTheme.typeButtonDense,
-                  color: ChunkyFace.textOn(tone),
+                  color: textColor,
                 ),
               ),
             ),
