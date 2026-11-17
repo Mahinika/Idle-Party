@@ -14,6 +14,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import 'home/nav_clearance.dart';
+import 'power_upgrade_row.dart';
 import 'shell_common.dart';
 import 'shell_layout.dart';
 
@@ -43,8 +44,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
     widget.director.ensureMarketListings();
   }
 
-  bool get _boundedList =>
-      widget.inlineUnderFight || widget.expandedTrackList;
+  bool get _boundedList => widget.inlineUnderFight || widget.expandedTrackList;
 
   @override
   Widget build(BuildContext context) {
@@ -64,28 +64,11 @@ class _MarketOverlayState extends State<MarketOverlay> {
     GameDirector director,
   ) {
     final listings = _sortedFilteredListings(state);
+    // Controls scroll with the listings: at 1.45 the wrapped chip rows can
+    // not push the fixed panel past its bottom.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: ShellLayout.sheetHorizontal,
-          ),
-          child: _marketTopControls(state, director, compact: true),
-        ),
-        ShellLayout.gap(4),
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: ShellLayout.sheetHorizontal,
-          ),
-          child: widget.inlineUnderFight
-              ? SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: _filterChips(state),
-                )
-              : _filterChips(state),
-        ),
-        ShellLayout.gap(4),
         Expanded(
           child: ListView(
             padding: EdgeInsets.fromLTRB(
@@ -94,48 +77,59 @@ class _MarketOverlayState extends State<MarketOverlay> {
               ShellLayout.sheetHorizontal,
               8 + NavClearance.of(context),
             ),
-            children: listings.isEmpty
-                ? [
-                    ShellLayout.hint(
-                      _upgradesOnly
-                          ? 'No upgrades in stock.'
-                          : 'No listings.',
-                      maxLines: 2,
-                    ),
-                    if (_upgradesOnly) ...[
-                      const SizedBox(height: 8),
-                      GameButton(
-                        label: 'ALL GEAR',
-                        style: GameButtonStyle.grey,
-                        dense: true,
-                        expanded: false,
-                        onPressed: () => setState(() => _upgradesOnly = false),
+            children: [
+              _marketTopControls(state, director, compact: true),
+              ShellLayout.gap(4),
+              _filterChips(state, director),
+              ShellLayout.gap(4),
+              ...listings.isEmpty
+                  ? [
+                      ShellLayout.hint(
+                        _upgradesOnly
+                            ? 'No upgrades in stock.'
+                            : 'No listings.',
+                        maxLines: 2,
                       ),
-                    ] else ...[
-                      const SizedBox(height: 8),
-                      GameButton(
-                        label: 'REROLL',
-                        style: GameButtonStyle.grey,
-                        dense: true,
-                        expanded: false,
-                        onPressed: state.gold >=
-                                GameLogic.marketListingsPaidRefreshCost(state)
-                            ? director.refreshMarketListings
-                            : null,
-                      ),
+                      if (_upgradesOnly) ...[
+                        const SizedBox(height: 8),
+                        GameButton(
+                          label: 'ALL GEAR',
+                          style: GameButtonStyle.grey,
+                          dense: true,
+                          expanded: false,
+                          onPressed: () =>
+                              setState(() => _upgradesOnly = false),
+                        ),
+                      ] else ...[
+                        const SizedBox(height: 8),
+                        GameButton(
+                          label: 'REROLL',
+                          style: GameButtonStyle.grey,
+                          dense: true,
+                          expanded: false,
+                          onPressed:
+                              state.gold >=
+                                  GameLogic.marketListingsPaidRefreshCost(state)
+                              ? director.refreshMarketListings
+                              : null,
+                        ),
+                      ],
+                    ]
+                  : [
+                      for (final listing in listings)
+                        _listingCard(state, director, listing),
                     ],
-                  ]
-                : [
-                    for (final listing in listings)
-                      _listingCard(state, director, listing),
-                  ],
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _filterChips(GameState state) {
+  /// UPGRADES / ALL GEAR plus the reroll chip. A [Wrap], never a sideways
+  /// scroll: at 1.45 the reroll price takes its own line instead of being
+  /// cut at the edge.
+  Widget _filterChips(GameState state, GameDirector director) {
     final upgradeCount = state.marketListings
         .where((l) => _upgradeHeroName(state, l) != null)
         .length;
@@ -153,7 +147,21 @@ class _MarketOverlayState extends State<MarketOverlay> {
           selected: !_upgradesOnly,
           onTap: () => setState(() => _upgradesOnly = false),
         ),
+        _rerollChip(state, director),
       ],
+    );
+  }
+
+  /// Paid reroll while listings are on cooldown, "Fresh stock" otherwise.
+  Widget _rerollChip(GameState state, GameDirector director) {
+    final refreshCost = GameLogic.marketListingsPaidRefreshCost(state);
+    final freeReady = MarketListingsService.refreshRemainingMs(state) <= 0;
+    if (freeReady) {
+      return _marketFlaskChip(label: 'Fresh stock', tone: GameTheme.mossLit);
+    }
+    return _marketFlaskChip(
+      label: 'Reroll ${formatGold(refreshCost)}',
+      onTap: state.gold >= refreshCost ? director.refreshMarketListings : null,
     );
   }
 
@@ -193,24 +201,8 @@ class _MarketOverlayState extends State<MarketOverlay> {
             label: 'Bandage ${formatGold(bandageCost)}',
             onTap: canBandage ? director.buyMarketBandage : null,
           ),
-          if (!freeReady)
-            _marketFlaskChip(
-              label: 'Reroll ${formatGold(refreshCost)}',
-              onTap: canReroll ? director.refreshMarketListings : null,
-            )
-          else
-            _marketFlaskChip(
-              label: 'Fresh stock',
-              tone: GameTheme.mossLit,
-            ),
         ],
       );
-      if (widget.inlineUnderFight) {
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: wrap,
-        );
-      }
       return wrap;
     }
 
@@ -279,16 +271,14 @@ class _MarketOverlayState extends State<MarketOverlay> {
     final refreshCost = GameLogic.marketListingsPaidRefreshCost(state);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
+      padding: const EdgeInsets.symmetric(
+        horizontal: ShellLayout.sheetHorizontal,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _marketTopControls(
-            state,
-            director,
-            compact: compactControls,
-          ),
+          _marketTopControls(state, director, compact: compactControls),
           if (!compactControls) ...[
             ShellLayout.gap(6),
             ShellLayout.hint(
@@ -297,23 +287,26 @@ class _MarketOverlayState extends State<MarketOverlay> {
             ),
           ],
           ShellLayout.gap(8),
-          Row(
-            children: [
-              MenuChrome.chip(
-                label: upgradeCount > 0
-                    ? 'UPGRADES · $upgradeCount'
-                    : 'UPGRADES',
-                selected: _upgradesOnly,
-                onTap: () => setState(() => _upgradesOnly = true),
-              ),
-              const SizedBox(width: 6),
-              MenuChrome.chip(
-                label: 'ALL GEAR',
-                selected: !_upgradesOnly,
-                onTap: () => setState(() => _upgradesOnly = false),
-              ),
-            ],
-          ),
+          if (compactControls)
+            _filterChips(state, director)
+          else
+            Row(
+              children: [
+                MenuChrome.chip(
+                  label: upgradeCount > 0
+                      ? 'UPGRADES · $upgradeCount'
+                      : 'UPGRADES',
+                  selected: _upgradesOnly,
+                  onTap: () => setState(() => _upgradesOnly = true),
+                ),
+                const SizedBox(width: 6),
+                MenuChrome.chip(
+                  label: 'ALL GEAR',
+                  selected: !_upgradesOnly,
+                  onTap: () => setState(() => _upgradesOnly = false),
+                ),
+              ],
+            ),
           ShellLayout.gap(8),
           ShellLayout.hint(
             'Fills an empty slot. UPGRADE is stronger than what is worn.',
@@ -326,9 +319,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
               child: Column(
                 children: [
                   Text(
-                    _upgradesOnly
-                        ? 'No upgrades in stock.'
-                        : 'No listings.',
+                    _upgradesOnly ? 'No upgrades in stock.' : 'No listings.',
                     textAlign: TextAlign.center,
                     style: GameTheme.readable(color: GameTheme.parchmentDim),
                   ),
@@ -396,94 +387,54 @@ class _MarketOverlayState extends State<MarketOverlay> {
     final isUpgrade = upgradeHero != null;
     final isGapFill =
         !isUpgrade && MarketListingsService.isGapFillListing(state, listing);
-    final wornCompare = _wornCompareLine(state, listing);
     final canBuy = state.gold >= listing.priceGold;
     final showUpgradeBadge = isUpgrade && canBuy;
-    final subtitle = isUpgrade
-        ? (wornCompare != null
-              ? '$upgradeHero · $wornCompare'
-              : '$upgradeHero · upgrade')
+    final price = formatGold(listing.priceGold);
+    final ilvl = item.effectiveItemLevel;
+    final compare = isUpgrade ? _wornCompare(state, listing) : null;
+    // "now › next": what is worn today, then the listing in green.
+    final (String subtitle, String? next) = isUpgrade
+        ? (compare != null
+              ? ('$upgradeHero · ${compare.now}', compare.next)
+              : ('$upgradeHero · upgrade', null))
         : isGapFill
-        ? 'Fills empty slot · ${_slotLabel(listing.slot)} · iLvl ${item.effectiveItemLevel}'
-        : '${_slotLabel(listing.slot)} · iLvl ${item.effectiveItemLevel}';
+        ? ('Fills empty slot · ${_slotLabel(listing.slot)}', 'i$ilvl')
+        : ('${_slotLabel(listing.slot)} · iLvl $ilvl', null);
+    final rim = rarityBorderColor(item.rarity);
+    void buy() => director.buyMarketListing(listing.id);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Semantics(
-        button: true,
-        label: canBuy
-            ? 'Buy ${item.name}, ${formatGold(listing.priceGold)}'
-            : '${item.name}, need ${formatGold(listing.priceGold)}',
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: canBuy
-              ? () => director.buyMarketListing(listing.id)
-              : () => director.showToast(
-                  'Need ${formatGold(listing.priceGold)}',
-                  life: 1.6,
-                ),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-            decoration: MenuChrome.listCard(
-              selected: showUpgradeBadge || isGapFill,
-              borderColor: rarityBorderColor(item.rarity).withValues(alpha: 0.85),
-            ),
-            child: Row(
-              children: [
-                EquipmentIcon(item: item, size: 26),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          if (showUpgradeBadge) ...[
-                            Text(
-                              'UPGRADE',
-                              style: GameTheme.hint(color: GameTheme.mossLit),
-                            ),
-                            const SizedBox(width: 6),
-                          ] else if (isGapFill) ...[
-                            Text(
-                              'EMPTY SLOT',
-                              style: GameTheme.hint(color: GameTheme.torchHot),
-                            ),
-                            const SizedBox(width: 6),
-                          ],
-                          Expanded(
-                            child: Text(
-                              item.name,
-                              style: GameTheme.section(color: canBuy
-                                    ? GameTheme.parchment
-                                    : GameTheme.parchmentDim),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        subtitle,
-                        style: GameTheme.hint(color: showUpgradeBadge
-                              ? GameTheme.mossLit
-                              : GameTheme.parchmentDim),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  canBuy
-                      ? formatGold(listing.priceGold)
-                      : 'Need ${formatGold(listing.priceGold)}',
-                  style: GameTheme.hint(color: canBuy && showUpgradeBadge
-                        ? GameTheme.torchHot
-                        : GameTheme.parchmentDim),
-                ),
-              ],
+    return Semantics(
+      button: true,
+      label: canBuy ? 'Buy ${item.name}, $price' : '${item.name}, need $price',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: canBuy
+            ? buy
+            : () => director.showToast('Need $price', life: 1.6),
+        child: PowerUpgradeRow(
+          accent: rim.withValues(alpha: 0.85),
+          selected: showUpgradeBadge || isGapFill,
+          dense: true,
+          leading: UpgradeIconTile(
+            accent: rim,
+            child: EquipmentIcon(item: item, size: 30),
+          ),
+          title: item.name,
+          tag: showUpgradeBadge
+              ? 'UPGRADE'
+              : isGapFill
+              ? 'EMPTY SLOT'
+              : null,
+          subtitle: subtitle,
+          gainNext: next,
+          detail: canBuy
+              ? null
+              : 'Need ${formatGold(listing.priceGold - state.gold)} more',
+          trailing: ExcludeSemantics(
+            child: PowerUpgradePriceChip(
+              label: price,
+              primary: showUpgradeBadge,
+              onPressed: canBuy ? buy : null,
             ),
           ),
         ),
@@ -524,7 +475,11 @@ class _MarketOverlayState extends State<MarketOverlay> {
     return null;
   }
 
-  String? _wornCompareLine(GameState state, MarketListing listing) {
+  /// Worn vs listing for the hero the listing upgrades: ("i5", "i9 · +37").
+  ({String now, String next})? _wornCompare(
+    GameState state,
+    MarketListing listing,
+  ) {
     PartyHero? hero;
     if (listing.targetHeroIndex >= 0 &&
         listing.targetHeroIndex < state.heroes.length) {
@@ -551,15 +506,13 @@ class _MarketOverlayState extends State<MarketOverlay> {
       pairingStash: state.gearStash,
     );
     if (!cmp.isUpgrade) return null;
-    final worn = hero.itemIn(listing.slot);
-    final wornIlvl = worn?.effectiveItemLevel;
-    if (cmp.powerDelta > 0 && wornIlvl != null) {
-      return '+${cmp.powerDelta} · i$wornIlvl→${listing.item.effectiveItemLevel}';
-    }
-    if (wornIlvl != null) {
-      return 'i$wornIlvl→${listing.item.effectiveItemLevel}';
-    }
-    return 'empty→i${listing.item.effectiveItemLevel}';
+    final wornIlvl = hero.itemIn(listing.slot)?.effectiveItemLevel;
+    final ilvl = listing.item.effectiveItemLevel;
+    final gain = cmp.powerDelta > 0 ? ' · +${cmp.powerDelta}' : '';
+    return (
+      now: wornIlvl != null ? 'i$wornIlvl' : 'empty',
+      next: 'i$ilvl$gain',
+    );
   }
 
   Widget _marketFlaskChip({
@@ -568,13 +521,17 @@ class _MarketOverlayState extends State<MarketOverlay> {
     VoidCallback? onTap,
     Color? tone,
   }) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-      child: MenuChrome.chip(
-        label: label,
-        selected: selected,
-        onTap: onTap,
-        tone: tone,
+    // IntrinsicWidth: a disabled chip is a centred box that would fill the
+    // whole Wrap line.
+    return IntrinsicWidth(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+        child: MenuChrome.chip(
+          label: label,
+          selected: selected,
+          onTap: onTap,
+          tone: tone,
+        ),
       ),
     );
   }

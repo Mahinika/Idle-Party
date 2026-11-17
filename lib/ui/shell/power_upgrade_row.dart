@@ -93,9 +93,10 @@ class PowerUpgradeRow extends StatelessWidget {
                         Flexible(
                           child: Text(
                             title,
-                            style: (dense ? GameTheme.readable : GameTheme.section)(
-                              color: GameTheme.parchment,
-                            ),
+                            style: (dense
+                                ? GameTheme.readable
+                                : GameTheme
+                                      .section)(color: GameTheme.parchment),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -163,10 +164,7 @@ class PowerUpgradeRow extends StatelessWidget {
               trailing,
             ],
           ),
-          if (below != null) ...[
-            const SizedBox(height: 4),
-            below!,
-          ],
+          if (below != null) ...[const SizedBox(height: 4), below!],
         ],
       ),
     );
@@ -174,22 +172,31 @@ class PowerUpgradeRow extends StatelessWidget {
 }
 
 /// 48 dp icon tile with a fixed color per stat (left of an upgrade card).
+///
+/// Pass an [icon] asset, or a [child] (for example an item sprite) to paint
+/// inside the same tile. [dim] greys a locked tile.
 class UpgradeIconTile extends StatelessWidget {
   const UpgradeIconTile({
     super.key,
-    required this.icon,
+    this.icon,
+    this.child,
     required this.accent,
     this.size = GameTheme.primaryTouch,
-  });
+    this.dim = false,
+  }) : assert(icon != null || child != null);
 
-  final String icon;
+  final String? icon;
+  final Widget? child;
   final Color accent;
   final double size;
+  final bool dim;
 
   @override
   Widget build(BuildContext context) {
-    final top = Color.lerp(accent, GameTheme.parchment, 0.18)!;
-    final bottom = Color.lerp(accent, GameTheme.ink, 0.55)!;
+    final tone = dim ? GameTheme.buyGreyTop : accent;
+    final top = Color.lerp(tone, GameTheme.parchment, dim ? 0.05 : 0.18)!;
+    final bottom = Color.lerp(tone, GameTheme.ink, 0.55)!;
+    final mark = child ?? GameIcon.asset(icon!, size: size * 0.6);
     return ExcludeSemantics(
       child: Container(
         width: size,
@@ -203,14 +210,11 @@ class UpgradeIconTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(GameTheme.radiusSm),
           border: Border.all(color: GameTheme.buyGoldEdge, width: 2),
           boxShadow: const [
-            BoxShadow(
-              color: GameTheme.chunkyShadow,
-              offset: Offset(0, 2),
-            ),
+            BoxShadow(color: GameTheme.chunkyShadow, offset: Offset(0, 2)),
           ],
         ),
         alignment: Alignment.center,
-        child: GameIcon.asset(icon, size: size * 0.6),
+        child: dim ? Opacity(opacity: 0.45, child: mark) : mark,
       ),
     );
   }
