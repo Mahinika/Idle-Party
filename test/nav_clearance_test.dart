@@ -5,9 +5,12 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/ui/game_theme.dart';
+import 'package:idle_party/ui/game_button.dart';
+import 'package:idle_party/ui/shell/home/home_gold_dock.dart';
 import 'package:idle_party/ui/shell/home/home_nav_bar.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
 import 'package:idle_party/ui/shell/home/nav_clearance.dart';
+import 'package:idle_party/ui/shell/home/town_viewport.dart';
 import 'package:idle_party/ui/shell/home/upgrade_panel.dart';
 import 'package:idle_party/ui/shell/power_upgrade_row.dart';
 
@@ -18,6 +21,8 @@ void main() {
     WidgetTester tester, {
     double scale = 1,
     double bottomInset = 0,
+    bool full = false,
+    bool inDungeon = true,
   }) async {
     tester.view.physicalSize = const Size(360, 780);
     tester.view.devicePixelRatio = 1;
@@ -28,7 +33,7 @@ void main() {
       now: DateTime.now().add(const Duration(minutes: 10)),
     ).copyWith(
       homeLayout: HomeLayout.home,
-      homePanelFull: false,
+      homePanelFull: full,
       bossVictories: 2,
       highestFloorCleared: 3,
       ascensionLevel: 1,
@@ -36,7 +41,7 @@ void main() {
       gold: 5000,
     );
     final director = GameDirector.preview(
-      initialState: GameLogic.enterDungeon(seeded),
+      initialState: inDungeon ? GameLogic.enterDungeon(seeded) : seeded,
     );
     addTearDown(director.dispose);
     final router = MenuRouter();
@@ -117,6 +122,49 @@ void main() {
       await scrollToEnd(tester);
       expectClear(tester, 'CAMP');
       expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final (scale, inset) in [
+    (1.0, 0.0),
+    (GameTheme.typeScaleMax, 0.0),
+    (1.0, 34.0),
+    (GameTheme.typeScaleMax, 34.0),
+  ]) {
+    testWidgets('FULL dock sits above FIGHT (scale $scale, inset $inset)', (
+      tester,
+    ) async {
+      await pumpSplit(tester, scale: scale, bottomInset: inset, full: true);
+      expect(tester.takeException(), isNull);
+      final circle = fightCircle(tester);
+      final taps = find.descendant(
+        of: find.byType(HomeGoldDock),
+        matching: find.byType(InkWell),
+      );
+      expect(taps, findsNWidgets(3));
+      for (final e in taps.evaluate()) {
+        final r = tester.getRect(find.byWidget(e.widget));
+        expect(r.bottom, lessThanOrEqualTo(circle.top));
+        expect(r.height, greaterThanOrEqualTo(GameTheme.minTouch));
+      }
+    });
+
+    testWidgets('town ENTER sits above FIGHT (scale $scale, inset $inset)', (
+      tester,
+    ) async {
+      await pumpSplit(tester, scale: scale, bottomInset: inset, inDungeon: false);
+      expect(tester.takeException(), isNull);
+      final circle = fightCircle(tester);
+      final enter = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(TownViewport),
+              matching: find.byType(GameButton),
+            )
+            .first,
+      );
+      expect(enter.bottom, lessThanOrEqualTo(circle.top));
+      expect(enter.height, greaterThanOrEqualTo(GameTheme.minTouch));
     });
   }
 

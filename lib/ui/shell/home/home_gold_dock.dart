@@ -7,6 +7,7 @@ import '../../game_theme.dart';
 import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import '../shell_layout.dart';
+import 'home_nav_bar.dart';
 import 'upgrade_panel.dart';
 
 /// Thin FORGE / CAMP / MARKET row when the fight uses FULL height.
@@ -26,7 +27,12 @@ class HomeGoldDock extends StatelessWidget {
     return Material(
       color: GameTheme.panel,
       child: Padding(
-          padding: ShellLayout.seamPadding.copyWith(top: 2, bottom: 2),
+          // The raised FIGHT circle rises over this row. Keep the
+          // segments above it.
+          padding: ShellLayout.seamPadding.copyWith(
+            top: 2,
+            bottom: 2 + HomeNavBar.fightOverhang(context),
+          ),
           child: MenuChrome.segmented(
             dense: true,
             labels: const ['FORGE', 'CAMP', 'MARKET'],

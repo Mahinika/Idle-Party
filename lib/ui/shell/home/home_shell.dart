@@ -122,7 +122,13 @@ class _HomeShellState extends State<HomeShell> {
                               onLeave: widget.onLeave,
                               controls: showPanel,
                             )
-                          : TownViewport(director: director, router: router),
+                          : NavClearance(
+                              bottom: HomeNavBar.fightOverhang(context),
+                              child: TownViewport(
+                                director: director,
+                                router: router,
+                              ),
+                            ),
                     ),
                   ),
                   if (showPanel)

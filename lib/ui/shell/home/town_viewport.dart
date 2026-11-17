@@ -28,6 +28,7 @@ import '../../web_click_bridge.dart';
 import '../menu_surface.dart';
 import 'director_select.dart';
 import 'fight_seam_rails.dart';
+import 'nav_clearance.dart';
 
 /// Out-of-dungeon town on [HomeShell]: party on the square, distinct
 /// buildings, one ENTER. [TownPreview] is the isolated harness.
@@ -205,7 +206,14 @@ class _TownViewportState extends State<TownViewport> {
         DecoratedBox(
           decoration: MenuChrome.panel(opaque: true),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+            // Under HomeShell the raised FIGHT circle rises into this card.
+            // Keep ENTER above it.
+            padding: EdgeInsets.fromLTRB(
+              10,
+              6,
+              10,
+              8 + NavClearance.of(context),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,

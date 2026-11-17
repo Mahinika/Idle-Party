@@ -419,6 +419,9 @@ abstract final class MenuChrome {
       ),
       clipBehavior: Clip.antiAlias,
       child: Row(
+        // Stretch so each segment's tap area and rose face fill the
+        // whole 44+ dp well, not just the icon + label band.
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (var i = 0; i < labels.length; i++) ...[
             if (i > 0)
