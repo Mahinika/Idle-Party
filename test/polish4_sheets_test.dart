@@ -16,8 +16,9 @@ import 'package:idle_party/ui/shell/wallet_strip.dart';
 
 import 'shell_golden_harness.dart';
 
-/// Polish 4: ESSENCE tiles carry icons, and home sheets do not repeat the
-/// wallet the top bar already shows.
+/// Polish 4: ESSENCE tiles carry icons, home sheets do not repeat the
+/// wallet the top bar already shows, the selected hero uses the selected
+/// colors (amber rim on plum), not buy gold.
 Future<GameDirector> _homeDirector() => withShellGoldenWeek(() async {
   final base = GameLogic.createInitialState(now: shellGoldenNow);
   final s = base.copyWith(
@@ -148,4 +149,37 @@ void main() {
       );
     }
   }
+
+  testWidgets('selected hero uses the selected colors, not buy gold', (
+    tester,
+  ) async {
+    final (director, router) = await _pumpHome(tester, 1);
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 150));
+    }
+    bool rimmed(Widget w, Color rim) {
+      if (w is! Container) return false;
+      final d = w.decoration;
+      if (d is! BoxDecoration) return false;
+      final b = d.border;
+      return b is Border && b.top.color == rim;
+    }
+
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            rimmed(w, GameTheme.toggleOnAccent) &&
+            (w as Container).decoration is BoxDecoration &&
+            (w.decoration! as BoxDecoration).color == GameTheme.selectedRowFill,
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byWidgetPredicate(
+        (w) => rimmed(w, GameTheme.torch.withValues(alpha: 0.55)),
+      ),
+      findsNothing,
+    );
+    await _dispose(tester, director, router);
+  });
 }

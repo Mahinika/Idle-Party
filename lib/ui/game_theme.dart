@@ -132,6 +132,10 @@ abstract final class GameTheme {
   /// (dusk theme "Skymning med hjältar"; 6.5:1 on chunkyStoneTop).
   static const Color toggleOnAccent = Color(0xFFE7A857);
 
+  /// Selected row fill (plum, 33%) under a [toggleOnAccent] rim, for picks
+  /// that are not buttons, such as the selected hero on the party line.
+  static const Color selectedRowFill = Color(0x5555304C);
+
   // Stat accents for FORGE / CAMP rows (dusk theme, desaturated).
   static const Color statAttack = Color(0xFFB5523A); // brick
   static const Color statArmor = Color(0xFF5E6E96); // slate dusk
