@@ -151,6 +151,34 @@ class ForgeOverlay extends StatefulWidget {
     return (parts[0], parts[1], soft);
   }
 
+  /// Share of the way to the track's soft-cap knee (same knees as
+  /// [forgeGainLine]). 1.0 once soft-capped.
+  static double forgeSoftProgress(GameState state, PartyUpgradeType type) {
+    final (points, softAt) = switch (type) {
+      PartyUpgradeType.attack => (
+        state.attackBonus,
+        GameLogic.forgeAttackSoftAt,
+      ),
+      PartyUpgradeType.defense => (
+        state.defenseBonus,
+        GameLogic.forgeDefenseSoftAt,
+      ),
+      PartyUpgradeType.vitality => (
+        state.vitalityBonus,
+        GameLogic.forgeVitalitySoftAt,
+      ),
+      PartyUpgradeType.moveSpeed => (state.moveSpeedBonus, 40.0),
+      PartyUpgradeType.attackSpeed => (state.attackSpeedBonus, 40.0),
+      PartyUpgradeType.crit => (state.critBonus, 25.0),
+      PartyUpgradeType.mastery => (
+        state.masteryBonus,
+        GameLogic.forgeMasterySoftAt,
+      ),
+    };
+    if (softAt <= 0) return 1;
+    return (points / softAt).clamp(0.0, 1.0);
+  }
+
   /// Long-press MAX: 5 / 25 / 50 / 100% of the wallet per tap.
   static Future<ForgeGoldSpendMode?> pickWalletSlice(
     BuildContext context,
@@ -303,6 +331,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       subtitle: now,
       gainNext: next,
       gainNote: soft ? 'SOFT' : null,
+      progress: ForgeOverlay.forgeSoftProgress(state, type),
       detail: onPressed == null && shortGold > 0
           ? 'Need ${formatGold(shortGold)} more'
           : null,

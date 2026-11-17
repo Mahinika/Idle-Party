@@ -107,6 +107,7 @@ class EssenceKeepPanel extends StatelessWidget {
             Expanded(
               child: GameButton(
                 label: 'Damage · ${formatCount(dmgCost)}e',
+                style: GameButtonStyle.gold,
                 tip: state.essence >= dmgCost
                     ? null
                     : 'Need ${formatCount(dmgCost - state.essence)}e more',
@@ -120,6 +121,7 @@ class EssenceKeepPanel extends StatelessWidget {
             Expanded(
               child: GameButton(
                 label: cdMaxed ? 'CD · MAX' : 'CD · ${formatCount(cdCost)}e',
+                style: GameButtonStyle.gold,
                 tip: cdMaxed
                     ? 'Cooldown is maxed'
                     : (state.essence >= cdCost
@@ -219,6 +221,7 @@ class EssenceKeepPanel extends StatelessWidget {
           _label('5TH SLOT'),
           GameButton(
             label: 'UNLOCK · ${GameLogic.partySlot5EssenceCost}e',
+            style: GameButtonStyle.gold,
             dense: true,
             onPressed: state.essence >= GameLogic.partySlot5EssenceCost
                 ? director.unlockPartySlot5

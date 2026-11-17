@@ -11,7 +11,9 @@ import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/home/home_nav_bar.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
 import 'package:idle_party/ui/shell/home/upgrade_panel.dart';
+import 'package:idle_party/ui/shell/forge_overlay.dart';
 import 'package:idle_party/ui/shell/market_overlay.dart';
+import 'package:idle_party/ui/shell/sanctuary_overlay.dart';
 import 'package:idle_party/ui/shell/power_upgrade_row.dart';
 
 import 'shell_golden_harness.dart';
@@ -167,6 +169,118 @@ void main() {
         router.dispose();
         await tester.pump();
       });
+    }
+  }
+
+  // Same fold rule for the other two split tabs (polish 6 #14): at 640
+  // and 1.45 the CAMP free-level chip and the SCROLLS rail used to push
+  // the first card under FIGHT.
+  for (final tab in const ['FORGE', 'CAMP']) {
+    for (final size in const [Size(360, 780), Size(360, 640)]) {
+      for (final scale in [1.0, GameTheme.typeScaleMax]) {
+        testWidgets('first $tab card is whole above the fold '
+            '${size.width.toInt()}x${size.height.toInt()} @$scale', (
+          tester,
+        ) async {
+          tester.view.physicalSize = size;
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.reset);
+          final director = await _director();
+          final router = MenuRouter();
+          await tester.pumpWidget(
+            MaterialApp(
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: TextScaler.linear(scale)),
+                child: child!,
+              ),
+              home: HomeShell(
+                director: director,
+                router: router,
+                onLeave: () {},
+              ),
+            ),
+          );
+          await tester.pump();
+          await tester.tap(
+            find
+                .descendant(
+                  of: find.byType(UpgradePanel),
+                  matching: find.text(tab),
+                )
+                .first,
+          );
+          for (var i = 0; i < 4; i++) {
+            await tester.pump(const Duration(milliseconds: 150));
+          }
+          expect(tester.takeException(), isNull);
+
+          final body = find.byType(
+            tab == 'FORGE' ? ForgeOverlay : SanctuaryOverlay,
+          );
+          expect(body, findsOneWidget);
+          final viewport = tester.getRect(
+            find.descendant(of: body, matching: find.byType(Scrollable)).first,
+          );
+          final navContext = tester.element(find.byType(HomeNavBar));
+          final nav = tester.getRect(find.byType(HomeNavBar));
+          final fold =
+              nav.bottom -
+              HomeNavBar.labelHeight(navContext) -
+              HomeNavBar.fightOverhang(navContext);
+          final card = tester.getRect(
+            find
+                .descendant(of: body, matching: find.byType(PowerUpgradeRow))
+                .first,
+          );
+          final buy = tester.getRect(
+            find
+                .descendant(
+                  of: body,
+                  matching: find.byType(PowerUpgradePriceChip),
+                )
+                .first,
+          );
+          for (final r in [card, buy]) {
+            expect(r.top, greaterThanOrEqualTo(viewport.top - 0.5));
+            expect(r.bottom, lessThanOrEqualTo(viewport.bottom + 0.5));
+            expect(r.bottom, lessThanOrEqualTo(fold + 0.5));
+            expect(r.right, lessThanOrEqualTo(size.width));
+          }
+          for (final label in ['FORGE', 'CAMP', 'MARKET']) {
+            final para = tester.renderObject<RenderParagraph>(
+              find
+                  .descendant(
+                    of: find.byType(UpgradePanel),
+                    matching: find.text(label),
+                  )
+                  .first,
+            );
+            expect(para.didExceedMaxLines, isFalse, reason: label);
+          }
+          if (tab == 'CAMP' && scale > 1.2) {
+            // Large text: the free level sits under the first card.
+            final chip = tester.getRect(find.text('Watch · free level'));
+            expect(chip.top, greaterThanOrEqualTo(card.bottom));
+            expect(find.byKey(UpgradePanel.campWatchKey), findsNothing);
+          }
+          if (tab == 'CAMP' && scale <= 1.2) {
+            // The free level moved to the header: one 48x48 tap, on screen.
+            final watch = find.byKey(UpgradePanel.campWatchKey);
+            expect(watch, findsOneWidget);
+            final r = tester.getRect(watch);
+            expect(r.width, greaterThanOrEqualTo(GameTheme.primaryTouch - 0.01));
+            expect(r.height, greaterThanOrEqualTo(GameTheme.primaryTouch - 0.01));
+            expect(r.right, lessThanOrEqualTo(size.width));
+            expect(find.text('Watch · free level'), findsNothing);
+          }
+          await tester.pumpWidget(const SizedBox.shrink());
+          director.dispose();
+          router.dispose();
+          await tester.pump();
+        });
+      }
     }
   }
 

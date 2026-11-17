@@ -14,6 +14,7 @@ import '../game_theme.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 import 'home/nav_clearance.dart';
+import 'home/upgrade_panel.dart';
 import 'income_overlay.dart';
 import 'buy_qty_toggle.dart';
 import 'power_upgrade_row.dart';
@@ -41,6 +42,45 @@ class SanctuaryOverlay extends StatefulWidget {
 
   /// Opens SHOP from the one-time Ad-free line. Null hides that line.
   final VoidCallback? onOpenAdFree;
+
+  /// A free CAMP level is still on offer today (rewarded ad, or free with
+  /// ad-free).
+  static bool watchFreeReady(GameState state) =>
+      GameLogic.campAdClaimsToday(state) < GameLogic.campAdDailyCap;
+
+  /// Share of the way to the track's soft-cap knee (the same knees as
+  /// [GameLogic.sanctuaryTrackBonusAt]; prestige is not soft-capped).
+  /// Display only. 1.0 once soft-capped.
+  static double campSoftProgress(String track, int level) {
+    final (points, softAt) = switch (track) {
+      'gold' => (
+        level * GameLogic.sanctuaryGoldPctPerLevel,
+        GameLogic.sanctuaryGoldSoftAt,
+      ),
+      'power' => (
+        level * GameLogic.sanctuaryPowerPerLevel,
+        GameLogic.sanctuaryPowerSoftAt,
+      ),
+      'vitality' => (
+        level * GameLogic.sanctuaryVitalityPerLevel,
+        GameLogic.sanctuaryVitalitySoftAt,
+      ),
+      'xp' => (
+        level * GameLogic.sanctuaryXpPctPerLevel,
+        GameLogic.sanctuaryXpSoftAt,
+      ),
+      'defense' => (
+        level * GameLogic.sanctuaryDefensePerLevel,
+        GameLogic.sanctuaryDefenseSoftAt,
+      ),
+      _ => (0, 0.0),
+    };
+    if (softAt <= 0) return 0;
+    return (points / softAt).clamp(0.0, 1.0);
+  }
+
+  static String watchFreeLabel(GameState state) =>
+      state.metaDepth.adFree ? 'Free level' : 'Watch · free level';
 
   @override
   State<SanctuaryOverlay> createState() => _SanctuaryOverlayState();
@@ -211,11 +251,10 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     final effectiveBuy = _buyLevels.clamp(1, buyCap);
     final pick = GameLogic.recommendedSanctuaryTrack(state);
 
-    final watchFree =
-        GameLogic.campAdClaimsToday(state) < GameLogic.campAdDailyCap;
+    final watchFree = SanctuaryOverlay.watchFreeReady(state);
     final watchChip = watchFree
         ? MenuChrome.chip(
-            label: state.metaDepth.adFree ? 'Free level' : 'Watch · free level',
+            label: SanctuaryOverlay.watchFreeLabel(state),
             selected: true,
             onTap: () => director.watchCampAd(),
           )
@@ -231,17 +270,23 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       8 + NavClearance.of(context),
     );
     if (widget.qty != null) {
-      // The header owns ×1 / ×10 / MAX: every row here is a buy row,
-      // and the free-level chip scrolls with them.
+      // The header owns ×1 / ×10 / MAX and the free-level button, so every
+      // row here is a buy row and the first card sits right under it.
       return ListView(
         primary: false,
         physics: const AlwaysScrollableScrollPhysics(),
         padding: listPad,
         children: [
-          if (watchChip != null)
-            Align(alignment: Alignment.centerLeft, child: watchChip),
           _adFreeLine(state),
-          ...cards,
+          ...cards.take(1),
+          // Large text: the header has no room, so the free level sits
+          // under the first card (that card stays whole above the fold).
+          if (watchChip != null && !UpgradePanel.campWatchInHeader(context))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Align(alignment: Alignment.centerLeft, child: watchChip),
+            ),
+          ...cards.skip(1),
         ],
       );
     }
@@ -453,6 +498,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       subtitle: '$lv · +$now$unit',
       gainNext: '+$next$unitNext',
       detail: detail,
+      progress: SanctuaryOverlay.campSoftProgress(track, level),
       selected: recommended,
       dense: true,
       trailing: trailing,

@@ -39,6 +39,14 @@ class UpgradePanel extends StatefulWidget {
   final HomeGoldPanel? focusPanel;
   final int focusGeneration;
 
+  /// At large text the three tab labels need the whole header row, so the
+  /// CAMP free level drops below the first track card instead.
+  static bool campWatchInHeader(BuildContext context) =>
+      MediaQuery.textScalerOf(context).scale(1) <= 1.2;
+
+  /// The CAMP free-level button in the split header.
+  static const campWatchKey = ValueKey('upgrade-panel-camp-watch');
+
   @override
   State<UpgradePanel> createState() => _UpgradePanelState();
 }
@@ -184,6 +192,13 @@ class _UpgradePanelState extends State<UpgradePanel> {
             onMaxLongPress: _mode == _Panel.forge ? _pickSlice : null,
           ),
         ],
+        if (showQty &&
+            _mode == _Panel.camp &&
+            UpgradePanel.campWatchInHeader(context) &&
+            SanctuaryOverlay.watchFreeReady(widget.director.state)) ...[
+          const SizedBox(width: 4),
+          _campWatchButton(widget.director.state),
+        ],
         if (marketControls) ...[
           const SizedBox(width: 8),
           MarketHeaderControls(
@@ -194,6 +209,46 @@ class _UpgradePanelState extends State<UpgradePanel> {
           ),
         ],
       ],
+    );
+  }
+
+  /// CAMP's free level, in the header like MARKET's reroll, so the track
+  /// list starts with a buy card. 48x48 tap; the label is in semantics.
+  Widget _campWatchButton(GameState state) {
+    final label = SanctuaryOverlay.watchFreeLabel(state);
+    final onTap = widget.director.watchCampAd;
+    return WebClickScope(
+      label: label,
+      onPressed: onTap,
+      child: Semantics(
+        button: true,
+        label: label,
+        excludeSemantics: true,
+        onTap: onTap,
+        child: Tooltip(
+          message: label,
+          child: Material(
+            key: UpgradePanel.campWatchKey,
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              child: SizedBox.square(
+                dimension: GameTheme.primaryTouch,
+                child: Center(
+                  child: ChunkyFace(
+                    tone: ChunkyTone.stone,
+                    highlight: true,
+                    minHeight: GameTheme.chunkyFace,
+                    padding: const EdgeInsets.all(4),
+                    child: GameIcon.asset(UiIcon.watchAd, size: 24),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

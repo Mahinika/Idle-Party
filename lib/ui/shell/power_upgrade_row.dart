@@ -24,6 +24,7 @@ class PowerUpgradeRow extends StatelessWidget {
     this.gainNote,
     this.tag,
     this.detail,
+    this.progress,
     this.below,
     this.selected = false,
     this.dense = false,
@@ -44,6 +45,9 @@ class PowerUpgradeRow extends StatelessWidget {
   final String? gainNote;
   final String? tag;
   final String? detail;
+
+  /// Purple bar toward the next soft cap (0..1). Null: no bar.
+  final double? progress;
   final Widget? below;
   final bool selected;
 
@@ -149,6 +153,11 @@ class PowerUpgradeRow extends StatelessWidget {
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
+                      ),
+                    if (progress != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 3, bottom: 1),
+                        child: SoftCapBar(value: progress!),
                       ),
                     if (detail != null)
                       Text(
@@ -337,6 +346,40 @@ class QtyBadge extends StatelessWidget {
           '×$quantity',
           maxLines: 1,
           style: GameTheme.hint(color: GameTheme.toggleOnText),
+        ),
+      ),
+    );
+  }
+}
+
+/// Thin purple bar: how far a track is toward its soft cap.
+class SoftCapBar extends StatelessWidget {
+  const SoftCapBar({super.key, required this.value});
+
+  final double value;
+
+  @override
+  Widget build(BuildContext context) {
+    final v = value.clamp(0.0, 1.0);
+    return Semantics(
+      label: 'Soft cap ${(v * 100).round()}%',
+      excludeSemantics: true,
+      child: Container(
+        height: 4,
+        decoration: BoxDecoration(
+          color: GameTheme.levelAccentDeep,
+          borderRadius: BorderRadius.circular(2),
+        ),
+        alignment: Alignment.centerLeft,
+        child: FractionallySizedBox(
+          widthFactor: v,
+          heightFactor: 1,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: GameTheme.levelAccent,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
         ),
       ),
     );

@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'game_theme.dart';
 import 'web_click_bridge.dart';
 
-enum GameButtonStyle { brown, grey, red, ghost }
+/// [gold]: a purchase you can afford (muted buy gold, like the price chips
+/// on FORGE / CAMP / MARKET cards). Brown stays for non-buys.
+enum GameButtonStyle { brown, grey, red, ghost, gold }
 
 /// Action button.
 class GameButton extends StatelessWidget {
@@ -58,6 +60,14 @@ class GameButton extends StatelessWidget {
       text: GameTheme.torchHot,
       glow: GameTheme.bloodLit.withValues(alpha: 0.2),
       edge: GameTheme.chunkyRedEdge,
+    ),
+    GameButtonStyle.gold => (
+      top: GameTheme.buyGoldTop,
+      bottom: GameTheme.buyGoldBottom,
+      border: GameTheme.buyGoldShine,
+      text: GameTheme.buyGoldText,
+      glow: GameTheme.torch.withValues(alpha: 0.22),
+      edge: GameTheme.buyGoldEdge,
     ),
     GameButtonStyle.ghost => (
       top: GameTheme.panelInset.withValues(alpha: 0.55),

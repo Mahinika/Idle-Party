@@ -487,7 +487,7 @@ class _InventoryDockState extends State<InventoryDock>
                       label: RunStashShop.goldBuyLabel(state),
                       dense: true,
                       style: RunStashShop.canBuyGold(state)
-                          ? GameButtonStyle.brown
+                          ? GameButtonStyle.gold
                           : GameButtonStyle.grey,
                       onPressed: director.buyGoldBagExpansion,
                     ),
@@ -496,7 +496,7 @@ class _InventoryDockState extends State<InventoryDock>
                       label: RunStashShop.cinderBuyLabel(state),
                       dense: true,
                       style: RunStashShop.canBuyCinders(state)
-                          ? GameButtonStyle.brown
+                          ? GameButtonStyle.gold
                           : GameButtonStyle.grey,
                       onPressed: director.buyCinderBagExpansion,
                     ),

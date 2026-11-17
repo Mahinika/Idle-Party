@@ -10,8 +10,10 @@ import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/run_stash_shop.dart';
 import 'package:idle_party/models/vfx_quality.dart';
+import 'package:idle_party/ui/game_button.dart';
 import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/kenney_button.dart';
+import 'package:idle_party/ui/shell/dungeon_party_hud.dart';
 import 'package:idle_party/ui/shell/essence_keep_panel.dart';
 import 'package:idle_party/ui/shell/home/fight_seam.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
@@ -434,6 +436,82 @@ void main() {
     expect(find.text('MAX · wallet slice'), findsOneWidget);
     expect(_handles(), findsOneWidget);
   });
+
+  // Fynd 15: at 1.45 the party strip read "A… › L1", "Va…", "Em…".
+  for (final size in _sizes) {
+    _testHome('party strip names are whole ${_label(size, 1.45)}', (
+      tester,
+    ) async {
+      final (director, _) = await _pump(tester, size, 1.45);
+      final hud = find.byType(PartyCornerHud);
+      expect(hud, findsOneWidget);
+      for (final h in director.state.heroes) {
+        final name = find.descendant(of: hud, matching: find.text(h.name));
+        expect(name, findsOneWidget, reason: h.name);
+        final p = tester.renderObject<RenderParagraph>(name);
+        expect(p.didExceedMaxLines, isFalse, reason: h.name);
+        expect(
+          p.getMaxIntrinsicWidth(double.infinity),
+          lessThanOrEqualTo(p.size.width + 0.5),
+          reason: h.name,
+        );
+      }
+      // The level left the line; the chip still says it to a reader.
+      expect(
+        find.bySemanticsLabel(RegExp(r'level \d+ — tap for abilities')),
+        findsNWidgets(director.state.heroes.length),
+      );
+    });
+  }
+
+  _testHome('party strip keeps the level at 1.0', (tester) async {
+    final (director, _) = await _pump(tester, const Size(360, 780), 1.0);
+    final hud = find.byType(PartyCornerHud);
+    for (final h in director.state.heroes) {
+      expect(
+        find.descendant(of: hud, matching: find.text(' L${h.level}')),
+        findsWidgets,
+      );
+    }
+  });
+
+
+  // Fynd 16: BUY FLASK, God Hand Damage/CD and the 5th slot were brown,
+  // while every other buy is muted gold.
+  test('gold buy style reads 4.5:1 on both gradient stops', () {
+    for (final bg in [GameTheme.buyGoldTop, GameTheme.buyGoldBottom]) {
+      expect(_contrast(GameTheme.buyGoldText, bg), greaterThanOrEqualTo(4.5));
+    }
+  });
+
+  GameButton buttonWith(WidgetTester tester, Pattern label) =>
+      tester.widget<GameButton>(
+        find.byWidgetPredicate(
+          (w) => w is GameButton && w.label.startsWith(label),
+        ),
+      );
+
+  _testHome('BUY FLASK is a gold buy when affordable', (tester) async {
+    await _pump(tester, const Size(360, 780), 1);
+    await tester.tap(find.text('MARKET').first);
+    await _settle(tester);
+    await tester.tap(find.bySemanticsLabel('Flasks and filter').first);
+    await _settle(tester);
+    final buy = buttonWith(tester, 'BUY FLASK');
+    expect(buy.onPressed, isNotNull);
+    expect(buy.style, GameButtonStyle.gold);
+  });
+
+  _testHome('God Hand Damage / CD are gold buys', (tester) async {
+    final (director, router) = await _pump(tester, const Size(360, 780), 1);
+    router.open(MenuRoute.essence, essence: EssencePanel.keep);
+    router.pushSub();
+    await _settle(tester);
+    expect(director.state.essence, greaterThan(0));
+    expect(buttonWith(tester, 'Damage').style, GameButtonStyle.gold);
+    expect(buttonWith(tester, 'CD').style, GameButtonStyle.gold);
+  });
+
 }
 
 /// `MenuChrome.sheetHandle`: a 44x4 bar.

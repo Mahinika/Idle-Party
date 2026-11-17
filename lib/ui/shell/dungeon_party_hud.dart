@@ -325,7 +325,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
             selected: widget.selectedHeroIndex == i,
             label:
                 '${partyStripName(hero, plainEnglish: plainEnglish)} '
-                '${hero.spec.roleTag.plainLabel} — tap for abilities, '
+                '${hero.spec.roleTag.plainLabel} level ${hero.level} — '
+                'tap for abilities, '
                 'long-press for gear',
             onTap: () => _onHeroTap(i),
             onLongPress: _onLongPressGear,
@@ -1091,6 +1092,9 @@ class _HomePartyChip extends StatelessWidget {
     final named = name.trim().isNotEmpty;
     final who = named ? name.trim() : role;
     final doll = dense ? 18.0 : 20.0;
+    // Large text: the name gets the whole first line. The level is in the
+    // chip's semantics and the hero sheet; the border shows the pick.
+    final roomy = MediaQuery.textScalerOf(context).scale(1) <= 1.2;
     return Container(
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 1),
@@ -1130,7 +1134,7 @@ class _HomePartyChip extends StatelessWidget {
                         style: GameTheme.combat(color: GameTheme.parchment),
                       ),
                     ),
-                    if (selected)
+                    if (selected && roomy)
                       Padding(
                         padding: const EdgeInsets.only(left: 2),
                         child: GameIcon.glyph(
@@ -1139,12 +1143,13 @@ class _HomePartyChip extends StatelessWidget {
                           color: GameTheme.torchHot,
                         ),
                       ),
-                    Text(
-                      ' L$level',
-                      maxLines: 1,
-                      softWrap: false,
-                      style: GameTheme.readable(color: GameTheme.parchment),
-                    ),
+                    if (roomy)
+                      Text(
+                        ' L$level',
+                        maxLines: 1,
+                        softWrap: false,
+                        style: GameTheme.readable(color: GameTheme.parchment),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 1),

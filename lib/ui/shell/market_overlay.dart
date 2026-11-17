@@ -260,7 +260,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
               : 'FLASK · NEED ${formatGold(flaskCost)}',
           tip: 'Heals the whole party when HP is low (auto in AFK).',
           dense: true,
-          style: canFlask ? GameButtonStyle.brown : GameButtonStyle.grey,
+          style: canFlask ? GameButtonStyle.gold : GameButtonStyle.grey,
           primary: canFlask,
           onPressed: canFlask ? director.buyMarketFlask : null,
         ),
@@ -772,7 +772,7 @@ class MarketHeaderControls extends StatelessWidget {
                           : 'FLASK · NEED ${formatGold(flaskCost)}',
                       dense: true,
                       style: canFlask
-                          ? GameButtonStyle.brown
+                          ? GameButtonStyle.gold
                           : GameButtonStyle.grey,
                       primary: canFlask,
                       onPressed: canFlask
