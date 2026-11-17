@@ -7,17 +7,27 @@ import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
 import '../../apex_forge_panel.dart';
 import '../../confirm_dialogs.dart';
+import '../../../assets/custom_assets.dart';
+import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
 import '../../meta/codex_overlay.dart';
 import '../beast_overlay.dart';
 import '../essence_keep_panel.dart';
+import '../power_upgrade_row.dart';
 import '../relics_overlay.dart';
 
 /// ESSENCE tiles. CAMP upgrades stay in the fight panel.
 class EssenceTilesScreen extends StatelessWidget {
-  const EssenceTilesScreen({super.key, required this.director, required this.router});
+  /// Icon tile on each ESSENCE tile (fits the 1.15x touch CRAFT row).
+  static const double iconTile = 36;
+
+  const EssenceTilesScreen({
+    super.key,
+    required this.director,
+    required this.router,
+  });
 
   final GameDirector director;
   final MenuRouter router;
@@ -26,7 +36,9 @@ class EssenceTilesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     if (router.homeAtSub) return _open(context);
     final state = director.state;
-    final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.45);
+    final textScale = MediaQuery.textScalerOf(
+      context,
+    ).scale(1).clamp(1.0, 1.45);
     final aspect = 2.4 / textScale;
     return Column(
       children: [
@@ -45,6 +57,8 @@ class EssenceTilesScreen extends StatelessWidget {
                   _tile(
                     context,
                     'BLESSING',
+                    UiIcon.embers,
+                    GameTheme.statMove,
                     MenuTabs.showKeep(state),
                     'After the first boss or Ascend',
                     () {
@@ -55,6 +69,8 @@ class EssenceTilesScreen extends StatelessWidget {
                   _tile(
                     context,
                     'RELICS',
+                    CustomAssets.iconRelicPhoenixEmber,
+                    GameTheme.statCrit,
                     MenuTabs.showRelics(state),
                     'After the first boss or Ascend',
                     () {
@@ -65,6 +81,8 @@ class EssenceTilesScreen extends StatelessWidget {
                   _tile(
                     context,
                     'PETS',
+                    CustomAssets.petEgg,
+                    GameTheme.statVitality,
                     MenuTabs.showBeast(state),
                     'Ascend or hatch',
                     () {
@@ -75,6 +93,8 @@ class EssenceTilesScreen extends StatelessWidget {
                   _tile(
                     context,
                     'CODEX',
+                    CustomAssets.iconBook,
+                    GameTheme.statArmor,
                     MenuTabs.showCodex(state),
                     'Clear a floor',
                     () {
@@ -88,6 +108,8 @@ class EssenceTilesScreen extends StatelessWidget {
               _tile(
                 context,
                 'CRAFT',
+                UiIcon.wand,
+                GameTheme.statMastery,
                 MenuTabs.showCraft(state),
                 'After the first boss or Ascend',
                 () {
@@ -122,6 +144,8 @@ class EssenceTilesScreen extends StatelessWidget {
   Widget _tile(
     BuildContext context,
     String label,
+    String icon,
+    Color accent,
     bool open,
     String lockedHint,
     VoidCallback onTap, {
@@ -139,28 +163,43 @@ class EssenceTilesScreen extends StatelessWidget {
             borderColor: open ? GameTheme.borderLit : GameTheme.border,
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Row(
               children: [
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.readable(
-                    color: open ? GameTheme.parchment : GameTheme.parchmentDim,
+                UpgradeIconTile(
+                  icon: icon,
+                  accent: accent,
+                  size: iconTile,
+                  dim: !open,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.readable(
+                          color: open
+                              ? GameTheme.parchment
+                              : GameTheme.parchmentDim,
+                        ),
+                      ),
+                      if (!open) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          lockedHint,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.hint(color: GameTheme.parchmentDim),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                if (!open) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    lockedHint,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.hint(color: GameTheme.parchmentDim),
-                  ),
-                ],
               ],
             ),
           ),
@@ -168,10 +207,7 @@ class EssenceTilesScreen extends StatelessWidget {
       ),
     );
     if (fullWidth) {
-      return SizedBox(
-        height: GameTheme.minTouch * 1.15,
-        child: tile,
-      );
+      return SizedBox(height: GameTheme.minTouch * 1.15, child: tile);
     }
     return tile;
   }
