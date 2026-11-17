@@ -184,8 +184,10 @@ class _MenuSurfaceState extends State<MenuSurface> {
       title: homeMenuGrid ? '' : router.title,
       subtitle: homeMenuGrid ? '' : router.jobHintFor(state),
       heightFactor: 1,
-      gold: state.gold,
-      essence: state.essence,
+      // Home keeps the top bar (essence, gold, gold/min) above every sheet,
+      // so the sheet header does not repeat the wallet.
+      gold: widget.home ? null : state.gold,
+      essence: widget.home ? null : state.essence,
       showEssence: MenuTabs.showCamp(state),
       showClose: !navOwnedClose,
       onClose: router.close,
