@@ -79,8 +79,7 @@ class _UpgradePanelState extends State<UpgradePanel> {
   void didUpdateWidget(covariant UpgradePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     final focus = widget.focusPanel;
-    if (focus != null &&
-        widget.focusGeneration != oldWidget.focusGeneration) {
+    if (focus != null && widget.focusGeneration != oldWidget.focusGeneration) {
       _mode = _Panel.values[focus.index];
     }
   }
@@ -90,9 +89,7 @@ class _UpgradePanelState extends State<UpgradePanel> {
     final state = widget.director.state;
     final open = MenuTabs.showGold(state);
     final embedded = widget.sheetPanel != null;
-    final active = embedded
-        ? _Panel.values[widget.sheetPanel!.index]
-        : _mode;
+    final active = embedded ? _Panel.values[widget.sheetPanel!.index] : _mode;
     return Material(
       color: embedded ? Colors.transparent : GameTheme.panel,
       child: LayoutBuilder(
@@ -127,8 +124,7 @@ class _UpgradePanelState extends State<UpgradePanel> {
 
   Widget _body(GameState state, bool open, _Panel mode, bool embedded) {
     if (!open) return _locked(state);
-    final inline =
-        widget.sheetPanel == null && !state.homePanelFull;
+    final inline = widget.sheetPanel == null && !state.homePanelFull;
     switch (mode) {
       case _Panel.market:
         return MarketOverlay(
@@ -212,27 +208,40 @@ class _UpgradePanelState extends State<UpgradePanel> {
           child: InkWell(
             onTap: select,
             borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-            child: ChunkyFace(
-              tone: ChunkyTone.stone,
-              raised: !selected,
-              highlight: selected,
-              minHeight: GameTheme.primaryTouch,
-              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GameIcon.asset(
-                    UiIcon.goldDockSegment[p.index],
-                    size: 18,
-                    color: selected ? null : GameTheme.parchmentDim,
+            // 48 dp tap area around a 40 dp face. At large text the face
+            // grows into the margin instead of overflowing.
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: GameTheme.primaryTouch,
+              ),
+              child: Center(
+                heightFactor: 1,
+                child: ChunkyFace(
+                  tone: ChunkyTone.stone,
+                  raised: !selected,
+                  highlight: selected,
+                  minHeight: GameTheme.chunkyFace + 4,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 2,
+                    vertical: 1,
                   ),
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.hint(color: ink),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GameIcon.asset(
+                        UiIcon.goldDockSegment[p.index],
+                        size: 18,
+                        color: selected ? null : GameTheme.parchmentDim,
+                      ),
+                      Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.hint(color: ink),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -266,11 +275,13 @@ class _UpgradePanelState extends State<UpgradePanel> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GameIcon.asset(UiIcon.forge, size: 28, color: GameTheme.parchmentDim),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ShellLayout.hint(lockHint, maxLines: 3),
+              GameIcon.asset(
+                UiIcon.forge,
+                size: 28,
+                color: GameTheme.parchmentDim,
               ),
+              const SizedBox(width: 10),
+              Expanded(child: ShellLayout.hint(lockHint, maxLines: 3)),
             ],
           ),
         ),

@@ -69,13 +69,16 @@ class GameButton extends StatelessWidget {
     ),
   };
 
+  /// Invisible tap margin above and below the painted face.
+  static const double _facePad = 3;
+
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
     final palette = _palette;
     final radius = BorderRadius.circular(GameTheme.radiusSm);
     final padH = dense ? 10.0 : 14.0;
-    final padV = dense ? 6.0 : 11.0;
+    final padV = dense ? 4.0 : 7.0;
     final fontSize = dense ? GameTheme.typeButtonDense : GameTheme.typeButton;
     final child = Padding(
       padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
@@ -96,6 +99,10 @@ class GameButton extends StatelessWidget {
       child: InkWell(
         onTap: onPressed,
         borderRadius: radius,
+        // The painted face is [_facePad] shorter on each side than the tap
+        // area, so the button reads lighter and still meets 44/48 dp.
+        child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: _facePad),
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: radius,
@@ -113,13 +120,13 @@ class GameButton extends StatelessWidget {
             // pressed, and a light top edge (see [ChunkyFace]).
             border: Border.all(
               color: enabled ? palette.edge : GameTheme.buyGreyEdge,
-              width: 2,
+              width: GameTheme.chunkyRim,
             ),
             boxShadow: enabled && style != GameButtonStyle.ghost
                 ? const [
                     BoxShadow(
                       color: GameTheme.chunkyShadow,
-                      offset: Offset(0, 3),
+                      offset: Offset(0, GameTheme.chunkyDepth),
                     ),
                   ]
                 : null,
@@ -130,9 +137,10 @@ class GameButton extends StatelessWidget {
                 : null,
             child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: dense
-                  ? GameTheme.minTouch
-                  : (primary ? GameTheme.primaryTouch : GameTheme.minTouch),
+              minHeight: (dense
+                      ? GameTheme.minTouch
+                      : (primary ? GameTheme.primaryTouch : GameTheme.minTouch)) -
+                  2 * _facePad,
             ),
             child: expanded
                 ? SizedBox(
@@ -142,6 +150,7 @@ class GameButton extends StatelessWidget {
                 : Center(child: child),
           ),
           ),
+        ),
         ),
       ),
     );
@@ -188,7 +197,7 @@ class _ShineEdge extends StatelessWidget {
           left: 3,
           right: 3,
           top: 1,
-          height: 2,
+          height: 1,
           child: IgnorePointer(child: ColoredBox(color: c)),
         ),
       ],

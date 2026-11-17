@@ -400,8 +400,8 @@ abstract final class MenuChrome {
         final scale = MediaQuery.textScalerOf(context).scale(1);
         final wanted = GameTheme.minTouch * (scale < 1 ? 1.0 : scale);
         final cap = maxHeight;
-        // +4: the 2 dp chunky rim sits outside the 44 dp tap rows.
-        final full = wanted + 4;
+        // The chunky rim sits outside the 44 dp tap rows.
+        final full = wanted + 2 * GameTheme.chunkyRim;
         final height = cap == null || cap >= full
             ? full
             : (cap < 36 ? 36.0 : cap);
@@ -412,9 +412,15 @@ abstract final class MenuChrome {
       decoration: BoxDecoration(
         color: GameTheme.panelInset.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-        border: Border.all(color: GameTheme.buyGreyEdge, width: 2),
+        border: Border.all(
+          color: GameTheme.buyGreyEdge,
+          width: GameTheme.chunkyRim,
+        ),
         boxShadow: const [
-          BoxShadow(color: GameTheme.chunkyShadow, offset: Offset(0, 3)),
+          BoxShadow(
+            color: GameTheme.chunkyShadow,
+            offset: Offset(0, GameTheme.chunkyDepth),
+          ),
         ],
       ),
       clipBehavior: Clip.antiAlias,

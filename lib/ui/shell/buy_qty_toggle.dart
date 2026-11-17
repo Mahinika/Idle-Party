@@ -29,8 +29,9 @@ class BuyQtyToggle extends StatelessWidget {
   /// Face text on MAX (a wallet slice such as "25%" when one is picked).
   final String maxLabel;
 
-  /// Per-button floor: 48 wide, 44 tall.
+  /// Per-button tap floor: 48 wide, 44 tall, around a 40x32 face.
   static const double buttonWidth = GameTheme.primaryTouch;
+  static const double faceWidth = 40;
 
   @override
   Widget build(BuildContext context) {
@@ -38,9 +39,7 @@ class BuyQtyToggle extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _button(BuyQty.one, '×1'),
-        const SizedBox(width: 6),
         _button(BuyQty.ten, '×10'),
-        const SizedBox(width: 6),
         _button(BuyQty.max, maxLabel, longPress: onMaxLongPress),
       ],
     );
@@ -69,20 +68,23 @@ class BuyQtyToggle extends StatelessWidget {
             onTap: () => onChanged(qty),
             onLongPress: longPress,
             borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-            child: ChunkyFace(
-              tone: tone,
-              raised: !selected,
-              edgeColor: selected ? GameTheme.toggleOnTop : null,
+            child: TapPad(
               minWidth: buttonWidth,
-              minHeight: GameTheme.minTouch,
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.button(
-                  size: GameTheme.typeButtonDense,
-                  color: textColor,
+              child: ChunkyFace(
+                tone: tone,
+                raised: !selected,
+                edgeColor: selected ? GameTheme.toggleOnTop : null,
+                minWidth: faceWidth,
+                minHeight: GameTheme.chunkyFaceDense,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.button(
+                    size: GameTheme.typeBody,
+                    color: textColor,
+                  ),
                 ),
               ),
             ),

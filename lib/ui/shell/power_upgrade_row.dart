@@ -219,8 +219,9 @@ class UpgradeIconTile extends StatelessWidget {
 /// Buy control for dense FORGE / CAMP lists.
 ///
 /// Gold when the wallet covers it, grey when it does not, so the row reads
-/// without the words. At least 76x48 dp. [quantity] paints a ×N badge in
-/// the corner: the number of buys one tap makes.
+/// without the words. The tap area is at least 76x48 dp around a lighter
+/// 64x36 face. [quantity] paints a ×N badge in the face's corner: the
+/// number of buys one tap makes.
 class PowerUpgradePriceChip extends StatelessWidget {
   const PowerUpgradePriceChip({
     super.key,
@@ -240,8 +241,12 @@ class PowerUpgradePriceChip extends StatelessWidget {
   /// Room above the face for the ×N badge.
   static const double badgeLift = 7;
 
-  /// Narrowest gold face. Wide enough for "12.3k essence" at scale 1.
-  static const double minFaceWidth = 76;
+  /// Narrowest gold face.
+  static const double minFaceWidth = 64;
+
+  /// Tap area floor around the face.
+  static const double minTapWidth = 76;
+  static const double minTapHeight = GameTheme.primaryTouch;
 
   @override
   Widget build(BuildContext context) {
@@ -252,13 +257,14 @@ class PowerUpgradePriceChip extends StatelessWidget {
       raised: enabled,
       highlight: primary && enabled,
       minWidth: minFaceWidth,
-      minHeight: GameTheme.primaryTouch,
+      minHeight: GameTheme.chunkyFace,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       child: Text(
         label,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: GameTheme.button(
-          size: GameTheme.typeButtonDense,
+          size: GameTheme.typeBody,
           color: enabled ? GameTheme.buyGoldText : GameTheme.buyGreyText,
         ),
       ),
@@ -272,26 +278,30 @@ class PowerUpgradePriceChip extends StatelessWidget {
         label: label,
         onTap: onPressed,
         excludeSemantics: true,
-        child: Padding(
-          padding: const EdgeInsets.only(top: badgeLift),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: onPressed,
-                  borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-                  child: face,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: TapPad(
+              minWidth: minTapWidth,
+              minHeight: minTapHeight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: badgeLift),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    face,
+                    if (q != null && enabled)
+                      Positioned(
+                        top: -badgeLift - 1,
+                        right: -3,
+                        child: QtyBadge(quantity: q),
+                      ),
+                  ],
                 ),
               ),
-              if (q != null && enabled)
-                Positioned(
-                  top: -badgeLift - 2,
-                  right: -2,
-                  child: QtyBadge(quantity: q),
-                ),
-            ],
+            ),
           ),
         ),
       ),

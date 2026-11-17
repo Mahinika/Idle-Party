@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
@@ -95,21 +96,25 @@ void main() {
     expect(find.textContaining('Need'), findsWidgets);
   });
 
-  testWidgets('the buy face keeps a 76x48 floor', (tester) async {
+  testWidgets('the buy tap area keeps a 76x48 floor around a lighter face', (
+    tester,
+  ) async {
     await pumpForge(tester, forgeState(gold: 5000));
-    final size = tester.getSize(
-      find
-          .descendant(
-            of: find.byType(PowerUpgradePriceChip),
-            matching: find.byType(ChunkyFace),
-          )
-          .first,
+    final chip = find.byType(PowerUpgradePriceChip).first;
+    final tap = tester.getSize(
+      find.descendant(of: chip, matching: find.byType(InkWell)).first,
+    );
+    expect(tap.width, greaterThanOrEqualTo(76));
+    expect(tap.height, greaterThanOrEqualTo(48));
+    final face = tester.getSize(
+      find.descendant(of: chip, matching: find.byType(ChunkyFace)).first,
     );
     expect(
-      size.width,
+      face.width,
       greaterThanOrEqualTo(PowerUpgradePriceChip.minFaceWidth),
     );
-    expect(size.height, greaterThanOrEqualTo(48));
+    expect(face.height, greaterThanOrEqualTo(GameTheme.chunkyFace));
+    expect(face.height, lessThan(tap.height));
   });
 
   testWidgets('a CAMP row shows level now and the next value in green', (

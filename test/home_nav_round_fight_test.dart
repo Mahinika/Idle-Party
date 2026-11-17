@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
@@ -90,8 +91,9 @@ void main() {
       matching: find.byType(InkWell),
     );
     final circle = tester.getRect(fight.first);
-    expect(circle.width, closeTo(68, 0.5));
-    expect(circle.height, closeTo(68, 0.5));
+    expect(circle.width, closeTo(HomeNavBar.fightDiameter(1), 0.5));
+    expect(circle.height, closeTo(HomeNavBar.fightDiameter(1), 0.5));
+    expect(circle.width, greaterThanOrEqualTo(GameTheme.primaryTouch));
     expect(circle.top, lessThan(nav.top));
     expect(nav.top - circle.top, closeTo(HomeNavBar.fightLift, 0.5));
     // Tappable part stays inside the bar and above the 48 dp floor.
@@ -111,8 +113,15 @@ void main() {
   testWidgets('round FIGHT keeps its size and labels at 1.45', (tester) async {
     await pumpShell(tester, unlocked: false, scale: GameTheme.typeScaleMax);
     expect(tester.takeException(), isNull);
-    expect(HomeNavBar.fightDiameter(GameTheme.typeScaleMax), 68);
+    expect(HomeNavBar.fightDiameter(GameTheme.typeScaleMax), 56);
     expect(find.text('FIGHT'), findsOneWidget);
+    final label = tester.renderObject<RenderParagraph>(find.text('FIGHT'));
+    expect(label.didExceedMaxLines, isFalse);
+    expect(
+      label.size.width,
+      greaterThanOrEqualTo(label.getMaxIntrinsicWidth(1e9) - 0.5),
+      reason: 'FIGHT is whole at 1.45',
+    );
     expect(find.text('Boss F2'), findsNWidgets(3));
     expect(find.byType(FittedBox), findsNothing);
   });

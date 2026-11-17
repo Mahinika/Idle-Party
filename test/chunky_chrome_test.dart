@@ -71,7 +71,7 @@ void main() {
       ),
     );
     final enter = deco('ENTER');
-    expect((enter.border! as Border).top.width, 2);
+    expect((enter.border! as Border).top.width, GameTheme.chunkyRim);
     expect((enter.border! as Border).top.color, GameTheme.buyGoldEdge);
     expect(enter.boxShadow!.single.color, GameTheme.chunkyShadow);
     expect(enter.boxShadow!.single.blurRadius, 0);

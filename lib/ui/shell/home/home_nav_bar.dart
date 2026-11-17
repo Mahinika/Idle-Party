@@ -49,7 +49,7 @@ class HomeNavBar extends StatelessWidget {
                   child: DecoratedBox(
                     decoration: const BoxDecoration(
                       border: Border(
-                        top: BorderSide(color: GameTheme.buyGreyEdge, width: 2),
+                        top: BorderSide(color: GameTheme.buyGreyEdge),
                       ),
                     ),
                     child: Row(
@@ -111,7 +111,7 @@ class HomeNavBar extends StatelessWidget {
   }
 
   /// FIGHT rises this far above the bar.
-  static const double fightLift = 14;
+  static const double fightLift = 8;
 
   /// About 68 dp; grows only past the in-app text ceiling (raw OS scale).
   static double labelHeight(BuildContext context) {
@@ -130,7 +130,7 @@ class HomeNavBar extends StatelessWidget {
   }
 
   static double fightDiameter(double textScale) {
-    const base = 68.0;
+    const base = 56.0;
     if (textScale <= GameTheme.typeScaleMax) return base;
     return base * textScale / GameTheme.typeScaleMax;
   }
@@ -211,19 +211,19 @@ class HomeNavBar extends StatelessWidget {
                 ),
                 border: Border.all(
                   color: open ? edge : GameTheme.torchHot,
-                  width: 3,
+                  width: 2,
                 ),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  GameIcon.asset(UiIcon.sword, size: 24),
+                  GameIcon.asset(UiIcon.sword, size: 20),
                   Text(
                     'FIGHT',
                     maxLines: 1,
                     softWrap: false,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.readable(color: ink),
+                    style: GameTheme.body(size: GameTheme.typeHint, color: ink),
                   ),
                 ],
               ),
@@ -254,7 +254,7 @@ class HomeNavBar extends StatelessWidget {
               children: [
                 Semantics(
                   label: 'CLOSE',
-                  child: GameIcon.asset(UiIcon.closeTab, size: 24),
+                  child: GameIcon.asset(UiIcon.closeTab, size: 20),
                 ),
                 const SizedBox(height: 2),
                 Flexible(
@@ -263,7 +263,10 @@ class HomeNavBar extends StatelessWidget {
                       'CLOSE',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.readable(color: GameTheme.torchHot),
+                      style: GameTheme.body(
+                        size: GameTheme.typeHint,
+                        color: GameTheme.torchHot,
+                      ),
                     ),
                   ),
                 ),
@@ -275,7 +278,7 @@ class HomeNavBar extends StatelessWidget {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    GameIcon.asset(icon, size: GameTheme.iconNav),
+                    GameIcon.asset(icon, size: 20),
                     if (alert)
                       const Positioned(
                         right: -3,
@@ -291,7 +294,10 @@ class HomeNavBar extends StatelessWidget {
                     maxLines: 2,
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.readable(color: GameTheme.parchment),
+                    style: GameTheme.body(
+                      size: GameTheme.typeHint,
+                      color: GameTheme.parchment,
+                    ),
                   ),
                 ),
                 if (timer != null)
@@ -349,7 +355,7 @@ class HomeNavBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(GameTheme.radiusSm),
               border: Border.all(
                 color: selected ? GameTheme.torchHot : Colors.transparent,
-                width: 2,
+                width: 1,
               ),
             ),
             child: Center(

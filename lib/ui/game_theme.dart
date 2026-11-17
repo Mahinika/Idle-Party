@@ -136,7 +136,17 @@ abstract final class GameTheme {
   static const Color gainGreen = Color(0xFF86E39A);
   /// Dark rim under red (leave / danger) chunky buttons.
   static const Color chunkyRedEdge = Color(0xFF2A0A06);
-  static const Color chunkyShadow = Color(0xCC000000);
+  static const Color chunkyShadow = Color(0x99000000);
+
+  /// Chunky face rim and drop depth. Light on purpose: the faces read as
+  /// buttons without shouting over the town and the cave.
+  static const double chunkyRim = 1;
+  static const double chunkyDepth = 2;
+
+  /// Visible face heights. The tap area around a face stays [minTouch] /
+  /// [primaryTouch]; only the painted part is smaller.
+  static const double chunkyFace = 36;
+  static const double chunkyFaceDense = 32;
 
   /// GEAR doll wash + bag UP/BEST chip.
   static const Color dollGlow = Color(0x5540A090);

@@ -131,8 +131,8 @@ class HomeTopBar extends StatelessWidget {
                   onTap: director.cycleCombatPace,
                   child: ChunkyFace(
                     tone: fast ? ChunkyTone.orange : ChunkyTone.stone,
-                    minWidth: GameTheme.minTouch,
-                    minHeight: 34,
+                    minWidth: 40,
+                    minHeight: GameTheme.chunkyFaceDense,
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     child: Text(
                       fast ? '2×' : '1×',
@@ -152,10 +152,10 @@ class HomeTopBar extends StatelessWidget {
                   onTap: () => router.toggle(MenuRoute.more),
                   child: ChunkyFace(
                     tone: ChunkyTone.stone,
-                    minWidth: 38,
-                    minHeight: 34,
+                    minWidth: 36,
+                    minHeight: GameTheme.chunkyFaceDense,
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: GameIcon.asset(UiIcon.menu, size: 22),
+                    child: GameIcon.asset(UiIcon.menu, size: 20),
                   ),
                 ),
               ],

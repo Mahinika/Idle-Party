@@ -65,6 +65,7 @@ class FightSeam extends StatelessWidget {
                   onTap: director.startExitHold,
                   child: ChunkyFace(
                     tone: ChunkyTone.gold,
+                    minHeight: GameTheme.chunkyFace,
                     child: Text(
                       'HOLD',
                       style: GameTheme.readable(
@@ -184,6 +185,7 @@ class FightFieldControls extends StatelessWidget {
                   onTap: onLeave,
                   child: ChunkyFace(
                     tone: ChunkyTone.red,
+                    minHeight: GameTheme.chunkyFace,
                     child: Text(
                       'LEAVE',
                       style: GameTheme.readable(
@@ -199,6 +201,7 @@ class FightFieldControls extends StatelessWidget {
                     onTap: () => router.open(MenuRoute.more),
                     child: ChunkyFace(
                       tone: ChunkyTone.stone,
+                      minHeight: GameTheme.chunkyFace,
                       child: Text(
                         'MORE',
                         style: GameTheme.readable(color: GameTheme.torchHot),
@@ -212,6 +215,7 @@ class FightFieldControls extends StatelessWidget {
                   onTap: () => director.setHomePanelFull(!full),
                   child: ChunkyFace(
                     tone: ChunkyTone.stone,
+                    minHeight: GameTheme.chunkyFace,
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     child: Text(
                       full ? 'TALL' : 'FORGE',

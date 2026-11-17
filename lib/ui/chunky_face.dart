@@ -104,13 +104,13 @@ class ChunkyFace extends StatelessWidget {
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
           color: highlight ? GameTheme.torchHot : (edgeColor ?? edge),
-          width: 2,
+          width: GameTheme.chunkyRim,
         ),
         boxShadow: raised
             ? const [
                 BoxShadow(
                   color: GameTheme.chunkyShadow,
-                  offset: Offset(0, 3),
+                  offset: Offset(0, GameTheme.chunkyDepth),
                 ),
               ]
             : null,
@@ -125,15 +125,38 @@ class ChunkyFace extends StatelessWidget {
               child: Align(widthFactor: 1, heightFactor: 1, child: child),
             ),
             Positioned(
-              top: 2,
+              top: 1,
               left: radius / 2 + 2,
               right: radius / 2 + 2,
-              height: 2,
+              height: 1,
               child: IgnorePointer(child: ColoredBox(color: shine)),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Keeps a tap area of at least [minWidth] x [minHeight] around a smaller
+/// painted face, centered. Put it inside the InkWell, around the face.
+class TapPad extends StatelessWidget {
+  const TapPad({
+    super.key,
+    required this.child,
+    this.minWidth = GameTheme.minTouch,
+    this.minHeight = GameTheme.minTouch,
+  });
+
+  final Widget child;
+  final double minWidth;
+  final double minHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(minWidth: minWidth, minHeight: minHeight),
+      child: Center(widthFactor: 1, heightFactor: 1, child: child),
     );
   }
 }
