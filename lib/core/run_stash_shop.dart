@@ -25,7 +25,8 @@ abstract final class RunStashShop {
       state.metaDepth.stashGoldBuys < goldBuyMax &&
       state.gold >= goldBuyCost(state);
 
-  static bool goldBuysAtCap(MetaDepthState md) => md.stashGoldBuys >= goldBuyMax;
+  static bool goldBuysAtCap(MetaDepthState md) =>
+      md.stashGoldBuys >= goldBuyMax;
 
   static bool cinderBuysAtCap(MetaDepthState md) =>
       md.stashCinderBuys >= cinderBuyMax;
@@ -61,7 +62,7 @@ abstract final class RunStashShop {
     if (state.metaDepth.stashGoldBuys >= goldBuyMax) {
       return 'BAG +$slotsPerGoldBuy (gold max)';
     }
-    return 'BAG +$slotsPerGoldBuy · ${formatGoldCost(goldBuyCost(state))}g';
+    return 'BAG +$slotsPerGoldBuy · ${goldCostLabel(goldBuyCost(state))}';
   }
 
   static String cinderBuyLabel(GameState state) {
@@ -69,6 +70,19 @@ abstract final class RunStashShop {
       return 'BAG +$slotsPerCinderBuy (Cinder max)';
     }
     return 'BAG +$slotsPerCinderBuy · $cinderBuyCost Cinders';
+  }
+
+  /// Gold cost as players read it elsewhere ("17,000g", "1.2M gold").
+  /// Never "17kg": a k right before the g reads as kilograms.
+  static String goldCostLabel(int gold) {
+    if (gold >= 1000000) return '${formatGoldCost(gold)} gold';
+    final digits = gold.abs().toString();
+    final buf = StringBuffer(gold < 0 ? '-' : '');
+    for (var i = 0; i < digits.length; i++) {
+      if (i > 0 && (digits.length - i) % 3 == 0) buf.write(',');
+      buf.write(digits[i]);
+    }
+    return '${buf}g';
   }
 
   static String formatGoldCost(int gold) {

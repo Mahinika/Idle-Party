@@ -480,9 +480,11 @@ class _ShopRow extends StatelessWidget {
           ),
           if (!compact) ...[
             const SizedBox(height: 4),
+            // Same hint size as the SHOP intro and tags; the full terms
+            // stay (no line cap) because this is what the player buys.
             Text(
               NavCopy.playerText(item.description, layout),
-              style: GameTheme.section(color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
           ],
           const SizedBox(height: 8),

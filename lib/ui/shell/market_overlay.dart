@@ -753,6 +753,7 @@ class MarketHeaderControls extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    MenuChrome.sheetHandle(),
                     Text('MARKET · flasks', style: GameTheme.section()),
                     ShellLayout.gap(4),
                     // Two lines so a wrap never starts with a lone "·".

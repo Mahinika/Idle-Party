@@ -126,7 +126,7 @@ class _UpgradePanelState extends State<UpgradePanel> {
   }
 
   Widget _body(GameState state, bool open, _Panel mode, bool embedded) {
-    if (!open) return _locked(state);
+    if (!open) return _locked(state, mode);
     final inline = widget.sheetPanel == null && !state.homePanelFull;
     switch (mode) {
       case _Panel.market:
@@ -278,8 +278,12 @@ class _UpgradePanelState extends State<UpgradePanel> {
     router.open(MenuRoute.shop);
   }
 
-  Widget _locked(GameState state) {
-    const lockHint = 'FORGE opens after the first boss (F2).';
+  /// Locked-dock line for the picked tab ("MARKET opens after …").
+  static String lockHintFor(int tabIndex) =>
+      '${_tabLabels[tabIndex]} opens after the first boss (F2).';
+
+  Widget _locked(GameState state, _Panel mode) {
+    final lockHint = lockHintFor(mode.index);
     return ListView(
       padding: ShellLayout.listPadding.copyWith(
         bottom: ShellLayout.listPadding.bottom + NavClearance.of(context),
@@ -296,7 +300,7 @@ class _UpgradePanelState extends State<UpgradePanel> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GameIcon.asset(
-                UiIcon.forge,
+                UiIcon.goldDockSegment[mode.index],
                 size: 28,
                 color: GameTheme.parchmentDim,
               ),

@@ -170,6 +170,7 @@ class ForgeOverlay extends StatefulWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                MenuChrome.sheetHandle(),
                 Text('MAX · wallet slice', style: GameTheme.section()),
                 ShellLayout.gap(4),
                 ShellLayout.hint(

@@ -353,7 +353,39 @@ abstract final class MenuChrome {
                 color: GameTheme.border.withValues(alpha: 0.7),
               ),
             ),
-            child: TabBar(
+            // Scrolling rails fade at both ends, so a tab cut by the edge
+            // (5 tabs at 1.45) reads as "more this way", not as clipped.
+            child: !scroll
+                ? _tabBar(controller, onTap, scroll, tabs)
+                : ShaderMask(
+                    key: tabRailFadeKey,
+                    blendMode: BlendMode.dstIn,
+                    shaderCallback: (rect) => const LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        Colors.white,
+                        Colors.white,
+                        Colors.transparent,
+                      ],
+                      stops: [0, 0.03, 0.97, 1],
+                    ).createShader(rect),
+                    child: _tabBar(controller, onTap, scroll, tabs),
+                  ),
+          ),
+        );
+      },
+    );
+  }
+
+  static const tabRailFadeKey = ValueKey('tab-rail-fade');
+
+  static Widget _tabBar(
+    TabController controller,
+    ValueChanged<int>? onTap,
+    bool scroll,
+    List<Widget> tabs,
+  ) {
+    return TabBar(
               controller: controller,
               onTap: onTap,
               isScrollable: scroll,
@@ -372,11 +404,7 @@ abstract final class MenuChrome {
               unselectedLabelColor: GameTheme.parchmentDim,
               dividerColor: Colors.transparent,
               tabs: tabs,
-            ),
-          ),
-        );
-      },
-    );
+            );
   }
 
   /// Compact exclusive choices in one row (spend ×1 / 5% / …).

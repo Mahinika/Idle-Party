@@ -23,6 +23,9 @@ class EssenceTilesScreen extends StatelessWidget {
   /// Icon tile on each ESSENCE tile (fits the 1.15x touch CRAFT row).
   static const double iconTile = 36;
 
+  /// Same height the old 2.4 grid aspect gave at 1.0 on a 360 dp phone.
+  static const double gridTileMinHeight = 70;
+
   const EssenceTilesScreen({
     super.key,
     required this.director,
@@ -36,73 +39,66 @@ class EssenceTilesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     if (router.homeAtSub) return _open(context);
     final state = director.state;
-    final textScale = MediaQuery.textScalerOf(
-      context,
-    ).scale(1).clamp(1.0, 1.45);
-    final aspect = 2.4 / textScale;
     return Column(
       children: [
         Expanded(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
             children: [
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 6,
-                crossAxisSpacing: 6,
-                childAspectRatio: aspect,
-                children: [
-                  _tile(
-                    context,
-                    'BLESSING',
-                    UiIcon.embers,
-                    GameTheme.statMove,
-                    MenuTabs.showKeep(state),
-                    'After the first boss or Ascend',
-                    () {
-                      router.essencePanel = EssencePanel.keep;
-                      router.pushSub();
-                    },
-                  ),
-                  _tile(
-                    context,
-                    'RELICS',
-                    CustomAssets.iconRelicPhoenixEmber,
-                    GameTheme.statCrit,
-                    MenuTabs.showRelics(state),
-                    'After the first boss or Ascend',
-                    () {
-                      router.essencePanel = EssencePanel.relics;
-                      router.pushSub();
-                    },
-                  ),
-                  _tile(
-                    context,
-                    'PETS',
-                    CustomAssets.petEgg,
-                    GameTheme.statVitality,
-                    MenuTabs.showBeast(state),
-                    'Ascend or hatch',
-                    () {
-                      router.essencePanel = EssencePanel.pets;
-                      router.pushSub();
-                    },
-                  ),
-                  _tile(
-                    context,
-                    'CODEX',
-                    CustomAssets.iconBook,
-                    GameTheme.statArmor,
-                    MenuTabs.showCodex(state),
-                    'Clear a floor',
-                    () {
-                      router.essencePanel = EssencePanel.tracks;
-                      router.pushSub();
-                    },
-                  ),
-                ],
+              // Rows of two that grow with their text: a fixed grid aspect
+              // cut the locked hints and overflowed CRAFT at 1.45.
+              _tileRow(
+                _tile(
+                  context,
+                  'BLESSING',
+                  UiIcon.embers,
+                  GameTheme.statMove,
+                  MenuTabs.showKeep(state),
+                  'After the first boss or Ascend',
+                  () {
+                    router.essencePanel = EssencePanel.keep;
+                    router.pushSub();
+                  },
+                ),
+                _tile(
+                  context,
+                  'RELICS',
+                  CustomAssets.iconRelicPhoenixEmber,
+                  GameTheme.statCrit,
+                  MenuTabs.showRelics(state),
+                  'After the first boss or Ascend',
+                  () {
+                    router.essencePanel = EssencePanel.relics;
+                    router.pushSub();
+                  },
+                ),
+              ),
+              const SizedBox(height: 6),
+              _tileRow(
+                _tile(
+                  context,
+                  'PETS',
+                  CustomAssets.petEgg,
+                  GameTheme.statVitality,
+                  MenuTabs.showBeast(state),
+                  'Ascend or hatch',
+                  () {
+                    router.essencePanel = EssencePanel.pets;
+                    router.pushSub();
+                  },
+                ),
+                _tile(
+                  context,
+                  'CODEX',
+                  CustomAssets.iconBook,
+                  GameTheme.statArmor,
+                  MenuTabs.showCodex(state),
+                  'Clear a floor',
+                  () {
+                    router.essencePanel = EssencePanel.tracks;
+                    router.pushSub();
+                  },
+                ),
               ),
               const SizedBox(height: 6),
               _tile(
@@ -192,7 +188,7 @@ class EssenceTilesScreen extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           lockedHint,
-                          maxLines: 2,
+                          maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                           style: GameTheme.hint(color: GameTheme.parchmentDim),
                         ),
@@ -206,10 +202,26 @@ class EssenceTilesScreen extends StatelessWidget {
         ),
       ),
     );
-    if (fullWidth) {
-      return SizedBox(height: GameTheme.minTouch * 1.15, child: tile);
-    }
-    return tile;
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        minHeight: fullWidth ? GameTheme.minTouch * 1.15 : gridTileMinHeight,
+      ),
+      child: tile,
+    );
+  }
+
+  /// Two tiles side by side, both as tall as the taller one.
+  Widget _tileRow(Widget a, Widget b) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: a),
+          const SizedBox(width: 6),
+          Expanded(child: b),
+        ],
+      ),
+    );
   }
 
   Widget _summary(BuildContext context, GameState state) {

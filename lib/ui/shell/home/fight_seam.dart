@@ -97,6 +97,10 @@ class FightFieldControls extends StatelessWidget {
   final MenuRouter router;
   final VoidCallback onLeave;
 
+  /// Capsule behind the FARM/PUSH hint line.
+  static const modeHintKey = ValueKey('fight-seam-mode-hint');
+  static const double modeHintCapsuleAlpha = 0.85;
+
   /// Camera bottom inset: the button row plus its pad.
   static const double cameraReserve = GameTheme.minTouch + 12;
 
@@ -131,13 +135,33 @@ class FightFieldControls extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (seamFitsExtras)
+              // Dark capsule: the line sits on lit sand, where the bare
+              // text was ~1.1–1.7:1. On the capsule it is above 7:1.
               Padding(
                 padding: const EdgeInsets.only(bottom: 2),
-                child: Text(
-                  modeHint,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.hint(color: GameTheme.parchmentDim),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: DecoratedBox(
+                    key: modeHintKey,
+                    decoration: BoxDecoration(
+                      color: GameTheme.stoneDeep.withValues(
+                        alpha: modeHintCapsuleAlpha,
+                      ),
+                      borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
+                      child: Text(
+                        modeHint,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.hint(color: GameTheme.parchmentDim),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             Row(
@@ -179,7 +203,12 @@ class FightFieldControls extends StatelessWidget {
                       ),
                     ),
                   ),
-                const Spacer(),
+                // At large text FARM/PUSH (or Repeat/Next) takes the gap
+                // instead, so "Repeat" is not cut to "Repe…".
+                if (osScale <= 1.2)
+                  const Spacer()
+                else
+                  const SizedBox(width: 6),
                 _seamTap(
                   label: 'LEAVE',
                   onTap: onLeave,

@@ -35,8 +35,7 @@ class JobsOverlay extends StatelessWidget {
     return 'NEW GOAL';
   }
 
-  static String rerollAdLine() =>
-      'Swap for a new goal after a short ad.';
+  static String rerollAdLine() => 'Swap for a new goal after a short ad.';
 
   static String rerollButtonTip({required int rerollsLeft}) =>
       'Rewarded ad · new Daily or Side goal · $rerollsLeft left today (UTC)';
@@ -82,9 +81,8 @@ class JobsOverlay extends StatelessWidget {
     return DirectorSelect<String>(
       director: director,
       select: (s) => _missionDigest(s),
-      builder: (context, state) => SingleChildScrollView(
-        child: _board(context, state),
-      ),
+      builder: (context, state) =>
+          SingleChildScrollView(child: _board(context, state)),
     );
   }
 
@@ -96,9 +94,11 @@ class JobsOverlay extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // One line at 1.0; at large text it wraps instead of cutting
+          // the progress count.
           ShellLayout.hint(
             introLine(chainCount: state.metaDepth.jobChainCount),
-            maxLines: 1,
+            maxLines: 2,
           ),
           if (claimable == 0) ...[
             ShellLayout.gap(4),
@@ -169,10 +169,7 @@ class JobsOverlay extends StatelessWidget {
                 style: titleStyle,
               ),
             ),
-            Text(
-              'CLAIMED',
-              style: GameTheme.section(color: GameTheme.mossLit),
-            ),
+            Text('CLAIMED', style: GameTheme.section(color: GameTheme.mossLit)),
           ],
         ),
       );
@@ -197,12 +194,23 @@ class JobsOverlay extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 2),
-          Text(
-            'Progress ${mission.progress}/${mission.target} · '
-            '${rewardLine(gold: mission.goldReward, essence: mission.essenceReward)}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GameTheme.section(),
+          // Reward moves to its own line when tight (1.45) instead of
+          // being cut to "+3 e…".
+          Wrap(
+            spacing: 6,
+            children: [
+              Text(
+                'Progress ${mission.progress}/${mission.target} ·',
+                style: GameTheme.section(),
+              ),
+              Text(
+                rewardLine(
+                  gold: mission.goldReward,
+                  essence: mission.essenceReward,
+                ),
+                style: GameTheme.section(),
+              ),
+            ],
           ),
           const SizedBox(height: 2),
           ClipRRect(

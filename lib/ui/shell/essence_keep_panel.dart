@@ -9,6 +9,7 @@ import '../../core/menu_alerts.dart';
 import '../confirm_dialogs.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
+import '../menu_chrome.dart';
 import '../meta/prestige_shop.dart';
 import 'shell_common.dart';
 import 'shell_layout.dart';
@@ -32,6 +33,13 @@ String _blessingLine(GameState state) {
 
 /// Forever essence spends — God Hand, Blessing, permanent buys, REBORN.
 class EssenceKeepPanel extends StatelessWidget {
+  /// God Hand smash modes: (style id, label, what it does).
+  static const godHandStyles = <(int, String, String)>[
+    (0, 'BAL', 'Balanced smash'),
+    (1, 'FOCUS', 'Smaller + stronger (~+22% dmg · −18% radius)'),
+    (2, 'WIDE', 'Wider + weaker (~−12% dmg · +22% radius)'),
+  ];
+
   const EssenceKeepPanel({super.key, required this.director});
 
   final GameDirector director;
@@ -128,27 +136,17 @@ class EssenceKeepPanel extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 4),
-        Row(
-          children: [
-            for (final entry in <(int, String, String)>[
-              (0, 'BAL', 'Balanced smash'),
-              (1, 'FOCUS', 'Smaller + stronger (~+22% dmg · −18% radius)'),
-              (2, 'WIDE', 'Wider + weaker (~−12% dmg · +22% radius)'),
-            ]) ...[
-              if (entry.$1 > 0) const SizedBox(width: 6),
-              Expanded(
-                child: GameButton(
-                  label: entry.$2,
-                  tip: entry.$3,
-                  dense: true,
-                  style: style == entry.$1
-                      ? GameButtonStyle.brown
-                      : GameButtonStyle.grey,
-                  onPressed: () => director.setGodHandStyle(entry.$1),
-                ),
-              ),
-            ],
-          ],
+        // Picked smash mode uses the plum segmented toggle (batch 6
+        // colour rule: plum = picked, brown/gold = act or buy).
+        MenuChrome.segmented(
+          dense: true,
+          labels: [for (final e in EssenceKeepPanel.godHandStyles) e.$2],
+          selectedIndex: style.clamp(0, EssenceKeepPanel.godHandStyles.length - 1),
+          onSelect: (i) => director.setGodHandStyle(EssenceKeepPanel.godHandStyles[i].$1),
+        ),
+        ShellLayout.hint(
+          EssenceKeepPanel.godHandStyles[style.clamp(0, EssenceKeepPanel.godHandStyles.length - 1)].$3,
+          maxLines: 2,
         ),
         if (masteryOpen.isNotEmpty) ...[
           const SizedBox(height: 6),

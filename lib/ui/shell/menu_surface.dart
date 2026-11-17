@@ -22,6 +22,9 @@ import 'home/map_screen.dart';
 /// The one menu sheet, shared by hub and dungeon.
 /// All routes fill the stack above the shared [AppBottomBar] (full height).
 class MenuSurface extends StatefulWidget {
+  /// Subtitle of the home ESSENCE tile hub.
+  static const essenceHubHint = 'Lasting upgrades for the party';
+
   const MenuSurface({
     super.key,
     required this.director,
@@ -180,9 +183,22 @@ class _MenuSurfaceState extends State<MenuSurface> {
     // SHOP / ESSENCE / KEY / MORE match GEAR (never cover the bar; OverlayScrim
     // lives only inside the Expanded scene stack).
     final navOwnedClose = widget.home && _homeNavOwnsClose(router.route);
+    // Home ESSENCE tiles: the hub is always "ESSENCE", whichever panel was
+    // last open (RELICS / PETS used to retitle the same tile grid).
+    final essenceHub = widget.home &&
+        router.route == MenuRoute.essence &&
+        !router.homeAtSub;
     return OverlayScrim(
-      title: homeMenuGrid ? '' : router.title,
-      subtitle: homeMenuGrid ? '' : router.jobHintFor(state),
+      title: homeMenuGrid
+          ? ''
+          : essenceHub
+          ? 'ESSENCE'
+          : router.title,
+      subtitle: homeMenuGrid
+          ? ''
+          : essenceHub
+          ? MenuSurface.essenceHubHint
+          : router.jobHintFor(state),
       heightFactor: 1,
       // Home keeps the top bar (essence, gold, gold/min) above every sheet,
       // so the sheet header does not repeat the wallet.

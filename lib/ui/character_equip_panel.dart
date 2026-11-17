@@ -227,8 +227,17 @@ class CharacterEquipPanel extends StatelessWidget {
               itemBuilder: (context, i) {
                 final h = heroes[i];
                 final active = i == index;
-                final label =
-                    '${h.displayRoleLabel(plainEnglish: GameLogic.plainPlayerChrome(state))} · Lv${h.level}';
+                final role = h.displayRoleLabel(
+                  plainEnglish: GameLogic.plainPlayerChrome(state),
+                );
+                final label = '$role · Lv${h.level}';
+                // Above 1.2 text scale the chips show the role only, so three
+                // fit on a 360 dp phone; the level is under the doll and in
+                // the semantics label.
+                final chipText =
+                    MediaQuery.textScalerOf(context).scale(1) > 1.2
+                    ? role
+                    : label;
                 return Semantics(
                   button: true,
                   selected: active,
@@ -258,7 +267,7 @@ class CharacterEquipPanel extends StatelessWidget {
                               const SizedBox(width: 6),
                             ],
                             Text(
-                              label,
+                              chipText,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: GameTheme.readable(

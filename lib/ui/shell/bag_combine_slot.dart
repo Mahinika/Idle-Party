@@ -23,10 +23,14 @@ class _CombineSlot extends StatelessWidget {
         decoration: MenuChrome.cardBox(inset: true, selected: item != null),
         child: Row(
           children: [
+            // Label column grows with text scale: a fixed 44 made
+            // "SECOND" run into its value at 1.45.
             SizedBox(
-              width: 44,
+              width: MediaQuery.textScalerOf(context).scale(44) + 4,
               child: Text(
                 label,
+                maxLines: 1,
+                softWrap: false,
                 style: GameTheme.hint(color: item != null
                       ? GameTheme.torchHot
                       : GameTheme.parchmentDim),

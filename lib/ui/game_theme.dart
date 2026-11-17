@@ -63,7 +63,9 @@ abstract final class GameTheme {
   /// RUN / TODAY / ACCOUNT scope tones (hub + POWER section headers).
   static const Color scopeRun = mossLit;
   static const Color scopeToday = accentWarn;
-  static const Color scopeAccount = accentInfo;
+  /// Account-scope section labels (MENU, ROSTER, ACTIVE, SOUND): muted
+  /// gold from the dusk palette, not the old off-theme blue (6.6:1 on panel).
+  static const Color scopeAccount = statSpeed;
   static const Color moss = Color(0xFF2F4A3C);
   static const Color mossLit = Color(0xFF7DCF9A);
   static const Color torch = Color(0xFFE4B04A);

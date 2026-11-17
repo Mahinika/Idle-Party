@@ -45,9 +45,9 @@ class BagCleanupFilters extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             showScrap
-                ? 'Near-full bag auto-rules (also BAG → FILTERS). '
+                ? 'Near-full bag auto-rules (also BAG › FILTERS). '
                       'Auto-sell = gold · auto-scrap = essence. $keepLine'
-                : 'Near-full bag auto-rules (also BAG → FILTERS). '
+                : 'Near-full bag auto-rules (also BAG › FILTERS). '
                       'Auto-sell = gold. $keepLine',
             style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
@@ -161,8 +161,8 @@ class BagCleanupFilters extends StatelessWidget {
         : '';
     final market = showMarket
         ? (compact
-              ? '. GOLD → MARKET buys flasks — it does not tap-sell stash.'
-              : '. GOLD → MARKET buys flasks and listings — it does not tap-sell stash.')
+              ? '. MARKET buys flasks — it does not tap-sell stash.'
+              : '. MARKET buys flasks and listings — it does not tap-sell stash.')
         : '.';
     return '$sell$scrap$market';
   }
