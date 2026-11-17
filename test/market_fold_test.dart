@@ -141,6 +141,16 @@ void main() {
           ),
           findsNothing,
         );
+        final filter = find.descendant(
+          of: header,
+          matching: find.text(MarketHeaderControls.filterUpgradesShort),
+        );
+        expect(filter, findsOneWidget);
+        expect(
+          tester.renderObject<RenderParagraph>(filter).didExceedMaxLines,
+          isFalse,
+        );
+        expect(tester.getRect(filter).right, lessThanOrEqualTo(size.width));
         for (final label in ['FORGE', 'CAMP', 'MARKET']) {
           final para = tester.renderObject<RenderParagraph>(
             find
@@ -177,6 +187,13 @@ void main() {
     await tester.tap(find.text('MARKET').first);
     await tester.pump(const Duration(milliseconds: 300));
     final upgradesShown = find.byType(PowerUpgradeRow).evaluate().length;
+    expect(
+      find.descendant(
+        of: find.byType(MarketHeaderControls),
+        matching: find.text(MarketHeaderControls.filterUpgradesShort),
+      ),
+      findsOneWidget,
+    );
 
     await tester.tap(find.bySemanticsLabel('Flasks and filter'));
     await tester.pumpAndSettle();
@@ -184,6 +201,22 @@ void main() {
     await tester.tap(find.text('ALL GEAR'));
     await tester.pumpAndSettle();
     expect(find.textContaining('BUY FLASK'), findsNothing);
+    // The chip says which filter is on without opening the sheet.
+    final chip = find.byType(MarketHeaderControls);
+    expect(
+      find.descendant(
+        of: chip,
+        matching: find.text(MarketHeaderControls.filterAllShort),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: chip,
+        matching: find.text(MarketHeaderControls.filterUpgradesShort),
+      ),
+      findsNothing,
+    );
     expect(
       find.byType(PowerUpgradeRow).evaluate().length,
       greaterThanOrEqualTo(upgradesShown),

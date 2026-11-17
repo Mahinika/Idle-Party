@@ -624,11 +624,19 @@ class MarketHeaderControls extends StatelessWidget {
       children: [
         _chip(
           label: 'Flasks and filter',
+          value: upgradesOnly ? 'Showing upgrades' : 'Showing all gear',
           onTap: () => _openMenu(context),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               const GameIcon.asset(UiIcon.flask, size: 20),
+              const SizedBox(width: 3),
+              // Active filter, readable without opening the sheet.
+              Text(
+                upgradesOnly ? filterUpgradesShort : filterAllShort,
+                maxLines: 1,
+                style: GameTheme.hint(color: GameTheme.toggleOnAccent),
+              ),
               const SizedBox(width: 2),
               RotatedBox(
                 quarterTurns: 1,
@@ -667,9 +675,14 @@ class MarketHeaderControls extends StatelessWidget {
     );
   }
 
+  /// Chip text for the active filter.
+  static const String filterUpgradesShort = 'UPG';
+  static const String filterAllShort = 'ALL';
+
   Widget _chip({
     required String label,
     required Widget child,
+    String? value,
     VoidCallback? onTap,
   }) {
     final face = ChunkyFace(
@@ -687,6 +700,7 @@ class MarketHeaderControls extends StatelessWidget {
         button: onTap != null,
         enabled: onTap != null,
         label: label,
+        value: value,
         onTap: onTap,
         excludeSemantics: true,
         child: Material(
@@ -741,10 +755,14 @@ class MarketHeaderControls extends StatelessWidget {
                   children: [
                     Text('MARKET · flasks', style: GameTheme.section()),
                     ShellLayout.gap(4),
+                    // Two lines so a wrap never starts with a lone "·".
                     ShellLayout.hint(
-                      '${_MarketOverlayState._marketHealCount(state)} · '
+                      _MarketOverlayState._marketHealCount(state),
+                      maxLines: 1,
+                    ),
+                    ShellLayout.hint(
                       'Flask: party heal · Bandage: one hero most hurt',
-                      maxLines: 3,
+                      maxLines: 2,
                     ),
                     ShellLayout.gap(8),
                     GameButton(
