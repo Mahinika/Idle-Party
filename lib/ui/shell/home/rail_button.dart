@@ -18,6 +18,7 @@ class RailButton extends StatelessWidget {
     required this.router,
     this.compact = false,
     this.listCard = false,
+    this.stacked = false,
   });
 
   final HomeEntry entry;
@@ -30,6 +31,10 @@ class RailButton extends StatelessWidget {
 
   /// Inside [ShellLayout.card] on the MENU grid — skip outer fill.
   final bool listCard;
+
+  /// With [compact]: icon above the label, filling the width it is given.
+  /// The fight seam uses it when the inline chips do not fit (large text).
+  final bool stacked;
 
   @override
   Widget build(BuildContext context) {
@@ -89,9 +94,43 @@ class RailButton extends StatelessWidget {
                 constraints: const BoxConstraints(
                   minHeight: GameTheme.minTouch,
                 ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: row,
+                child: Align(alignment: Alignment.centerLeft, child: row),
+              ),
+            ),
+          ),
+        );
+      }
+      if (stacked) {
+        return WebClickScope(
+          label: entry.label,
+          onPressed: () => entry.open(context, director, router),
+          child: Semantics(
+            button: true,
+            label: entry.label,
+            child: Material(
+              color: GameTheme.panelInset.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              child: InkWell(
+                onTap: () => entry.open(context, director, router),
+                borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: GameTheme.minTouch,
+                    minHeight: GameTheme.minTouch,
+                  ),
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      row.children.first,
+                      const SizedBox(height: 2),
+                      label,
+                    ],
+                  ),
                 ),
               ),
             ),
