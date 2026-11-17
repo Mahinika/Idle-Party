@@ -11,7 +11,9 @@ import 'package:idle_party/ui/shell/buy_qty_toggle.dart';
 void main() {
   Future<void> pump(WidgetTester tester, Widget child) async {
     await tester.pumpWidget(
-      MaterialApp(home: Scaffold(body: Center(child: child))),
+      MaterialApp(
+        home: Scaffold(body: Center(child: child)),
+      ),
     );
   }
 
@@ -76,7 +78,10 @@ void main() {
     expect(enter.boxShadow!.single.color, GameTheme.chunkyShadow);
     expect(enter.boxShadow!.single.blurRadius, 0);
     expect(deco('LOCKED').boxShadow, isNull);
-    expect((deco('LEAVE').border! as Border).top.color, GameTheme.chunkyRedEdge);
+    expect(
+      (deco('LEAVE').border! as Border).top.color,
+      GameTheme.chunkyRedEdge,
+    );
     expect(
       tester.getSize(find.byType(GameButton).first).height,
       greaterThanOrEqualTo(GameTheme.minTouch),
@@ -112,10 +117,8 @@ void main() {
     await pump(
       tester,
       StatefulBuilder(
-        builder: (context, setState) => BuyQtyToggle(
-          value: qty,
-          onChanged: (q) => setState(() => qty = q),
-        ),
+        builder: (context, setState) =>
+            BuyQtyToggle(value: qty, onChanged: (q) => setState(() => qty = q)),
       ),
     );
     ChunkyFace face(String s) => tester.widget<ChunkyFace>(
@@ -127,9 +130,9 @@ void main() {
     await tester.pump();
     final picked = face('×10');
     expect(picked.tone, ChunkyTone.stone);
-    expect(picked.edgeColor, GameTheme.toggleOnTop);
+    expect(picked.edgeColor, GameTheme.toggleOnAccent);
     expect(picked.raised, isFalse);
-    expect(label('×10').style?.color, GameTheme.toggleOnTop);
+    expect(label('×10').style?.color, GameTheme.toggleOnAccent);
     for (final other in ['×1', 'MAX']) {
       expect(face(other).tone, ChunkyTone.stone);
       expect(face(other).edgeColor, isNull);

@@ -96,27 +96,20 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       };
     }
     return switch (track) {
-      'gold' => GameTheme.torch,
-      'power' => GameTheme.hudHpDamage,
-      'vitality' => GameTheme.mossLit,
-      'defense' => GameTheme.rarityRare,
-      'xp' => GameTheme.rarityRare,
+      'gold' => GameTheme.statSpeed,
+      'power' => GameTheme.statAttack,
+      'vitality' => GameTheme.statVitality,
+      'defense' => GameTheme.statArmor,
+      'xp' => GameTheme.statMastery,
       _ => GameTheme.parchmentDim,
     };
   }
 
   String _essencePriceLabel(int cost) => '$cost essence';
 
-  static const _tracks = <String>[
-    'gold',
-    'power',
-    'vitality',
-    'defense',
-    'xp',
-  ];
+  static const _tracks = <String>['gold', 'power', 'vitality', 'defense', 'xp'];
 
-  bool get _compactPrice =>
-      widget.inlineUnderFight || widget.expandedTrackList;
+  bool get _compactPrice => widget.inlineUnderFight || widget.expandedTrackList;
 
   @override
   Widget build(BuildContext context) {
@@ -127,14 +120,14 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     }
     final maxBulk = campOpen
         ? _tracks
-            .map(
-              (t) => GameLogic.sanctuaryBulkAffordableLevels(
-                state,
-                t,
-                maxLevels: _campTapCap,
-              ),
-            )
-            .fold<int>(1, (a, b) => a > b ? a : b)
+              .map(
+                (t) => GameLogic.sanctuaryBulkAffordableLevels(
+                  state,
+                  t,
+                  maxLevels: _campTapCap,
+                ),
+              )
+              .fold<int>(1, (a, b) => a > b ? a : b)
         : 1;
     final buyCap = maxBulk.clamp(1, _campTapCap);
     final effectiveBuy = _buyLevels.clamp(1, buyCap);
@@ -143,56 +136,54 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       padding: ShellLayout.listPadding,
       child: SingleChildScrollView(
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              GameIcon.asset(UiIcon.campfire, size: 48),
-              const SizedBox(width: 10),
-              Text('CAMP', style: GameTheme.title()),
-            ],
-          ),
-          ShellLayout.gap(8),
-          CampRatesSection(director: director),
-          ShellLayout.gap(8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 4,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              MenuChrome.chip(
-                label: 'Ascend ${state.ascensionLevel}',
-                tone: GameTheme.torchHot,
-              ),
-              MenuChrome.chip(label: 'Camp tracks', selected: campOpen),
-              Text(
-                '${formatCount(state.essence)} essence · survive Ascend',
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
-              ),
-            ],
-          ),
-          if (campOpen) ...[
-            ShellLayout.gap(8),
-            _qtyToggle(),
-          ],
-          if (campOpen) _adFreeLine(state),
-          ShellLayout.gap(8),
-          if (campOpen)
-            for (final track in _tracks)
-              _campTrackCard(
-                state,
-                track,
-                effectiveBuy,
-                recommended: track == GameLogic.recommendedSanctuaryTrack(state),
-              )
-          else
-            ShellLayout.hint(
-              'Gold Find, War Altar, Life Well, Aegis, and Lore Font appear here once Essence unlocks.',
-              maxLines: 3,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                GameIcon.asset(UiIcon.campfire, size: 48),
+                const SizedBox(width: 10),
+                Text('CAMP', style: GameTheme.title()),
+              ],
             ),
-          ShellLayout.gap(12),
-        ],
-      ),
+            ShellLayout.gap(8),
+            CampRatesSection(director: director),
+            ShellLayout.gap(8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                MenuChrome.chip(
+                  label: 'Ascend ${state.ascensionLevel}',
+                  tone: GameTheme.torchHot,
+                ),
+                MenuChrome.chip(label: 'Camp tracks', selected: campOpen),
+                Text(
+                  '${formatCount(state.essence)} essence · survive Ascend',
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
+                ),
+              ],
+            ),
+            if (campOpen) ...[ShellLayout.gap(8), _qtyToggle()],
+            if (campOpen) _adFreeLine(state),
+            ShellLayout.gap(8),
+            if (campOpen)
+              for (final track in _tracks)
+                _campTrackCard(
+                  state,
+                  track,
+                  effectiveBuy,
+                  recommended:
+                      track == GameLogic.recommendedSanctuaryTrack(state),
+                )
+            else
+              ShellLayout.hint(
+                'Gold Find, War Altar, Life Well, Aegis, and Lore Font appear here once Essence unlocks.',
+                maxLines: 3,
+              ),
+            ShellLayout.gap(12),
+          ],
+        ),
       ),
     );
   }
@@ -209,12 +200,12 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     }
     final maxBulk = _tracks
         .map(
-              (t) => GameLogic.sanctuaryBulkAffordableLevels(
-                state,
-                t,
-                maxLevels: _campTapCap,
-              ),
-            )
+          (t) => GameLogic.sanctuaryBulkAffordableLevels(
+            state,
+            t,
+            maxLevels: _campTapCap,
+          ),
+        )
         .fold<int>(1, (a, b) => a > b ? a : b);
     final buyCap = maxBulk.clamp(1, _campTapCap);
     final effectiveBuy = _buyLevels.clamp(1, buyCap);
@@ -333,7 +324,9 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
             child: InkWell(
               onTap: onTap,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+                constraints: const BoxConstraints(
+                  minHeight: GameTheme.minTouch,
+                ),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(

@@ -56,7 +56,10 @@ class ForgeOverlay extends StatefulWidget {
     }
     final move = GameState.softForgePercent(state.moveSpeedBonus).round();
     final haste = GameState.softForgePercent(state.attackSpeedBonus).round();
-    final crit = GameState.softForgePercent(state.critBonus, softAt: 25).round();
+    final crit = GameState.softForgePercent(
+      state.critBonus,
+      softAt: 25,
+    ).round();
     final parts = <String>[
       'AP +${state.forgeAttackSheet}',
       'Armor +${state.forgeDefenseSheet}',
@@ -96,18 +99,30 @@ class ForgeOverlay extends StatefulWidget {
 
     final (line, soft) = switch (type) {
       PartyUpgradeType.attack => (
-        flat(state.attackBonus, GameLogic.forgeAttackGain,
-            GameLogic.forgeAttackSoftAt, 'AP'),
+        flat(
+          state.attackBonus,
+          GameLogic.forgeAttackGain,
+          GameLogic.forgeAttackSoftAt,
+          'AP',
+        ),
         state.attackBonus >= GameLogic.forgeAttackSoftAt,
       ),
       PartyUpgradeType.defense => (
-        flat(state.defenseBonus, GameLogic.forgeDefenseGain,
-            GameLogic.forgeDefenseSoftAt, 'Armor'),
+        flat(
+          state.defenseBonus,
+          GameLogic.forgeDefenseGain,
+          GameLogic.forgeDefenseSoftAt,
+          'Armor',
+        ),
         state.defenseBonus >= GameLogic.forgeDefenseSoftAt,
       ),
       PartyUpgradeType.vitality => (
-        flat(state.vitalityBonus, GameLogic.forgeVitalityGain,
-            GameLogic.forgeVitalitySoftAt, 'STA'),
+        flat(
+          state.vitalityBonus,
+          GameLogic.forgeVitalityGain,
+          GameLogic.forgeVitalitySoftAt,
+          'STA',
+        ),
         state.vitalityBonus >= GameLogic.forgeVitalitySoftAt,
       ),
       PartyUpgradeType.moveSpeed => (
@@ -123,8 +138,12 @@ class ForgeOverlay extends StatefulWidget {
         state.critBonus >= 25,
       ),
       PartyUpgradeType.mastery => (
-        flat(state.masteryBonus, GameLogic.forgeMasteryGain,
-            GameLogic.forgeMasterySoftAt, 'MASTERY'),
+        flat(
+          state.masteryBonus,
+          GameLogic.forgeMasteryGain,
+          GameLogic.forgeMasterySoftAt,
+          'MASTERY',
+        ),
         state.masteryBonus >= GameLogic.forgeMasterySoftAt,
       ),
     };
@@ -141,9 +160,7 @@ class ForgeOverlay extends StatefulWidget {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewPaddingOf(ctx).bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(ctx).bottom),
         child: Material(
           color: GameTheme.sheet,
           borderRadius: MenuChrome.sheetRadius,
@@ -224,13 +241,13 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       };
     }
     return switch (type) {
-      PartyUpgradeType.attack => GameTheme.hudHpDamage,
-      PartyUpgradeType.defense => GameTheme.rarityRare,
-      PartyUpgradeType.vitality => GameTheme.mossLit,
-      PartyUpgradeType.moveSpeed => GameTheme.torchHot,
-      PartyUpgradeType.attackSpeed => GameTheme.torch,
-      PartyUpgradeType.crit => GameTheme.bloodLit,
-      PartyUpgradeType.mastery => GameTheme.tooltipEpic,
+      PartyUpgradeType.attack => GameTheme.statAttack,
+      PartyUpgradeType.defense => GameTheme.statArmor,
+      PartyUpgradeType.vitality => GameTheme.statVitality,
+      PartyUpgradeType.moveSpeed => GameTheme.statMove,
+      PartyUpgradeType.attackSpeed => GameTheme.statSpeed,
+      PartyUpgradeType.crit => GameTheme.statCrit,
+      PartyUpgradeType.mastery => GameTheme.statMastery,
     };
   }
 
@@ -269,7 +286,11 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     final shortGold = cost > state.gold ? cost - state.gold : 0;
     final primaryBuy = recommended && onPressed != null;
     final buys = onPressed == null ? 1 : (preview.buys < 1 ? 1 : preview.buys);
-    final (now, next, soft) = ForgeOverlay.forgeGainLine(state, type, buys: buys);
+    final (now, next, soft) = ForgeOverlay.forgeGainLine(
+      state,
+      type,
+      buys: buys,
+    );
     return PowerUpgradeRow(
       accent: _forgeAccent(type),
       leading: UpgradeIconTile(
@@ -329,7 +350,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   }
 
   Widget _spendAllButton(GameState state) {
-  return Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         GameButton(
@@ -377,20 +398,20 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     final body = _scrollAllTracks
         ? _inlineUnderFightBody(plain: plain, canBuyAny: canBuyAny)
         : Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: _classicForgeBody(plain: plain, pinSpendAll: false),
-          ),
-        ),
-        if (canBuyAny)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-            child: _spendAllButton(state),
-          ),
-      ],
-    );
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: _classicForgeBody(plain: plain, pinSpendAll: false),
+                ),
+              ),
+              if (canBuyAny)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+                  child: _spendAllButton(state),
+                ),
+            ],
+          );
     final inline = _scrollAllTracks;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -423,16 +444,15 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     );
   }
 
-  Widget _inlineUnderFightBody({
-    required bool plain,
-    required bool canBuyAny,
-  }) {
+  Widget _inlineUnderFightBody({required bool plain, required bool canBuyAny}) {
     final state = director.state;
 
     // The home fight gives this panel whatever height is left. A short
     // phone at text scale 1.45 can be shorter than the spend row, so the
     // row scrolls with the tracks instead of painting a stripe.
-    final farmInline = FarmIntensity.applies(state) ? _farmIntensityRow(state) : null;
+    final farmInline = FarmIntensity.applies(state)
+        ? _farmIntensityRow(state)
+        : null;
     return ListView(
       primary: false,
       physics: const AlwaysScrollableScrollPhysics(),
@@ -513,13 +533,15 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
             ForgeOverlay.boughtSummary(state, plain: plain),
             maxLines: 2,
             softWrap: true,
-            style: GameTheme.readable(color: homeFight
-                  ? GameTheme.parchmentDim
-                  : GameTheme.parchment),
+            style: GameTheme.readable(
+              color: homeFight ? GameTheme.parchmentDim : GameTheme.parchment,
+            ),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
+          padding: const EdgeInsets.symmetric(
+            horizontal: ShellLayout.sheetHorizontal,
+          ),
           child: ShellLayout.hint(
             NavCopy.playerText(
               ForgeOverlay.resetHint(
@@ -534,22 +556,22 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
         ShellLayout.gap(homeFight ? 2 : 4),
         if (canBuyAny) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
+            padding: const EdgeInsets.symmetric(
+              horizontal: ShellLayout.sheetHorizontal,
+            ),
             child: _spendModeSegmented(dense: homeFight),
           ),
           ShellLayout.gap(2),
           if (!homeFight)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
-              child: ShellLayout.hint(
-                switch (_spendMode) {
-                  ForgeGoldSpendMode.one ||
-                  ForgeGoldSpendMode.x10 =>
-                    '×1 / ×10 buys per tap · MAX spends the wallet · hold MAX for 5–50%',
-                  _ => 'MAX ${_spendMode.chipLabel} of the wallet on each tap',
-                },
-                maxLines: 2,
+              padding: const EdgeInsets.symmetric(
+                horizontal: ShellLayout.sheetHorizontal,
               ),
+              child: ShellLayout.hint(switch (_spendMode) {
+                ForgeGoldSpendMode.one || ForgeGoldSpendMode.x10 =>
+                  '×1 / ×10 buys per tap · MAX spends the wallet · hold MAX for 5–50%',
+                _ => 'MAX ${_spendMode.chipLabel} of the wallet on each tap',
+              }, maxLines: 2),
             ),
           if (!homeFight) ShellLayout.gap(4),
         ] else ...[
@@ -566,7 +588,9 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
         ],
         for (final type in PartyUpgradeType.values)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
+            padding: const EdgeInsets.symmetric(
+              horizontal: ShellLayout.sheetHorizontal,
+            ),
             child: _upgradeRow(
               state: state,
               type: type,
@@ -581,7 +605,9 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
         if (canBuyAny && pinSpendAll) ...[
           ShellLayout.gap(2),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
+            padding: const EdgeInsets.symmetric(
+              horizontal: ShellLayout.sheetHorizontal,
+            ),
             child: _spendAllButton(state),
           ),
         ],

@@ -48,7 +48,9 @@ class BuyQtyToggle extends StatelessWidget {
   Widget _button(BuyQty qty, String label, {VoidCallback? longPress}) {
     final selected = value == qty;
     const tone = ChunkyTone.stone;
-    final textColor = selected ? GameTheme.toggleOnTop : GameTheme.parchmentDim;
+    final textColor = selected
+        ? GameTheme.toggleOnAccent
+        : GameTheme.parchmentDim;
     final semantics = qty == BuyQty.max && longPress != null
         ? '$label · hold for wallet slices'
         : label;
@@ -73,7 +75,7 @@ class BuyQtyToggle extends StatelessWidget {
               child: ChunkyFace(
                 tone: tone,
                 raised: !selected,
-                edgeColor: selected ? GameTheme.toggleOnTop : null,
+                edgeColor: selected ? GameTheme.toggleOnAccent : null,
                 minWidth: faceWidth,
                 minHeight: GameTheme.chunkyFaceDense,
                 padding: const EdgeInsets.symmetric(horizontal: 4),

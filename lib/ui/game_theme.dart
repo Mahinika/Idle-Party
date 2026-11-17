@@ -11,12 +11,12 @@ final bool bundledGoogleFonts = () {
 /// files should use these names (combat VFX may still paint raw hex).
 abstract final class GameTheme {
   // —— Surfaces (cooler charcoal with warm torch accents) ——————————————
-  static const Color ink = Color(0xFF06080C);
-  static const Color stoneDeep = Color(0xFF0C1016);
-  static const Color stone = Color(0xFF141A22);
-  static const Color stoneRaised = Color(0xFF1E2733);
-  static const Color panel = Color(0xFF182028);
-  static const Color panelInset = Color(0xFF0F141C);
+  static const Color ink = Color(0xFF0B0709);
+  static const Color stoneDeep = Color(0xFF140D11);
+  static const Color stone = Color(0xFF1C1318);
+  static const Color stoneRaised = Color(0xFF291D23);
+  static const Color panel = Color(0xFF22181D);
+  static const Color panelInset = Color(0xFF170F14);
 
   /// Loot border colors (bag slots, gear rows).
   static const Color rarityCommon = Color(0xFF5A5040);
@@ -72,11 +72,11 @@ abstract final class GameTheme {
   /// Wisp gift core. Same pixels the overlay used to paint inline.
   static const Color wispGlow = Color(0xFFFFF6D0);
   static const Color parchment = Color(0xFFECE8DF);
-  static const Color parchmentDim = Color(0xFFB4BCC8);
+  static const Color parchmentDim = Color(0xFFC2B4A4);
   static const Color blood = Color(0xFF8B3A2A);
   static const Color bloodLit = Color(0xFFE07058);
   static const Color clear = Color(0xFF7DCF9A);
-  static const Color border = Color(0xFF3D4A5C);
+  static const Color border = Color(0xFF4E3C42);
   static const Color borderLit = Color(0xFFC9A24A);
   static const Color accentInfo = Color(0xFF6EB6FF);
   static const Color accentWarn = Color(0xFFFFB454);
@@ -91,51 +91,65 @@ abstract final class GameTheme {
   static const Color shadowFaint = Color(0x44000000);
 
   /// Menu sheet surfaces (alpha baked so overlays stay `const`).
-  static const Color scrim = Color(0xE006080C);
-  static const Color card = Color(0xB8121820);
-  static const Color cardRaised = Color(0xCC1A2430);
-  static const Color sheet = Color(0xF0121820);
+  static const Color scrim = Color(0xE00B0709);
+  static const Color card = Color(0xB81C1318);
+  static const Color cardRaised = Color(0xCC291D23);
+  static const Color sheet = Color(0xF01C1318);
   static const Color tooltipSheet = Color(0xF0140C08);
 
   /// GameButton faces.
-  static const Color buttonBrownTop = Color(0xFF6B4E2E);
-  static const Color buttonBrownBottom = Color(0xFF3E2A18);
-  static const Color buttonGreyTop = Color(0xFF2A3340);
-  static const Color buttonGreyBottom = Color(0xFF171E28);
-  static const Color buttonRedTop = Color(0xFF9A4030);
-  static const Color buttonRedBottom = Color(0xFF5A2018);
-  static const Color buttonDisabledTop = Color(0xFF151A22);
-  static const Color buttonDisabledBottom = Color(0xFF0E1218);
-  static const Color buttonDisabledText = Color(0xFF5A6270);
+  static const Color buttonBrownTop = Color(0xFF6E4C2E);
+  static const Color buttonBrownBottom = Color(0xFF40291A);
+  static const Color buttonGreyTop = Color(0xFF382D33);
+  static const Color buttonGreyBottom = Color(0xFF211A1E);
+  static const Color buttonRedTop = Color(0xFF94402D);
+  static const Color buttonRedBottom = Color(0xFF62261A);
+  static const Color buttonDisabledTop = Color(0xFF1A1316);
+  static const Color buttonDisabledBottom = Color(0xFF120D10);
+  static const Color buttonDisabledText = Color(0xFF6E6264);
   static const Color buttonDisabledBorder = buttonGreyTop;
 
   /// Buy semantics (Brick-style layout). Few colors, one meaning each:
   /// gold = buy / can afford, grey = locked / cannot afford, rose = the
   /// picked toggle (×1 / ×10 / MAX), purple = level and progress, green =
   /// the gain a buy gives, red = leave / danger.
-  static const Color buyGoldTop = Color(0xFFF2C55A);
-  static const Color buyGoldBottom = Color(0xFFB07A22);
-  static const Color buyGoldShine = Color(0xFFFFE6A0);
-  static const Color buyGoldEdge = Color(0xFF3A2408);
-  static const Color buyGoldText = Color(0xFF2A1906);
-  static const Color buyGreyTop = Color(0xFF353E4A);
-  static const Color buyGreyBottom = Color(0xFF222932);
-  static const Color buyGreyShine = Color(0xFF48525F);
-  static const Color buyGreyEdge = Color(0xFF07090D);
-  static const Color buyGreyText = Color(0xFF98A0AC);
-  static const Color toggleOnTop = Color(0xFFF4A3C8);
-  static const Color toggleOnBottom = Color(0xFFC25A8E);
-  static const Color toggleOnText = Color(0xFF2A0C1C);
-  static const Color toggleOnShine = Color(0xFFFFD6E8);
-  static const Color chunkyStoneTop = Color(0xFF2C3644);
-  static const Color chunkyStoneBottom = Color(0xFF19202A);
-  static const Color boostOrangeTop = Color(0xFFF5A04A);
-  static const Color boostOrangeBottom = Color(0xFFC0601E);
-  static const Color levelAccent = Color(0xFF9466F0);
-  static const Color levelAccentDeep = Color(0xFF3A2466);
-  static const Color gainGreen = Color(0xFF86E39A);
+  static const Color buyGoldTop = Color(0xFFD8B566);
+  static const Color buyGoldBottom = Color(0xFFA47C3A);
+  static const Color buyGoldShine = Color(0xFFEED79E);
+  static const Color buyGoldEdge = Color(0xFF2A190B);
+  static const Color buyGoldText = Color(0xFF24140A);
+  static const Color buyGreyTop = Color(0xFF3D3337);
+  static const Color buyGreyBottom = Color(0xFF2A2226);
+  static const Color buyGreyShine = Color(0xFF52464B);
+  static const Color buyGreyEdge = Color(0xFF110B0E);
+  static const Color buyGreyText = Color(0xFFB3A69C);
+  static const Color toggleOnTop = Color(0xFF7C4A70);
+  static const Color toggleOnBottom = Color(0xFF55304C);
+  static const Color toggleOnText = Color(0xFFF4D7A6);
+  static const Color toggleOnShine = Color(0xFFA47896);
+
+  /// Lantern-amber accent for the selected rim and text on stone
+  /// (dusk theme "Skymning med hjältar"; 6.5:1 on chunkyStoneTop).
+  static const Color toggleOnAccent = Color(0xFFE7A857);
+
+  // Stat accents for FORGE / CAMP rows (dusk theme, desaturated).
+  static const Color statAttack = Color(0xFFB5523A); // brick
+  static const Color statArmor = Color(0xFF5E6E96); // slate dusk
+  static const Color statVitality = Color(0xFF7E9A5E); // moss
+  static const Color statMove = Color(0xFFD9A45A); // lantern amber
+  static const Color statSpeed = Color(0xFFC49A4E); // muted gold
+  static const Color statCrit = Color(0xFFC8693A); // pumpkin
+  static const Color statMastery = Color(0xFF8F74B8); // dusk violet
+  static const Color chunkyStoneTop = Color(0xFF382B31);
+  static const Color chunkyStoneBottom = Color(0xFF231A1F);
+  static const Color boostOrangeTop = Color(0xFFD88238);
+  static const Color boostOrangeBottom = Color(0xFFC47030);
+  static const Color levelAccent = Color(0xFF9C88CC);
+  static const Color levelAccentDeep = Color(0xFF3C2D57);
+  static const Color gainGreen = Color(0xFFAFCB8E);
+
   /// Dark rim under red (leave / danger) chunky buttons.
-  static const Color chunkyRedEdge = Color(0xFF2A0A06);
+  static const Color chunkyRedEdge = Color(0xFF220A06);
   static const Color chunkyShadow = Color(0x99000000);
 
   /// Chunky face rim and drop depth. Light on purpose: the faces read as
@@ -285,10 +299,7 @@ abstract final class GameTheme {
   }) {
     // Callers pass hudPixel or hudPixelComfort. Sub-9 requests are not
     // promoted; the type-ramp test rejects them in menu code.
-    assert(
-      size >= hudPixel,
-      'Pixel size $size is below hudPixel $hudPixel',
-    );
+    assert(size >= hudPixel, 'Pixel size $size is below hudPixel $hudPixel');
     final key = Object.hash(size, color.toARGB32(), height);
     return _pixelCache.putIfAbsent(
       key,
@@ -344,6 +355,7 @@ abstract final class GameTheme {
 
   /// Semantic ramp. Menus use these. Do not pass a free size.
   static const double typeTitle = 18;
+
   /// Between the page title and body. Must stay above [typeBody].
   static const double typeSection = 16;
   static const double typeBody = 14;
