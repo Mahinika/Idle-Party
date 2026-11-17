@@ -49,6 +49,9 @@ class _UpgradePanelState extends State<UpgradePanel> {
   /// One ×1 / ×10 / MAX pick for FORGE and CAMP under the fight. Not saved.
   BuyQty _qty = BuyQty.one;
 
+  /// SPLIT MARKET filter; the header dropdown and the list share it.
+  bool _marketUpgradesOnly = true;
+
   /// FORGE MAX slice (long-press MAX). 100% is the plain MAX.
   ForgeGoldSpendMode _slice = ForgeGoldSpendMode.pct100;
 
@@ -131,6 +134,11 @@ class _UpgradePanelState extends State<UpgradePanel> {
           director: widget.director,
           inlineUnderFight: inline,
           expandedTrackList: embedded,
+          controlsInHeader: inline,
+          upgradesOnly: inline ? _marketUpgradesOnly : null,
+          onUpgradesOnlyChanged: inline
+              ? (v) => setState(() => _marketUpgradesOnly = v)
+              : null,
         );
       case _Panel.camp:
         return SanctuaryOverlay(
@@ -150,9 +158,12 @@ class _UpgradePanelState extends State<UpgradePanel> {
     }
   }
 
-  /// One row: FORGE · CAMP · MARKET as icon tabs, then ×1 / ×10 / MAX.
+  /// One row: FORGE · CAMP · MARKET as icon tabs, then ×1 / ×10 / MAX,
+  /// or in SPLIT MARKET the flask dropdown and the reroll chip.
   Widget _header(bool open) {
     final showQty = open && _mode != _Panel.market;
+    final marketControls =
+        open && _mode == _Panel.market && !widget.director.state.homePanelFull;
     return Row(
       children: [
         for (final p in _Panel.values) ...[
@@ -171,6 +182,15 @@ class _UpgradePanelState extends State<UpgradePanel> {
               if (q == BuyQty.max) _slice = ForgeGoldSpendMode.pct100;
             }),
             onMaxLongPress: _mode == _Panel.forge ? _pickSlice : null,
+          ),
+        ],
+        if (marketControls) ...[
+          const SizedBox(width: 8),
+          MarketHeaderControls(
+            director: widget.director,
+            upgradesOnly: _marketUpgradesOnly,
+            onUpgradesOnlyChanged: (v) =>
+                setState(() => _marketUpgradesOnly = v),
           ),
         ],
       ],

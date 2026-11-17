@@ -9,10 +9,13 @@ import '../../core/market_service.dart';
 import '../../models/hero.dart';
 import '../../models/loot.dart';
 import '../../models/market_listing.dart';
+import '../chunky_face.dart';
 import '../equipment_icon.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../web_click_bridge.dart';
 import 'home/nav_clearance.dart';
 import 'power_upgrade_row.dart';
 import 'shell_common.dart';
@@ -25,10 +28,23 @@ class MarketOverlay extends StatefulWidget {
     required this.director,
     this.inlineUnderFight = false,
     this.expandedTrackList = false,
+    this.controlsInHeader = false,
+    this.upgradesOnly,
+    this.onUpgradesOnlyChanged,
   });
   final GameDirector director;
   final bool inlineUnderFight;
   final bool expandedTrackList;
+
+  /// SPLIT under the fight: flasks, filter and reroll sit in the panel
+  /// header ([MarketHeaderControls]) so the list shows listings only and
+  /// the first one stays above the fold at the 1.45 text cap.
+  final bool controlsInHeader;
+
+  /// Filter owned by the host (with [controlsInHeader]). Null keeps it
+  /// local, starting on upgrades.
+  final bool? upgradesOnly;
+  final ValueChanged<bool>? onUpgradesOnlyChanged;
 
   @override
   State<MarketOverlay> createState() => _MarketOverlayState();
@@ -36,7 +52,18 @@ class MarketOverlay extends StatefulWidget {
 
 class _MarketOverlayState extends State<MarketOverlay> {
   /// Start on upgrades — the usual reason to open MARKET.
-  bool _upgradesOnly = true;
+  bool _localUpgradesOnly = true;
+
+  bool get _upgradesOnly => widget.upgradesOnly ?? _localUpgradesOnly;
+
+  void _setUpgradesOnly(bool value) {
+    final host = widget.onUpgradesOnlyChanged;
+    if (host != null) {
+      host(value);
+    } else {
+      setState(() => _localUpgradesOnly = value);
+    }
+  }
 
   @override
   void initState() {
@@ -78,10 +105,13 @@ class _MarketOverlayState extends State<MarketOverlay> {
               8 + NavClearance.of(context),
             ),
             children: [
-              _marketTopControls(state, director, compact: true),
-              ShellLayout.gap(4),
-              _filterChips(state, director),
-              ShellLayout.gap(4),
+              if (!widget.controlsInHeader) ...[
+                _marketTopControls(state, director, compact: true),
+                ShellLayout.gap(4),
+                _filterChips(state, director),
+                ShellLayout.gap(4),
+              ] else
+                ShellLayout.gap(2),
               ...listings.isEmpty
                   ? [
                       ShellLayout.hint(
@@ -97,8 +127,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
                           style: GameButtonStyle.grey,
                           dense: true,
                           expanded: false,
-                          onPressed: () =>
-                              setState(() => _upgradesOnly = false),
+                          onPressed: () => _setUpgradesOnly(false),
                         ),
                       ] else ...[
                         const SizedBox(height: 8),
@@ -140,12 +169,12 @@ class _MarketOverlayState extends State<MarketOverlay> {
         MenuChrome.chip(
           label: upgradeCount > 0 ? 'UPGRADES · $upgradeCount' : 'UPGRADES',
           selected: _upgradesOnly,
-          onTap: () => setState(() => _upgradesOnly = true),
+          onTap: () => _setUpgradesOnly(true),
         ),
         MenuChrome.chip(
           label: 'ALL GEAR',
           selected: !_upgradesOnly,
-          onTap: () => setState(() => _upgradesOnly = false),
+          onTap: () => _setUpgradesOnly(false),
         ),
         _rerollChip(state, director),
       ],
@@ -297,13 +326,13 @@ class _MarketOverlayState extends State<MarketOverlay> {
                       ? 'UPGRADES · $upgradeCount'
                       : 'UPGRADES',
                   selected: _upgradesOnly,
-                  onTap: () => setState(() => _upgradesOnly = true),
+                  onTap: () => _setUpgradesOnly(true),
                 ),
                 const SizedBox(width: 6),
                 MenuChrome.chip(
                   label: 'ALL GEAR',
                   selected: !_upgradesOnly,
-                  onTap: () => setState(() => _upgradesOnly = false),
+                  onTap: () => _setUpgradesOnly(false),
                 ),
               ],
             ),
@@ -330,7 +359,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
                       style: GameButtonStyle.grey,
                       dense: true,
                       expanded: false,
-                      onPressed: () => setState(() => _upgradesOnly = false),
+                      onPressed: () => _setUpgradesOnly(false),
                     ),
                   ] else ...[
                     const SizedBox(height: 8),
@@ -451,7 +480,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
     };
   }
 
-  String? _upgradeHeroName(GameState state, MarketListing listing) {
+  static String? _upgradeHeroName(GameState state, MarketListing listing) {
     if (listing.targetHeroIndex >= 0 &&
         listing.targetHeroIndex < state.heroes.length) {
       final hero = state.heroes[listing.targetHeroIndex];
@@ -560,4 +589,216 @@ class _MarketOverlayState extends State<MarketOverlay> {
 
   static String _marketCount(int n, String one, String many) =>
       '$n ${n == 1 ? one : many}';
+}
+
+/// MARKET controls for the SPLIT panel header, next to FORGE / CAMP /
+/// MARKET (where FORGE shows ×1 / ×10 / MAX): a flask dropdown chip
+/// (flask, three flasks, bandage, and the UPGRADES / ALL GEAR filter) and
+/// the reroll chip ("Reroll 27k"). Both are 48x48 dp taps and never
+/// scroll sideways.
+class MarketHeaderControls extends StatelessWidget {
+  const MarketHeaderControls({
+    super.key,
+    required this.director,
+    required this.upgradesOnly,
+    required this.onUpgradesOnlyChanged,
+  });
+
+  final GameDirector director;
+  final bool upgradesOnly;
+  final ValueChanged<bool> onUpgradesOnlyChanged;
+
+  /// "27k" past 9,999 gold, "8,500g" under it. The full price is in the
+  /// semantics label and the dropdown.
+  static String compactGold(int gold) =>
+      gold >= 10000 ? formatCount(gold) : formatGold(gold);
+
+  @override
+  Widget build(BuildContext context) {
+    final state = director.state;
+    final refreshCost = GameLogic.marketListingsPaidRefreshCost(state);
+    final freeReady = MarketListingsService.refreshRemainingMs(state) <= 0;
+    final canReroll = state.gold >= refreshCost;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _chip(
+          label: 'Flasks and filter',
+          onTap: () => _openMenu(context),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const GameIcon.asset(UiIcon.flask, size: 20),
+              const SizedBox(width: 2),
+              RotatedBox(
+                quarterTurns: 1,
+                child: GameIcon.glyph(
+                  UiGlyph.next,
+                  size: 10,
+                  color: GameTheme.toggleOnAccent,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 4),
+        if (freeReady)
+          _chip(
+            label: 'Fresh stock',
+            child: Text(
+              'Fresh',
+              maxLines: 1,
+              style: GameTheme.hint(color: GameTheme.mossLit),
+            ),
+          )
+        else
+          _chip(
+            label: 'Reroll ${formatGold(refreshCost)}',
+            onTap: canReroll ? director.refreshMarketListings : null,
+            child: Text(
+              'Reroll ${compactGold(refreshCost)}',
+              maxLines: 1,
+              style: GameTheme.hint(
+                color: canReroll ? GameTheme.torchHot : GameTheme.buyGreyText,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _chip({
+    required String label,
+    required Widget child,
+    VoidCallback? onTap,
+  }) {
+    final face = ChunkyFace(
+      tone: ChunkyTone.stone,
+      raised: onTap != null,
+      minWidth: GameTheme.chunkyFace,
+      minHeight: GameTheme.chunkyFace,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: child,
+    );
+    return WebClickScope(
+      label: label,
+      onPressed: onTap,
+      child: Semantics(
+        button: onTap != null,
+        enabled: onTap != null,
+        label: label,
+        onTap: onTap,
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: TapPad(
+              minWidth: GameTheme.primaryTouch,
+              minHeight: GameTheme.primaryTouch,
+              child: face,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openMenu(BuildContext context) {
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => ListenableBuilder(
+        listenable: director,
+        builder: (ctx, _) {
+          final state = director.state;
+          final flaskCost = GameLogic.marketFlaskCost(state);
+          final bandageCost = GameLogic.marketBandageCost(state);
+          final canFlask = state.gold >= flaskCost;
+          final upgradeCount = state.marketListings
+              .where(
+                (l) => _MarketOverlayState._upgradeHeroName(state, l) != null,
+              )
+              .length;
+          void run(VoidCallback action) {
+            action();
+            Navigator.pop(ctx);
+          }
+
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewPaddingOf(ctx).bottom,
+            ),
+            child: Material(
+              color: GameTheme.sheet,
+              borderRadius: MenuChrome.sheetRadius,
+              child: SingleChildScrollView(
+                padding: ShellLayout.sheetPadding,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('MARKET · flasks', style: GameTheme.section()),
+                    ShellLayout.gap(4),
+                    ShellLayout.hint(
+                      '${_MarketOverlayState._marketHealCount(state)} · '
+                      'Flask: party heal · Bandage: one hero most hurt',
+                      maxLines: 3,
+                    ),
+                    ShellLayout.gap(8),
+                    GameButton(
+                      label: canFlask
+                          ? 'BUY FLASK · ${formatGold(flaskCost)}'
+                          : 'FLASK · NEED ${formatGold(flaskCost)}',
+                      dense: true,
+                      style: canFlask
+                          ? GameButtonStyle.brown
+                          : GameButtonStyle.grey,
+                      primary: canFlask,
+                      onPressed: canFlask
+                          ? () => run(director.buyMarketFlask)
+                          : null,
+                    ),
+                    ShellLayout.gap(6),
+                    GameButton(
+                      label: 'BUY 3 · ${formatGold(flaskCost * 3)}',
+                      style: GameButtonStyle.grey,
+                      dense: true,
+                      onPressed: state.gold >= flaskCost * 3
+                          ? () => run(() => director.buyMarketFlasks())
+                          : null,
+                    ),
+                    ShellLayout.gap(6),
+                    GameButton(
+                      label: 'BANDAGE · ${formatGold(bandageCost)}',
+                      style: GameButtonStyle.grey,
+                      dense: true,
+                      onPressed: state.gold >= bandageCost
+                          ? () => run(director.buyMarketBandage)
+                          : null,
+                    ),
+                    ShellLayout.gap(10),
+                    Text('SHOW', style: GameTheme.section()),
+                    ShellLayout.gap(4),
+                    MenuChrome.segmented(
+                      dense: true,
+                      labels: [
+                        upgradeCount > 0
+                            ? 'UPGRADES · $upgradeCount'
+                            : 'UPGRADES',
+                        'ALL GEAR',
+                      ],
+                      selectedIndex: upgradesOnly ? 0 : 1,
+                      onSelect: (i) => run(() => onUpgradesOnlyChanged(i == 0)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
