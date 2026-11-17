@@ -447,6 +447,37 @@ Future<void> pumpGoldenFrames(WidgetTester tester, {int ms = 400}) async {
   await tester.pump(Duration(milliseconds: ms));
 }
 
+/// Decode every image on screen (Image widgets and box decoration images)
+/// before a golden. Without it a shot shows the art or not depending on
+/// whether an earlier test in the isolate already warmed the cache.
+Future<void> settleGoldenImages(WidgetTester tester) async {
+  for (var pass = 0; pass < 3; pass++) {
+    final providers = <(ImageProvider, Element)>[];
+    for (final e in find.byType(Image).evaluate()) {
+      providers.add(((e.widget as Image).image, e));
+    }
+    for (final e in find.byType(DecoratedBox).evaluate()) {
+      final deco = (e.widget as DecoratedBox).decoration;
+      if (deco is BoxDecoration && deco.image != null) {
+        providers.add((deco.image!.image, e));
+      }
+    }
+    for (final e in find.byType(Container).evaluate()) {
+      final deco = (e.widget as Container).decoration;
+      if (deco is BoxDecoration && deco.image != null) {
+        providers.add((deco.image!.image, e));
+      }
+    }
+    await tester.runAsync(() async {
+      for (final (provider, element) in providers) {
+        await precacheImage(provider, element);
+      }
+    });
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+}
+
 /// A56 hub/shell shots need [Scaffold] so hub chrome [InkWell]s have Material.
 Widget shellGoldenScaffold(Widget body) {
   return MediaQuery(

@@ -103,6 +103,7 @@ void main() {
       ),
     );
     await pumpGoldenFrames(tester, ms: 800);
+    await settleGoldenImages(tester);
     await expectShellGolden(tester, find.byKey(key), 'hub_a56.png');
   });
 
