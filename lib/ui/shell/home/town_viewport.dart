@@ -80,8 +80,7 @@ class _TownViewportState extends State<TownViewport> {
           return;
         }
         _clearLocked();
-        router.open(MenuRoute.more, more: MoreSection.craft);
-        router.pushSub();
+        router.open(MenuRoute.gold, gold: GoldPanel.tracks);
       case TownBuildingId.market:
         if (!TownAccess.marketOpen(state)) {
           _showLocked(

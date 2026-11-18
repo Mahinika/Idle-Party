@@ -129,12 +129,12 @@ void main() {
 
     await tapBuilding(tester, TownBuildingId.forge);
     expect(router.isOpen, isFalse);
-    expect(find.text('CRAFT opens after the first boss.'), findsOneWidget);
+    expect(find.text('FORGE opens after the first boss.'), findsOneWidget);
     await tester.tap(find.text('CLOSE'));
     await tester.pump();
-    expect(find.text('CRAFT opens after the first boss.'), findsNothing);
+    expect(find.text('FORGE opens after the first boss.'), findsNothing);
     await tapBuilding(tester, TownBuildingId.forge);
-    expect(find.text('CRAFT opens after the first boss.'), findsOneWidget);
+    expect(find.text('FORGE opens after the first boss.'), findsOneWidget);
 
     await tester.tap(find.text('CLOSE'));
     await tester.pump();
@@ -147,7 +147,8 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('FORGE CRAFT opens, dismisses, reopens on HomeShell',
+  // CRAFT lives only in MENU (audit F099): FORGE is the gold forge.
+  testWidgets('FORGE gold forge opens, dismisses, reopens on HomeShell',
       (tester) async {
     final director = GameDirector.preview(
       initialState: quietTown(boss: 1, floor: 2),
@@ -157,14 +158,14 @@ void main() {
     addTearDown(router.dispose);
     await pumpShell(tester, director, router);
     await tapBuilding(tester, TownBuildingId.forge);
-    expect(router.route, MenuRoute.more);
-    expect(router.moreSection, MoreSection.craft);
-    expect(find.textContaining('Tap a hero, pick a slot'), findsOneWidget);
+    expect(router.route, MenuRoute.gold);
+    expect(router.goldPanel, GoldPanel.tracks);
+    expect(find.textContaining('Tap a hero, pick a slot'), findsNothing);
     await tester.tap(find.text('FIGHT'));
     await tester.pump();
     expect(router.isOpen, isFalse);
     await tapBuilding(tester, TownBuildingId.forge);
-    expect(router.moreSection, MoreSection.craft);
+    expect(router.route, MenuRoute.gold);
     expect(tester.takeException(), isNull);
   });
 

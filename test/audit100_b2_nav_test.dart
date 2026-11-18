@@ -19,7 +19,7 @@ void main() {
     final r = MenuRouter();
     addTearDown(r.dispose);
     r.open(MenuRoute.essence);
-    expect(r.essenceHubLit, isNull, reason: 'CODEX lit by default');
+    expect(r.essenceHubLit, isNull, reason: 'a tile lit by default');
     r.essencePanel = EssencePanel.tracks;
     expect(r.essenceHubLit, EssencePanel.tracks);
     r.close();
@@ -29,14 +29,14 @@ void main() {
     expect(r.essenceHubLit, EssencePanel.pets);
   });
 
-  test('F004 the CODEX sub-screen is titled CODEX', () {
+  test('F099 ESSENCE has no CODEX sub-screen; the title stays ESSENCE', () {
     final r = MenuRouter();
     addTearDown(r.dispose);
     r.open(MenuRoute.essence);
     expect(r.title, 'ESSENCE');
     r.essencePanel = EssencePanel.tracks;
     r.pushSub();
-    expect(r.title, 'CODEX');
+    expect(r.title, 'ESSENCE');
   });
 
   test('F080 a deep link to a MENU section lands on that section', () {

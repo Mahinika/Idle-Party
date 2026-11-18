@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
 import '../../../core/menu_router.dart';
+import '../../game_theme.dart';
 import '../shell_layout.dart';
 import 'rail_button.dart';
 import 'home_catalog.dart';
@@ -19,6 +22,9 @@ class HomeMenuGrid extends StatelessWidget {
 
   /// Width / height of one half-row tile.
   static const double tileAspect = 3.2;
+
+  /// Shortest row: a 44 dp tap target plus the card padding and rim.
+  static const double minRowHeight = GameTheme.minTouch + 14;
 
   /// Row of an odd last tile that spans the full width.
   static const Key lastWideKey = ValueKey('home_menu_grid_last_wide');
@@ -52,7 +58,8 @@ class HomeMenuGrid extends StatelessWidget {
           builder: (context, c) {
             const gap = ShellLayout.sectionGap;
             final cellW = (c.maxWidth - gap) / 2;
-            final h = cellW / tileAspect;
+            // Never below a 44 dp tap inside the card's 6 dp padding.
+            final h = math.max(cellW / tileAspect, minRowHeight);
             final rows = <Widget>[];
             for (var i = 0; i < entries.length; i += 2) {
               if (rows.isNotEmpty) rows.add(const SizedBox(height: gap));

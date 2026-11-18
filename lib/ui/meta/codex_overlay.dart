@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
@@ -26,119 +25,130 @@ class _CodexOverlayState extends State<CodexOverlay> {
   Widget build(BuildContext context) {
     final state = widget.director.state;
     final entries = _showEnemies ? state.codexEnemies : state.codexItems;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: GameButton(
-                label: 'MONSTERS (${state.codexEnemies.length})',
-                style: _showEnemies
-                    ? GameButtonStyle.brown
-                    : GameButtonStyle.grey,
-                onPressed: () => setState(() => _showEnemies = true),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: GameButton(
-                label: 'ITEMS (${state.codexItems.length})',
-                style: !_showEnemies
-                    ? GameButtonStyle.brown
-                    : GameButtonStyle.grey,
-                onPressed: () => setState(() => _showEnemies = false),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Codex ${GameLogic.codexCompletionPercent(state)}%  |  '
-          '${state.codexEnemies.length + state.codexItems.length} discovered '
-          '(goal ${GameLogic.expectedCodexEntries} entries)',
-          textAlign: TextAlign.center,
-          style: GameTheme.section(color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 4),
-        Column(
-          children: [
-            for (var i = 0; i < GameLogic.codexRewardTiers.length; i++) ...[
-              if (i > 0) const SizedBox(height: 6),
-              Builder(
-                builder: (context) {
-                  final entry =
-                      GameLogic.codexRewardTiers.entries.elementAt(i);
-                  final claimed =
-                      state.metaDepth.codexClaims.contains(entry.key);
-                  final pct = GameLogic.codexCompletionPercent(state);
-                  final ready = pct >= entry.value.pct && !claimed;
-                  final label = claimed
-                      ? '${entry.value.pct}%'
-                      : ready
-                      ? '${entry.value.pct}% +${formatCount(entry.value.reward)}e'
-                      : '${entry.value.pct}%';
-                  return GameButton(
-                    label: label,
-                    expanded: true,
-                    style: ready
-                        ? GameButtonStyle.brown
-                        : GameButtonStyle.grey,
-                    onPressed: ready
-                        ? () => widget.director.claimCodexReward(entry.key)
-                        : null,
-                  );
-                },
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 6),
-        Expanded(
-          child: entries.isEmpty
-              ? Center(
-                  child: Text(
-                    _showEnemies
-                        ? 'No monsters discovered yet. Fight your way through a dungeon.'
-                        : 'No items discovered yet. Clear floors for gear drops.',
-                    textAlign: TextAlign.center,
-                    style: GameTheme.readable(color: GameTheme.parchmentDim),
+    // One scroll for the header and the list: the reward tiers alone
+    // overflowed 360x640 at 1.45 inside MENU → CODEX (audit F099).
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: GameButton(
+                      label: 'MONSTERS (${state.codexEnemies.length})',
+                      style: _showEnemies
+                          ? GameButtonStyle.brown
+                          : GameButtonStyle.grey,
+                      onPressed: () => setState(() => _showEnemies = true),
+                    ),
                   ),
-                )
-              : ListView.builder(
-                  itemCount: entries.length,
-                  itemBuilder: (context, i) {
-                    final name = entries[i];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 8,
-                        ),
-                        decoration: MenuChrome.listCard(inset: true),
-                        child: Row(
-                          children: [
-                            KenneySprite(
-                              asset: _showEnemies
-                                  ? KenneyAssets.enemySpriteForCodexName(name)
-                                  : KenneyAssets.codexItemIconFor(name),
-                              size: 28,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                name,
-                                style: GameTheme.readable(),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: GameButton(
+                      label: 'ITEMS (${state.codexItems.length})',
+                      style: !_showEnemies
+                          ? GameButtonStyle.brown
+                          : GameButtonStyle.grey,
+                      onPressed: () => setState(() => _showEnemies = false),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Codex ${GameLogic.codexCompletionPercent(state)}%  |  '
+                '${state.codexEnemies.length + state.codexItems.length} discovered '
+                '(goal ${GameLogic.expectedCodexEntries} entries)',
+                textAlign: TextAlign.center,
+                style: GameTheme.section(color: GameTheme.parchmentDim),
+              ),
+              const SizedBox(height: 4),
+              Column(
+                children: [
+                  for (
+                    var i = 0;
+                    i < GameLogic.codexRewardTiers.length;
+                    i++
+                  ) ...[
+                    if (i > 0) const SizedBox(height: 6),
+                    Builder(
+                      builder: (context) {
+                        final entry = GameLogic.codexRewardTiers.entries
+                            .elementAt(i);
+                        final claimed = state.metaDepth.codexClaims.contains(
+                          entry.key,
+                        );
+                        final pct = GameLogic.codexCompletionPercent(state);
+                        final ready = pct >= entry.value.pct && !claimed;
+                        final label = claimed
+                            ? '${entry.value.pct}%'
+                            : ready
+                            ? '${entry.value.pct}% +${formatCount(entry.value.reward)}e'
+                            : '${entry.value.pct}%';
+                        return GameButton(
+                          label: label,
+                          expanded: true,
+                          style: ready
+                              ? GameButtonStyle.brown
+                              : GameButtonStyle.grey,
+                          onPressed: ready
+                              ? () =>
+                                    widget.director.claimCodexReward(entry.key)
+                              : null,
+                        );
+                      },
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 6),
+            ],
+          ),
         ),
+        if (entries.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Text(
+                _showEnemies
+                    ? 'No monsters discovered yet. Fight your way through a dungeon.'
+                    : 'No items discovered yet. Clear floors for gear drops.',
+                textAlign: TextAlign.center,
+                style: GameTheme.readable(color: GameTheme.parchmentDim),
+              ),
+            ),
+          )
+        else
+          SliverList.builder(
+            itemCount: entries.length,
+            itemBuilder: (context, i) {
+              final name = entries[i];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: MenuChrome.listCard(inset: true),
+                  child: Row(
+                    children: [
+                      KenneySprite(
+                        asset: _showEnemies
+                            ? KenneyAssets.enemySpriteForCodexName(name)
+                            : KenneyAssets.codexItemIconFor(name),
+                        size: 28,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text(name, style: GameTheme.readable())),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
       ],
     );
   }

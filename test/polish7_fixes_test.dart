@@ -216,7 +216,7 @@ void main() {
     }
 
     expect(rim('RELICS'), GameTheme.toggleOnAccent);
-    for (final other in ['BLESSING', 'PETS', 'CODEX']) {
+    for (final other in ['BLESSING', 'PETS']) {
       expect(rim(other), isNot(GameTheme.toggleOnAccent), reason: other);
     }
     // Screen readers hear which tile is active.
@@ -229,7 +229,7 @@ void main() {
         .properties
         .selected;
     expect(selected('RELICS'), isTrue);
-    for (final other in ['BLESSING', 'PETS', 'CODEX']) {
+    for (final other in ['BLESSING', 'PETS']) {
       expect(selected(other), isNot(isTrue), reason: other);
     }
   });

@@ -8,6 +8,7 @@ import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/ui/guides_overlay.dart';
 import 'package:idle_party/ui/game_icon.dart';
 import 'package:idle_party/ui/item_tooltip.dart';
+import 'package:idle_party/ui/meta/codex_overlay.dart';
 import 'package:idle_party/ui/shell/home/essence_tiles_screen.dart';
 import 'package:idle_party/ui/shell/inventory_dock.dart';
 import 'package:idle_party/ui/shell/jobs_overlay.dart';
@@ -96,7 +97,9 @@ void main() {
     expect(find.text('▾'), findsNothing);
   });
 
-  testWidgets('essence CODEX opens codex route', (tester) async {
+  // CODEX lives only in MENU (audit F099): the ESSENCE hub has no CODEX
+  // tile, and even a stale tracks sub-screen shows the hub, not the codex.
+  testWidgets('essence hub has no CODEX entry', (tester) async {
     final director = GameDirector.preview(
       initialState: GameLogic.createInitialState().copyWith(
         highestFloorCleared: 1,
@@ -113,9 +116,14 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.tap(find.text('CODEX'));
-    await tester.pumpAndSettle();
-    expect(router.essencePanel, EssencePanel.tracks);
+    expect(find.text('CODEX'), findsNothing);
+    expect(find.text('CRAFT'), findsNothing);
+    router.open(MenuRoute.essence);
+    router.essencePanel = EssencePanel.tracks;
+    router.pushSub();
+    await tester.pump();
+    expect(find.byType(CodexOverlay), findsNothing);
+    expect(find.text('BLESSING'), findsOneWidget);
   });
 
   testWidgets('jobs list ignores unrelated director ticks', (tester) async {

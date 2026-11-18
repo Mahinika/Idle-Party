@@ -101,7 +101,10 @@ void main() {
     );
     await tester.pump();
     expect(tester.takeException(), isNull);
-    for (final label in ['BLESSING', 'RELICS', 'PETS', 'CODEX', 'CRAFT']) {
+    // CODEX and CRAFT live only in MENU (audit F099).
+    expect(find.text('CODEX'), findsNothing);
+    expect(find.text('CRAFT'), findsNothing);
+    for (final label in ['BLESSING', 'RELICS', 'PETS']) {
       final tile = find.ancestor(
         of: find.text(label),
         matching: find.byType(InkWell),

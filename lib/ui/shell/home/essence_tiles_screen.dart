@@ -6,14 +6,12 @@ import '../../../core/game_state.dart';
 import '../../../core/relics.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
-import '../../apex_forge_panel.dart';
 import '../../confirm_dialogs.dart';
 import '../../../assets/custom_assets.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
-import '../../meta/codex_overlay.dart';
 import '../beast_overlay.dart';
 import '../essence_keep_panel.dart';
 import '../power_upgrade_row.dart';
@@ -58,7 +56,8 @@ class EssenceTilesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (router.homeAtSub) return _open(context);
+    final sub = _subBody();
+    if (sub != null) return SingleChildScrollView(child: sub);
     final state = director.state;
     return Column(
       children: [
@@ -105,46 +104,19 @@ class EssenceTilesScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              _tileRow(
-                _tile(
-                  context,
-                  'PETS',
-                  CustomAssets.petEgg,
-                  GameTheme.statVitality,
-                  MenuTabs.showBeast(state),
-                  'Ascend or hatch',
-                  () {
-                    router.essencePanel = EssencePanel.pets;
-                    router.pushSub();
-                  },
-                  active: router.essenceHubLit == EssencePanel.pets,
-                ),
-                _tile(
-                  context,
-                  'CODEX',
-                  CustomAssets.iconBook,
-                  GameTheme.statArmor,
-                  MenuTabs.showCodex(state),
-                  'Clear a floor',
-                  () {
-                    router.essencePanel = EssencePanel.tracks;
-                    router.pushSub();
-                  },
-                  active: router.essenceHubLit == EssencePanel.tracks,
-                ),
-              ),
-              const SizedBox(height: 6),
+              // CODEX and CRAFT live only in MENU (Robert, audit F099).
               _tile(
                 context,
-                'CRAFT',
-                UiIcon.wand,
-                GameTheme.statMastery,
-                MenuTabs.showCraft(state),
-                'After the first boss or Ascend',
+                'PETS',
+                CustomAssets.petEgg,
+                GameTheme.statVitality,
+                MenuTabs.showBeast(state),
+                'Ascend or hatch',
                 () {
-                  router.open(MenuRoute.more, more: MoreSection.craft);
+                  router.essencePanel = EssencePanel.pets;
                   router.pushSub();
                 },
+                active: router.essenceHubLit == EssencePanel.pets,
                 fullWidth: true,
               ),
             ],
@@ -155,19 +127,17 @@ class EssenceTilesScreen extends StatelessWidget {
     );
   }
 
-  Widget _open(BuildContext context) {
-    final panel = router.essencePanel;
-    final body = switch (panel) {
+  /// The open sub-screen, or null on the hub. The hub has no tile for
+  /// [EssencePanel.tracks] (CAMP sits under the fight and CODEX lives in
+  /// MENU), so that panel always shows the hub (audit F099).
+  Widget? _subBody() {
+    if (!router.homeAtSub) return null;
+    return switch (router.essencePanel) {
       EssencePanel.keep => EssenceKeepPanel(director: director),
       EssencePanel.relics => RelicsOverlay(director: director),
       EssencePanel.pets => BeastOverlay(director: director),
-      EssencePanel.tracks => CodexOverlay(director: director),
+      EssencePanel.tracks => null,
     };
-    if (router.route == MenuRoute.more &&
-        router.moreSection == MoreSection.craft) {
-      return ApexHubPanel(director: director);
-    }
-    return SingleChildScrollView(child: body);
   }
 
   Widget _tile(

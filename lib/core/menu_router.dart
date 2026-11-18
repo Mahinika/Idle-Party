@@ -280,8 +280,7 @@ class MenuRouter extends ChangeNotifier {
 
     MenuRoute.essence => switch (_essencePanel) {
 
-      // The CODEX tile opens the tracks panel as a sub-screen (F004).
-      EssencePanel.tracks => _homeDepth > 0 ? 'CODEX' : 'ESSENCE',
+      EssencePanel.tracks => 'ESSENCE',
 
       EssencePanel.keep => 'BLESSING',
 

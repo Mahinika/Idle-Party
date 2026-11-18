@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../assets/custom_assets.dart';
 import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
@@ -188,6 +189,21 @@ abstract final class HomeCatalog {
       },
     ),
     // GUIDES used to open this same INFO screen under another name (F082).
+    // CODEX and CRAFT live only in MENU (Robert, audit F099). CODEX is the
+    // INFO screen's CODEX pane, the same place the chase deep link lands.
+    HomeEntry(
+      id: 'menu_codex',
+      place: HomePlace.menuGrid,
+      order: 50,
+      icon: CustomAssets.iconBook,
+      label: 'CODEX',
+      visible: (s, _) => MenuTabs.showCodex(s),
+      badge: (_) => false,
+      open: (context, director, router) {
+        router.open(MenuRoute.more, more: MoreSection.info, infoPane: 1);
+        router.pushSub();
+      },
+    ),
     HomeEntry(
       id: 'menu_craft',
       place: HomePlace.menuGrid,
