@@ -321,7 +321,8 @@ abstract final class GameTheme {
     );
   }
 
-  /// VT323 and Cinzel have no arrows (→ ← ↑ ↓) or ▸ ▾ ▲ ★ ↻. Every text
+  /// VT323 and Cinzel have no arrows (U+2190..2193) or the small
+  /// triangles, star and circle arrow some copy uses. Every text
   /// style falls back to [glyphFallbackFamily] for those, so copy can keep
   /// "→" without a hole in the line.
   static const String glyphFallbackFamily = 'IdleArrows';

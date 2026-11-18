@@ -345,10 +345,13 @@ abstract final class MenuChrome {
       builder: (context, constraints) {
         // Always scroll on the shipping phone chrome so labels stay readable.
         final scroll = scrollable ?? true;
-        // When the labels do not fit one row (5 tabs at 1.45), lay them out
-        // in full-width rows instead of a rail that cuts the first or last
-        // tab ("UESTS"). Every label is whole; nothing shrinks.
-        final rows = _tabRows(context, tabs, constraints.maxWidth);
+        // When a scrolling rail's labels do not fit one row (5 tabs at
+        // 1.45), lay them out in full-width rows instead of a rail that
+        // cuts the first or last tab ("UESTS"). Every label is whole and
+        // nothing shrinks. Fixed rails (scrollable: false) keep the TabBar.
+        final rows = scroll
+            ? _tabRows(context, tabs, constraints.maxWidth)
+            : null;
         if (rows != null) {
           return _tabGrid(controller, onTap, tabs, rows);
         }
