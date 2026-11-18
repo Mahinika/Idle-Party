@@ -253,7 +253,11 @@ class _UpgradePanelState extends State<UpgradePanel> {
   }
 
   void _pickSlice() {
-    ForgeOverlay.pickWalletSlice(context, _forgeMode).then((mode) {
+    ForgeOverlay.pickWalletSlice(
+      context,
+      _forgeMode,
+      gold: widget.director.state.gold,
+    ).then((mode) {
       if (mode == null || !mounted) return;
       setState(() {
         _qty = BuyQty.max;

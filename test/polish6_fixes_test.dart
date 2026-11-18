@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/ui/shell/forge_overlay.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
@@ -416,7 +417,7 @@ void main() {
     await _pump(tester, const Size(360, 780), 1);
     await tester.tap(find.text('MARKET').first);
     await _settle(tester);
-    await tester.tap(find.bySemanticsLabel('Flasks and filter').first);
+    await tester.tap(find.bySemanticsLabel('Flasks').first);
     await _settle(tester);
     expect(find.text('MARKET · flasks'), findsOneWidget);
     expect(
@@ -433,7 +434,7 @@ void main() {
     await _pump(tester, const Size(360, 780), 1);
     await tester.longPress(find.text('MAX').first);
     await _settle(tester);
-    expect(find.text('MAX · wallet slice'), findsOneWidget);
+    expect(find.text(ForgeOverlay.sliceTitle), findsOneWidget);
     expect(_handles(), findsOneWidget);
   });
 
@@ -495,7 +496,7 @@ void main() {
     await _pump(tester, const Size(360, 780), 1);
     await tester.tap(find.text('MARKET').first);
     await _settle(tester);
-    await tester.tap(find.bySemanticsLabel('Flasks and filter').first);
+    await tester.tap(find.bySemanticsLabel('Flasks').first);
     await _settle(tester);
     final buy = buttonWith(tester, 'BUY FLASK');
     expect(buy.onPressed, isNotNull);

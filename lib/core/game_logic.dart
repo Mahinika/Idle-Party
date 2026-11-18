@@ -1566,6 +1566,10 @@ class GameLogic {
     );
   }
 
+  /// Return line markers: the wallet covers the next buy.
+  static const String returnCanBuy = 'You can buy';
+  static const String returnCampBuy = 'a CAMP upgrade now';
+
   /// What this return's gold or essence can actually pay for.
   ///
   /// Uses the wallet after the credit and the next forge or CAMP price.
@@ -1593,17 +1597,17 @@ class GameLogic {
     final name = _returnForgeName(cheapest ?? PartyUpgradeType.attack);
     final camp = cheapestSanctuaryNextCost(state);
     if (goldGained > 0 && state.gold >= cost) {
-      final open = canOpenGold ? ' Open GOLD.' : '';
-      return 'You brought back ${OfflineProgressResult.groupedCount(goldGained)} gold. The wallet covers '
-          '$name ($cost g).$open';
+      // Plain copy, "83g" like everywhere else (audit F086). The OPEN GOLD
+      // button under the text is the way there.
+      return 'You brought back ${OfflineProgressResult.groupedCount(goldGained)} gold. '
+          '$returnCanBuy $name now (${OfflineProgressResult.groupedCount(cost)}g).';
     }
     if (essenceGained > 0 && state.essence >= camp) {
       final brought = goldGained > 0
           ? 'You brought back ${OfflineProgressResult.groupedCount(goldGained)} gold and ${OfflineProgressResult.groupedCount(essenceGained)} essence. '
           : 'You brought back ${OfflineProgressResult.groupedCount(essenceGained)} essence. ';
-      final open = canOpenEssence ? 'Open ESSENCE.' : '';
-      return '${brought}The wallet covers CAMP (${OfflineProgressResult.groupedCount(camp)} essence). $open'
-          .trim();
+      return '$brought$returnCanBuy $returnCampBuy '
+          '(${OfflineProgressResult.groupedCount(camp)} essence).';
     }
     if (goldGained > 0) {
       final short = cost - state.gold;

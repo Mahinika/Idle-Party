@@ -109,10 +109,21 @@ void main() {
     );
     await tester.longPress(max);
     await tester.pumpAndSettle();
-    for (final slice in ['5%', '25%', '50%', '100%']) {
-      expect(find.text(slice), findsOneWidget, reason: slice);
+    // Each slice says what it is worth now: "25% · 3,000g" (audit F025).
+    final gold = director.state.gold;
+    for (final (slice, pct) in [
+      ('5%', 5),
+      ('25%', 25),
+      ('50%', 50),
+      ('100%', 100),
+    ]) {
+      expect(
+        find.text('$slice · ${formatGold((gold * pct) ~/ 100)}'),
+        findsOneWidget,
+        reason: slice,
+      );
     }
-    await tester.tap(find.text('25%'));
+    await tester.tap(find.textContaining('25% ·'));
     await tester.pumpAndSettle();
     final toggle = tester.widget<BuyQtyToggle>(find.byType(BuyQtyToggle));
     expect(toggle.value, BuyQty.max);

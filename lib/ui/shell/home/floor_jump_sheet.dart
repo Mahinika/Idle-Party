@@ -8,6 +8,12 @@ import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import '../shell_layout.dart';
 
+/// Empty FLOORS sheet: why there is nothing to jump to yet (F006).
+const floorJumpEmptyKey = ValueKey('floor_jump_empty');
+
+String floorJumpEmptyLine(int here) =>
+    'No other floor yet. Clear F$here to open F${here + 1} here.';
+
 /// Same floor list the classic HUD menu used. Calls [GameDirector.travelToFloor].
 Future<void> showFloorJumpSheet(
   BuildContext context,
@@ -27,17 +33,36 @@ Future<void> showFloorJumpSheet(
     for (var f = 1; f <= maxFloor; f++)
       if (f != here && GameLogic.canTravelToFloor(state, f)) f,
   ];
+  final noJumps = clearedFloors.isEmpty &&
+      ![
+        for (var f = here + 1; f <= maxFloor; f++)
+          GameLogic.canTravelToFloor(state, f),
+      ].contains(true);
   final picked = await showDialog<int>(
     context: context,
     barrierColor: MenuChrome.scrim,
     builder: (ctx) => MenuChrome.dialog(
       title: 'FLOORS',
-      content: SizedBox(
-        width: 280,
-        height: MediaQuery.sizeOf(ctx).height * 0.45,
+      // Sized to its rows, capped at 45 % of the screen: a fixed 45 % box
+      // left 250 px of dark under one row (audit F006).
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 280,
+          minWidth: 280,
+          maxHeight: MediaQuery.sizeOf(ctx).height * 0.45,
+        ),
         child: ListView(
+          shrinkWrap: true,
           children: [
             ShellLayout.hint('Now F$here. Jump keeps the KEY clock running.', maxLines: 2),
+            if (noJumps) ...[
+              ShellLayout.gap(6),
+              Text(
+                floorJumpEmptyLine(here),
+                key: floorJumpEmptyKey,
+                style: GameTheme.readable(color: GameTheme.parchmentDim),
+              ),
+            ],
             ShellLayout.gap(6),
             WebClickScope(
               label: 'This floor',

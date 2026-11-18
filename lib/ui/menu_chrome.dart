@@ -205,6 +205,26 @@ abstract final class MenuChrome {
     );
   }
 
+  /// Bottom-sheet title with the shared close X at the top right: one close
+  /// rule for every sheet (audit F069).
+  static const Key sheetCloseKey = ValueKey('sheet_close_x');
+
+  static Widget sheetTitleRow(BuildContext context, String title) {
+    return Row(
+      children: [
+        Expanded(child: Text(title, style: GameTheme.section())),
+        GameIconButton(
+          key: sheetCloseKey,
+          label: 'Close',
+          glyph: UiGlyph.close,
+          size: 16,
+          color: GameTheme.parchmentDim,
+          onPressed: () => Navigator.maybePop(context),
+        ),
+      ],
+    );
+  }
+
   /// Section label for dense menus (GEAR / PROGRESS / …).
   static Widget sectionLabel(String text) {
     return Padding(

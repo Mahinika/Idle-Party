@@ -12,9 +12,12 @@ import '../menu_chrome.dart';
 import '../shell/shell_layout.dart';
 
 /// In-app patch notes — marks itself seen once shown.
-class WhatsNewOverlay extends StatelessWidget {
+class WhatsNewOverlay extends StatefulWidget {
   const WhatsNewOverlay({super.key, required this.director});
   final GameDirector director;
+
+  /// Patch notes list scrollbar (F083).
+  static const scrollbarKey = ValueKey('whats_new_scrollbar');
 
   /// Current (or unseen) blocks. First hour: lead bullet only.
   static List<ChangelogRelease> visibleFocus(GameState state) {
@@ -69,12 +72,27 @@ class WhatsNewOverlay extends StatelessWidget {
   }
 
   @override
+  State<WhatsNewOverlay> createState() => _WhatsNewOverlayState();
+}
+
+class _WhatsNewOverlayState extends State<WhatsNewOverlay> {
+  final ScrollController _scroll = ScrollController();
+
+  GameDirector get director => widget.director;
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = director.state;
     final older = MetaSystems.releases.length <= 1
         ? const <ChangelogRelease>[]
         : MetaSystems.releases.sublist(1);
-    final focus = visibleFocus(state);
+    final focus = WhatsNewOverlay.visibleFocus(state);
 
     Widget noteLine(String entry) {
       return Padding(
@@ -82,13 +100,8 @@ class WhatsNewOverlay extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '•  ',
-              style: GameTheme.readable(color: GameTheme.torch),
-            ),
-            Expanded(
-              child: Text(entry, style: GameTheme.readable()),
-            ),
+            Text('•  ', style: GameTheme.readable(color: GameTheme.torch)),
+            Expanded(child: Text(entry, style: GameTheme.readable())),
           ],
         ),
       );
@@ -101,10 +114,7 @@ class WhatsNewOverlay extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              title,
-              style: GameTheme.readable(color: GameTheme.torch),
-            ),
+            Text(title, style: GameTheme.readable(color: GameTheme.torch)),
             const SizedBox(height: 4),
             for (final entry in lines) noteLine(entry),
           ],
@@ -141,44 +151,63 @@ class WhatsNewOverlay extends StatelessWidget {
     return Padding(
       padding: ShellLayout.listPadding,
       child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ShellLayout.hint(
-          'MENU · INFO · PATCH NOTES',
-          maxLines: 1,
-        ),
-        ShellLayout.gap(4),
-        Text(
-          'PATCH NOTES',
-          textAlign: TextAlign.center,
-          style: GameTheme.title(),
-        ),
-        ShellLayout.gap(10),
-        Expanded(
-          child: ListView(
-            children: [
-              for (final release in focus) releaseBlock(release),
-              if (showOlderVersions(state) && older.isNotEmpty)
-                MenuChrome.fold(
-                  title: 'Older versions',
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ShellLayout.hint('MENU · PATCH NOTES', maxLines: 1),
+          ShellLayout.gap(4),
+          Text(
+            'PATCH NOTES',
+            textAlign: TextAlign.center,
+            style: GameTheme.title(),
+          ),
+          ShellLayout.gap(10),
+          // Scrollbar + bottom fade: the last line used to cut off with no
+          // sign there was more (audit F083).
+          Expanded(
+            child: ShaderMask(
+              blendMode: BlendMode.dstIn,
+              shaderCallback: (r) => const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.white, Colors.white, Colors.transparent],
+                stops: [0, 0.9, 1],
+              ).createShader(r),
+              child: RawScrollbar(
+                key: WhatsNewOverlay.scrollbarKey,
+                controller: _scroll,
+                thumbVisibility: true,
+                thickness: 3,
+                radius: const Radius.circular(2),
+                thumbColor: GameTheme.borderLit.withValues(alpha: 0.7),
+                child: ListView(
+                  controller: _scroll,
+                  padding: const EdgeInsets.only(right: 8, bottom: 24),
                   children: [
-                    for (final release in older) releaseBlock(release),
+                    for (final release in focus) releaseBlock(release),
+                    if (WhatsNewOverlay.showOlderVersions(state) &&
+                        older.isNotEmpty)
+                      MenuChrome.fold(
+                        title: 'Older versions',
+                        children: [
+                          for (final release in older) releaseBlock(release),
+                        ],
+                      ),
                   ],
                 ),
-            ],
+              ),
+            ),
           ),
-        ),
-        ShellLayout.gap(8),
-        GameButton(
-          label: 'CLOSE',
-          primary: true,
-          onPressed: () {
-            director.markChangelogSeen();
-            Navigator.of(context).maybePop();
-          },
-        ),
-      ],
-    ),
+          ShellLayout.gap(8),
+          GameButton(
+            label: 'CLOSE',
+            primary: true,
+            onPressed: () {
+              director.markChangelogSeen();
+              Navigator.of(context).maybePop();
+            },
+          ),
+        ],
+      ),
     );
   }
 }

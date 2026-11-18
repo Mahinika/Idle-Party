@@ -622,31 +622,24 @@ class MarketHeaderControls extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Flasks get their own sheet; the UPG / ALL filter is a header chip
+        // that flips in place (audit F047).
         _chip(
-          label: 'Flasks and filter',
-          value: upgradesOnly ? 'Showing upgrades' : 'Showing all gear',
+          key: flaskKey,
+          label: 'Flasks',
           onTap: () => _openMenu(context),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const GameIcon.asset(UiIcon.flask, size: 20),
-              const SizedBox(width: 3),
-              // Active filter, readable without opening the sheet.
-              Text(
-                upgradesOnly ? filterUpgradesShort : filterAllShort,
-                maxLines: 1,
-                style: GameTheme.hint(color: GameTheme.toggleOnAccent),
-              ),
-              const SizedBox(width: 2),
-              RotatedBox(
-                quarterTurns: 1,
-                child: GameIcon.glyph(
-                  UiGlyph.next,
-                  size: 10,
-                  color: GameTheme.toggleOnAccent,
-                ),
-              ),
-            ],
+          child: const GameIcon.asset(UiIcon.flask, size: 20),
+        ),
+        const SizedBox(width: 4),
+        _chip(
+          key: filterKey,
+          label: 'Filter',
+          value: upgradesOnly ? 'Showing upgrades' : 'Showing all gear',
+          onTap: () => onUpgradesOnlyChanged(!upgradesOnly),
+          child: Text(
+            upgradesOnly ? filterUpgradesShort : filterAllShort,
+            maxLines: 1,
+            style: GameTheme.hint(color: GameTheme.toggleOnAccent),
           ),
         ),
         const SizedBox(width: 4),
@@ -675,7 +668,11 @@ class MarketHeaderControls extends StatelessWidget {
                 const GameIcon.asset(UiIcon.gold, size: 14),
                 const SizedBox(width: 3),
                 Text(
-                  'Reroll ${compactGold(refreshCost)}',
+                  // At big text the word goes (it is in semantics) so the
+                  // filter chip fits beside it (F047).
+                  MediaQuery.textScalerOf(context).scale(1) > 1.2
+                      ? compactGold(refreshCost)
+                      : 'Reroll ${compactGold(refreshCost)}',
                   maxLines: 1,
                   style: GameTheme.hint(
                     color: ChunkyFace.textOn(
@@ -693,6 +690,8 @@ class MarketHeaderControls extends StatelessWidget {
   /// Chip text for the active filter.
   static const String filterUpgradesShort = 'UPG';
   static const Key rerollKey = ValueKey('market-reroll');
+  static const Key flaskKey = ValueKey('market-flask');
+  static const Key filterKey = ValueKey('market-filter');
   static const String filterAllShort = 'ALL';
 
   Widget _chip({
@@ -749,11 +748,6 @@ class MarketHeaderControls extends StatelessWidget {
           final flaskCost = GameLogic.marketFlaskCost(state);
           final bandageCost = GameLogic.marketBandageCost(state);
           final canFlask = state.gold >= flaskCost;
-          final upgradeCount = state.marketListings
-              .where(
-                (l) => _MarketOverlayState._upgradeHeroName(state, l) != null,
-              )
-              .length;
           void run(VoidCallback action) {
             action();
             Navigator.pop(ctx);
@@ -773,7 +767,7 @@ class MarketHeaderControls extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     MenuChrome.sheetHandle(),
-                    Text('MARKET · flasks', style: GameTheme.section()),
+                    MenuChrome.sheetTitleRow(ctx, 'MARKET · flasks'),
                     ShellLayout.gap(4),
                     // Two lines so a wrap never starts with a lone "·".
                     ShellLayout.hint(
@@ -815,20 +809,6 @@ class MarketHeaderControls extends StatelessWidget {
                       onPressed: state.gold >= bandageCost
                           ? () => run(director.buyMarketBandage)
                           : null,
-                    ),
-                    ShellLayout.gap(10),
-                    Text('SHOW', style: GameTheme.section()),
-                    ShellLayout.gap(4),
-                    MenuChrome.segmented(
-                      dense: true,
-                      labels: [
-                        upgradeCount > 0
-                            ? 'UPGRADES · $upgradeCount'
-                            : 'UPGRADES',
-                        'ALL GEAR',
-                      ],
-                      selectedIndex: upgradesOnly ? 0 : 1,
-                      onSelect: (i) => run(() => onUpgradesOnlyChanged(i == 0)),
                     ),
                   ],
                 ),

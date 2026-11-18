@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/ui/menu_chrome.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
@@ -309,12 +310,17 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.bySemanticsLabel('Flasks and filter'));
+    // The flask sheet is flasks only; the filter is its own header chip
+    // that flips in place (audit F047).
+    await tester.tap(find.bySemanticsLabel('Flasks'));
     await tester.pumpAndSettle();
     expect(find.textContaining('BUY FLASK'), findsOneWidget);
-    await tester.tap(find.text('ALL GEAR'));
+    expect(find.text('ALL GEAR'), findsNothing);
+    await tester.tap(find.byKey(MenuChrome.sheetCloseKey));
     await tester.pumpAndSettle();
     expect(find.textContaining('BUY FLASK'), findsNothing);
+    await tester.tap(find.byKey(MarketHeaderControls.filterKey));
+    await tester.pumpAndSettle();
     // The chip says which filter is on without opening the sheet.
     final chip = find.byType(MarketHeaderControls);
     expect(
@@ -338,7 +344,7 @@ void main() {
 
     final gold = director.state.gold;
     final flaskCost = GameLogic.marketFlaskCost(director.state);
-    await tester.tap(find.bySemanticsLabel('Flasks and filter'));
+    await tester.tap(find.bySemanticsLabel('Flasks'));
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('BUY FLASK'));
     await tester.pumpAndSettle();

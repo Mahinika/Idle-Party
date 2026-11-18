@@ -700,8 +700,10 @@ void main() {
       canOpenGold: true,
     );
     expect(covered, contains('brought back 100 gold'));
-    expect(covered, contains('wallet covers'));
-    expect(covered, contains('Open GOLD'));
+    // Plain copy: "You can buy AP now (83g)." (audit F086).
+    expect(covered, contains(GameLogic.returnCanBuy));
+    expect(covered, matches(RegExp(r'\(\d[\d,]*g\)\.$')));
+    expect(covered, isNot(contains(' g)')));
     final short = poor.copyWith(gold: 1);
     final gap = GameLogic.returnGainLine(
       short,
@@ -711,6 +713,7 @@ void main() {
     );
     expect(gap, contains('still needs'));
     expect(gap, isNot(contains('Open GOLD')));
+    expect(gap, isNot(contains(GameLogic.returnCanBuy)));
     final noButton = GameLogic.returnGainLine(
       rich,
       goldGained: 100,
@@ -833,7 +836,7 @@ void main() {
         essenceGained: 12,
         canOpenEssence: true,
       ),
-      contains('Open ESSENCE'),
+      contains(GameLogic.returnCampBuy),
     );
     final campDirector = GameDirector.preview(initialState: campState);
     addTearDown(campDirector.dispose);
@@ -923,7 +926,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('OPEN GOLD'), findsOneWidget);
-    expect(find.textContaining('Open GOLD'), findsOneWidget);
+    expect(find.textContaining(GameLogic.returnCanBuy), findsOneWidget);
     final goldBefore = director.state.gold;
     await tester.tap(find.text('OPEN GOLD'));
     await tester.pump();

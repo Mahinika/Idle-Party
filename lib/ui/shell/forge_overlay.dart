@@ -182,8 +182,9 @@ class ForgeOverlay extends StatefulWidget {
   /// Long-press MAX: 5 / 25 / 50 / 100% of the wallet per tap.
   static Future<ForgeGoldSpendMode?> pickWalletSlice(
     BuildContext context,
-    ForgeGoldSpendMode current,
-  ) {
+    ForgeGoldSpendMode current, {
+    int? gold,
+  }) {
     return showModalBottomSheet<ForgeGoldSpendMode>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -199,12 +200,9 @@ class ForgeOverlay extends StatefulWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 MenuChrome.sheetHandle(),
-                Text('MAX · wallet slice', style: GameTheme.section()),
+                MenuChrome.sheetTitleRow(ctx, sliceTitle),
                 ShellLayout.gap(4),
-                ShellLayout.hint(
-                  'Spend that slice of your wallet on one GOLD track.',
-                  maxLines: 2,
-                ),
+                ShellLayout.hint(sliceHint, maxLines: 2),
                 ShellLayout.gap(8),
                 for (final mode in [
                   ForgeGoldSpendMode.pct5,
@@ -215,7 +213,7 @@ class ForgeOverlay extends StatefulWidget {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
                     child: GameButton(
-                      label: mode.chipLabel,
+                      label: sliceLabel(mode, gold),
                       style: current == mode
                           ? GameButtonStyle.brown
                           : GameButtonStyle.grey,
@@ -229,6 +227,23 @@ class ForgeOverlay extends StatefulWidget {
         ),
       ),
     );
+  }
+
+  /// MAX sheet title and hint (audit F025 / F070: no "GOLD track" jargon).
+  static const sliceTitle = 'MAX · share of gold';
+  static const sliceHint =
+      'Each MAX tap spends this share of your gold on the upgrade you tap.';
+
+  /// "25% · 3.0Kg": the share and what it is worth now (F025).
+  static String sliceLabel(ForgeGoldSpendMode mode, int? gold) {
+    if (gold == null) return mode.chipLabel;
+    final pct = switch (mode) {
+      ForgeGoldSpendMode.pct5 => 5,
+      ForgeGoldSpendMode.pct25 => 25,
+      ForgeGoldSpendMode.pct50 => 50,
+      _ => 100,
+    };
+    return '${mode.chipLabel} · ${formatGold((gold * pct) ~/ 100)}';
   }
 
   /// MAX face for a spend mode: plain MAX for the wallet, else the slice.
@@ -347,7 +362,11 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   }
 
   void _openBulkSpendSheet() {
-    ForgeOverlay.pickWalletSlice(context, _spendMode).then((mode) {
+    ForgeOverlay.pickWalletSlice(
+      context,
+      _spendMode,
+      gold: director.state.gold,
+    ).then((mode) {
       if (mode != null && mounted) setState(() => _spendMode = mode);
     });
   }

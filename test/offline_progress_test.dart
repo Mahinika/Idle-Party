@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/ui/game_button.dart';
 import 'package:idle_party/core/chase_contract.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
@@ -658,6 +659,16 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('COLLECT ALL'), findsOneWidget);
+    // Audit F042: COLLECT ALL is the lead action while quests wait.
+    final collect = tester.widget<GameButton>(
+      find.byKey(OfflineWelcomeKeys.collectAll),
+    );
+    expect(collect.style, GameButtonStyle.go);
+    expect(collect.primary, isTrue);
+    expect(
+      tester.widget<GameButton>(find.byKey(OfflineWelcomeKeys.enter)).primary,
+      isFalse,
+    );
     final gold = director.state.gold;
     await tester.tap(find.text('COLLECT ALL'));
     await tester.pumpAndSettle();

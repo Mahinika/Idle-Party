@@ -25,6 +25,12 @@ import '../shell/play_nav.dart';
 import '../web_click_bridge.dart';
 
 /// Short Welcome Back: wow lead, ≤3 highlights, one Up next, dismiss.
+/// Test keys for the WELCOME BACK dialog.
+abstract final class OfflineWelcomeKeys {
+  static const collectAll = ValueKey('welcome_collect_all');
+  static const enter = ValueKey('welcome_enter');
+}
+
 Future<void> showOfflineProgressDialog(
   BuildContext context,
   GameDirector director, {
@@ -112,11 +118,14 @@ Future<void> showOfflineProgressDialog(
     canOpenGold: canSpend && MenuTabs.showGold(rewardState),
     canOpenEssence: canSpend && MenuTabs.showCamp(rewardState),
   );
-  final showCheckIn = checkInLine.isNotEmpty &&
-      !gainLine.contains('wallet covers') &&
-      !gainLine.contains('Open ESSENCE');
-  final openGold = canSpend && gainLine.contains('Open GOLD');
-  final openEssence = canSpend && gainLine.contains('Open ESSENCE');
+  final canBuy = gainLine.contains(GameLogic.returnCanBuy);
+  final campBuy = gainLine.contains(GameLogic.returnCampBuy);
+  final showCheckIn = checkInLine.isNotEmpty && !canBuy;
+  final openGold = canSpend &&
+      MenuTabs.showGold(rewardState) &&
+      canBuy &&
+      !campBuy;
+  final openEssence = canSpend && MenuTabs.showCamp(rewardState) && campBuy;
   final shownGain = _welcomeGainVisible(
     welcome: summary?.welcomeLead ?? '',
     gainLine: gainLine,
@@ -141,7 +150,8 @@ Future<void> showOfflineProgressDialog(
           GameButton(
             label: 'OPEN GOLD',
             expanded: false,
-            style: GameButtonStyle.grey,
+            // A link, not a third big button (audit F042).
+            style: GameButtonStyle.ghost,
             onPressed: () => _openReturnSpend(
               context,
               ctx,
@@ -156,7 +166,7 @@ Future<void> showOfflineProgressDialog(
           GameButton(
             label: 'OPEN ESSENCE',
             expanded: false,
-            style: GameButtonStyle.grey,
+            style: GameButtonStyle.ghost,
             onPressed: () => _openReturnSpend(
               context,
               ctx,
@@ -253,9 +263,12 @@ Future<void> showOfflineProgressDialog(
                     .where((m) => m.canClaim)
                     .length;
                 if (ready == 0) return const SizedBox.shrink();
+                // The prize is the main action here: amber go face (F042).
                 return GameButton(
+                  key: OfflineWelcomeKeys.collectAll,
                   label: 'COLLECT ALL',
-                  style: GameButtonStyle.grey,
+                  style: GameButtonStyle.go,
+                  primary: true,
                   onPressed: director.claimAllReadyMissions,
                 );
               },
@@ -343,10 +356,12 @@ Future<void> showOfflineProgressDialog(
       actions: [
         if (!crowded) ...greyActions,
         GameButton(
+          key: OfflineWelcomeKeys.enter,
           label: returnLabel,
           expanded: false,
           style: GameButtonStyle.brown,
-          primary: true,
+          // COLLECT ALL leads while quests wait; the fight comes after (F042).
+          primary: !director.state.missions.any((m) => m.canClaim),
           onPressed: () {
             director.claimReturnRewards();
             director.dismissOfflineSummary();
