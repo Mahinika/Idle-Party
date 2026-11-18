@@ -203,7 +203,17 @@ class ZonePathMap extends StatelessWidget {
     required this.highestCleared,
     required this.onSelect,
     this.pulse,
+    this.fillWidthWhenShort = false,
   });
+
+  /// Short screens (360x640): when contain-fit would leave the board under
+  /// [shortFillRatio] of the width, draw it full width and scroll it
+  /// vertically, opened on the selected cave, instead of a thumbnail.
+  final bool fillWidthWhenShort;
+  static const double shortFillRatio = 0.8;
+
+  /// The vertical scroller used by [fillWidthWhenShort].
+  static const scrollKey = ValueKey('zone-path-map-scroll');
 
   final List<DungeonDef> dungeons;
   final String selectedId;
@@ -275,8 +285,26 @@ class ZonePathMap extends StatelessWidget {
         final boxW = constraints.maxWidth;
         if (boxW < 8 || !boxW.isFinite) return const SizedBox.shrink();
         final rawH = constraints.maxHeight;
+        final fullH = boxW / mapAspect;
+        if (fillWidthWhenShort &&
+            rawH.isFinite &&
+            containRect(Size(boxW, rawH)).width < boxW * shortFillRatio) {
+          final i = dungeons.indexWhere((d) => d.id == selectedId);
+          final cy = i < 0 || i >= markerNorm.length
+              ? fullH / 2
+              : markerNorm[i].dy * fullH;
+          return _OpenAt(
+            key: scrollKey,
+            offset: (cy - rawH / 2).clamp(0.0, math.max(0.0, fullH - rawH)),
+            child: SizedBox(
+              width: boxW,
+              height: fullH,
+              child: _board(context, Size(boxW, fullH)),
+            ),
+          );
+        }
         final innerH = !rawH.isFinite
-            ? boxW / mapAspect
+            ? fullH
             : math.max(rawH, minBoardHeight);
         final board = _board(context, Size(boxW, innerH));
         if (rawH.isFinite && rawH + 0.5 < innerH) {
@@ -373,6 +401,42 @@ class ZonePathMap extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(GameTheme.radiusSm),
       child: Stack(clipBehavior: Clip.hardEdge, children: pathChildren),
+    );
+  }
+}
+
+/// Vertical scroller that opens at [offset], with a always-visible thumb so
+/// the taller board reads as "scroll for more".
+class _OpenAt extends StatefulWidget {
+  const _OpenAt({super.key, required this.offset, required this.child});
+
+  final double offset;
+  final Widget child;
+
+  @override
+  State<_OpenAt> createState() => _OpenAtState();
+}
+
+class _OpenAtState extends State<_OpenAt> {
+  late final ScrollController _scroll = ScrollController(
+    initialScrollOffset: widget.offset,
+  );
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RawScrollbar(
+      controller: _scroll,
+      thumbVisibility: true,
+      thickness: 4,
+      radius: const Radius.circular(2),
+      thumbColor: GameTheme.borderLit.withValues(alpha: 0.8),
+      child: SingleChildScrollView(controller: _scroll, child: widget.child),
     );
   }
 }

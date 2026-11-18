@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'game_button.dart';
@@ -343,6 +345,13 @@ abstract final class MenuChrome {
       builder: (context, constraints) {
         // Always scroll on the shipping phone chrome so labels stay readable.
         final scroll = scrollable ?? true;
+        // When the labels do not fit one row (5 tabs at 1.45), lay them out
+        // in full-width rows instead of a rail that cuts the first or last
+        // tab ("UESTS"). Every label is whole; nothing shrinks.
+        final rows = _tabRows(context, tabs, constraints.maxWidth);
+        if (rows != null) {
+          return _tabGrid(controller, onTap, tabs, rows);
+        }
         return Material(
           color: Colors.transparent,
           child: Container(
@@ -378,6 +387,183 @@ abstract final class MenuChrome {
   }
 
   static const tabRailFadeKey = ValueKey('tab-rail-fade');
+
+  /// The multi-row layout [tabRail] uses when one row cannot hold every
+  /// label.
+  static const tabGridKey = ValueKey('tab-rail-grid');
+
+  /// Inner horizontal padding of a tab label (TabBar's scroll padding).
+  static const double _tabPad = 10;
+
+  /// Text of a rail tab: `Tab(text:)` or a [bridgedTab]'s label.
+  static List<String>? _tabTexts(Widget tab) {
+    if (tab is! Tab) return null;
+    final text = tab.text;
+    if (text != null) return [text];
+    final child = tab.child;
+    if (child is WebClickScope) {
+      final inner = child.child;
+      if (inner is Semantics) {
+        final c = inner.child;
+        if (c is Text && c.data != null) return [c.data!];
+        if (c is Column) {
+          return [
+            for (final t in c.children)
+              if (t is Text && t.data != null) t.data!,
+          ];
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Tab indices per row when the labels overflow one row of [maxWidth];
+  /// null when they fit (or cannot be measured) and the TabBar is kept.
+  static List<List<(int, double)>>? _tabRows(
+    BuildContext context,
+    List<Widget> tabs,
+    double maxWidth,
+  ) {
+    if (!maxWidth.isFinite || tabs.length < 2) return null;
+    final scaler = MediaQuery.textScalerOf(context);
+    final widths = <double>[];
+    for (final t in tabs) {
+      final texts = _tabTexts(t);
+      if (texts == null || texts.isEmpty) return null;
+      var w = 0.0;
+      for (final (i, text) in texts.indexed) {
+        final painter = TextPainter(
+          text: TextSpan(
+            text: text,
+            style: i == 0 ? GameTheme.readable() : GameTheme.hint(),
+          ),
+          textDirection: TextDirection.ltr,
+          textScaler: scaler,
+          maxLines: 1,
+        )..layout();
+        w = math.max(w, painter.width);
+        painter.dispose();
+      }
+      widths.add(w + 2 * _tabPad);
+    }
+    // Two px of rail border.
+    final room = maxWidth - 2;
+    if (widths.fold<double>(0, (a, b) => a + b) <= room) return null;
+    final rows = <List<(int, double)>>[];
+    var row = <(int, double)>[];
+    var used = 0.0;
+    for (var i = 0; i < widths.length; i++) {
+      if (row.isNotEmpty && used + widths[i] > room) {
+        rows.add(row);
+        row = <(int, double)>[];
+        used = 0;
+      }
+      row.add((i, widths[i]));
+      used += widths[i];
+    }
+    rows.add(row);
+    // Same number of rows, but balanced (5 tabs: 3 + 2, not 4 + 1) when
+    // the even split still fits.
+    final per = (tabs.length / rows.length).ceil();
+    final even = <List<(int, double)>>[
+      for (var start = 0; start < tabs.length; start += per)
+        [
+          for (var i = start; i < math.min(start + per, tabs.length); i++)
+            (i, widths[i]),
+        ],
+    ];
+    final evenFits = even.length == rows.length &&
+        even.every((r) => r.fold<double>(0, (a, e) => a + e.$2) <= room);
+    return evenFits ? even : rows;
+  }
+
+  static Widget _tabGrid(
+    TabController controller,
+    ValueChanged<int>? onTap,
+    List<Widget> tabs,
+    List<List<(int, double)>> rows,
+  ) {
+    return AnimatedBuilder(
+      key: tabGridKey,
+      animation: controller,
+      builder: (context, _) {
+        Widget cell(int i) {
+          final selected = controller.index == i;
+          void select() {
+            controller.animateTo(i);
+            onTap?.call(i);
+          }
+
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: select,
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm - 2),
+              child: Ink(
+                decoration: selected
+                    ? BoxDecoration(
+                        color: GameTheme.torch.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(
+                          GameTheme.radiusSm - 2,
+                        ),
+                      )
+                    : null,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: GameTheme.primaryTouch,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: _tabPad),
+                    child: Center(
+                      child: DefaultTextStyle.merge(
+                        style: GameTheme.readable(
+                          color: selected
+                              ? GameTheme.torchHot
+                              : GameTheme.parchmentDim,
+                        ),
+                        softWrap: false,
+                        child: Semantics(
+                          selected: selected,
+                          child: tabs[i],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Material(
+          color: Colors.transparent,
+          child: Container(
+            decoration: BoxDecoration(
+              color: GameTheme.panelInset.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              border: Border.all(
+                color: GameTheme.border.withValues(alpha: 0.7),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final row in rows)
+                  Row(
+                    children: [
+                      // Share the row by label width, so the longest
+                      // label gets the most room.
+                      for (final (i, w) in row)
+                        Expanded(flex: w.round(), child: cell(i)),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   static Widget _tabBar(
     TabController controller,

@@ -23,6 +23,9 @@ class EssenceTilesScreen extends StatelessWidget {
   /// Icon tile on each ESSENCE tile (fits the 1.15x touch CRAFT row).
   static const double iconTile = 36;
 
+  /// Rim width of the active (last opened) tile.
+  static const double activeRim = 2;
+
   /// Same height the old 2.4 grid aspect gave at 1.0 on a 360 dp phone.
   static const double gridTileMinHeight = 70;
 
@@ -59,6 +62,7 @@ class EssenceTilesScreen extends StatelessWidget {
                     router.essencePanel = EssencePanel.keep;
                     router.pushSub();
                   },
+                  active: router.essencePanel == EssencePanel.keep,
                 ),
                 _tile(
                   context,
@@ -71,6 +75,7 @@ class EssenceTilesScreen extends StatelessWidget {
                     router.essencePanel = EssencePanel.relics;
                     router.pushSub();
                   },
+                  active: router.essencePanel == EssencePanel.relics,
                 ),
               ),
               const SizedBox(height: 6),
@@ -86,6 +91,7 @@ class EssenceTilesScreen extends StatelessWidget {
                     router.essencePanel = EssencePanel.pets;
                     router.pushSub();
                   },
+                  active: router.essencePanel == EssencePanel.pets,
                 ),
                 _tile(
                   context,
@@ -98,6 +104,7 @@ class EssenceTilesScreen extends StatelessWidget {
                     router.essencePanel = EssencePanel.tracks;
                     router.pushSub();
                   },
+                  active: router.essencePanel == EssencePanel.tracks,
                 ),
               ),
               const SizedBox(height: 6),
@@ -146,18 +153,36 @@ class EssenceTilesScreen extends StatelessWidget {
     String lockedHint,
     VoidCallback onTap, {
     bool fullWidth = false,
+    bool active = false,
   }) {
+    // The panel the ESSENCE tab reopens: amber rim and a soft glow (the
+    // selected-toggle amber), so the hub shows where you were.
+    final lit = active && open;
     final tile = Semantics(
       button: open,
+      selected: lit,
       label: open ? label : '$label. $lockedHint',
       child: InkWell(
         onTap: open ? onTap : null,
         borderRadius: BorderRadius.circular(GameTheme.radiusSm),
         child: DecoratedBox(
-          decoration: MenuChrome.listCard(
-            selected: false,
-            borderColor: open ? GameTheme.borderLit : GameTheme.border,
-          ),
+          decoration: lit
+              ? MenuChrome.listCard(selected: true).copyWith(
+                  border: Border.all(
+                    color: GameTheme.toggleOnAccent,
+                    width: activeRim,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: GameTheme.toggleOnAccent.withValues(alpha: 0.35),
+                      blurRadius: 8,
+                    ),
+                  ],
+                )
+              : MenuChrome.listCard(
+                  selected: false,
+                  borderColor: open ? GameTheme.borderLit : GameTheme.border,
+                ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             child: Row(
@@ -179,7 +204,9 @@ class EssenceTilesScreen extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GameTheme.readable(
-                          color: open
+                          color: lit
+                              ? GameTheme.torchHot
+                              : open
                               ? GameTheme.parchment
                               : GameTheme.parchmentDim,
                         ),

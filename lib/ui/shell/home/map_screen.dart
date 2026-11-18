@@ -28,6 +28,20 @@ class MapScreen extends StatefulWidget {
   final GameDirector director;
   final MenuRouter router;
 
+  /// Lock glyph on an ENDGAME hunt that is not open yet.
+  static const lockKey = ValueKey('map-endgame-lock');
+  static const double lockedPortraitOpacity = 0.45;
+
+  /// What opens ENDGAME, and how far the party is (display only; the rule
+  /// is [GameLogic.endgameUnlocked]).
+  static String endgameLockLine(GameState state) {
+    final lowest = state.heroes.isEmpty
+        ? 0
+        : state.heroes.map((h) => h.level).reduce((a, b) => a < b ? a : b);
+    return 'Locked · every hero Lv${GameLogic.maxHeroLevel} '
+        '(lowest Lv$lowest)';
+  }
+
   @override
   State<MapScreen> createState() => _MapScreenState();
 }
@@ -79,6 +93,7 @@ class _MapScreenState extends State<MapScreen> {
             selectedId: _zoneId,
             partyLevel: mean,
             highestCleared: state.highestDungeonCleared,
+            fillWidthWhenShort: true,
             onSelect: (id) => setState(() {
               _zoneId = id;
               _hunt = null;
@@ -130,8 +145,9 @@ class _MapScreenState extends State<MapScreen> {
         for (final node in HubEndgameAct.nodes)
           _card(
             node.shortLabel,
-            endgame ? node.blurb : 'Active party all Lv100.',
+            endgame ? node.blurb : MapScreen.endgameLockLine(state),
             endgame ? () => setState(() => _hunt = node.hunt) : null,
+            locked: !endgame,
             selected: _hunt == node.hunt,
             portrait: KenneyAssets.dungeonPortraitFor(node.portraitDungeonId),
             badge: node.hunt == HubEndgameHunt.ashen &&
@@ -168,6 +184,7 @@ class _MapScreenState extends State<MapScreen> {
     bool selected = false,
     String? badge,
     String? portrait,
+    bool locked = false,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -178,7 +195,9 @@ class _MapScreenState extends State<MapScreen> {
           onPressed: onTap,
           child: Semantics(
             button: onTap != null,
-            label: badge != null && badge.isNotEmpty
+            label: locked
+                ? '$title. Locked. $body'
+                : badge != null && badge.isNotEmpty
                 ? '$title. $body. Tickets: $badge.'
                 : '$title. $body',
             child: InkWell(
@@ -186,7 +205,11 @@ class _MapScreenState extends State<MapScreen> {
               child: Row(
                 children: [
                   if (portrait != null) ...[
-                    _huntPortrait(portrait),
+                    // Locked hunts: the picture dims, like locked tiles.
+                    Opacity(
+                      opacity: locked ? MapScreen.lockedPortraitOpacity : 1,
+                      child: _huntPortrait(portrait),
+                    ),
                     const SizedBox(width: 8),
                   ],
                   Expanded(
@@ -197,7 +220,11 @@ class _MapScreenState extends State<MapScreen> {
                           title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GameTheme.readable(),
+                          style: GameTheme.readable(
+                            color: locked
+                                ? GameTheme.parchmentDim
+                                : GameTheme.parchment,
+                          ),
                         ),
                         Text(
                           body,
@@ -210,6 +237,15 @@ class _MapScreenState extends State<MapScreen> {
                       ],
                     ),
                   ),
+                  if (locked) ...[
+                    const SizedBox(width: 8),
+                    GameIcon.glyph(
+                      UiGlyph.lock,
+                      key: MapScreen.lockKey,
+                      size: 18,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ],
                   if (badge != null && badge.isNotEmpty) ...[
                     const SizedBox(width: 8),
                     MenuChrome.chip(
