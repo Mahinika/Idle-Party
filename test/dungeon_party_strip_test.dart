@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
@@ -109,7 +110,16 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.textContaining(' L'), findsNWidgets(3));
+    // Since audit F020 the level hides when it would cut the name, so
+    // each hero shows its whole name, and the level wherever it fits.
+    final levels = find.textContaining(' L').evaluate().length;
+    expect(levels, inInclusiveRange(0, 3));
+    for (final h in director.state.heroes) {
+      final name = find.text(h.name.trim());
+      expect(name, findsOneWidget);
+      final p = tester.renderObject<RenderParagraph>(name);
+      expect(p.didExceedMaxLines, isFalse, reason: h.name);
+    }
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });

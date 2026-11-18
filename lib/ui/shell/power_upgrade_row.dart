@@ -28,7 +28,11 @@ class PowerUpgradeRow extends StatelessWidget {
     this.below,
     this.selected = false,
     this.dense = false,
+    this.titleLines = 1,
   });
+
+  /// Max lines for [title]. MARKET item names may wrap to two.
+  final int titleLines;
 
   final Color accent;
   final String title;
@@ -101,7 +105,7 @@ class PowerUpgradeRow extends StatelessWidget {
                                 ? GameTheme.readable
                                 : GameTheme
                                       .section)(color: GameTheme.parchment),
-                            maxLines: 1,
+                            maxLines: titleLines,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),

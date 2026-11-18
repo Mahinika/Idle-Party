@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
+import '../../../core/game_state.dart';
 import '../../../core/menu_router.dart';
 import '../../../models/dungeon_mode.dart';
 import '../../chunky_face.dart';
@@ -103,6 +104,15 @@ class FightFieldControls extends StatelessWidget {
   static const modeHintKey = ValueKey('fight-seam-mode-hint');
   static const double modeHintCapsuleAlpha = 0.85;
 
+  /// FARM/PUSH line is a first-sessions tip, not forever (audit F065).
+  static const int modeHintUntilClears = 20;
+  static bool showModeHint(GameState s) =>
+      s.metaDepth.lifetimeFloorClears < modeHintUntilClears;
+
+  /// Seam toggle back to the big fight view (audit F021: was "TALL").
+  static const String bigViewLabel = 'BIG VIEW';
+  static const String bigViewShort = 'BIG';
+
   /// Camera bottom inset: the button row plus its pad.
   static const double cameraReserve = GameTheme.minTouch + 12;
 
@@ -136,7 +146,7 @@ class FightFieldControls extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (seamFitsExtras)
+            if (seamFitsExtras && FightFieldControls.showModeHint(state))
               // Dark capsule: the line sits on lit sand, where the bare
               // text was ~1.1–1.7:1. On the capsule it is above 7:1.
               Padding(
@@ -244,14 +254,20 @@ class FightFieldControls extends StatelessWidget {
                 ],
                 const SizedBox(width: 4),
                 _seamTap(
-                  label: full ? 'TALL' : 'FORGE',
+                  label: full ? 'Big fight view' : 'FORGE',
                   onTap: () => director.setHomePanelFull(!full),
                   child: ChunkyFace(
                     tone: ChunkyTone.stone,
                     minHeight: GameTheme.chunkyFace,
                     padding: const EdgeInsets.symmetric(horizontal: 6),
+                    // At large text "BIG" keeps Repeat/Next whole; the
+                    // full name is in semantics.
                     child: Text(
-                      full ? 'TALL' : 'FORGE',
+                      full
+                          ? (osScale > 1.2
+                                ? FightFieldControls.bigViewShort
+                                : FightFieldControls.bigViewLabel)
+                          : 'FORGE',
                       style: GameTheme.readable(color: GameTheme.parchment),
                     ),
                   ),

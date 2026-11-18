@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../assets/custom_assets.dart';
 import '../../../assets/kenney_assets.dart';
 import '../../../core/chase_dispatcher.dart';
+import '../../../core/first_climb_coach.dart';
 import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
@@ -18,7 +19,9 @@ import '../../../models/town_building.dart';
 import 'town_life.dart';
 import 'town_scene.dart';
 import '../../chase_bind.dart';
+import '../../coach_pulse.dart';
 import '../../confirm_dialogs.dart';
+import '../../first_session_tips.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../hero_doll_sprite.dart';
@@ -233,22 +236,13 @@ class _TownViewportState extends State<TownViewport> {
                   style: GameTheme.section(),
                 ),
                 const SizedBox(height: GameTheme.clusterGap),
-                WebClickScope(
-                  label: label,
-                  onPressed: () => runChasePlan(
-                    context: context,
-                    director: director,
-                    router: router,
-                    plan: plan,
-                    onEnterDungeon: (id) {
-                      router.close();
-                      director.enterDungeon(dungeonId: id);
-                    },
-                  ),
-                  child: GameButton(
+                // The coach says "Tap ENTER." — pulse the button it means
+                // (audit F093).
+                CoachPulse(
+                  key: TownEnterCoach.pulseKey,
+                  active: TownEnterCoach.active(state),
+                  child: WebClickScope(
                     label: label,
-                    style: GameButtonStyle.go,
-                    primary: true,
                     onPressed: () => runChasePlan(
                       context: context,
                       director: director,
@@ -258,6 +252,21 @@ class _TownViewportState extends State<TownViewport> {
                         router.close();
                         director.enterDungeon(dungeonId: id);
                       },
+                    ),
+                    child: GameButton(
+                      label: label,
+                      style: GameButtonStyle.go,
+                      primary: true,
+                      onPressed: () => runChasePlan(
+                        context: context,
+                        director: director,
+                        router: router,
+                        plan: plan,
+                        onEnterDungeon: (id) {
+                          router.close();
+                          director.enterDungeon(dungeonId: id);
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -804,14 +813,28 @@ class _TownLockedNote extends StatelessWidget {
   }
 }
 
-/// Below the pennant tier the line names the town and the cave.
+/// When the first-session coach points at ENTER on the town card.
+abstract final class TownEnterCoach {
+  static const Key pulseKey = ValueKey('town-enter-coach');
+
+  static bool active(GameState state) {
+    if (state.inDungeon) return false;
+    final climb = FirstClimbCoach.line(state, inDungeon: false);
+    if (climb != null) return climb.contains('ENTER');
+    final tip = FirstSessionTips.active(state, inDungeon: false);
+    return tip?.target == CoachTarget.enter;
+  }
+}
+
+/// Below the pennant tier the line names the town ([cave] is shown big
+/// under it, so it is not repeated here).
 /// At the tier it keeps [TownTier.progressLine], which says banners.
 String townProgressLine({required int ascensionLevel, required String cave}) {
   if (TownTier.showPennants(ascensionLevel)) {
     return TownTier.progressLine(ascensionLevel);
   }
-  final look = ascensionLevel >= 1 ? 'Stone town' : 'Timber town';
-  return '$look · $cave';
+  // The cave name is the big line right under this one (audit F090).
+  return ascensionLevel >= 1 ? 'Stone town' : 'Timber town';
 }
 
 /// What the town square paints. Gold is not in here, so a wallet tick

@@ -449,7 +449,9 @@ class _MarketOverlayState extends State<MarketOverlay> {
             child: EquipmentIcon(item: item, size: 30),
           ),
           title: item.name,
-          tag: showUpgradeBadge
+          // Keep the UPGRADE tag when broke; "Need Ng more" sits under it
+          // (audit F067). The gold face and the plum rim stay buy-only.
+          tag: isUpgrade
               ? 'UPGRADE'
               : isGapFill
               ? 'EMPTY SLOT'

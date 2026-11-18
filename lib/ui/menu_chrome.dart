@@ -625,6 +625,12 @@ abstract final class MenuChrome {
   ///
   /// Prefer this over a Wrap of [chip]s — InkWell chips expand to the Wrap's
   /// max width and stack full-width on phone.
+  /// "Can buy" dot on segment [i] of [segmented].
+  static Key segmentDotKey(int i) => ValueKey('segment-dot-$i');
+
+  /// Padlock in place of segment [i]'s icon when [segmented] is locked.
+  static Key segmentLockKey(int i) => ValueKey('segment-lock-$i');
+
   static Widget segmented({
     required List<String> labels,
     required int selectedIndex,
@@ -632,8 +638,11 @@ abstract final class MenuChrome {
     bool dense = false,
     List<String>? icons,
     double? maxHeight,
+    List<bool>? dots,
+    bool locked = false,
   }) {
     assert(labels.isNotEmpty);
+    assert(dots == null || dots.length == labels.length);
     if (icons != null) {
       assert(icons.length == labels.length);
     }
@@ -684,7 +693,11 @@ abstract final class MenuChrome {
                 child: Semantics(
                   button: true,
                   selected: i == selectedIndex,
-                  label: labels[i],
+                  label: locked
+                      ? '${labels[i]}, locked'
+                      : dots?[i] == true
+                      ? '${labels[i]}, can buy'
+                      : labels[i],
                   onTap: () => onSelect(i),
                   excludeSemantics: true,
                   child: Material(
@@ -721,10 +734,18 @@ abstract final class MenuChrome {
                               padding: const EdgeInsets.symmetric(horizontal: 4),
                               child: Row(
                                 children: [
-                                  GameIcon.asset(
-                                    icons[i],
-                                    size: dense ? 16 : GameTheme.iconList,
-                                  ),
+                                  if (locked)
+                                    GameIcon.glyph(
+                                      UiGlyph.lock,
+                                      key: segmentLockKey(i),
+                                      size: dense ? 14 : 16,
+                                      color: GameTheme.parchmentDim,
+                                    )
+                                  else
+                                    GameIcon.asset(
+                                      icons[i],
+                                      size: dense ? 16 : GameTheme.iconList,
+                                    ),
                                   const SizedBox(width: 4),
                                   Flexible(
                                     child: Text(
@@ -736,6 +757,22 @@ abstract final class MenuChrome {
                                             : GameTheme.parchmentDim),
                                     ),
                                   ),
+                                  // Gold dot: something here is affordable.
+                                  if (dots?[i] == true) ...[
+                                    const SizedBox(width: 4),
+                                    Container(
+                                      key: segmentDotKey(i),
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: GameTheme.torchHot,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: GameTheme.chunkyShadow,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),

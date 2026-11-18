@@ -59,14 +59,17 @@ class TargetCornerHud extends StatelessWidget {
   const TargetCornerHud({super.key, required this.director});
   final GameDirector director;
 
+  /// Enemy title text (role · name).
+  static const Key titleKey = ValueKey('target-corner-title');
+
   static String _archetypeLabel(EnemyArchetype a) => switch (a) {
-        EnemyArchetype.swarm => 'SWARM',
-        EnemyArchetype.brute => 'MELEE',
-        EnemyArchetype.tank => 'TANK',
-        EnemyArchetype.ranged => 'RANGED',
-        EnemyArchetype.glass => 'GLASS',
-        EnemyArchetype.support => 'SUPPORT',
-      };
+    EnemyArchetype.swarm => 'SWARM',
+    EnemyArchetype.brute => 'MELEE',
+    EnemyArchetype.tank => 'TANK',
+    EnemyArchetype.ranged => 'RANGED',
+    EnemyArchetype.glass => 'GLASS',
+    EnemyArchetype.support => 'SUPPORT',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -176,13 +179,12 @@ class TargetCornerHud extends StatelessWidget {
     final hpFrac = enemy == null || enemy.maxHp <= 0
         ? 0.0
         : (enemy.hp / enemy.maxHp).clamp(0.0, 1.0);
-    final swarmPack = enemy != null &&
+    final swarmPack =
+        enemy != null &&
         enemy.archetype == EnemyArchetype.swarm &&
         world != null;
     final foeCount = swarmPack
-        ? world.enemies
-            .where((e) => e.hp > 0 && !e.dormant && e.isAlive)
-            .length
+        ? world.enemies.where((e) => e.hp > 0 && !e.dormant && e.isAlive).length
         : 0;
     final atFullHp = hpFrac >= 0.999;
     final titleColor = role == 'BOSS'
@@ -208,7 +210,9 @@ class TargetCornerHud extends StatelessWidget {
               message: role.isEmpty ? label : '$role · $label',
               child: Text(
                 role.isEmpty ? label : '$role · $label',
-                maxLines: 1,
+                key: TargetCornerHud.titleKey,
+                // Two lines at big text so the name is whole (audit F018).
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.combat(color: titleColor),
               ),
@@ -224,9 +228,7 @@ class TargetCornerHud extends StatelessWidget {
                       assetIndex: enemy.assetIndex,
                       dungeonId: director.state.dungeonId,
                     ),
-                    size: role == 'BOSS'
-                        ? 28
-                        : (role == 'ELITE' ? 22 : 16),
+                    size: role == 'BOSS' ? 28 : (role == 'ELITE' ? 22 : 16),
                   ),
                   const SizedBox(width: 6),
                   Expanded(
@@ -253,13 +255,17 @@ class TargetCornerHud extends StatelessWidget {
                                   : (SpatialCombat.compactNumbers
                                         ? SpatialCombat.compactCount(enemy.hp)
                                         : '${enemy.hp}'),
-                              style: GameTheme.hint(color: GameTheme.parchmentDim),
+                              style: GameTheme.hint(
+                                color: GameTheme.parchmentDim,
+                              ),
                             ),
                             const Spacer(),
                             if (!atFullHp)
                               Text(
                                 '${(hpFrac * 100).round()}%',
-                                style: GameTheme.hint(color: GameTheme.parchmentDim),
+                                style: GameTheme.hint(
+                                  color: GameTheme.parchmentDim,
+                                ),
                               ),
                           ],
                         ),
@@ -278,12 +284,12 @@ class TargetCornerHud extends StatelessWidget {
               Text(
                 state.isPartyDefeated
                     ? (state.inGauntlet || state.inAnyRiftMode
-                        ? 'End → hub'
-                        : 'Retry / Hub')
+                          ? 'End → hub'
+                          : 'Retry / Hub')
                     : _stairsHint(world),
                 style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
-                      if (_gateLocked(world))
+            if (_gateLocked(world))
               Text(
                 GameLogic.plainPlayerChrome(state)
                     ? 'Finish this room to go deeper'
@@ -320,8 +326,7 @@ class TargetCornerHud extends StatelessWidget {
   static bool _gateLocked(SpatialWorld? world) {
     if (world == null || world.awaitingExit) return false;
     // Already fighting in an open chamber — don't nag about deeper gates.
-    final fightingHere =
-        world.enemies.any((e) => e.hp > 0 && !e.dormant);
+    final fightingHere = world.enemies.any((e) => e.hp > 0 && !e.dormant);
     if (fightingHere) return false;
     for (final g in world.map.gates) {
       if (!world.openGateIds.contains(g.id)) return true;
@@ -331,8 +336,7 @@ class TargetCornerHud extends StatelessWidget {
 
   static bool _hasDormantAhead(SpatialWorld? world) {
     if (world == null || world.awaitingExit) return false;
-    final fightingHere =
-        world.enemies.any((e) => e.hp > 0 && !e.dormant);
+    final fightingHere = world.enemies.any((e) => e.hp > 0 && !e.dormant);
     if (fightingHere) return false;
     return world.enemies.any((e) => e.hp > 0 && e.dormant);
   }

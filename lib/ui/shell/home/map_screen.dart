@@ -42,6 +42,29 @@ class MapScreen extends StatefulWidget {
         '(lowest Lv$lowest)';
   }
 
+  static const Key zoneCardKey = ValueKey('map-zone-card');
+  static const Key endgameLockHeaderKey = ValueKey('map-endgame-lock-line');
+  static const Key enterKey = ValueKey('map-enter');
+  static const String youAreHere = 'YOU ARE HERE';
+
+  /// Second line of the zone card under the PATH map.
+  static String zoneDetail(
+    GameState state,
+    DungeonDef def, {
+    required bool open,
+    required int mean,
+  }) {
+    final need = DungeonCatalog.unlockHeroLevel(def);
+    if (!open) return 'Party Lv$need or clear the previous cave';
+    final here = state.inDungeon && state.dungeonId == def.id;
+    final cleared = def.number <= state.highestDungeonCleared;
+    return [
+      if (here) 'You are here · F${state.currentRoom.floorNumber}',
+      cleared ? 'Cleared' : 'Not cleared yet',
+      'Party Lv$mean / $need',
+    ].join(' · ');
+  }
+
   @override
   State<MapScreen> createState() => _MapScreenState();
 }
@@ -75,9 +98,7 @@ class _MapScreenState extends State<MapScreen> {
             onSelect: (i) => setState(() => _endgame = i == 1),
           ),
         ),
-        Expanded(
-          child: _endgame ? _hunts(state, mean) : _path(state, mean),
-        ),
+        Expanded(child: _endgame ? _hunts(state, mean) : _path(state, mean)),
         _footer(state, mean),
       ],
     );
@@ -112,17 +133,47 @@ class _MapScreenState extends State<MapScreen> {
       mean,
       state.highestDungeonCleared,
     );
-    final line = open
-        ? def.name
-        : '${def.name} · Party Lv${DungeonCatalog.unlockHeroLevel(def)} or clear the previous cave';
+    // A small card: the name big enough to read (F037), and what the cave
+    // is for you: cleared or not, where you are, the party level (F049).
+    final detail = MapScreen.zoneDetail(state, def, open: open, mean: mean);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Text(
-        line,
-        textAlign: TextAlign.center,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: GameTheme.hint(color: GameTheme.parchmentDim),
+      key: MapScreen.zoneCardKey,
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (!open) ...[
+                const GameIcon.glyph(
+                  UiGlyph.lock,
+                  size: 12,
+                  color: GameTheme.parchmentDim,
+                ),
+                const SizedBox(width: 4),
+              ],
+              Flexible(
+                child: Text(
+                  def.name,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.readable(
+                    color: open ? GameTheme.parchment : GameTheme.parchmentDim,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Text(
+            detail,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
+          ),
+        ],
       ),
     );
   }
@@ -132,47 +183,41 @@ class _MapScreenState extends State<MapScreen> {
     return ListView(
       padding: ShellLayout.listPadding,
       children: [
-        if (MenuTabs.showKey(state))
-          _card(
-            'KEY',
-            'Harder cave. Same floors.',
-            () {
-              setState(() => _hunt = null);
-              widget.router.open(MenuRoute.key);
-            },
-            portrait: UiIcon.key,
+        // The lock rule once, not on every hunt (audit F088).
+        if (!endgame) ...[
+          Text(
+            MapScreen.endgameLockLine(state),
+            key: MapScreen.endgameLockHeaderKey,
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
+          const SizedBox(height: 6),
+        ],
+        if (MenuTabs.showKey(state))
+          _card('KEY', 'Harder cave. Same floors.', () {
+            setState(() => _hunt = null);
+            widget.router.open(MenuRoute.key);
+          }, portrait: UiIcon.key),
         for (final node in HubEndgameAct.nodes)
           _card(
             node.shortLabel,
-            endgame ? node.blurb : MapScreen.endgameLockLine(state),
+            endgame ? node.blurb : 'Locked',
             endgame ? () => setState(() => _hunt = node.hunt) : null,
             locked: !endgame,
             selected: _hunt == node.hunt,
             portrait: KenneyAssets.dungeonPortraitFor(node.portraitDungeonId),
-            badge: node.hunt == HubEndgameHunt.ashen &&
-                    AshenCrown.canEnter(state)
+            badge:
+                node.hunt == HubEndgameHunt.ashen && AshenCrown.canEnter(state)
                 ? '${state.metaDepth.worldBossTickets}'
                 : null,
           ),
-        _card(
-          'DAILY',
-          'Today\'s cave.',
-          () {
-            setState(() => _hunt = null);
-            confirmDailyRun(context, director);
-          },
-          portrait: UiIcon.daily,
-        ),
-        _card(
-          'RANKS',
-          'Season boards.',
-          () {
-            setState(() => _hunt = null);
-            openHubRanksSheet(context, director);
-          },
-          portrait: UiIcon.trophy,
-        ),
+        _card('DAILY', 'Today\'s cave.', () {
+          setState(() => _hunt = null);
+          confirmDailyRun(context, director);
+        }, portrait: UiIcon.daily),
+        _card('RANKS', 'Season boards.', () {
+          setState(() => _hunt = null);
+          openHubRanksSheet(context, director);
+        }, portrait: UiIcon.trophy),
       ],
     );
   }
@@ -230,9 +275,7 @@ class _MapScreenState extends State<MapScreen> {
                           body,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: GameTheme.hint(
-                            color: GameTheme.parchmentDim,
-                          ),
+                          style: GameTheme.hint(color: GameTheme.parchmentDim),
                         ),
                       ],
                     ),
@@ -283,13 +326,17 @@ class _MapScreenState extends State<MapScreen> {
     // KEY, the daily, and ranks already start on tap. ENTER is the hunt
     // confirm, and the cave confirm on PATH.
     if (_endgame && _hunt == null) return const SizedBox.shrink();
+    // Already in this cave: say so instead of an ENTER that restarts it
+    // without saying (audit F089).
+    final here = !_endgame && state.inDungeon && _zoneId == state.dungeonId;
     return Padding(
       padding: ShellLayout.listPadding,
       child: GameButton(
-        label: 'ENTER',
+        key: MapScreen.enterKey,
+        label: here ? MapScreen.youAreHere : 'ENTER',
         style: GameButtonStyle.go,
-        primary: true,
-        onPressed: () => _enter(state, mean, endgame),
+        primary: !here,
+        onPressed: here ? null : () => _enter(state, mean, endgame),
       ),
     );
   }

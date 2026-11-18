@@ -47,6 +47,9 @@ class UpgradePanel extends StatefulWidget {
   /// The CAMP free-level button in the split header.
   static const campWatchKey = ValueKey('upgrade-panel-camp-watch');
 
+  /// The one lock card while FORGE / CAMP / MARKET are still closed.
+  static const lockedCardKey = ValueKey('upgrade-panel-locked');
+
   @override
   State<UpgradePanel> createState() => _UpgradePanelState();
 }
@@ -347,21 +350,31 @@ class _UpgradePanelState extends State<UpgradePanel> {
       padding: ShellLayout.listPadding.copyWith(
         bottom: ShellLayout.listPadding.bottom + NavClearance.of(context),
       ),
+      // The lock card first and alone: no party filler above it (F039).
       children: [
-        for (final hero in state.heroes)
-          Text(
-            '${hero.name}  Lv${hero.level}',
-            style: GameTheme.section(color: GameTheme.parchment),
-          ),
-        ShellLayout.gap(8),
         ShellLayout.card(
           child: Row(
+            key: UpgradePanel.lockedCardKey,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GameIcon.asset(
-                UiIcon.goldDockSegment[mode.index],
-                size: 28,
-                color: GameTheme.parchmentDim,
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  GameIcon.asset(
+                    UiIcon.goldDockSegment[mode.index],
+                    size: 28,
+                    color: GameTheme.parchmentDim,
+                  ),
+                  const Positioned(
+                    right: -4,
+                    bottom: -4,
+                    child: GameIcon.glyph(
+                      UiGlyph.lock,
+                      size: 14,
+                      color: GameTheme.parchment,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(width: 10),
               Expanded(child: ShellLayout.hint(lockHint, maxLines: 3)),

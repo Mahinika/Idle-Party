@@ -74,6 +74,10 @@ class ForgeOverlay extends StatefulWidget {
 
   /// Sheet value now and after [buys] more buys on [type], as shown on
   /// the card ("+12 AP" → "+14"). Same soft knees as the hero sheet.
+  /// "Lv3 · " before a FORGE row's value line, like CAMP rows.
+  static String levelPrefix(GameState state, PartyUpgradeType type) =>
+      'Lv${GameLogic.forgeTrackTier(state, type)} · ';
+
   static (String, String, bool) forgeGainLine(
     GameState state,
     PartyUpgradeType type, {
@@ -343,7 +347,8 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       ),
       title: _forgeName(type),
       tag: recommended ? 'BEST' : null,
-      subtitle: now,
+      // Same "Lv · now › next" line as CAMP (audit F060).
+      subtitle: '${ForgeOverlay.levelPrefix(state, type)}$now',
       gainNext: next,
       gainNote: soft ? 'SOFT' : null,
       progress: ForgeOverlay.forgeSoftProgress(state, type),

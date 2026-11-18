@@ -23,6 +23,9 @@ class EssenceTilesScreen extends StatelessWidget {
   /// Icon tile on each ESSENCE tile (fits the 1.15x touch CRAFT row).
   static const double iconTile = 36;
 
+  /// Padlock on a locked ESSENCE tile.
+  static const Key lockKey = ValueKey('essence-tile-lock');
+
   /// Rim width of the active (last opened) tile.
   static const double activeRim = 2;
 
@@ -187,11 +190,38 @@ class EssenceTilesScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             child: Row(
               children: [
-                UpgradeIconTile(
-                  icon: icon,
-                  accent: accent,
-                  size: iconTile,
-                  dim: !open,
+                // Locked tiles get a padlock, like ENDGAME cards (F095).
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    UpgradeIconTile(
+                      icon: icon,
+                      accent: accent,
+                      size: iconTile,
+                      dim: !open,
+                    ),
+                    if (!open)
+                      Positioned(
+                        right: -3,
+                        bottom: -3,
+                        child: DecoratedBox(
+                          key: EssenceTilesScreen.lockKey,
+                          decoration: BoxDecoration(
+                            color: GameTheme.stoneDeep,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: GameTheme.border),
+                          ),
+                          child: const Padding(
+                            padding: EdgeInsets.all(2),
+                            child: GameIcon.glyph(
+                              UiGlyph.lock,
+                              size: 11,
+                              color: GameTheme.parchment,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(width: 8),
                 Expanded(

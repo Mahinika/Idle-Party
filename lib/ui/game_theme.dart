@@ -159,7 +159,8 @@ abstract final class GameTheme {
   // Stat accents for FORGE / CAMP rows (dusk theme, desaturated).
   static const Color statAttack = Color(0xFFB5523A); // brick
   static const Color statArmor = Color(0xFF5E6E96); // slate dusk
-  static const Color statVitality = Color(0xFF7E9A5E); // moss
+  // Dusk rose, not moss: the STA tile matches the brown/plum frames (F061).
+  static const Color statVitality = Color(0xFF9A5A6E); // dusk rose
   static const Color statMove = Color(0xFFD9A45A); // lantern amber
   static const Color statSpeed = Color(0xFFC49A4E); // muted gold
   static const Color statCrit = Color(0xFFC8693A); // pumpkin

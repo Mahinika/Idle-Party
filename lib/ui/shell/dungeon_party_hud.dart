@@ -176,6 +176,12 @@ class PartyCornerHud extends StatefulWidget {
   /// One line under the home fight, so the forge keeps its buy rows.
   final bool homeRow;
 
+  /// "×N" under the compact flask button.
+  static const Key flaskCountKey = ValueKey('party-flask-count');
+
+  /// " L1" beside a hero name on the home party line.
+  static const Key chipLevelKey = ValueKey('party-chip-level');
+
   @override
   State<PartyCornerHud> createState() => _PartyCornerHudState();
 }
@@ -770,15 +776,23 @@ class DungeonFlaskButton extends StatelessWidget {
                             : GameTheme.border.withValues(alpha: 0.6),
                       ),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        GameIcon.asset(UiIcon.flask, size: 14),
-                        Text(
-                          '$count',
-                          style: GameTheme.combat(color: labelColor),
-                        ),
-                      ],
+                    // "×3" under the flask, plus a tooltip: a bare red
+                    // number read as an enemy count (audit F019).
+                    child: Tooltip(
+                      message: 'Healing $buttonWord · $count left',
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GameIcon.asset(UiIcon.flask, size: 14),
+                          Text(
+                            '×$count',
+                            key: PartyCornerHud.flaskCountKey,
+                            maxLines: 1,
+                            softWrap: false,
+                            style: GameTheme.combat(color: labelColor),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1123,34 +1137,69 @@ class _HomePartyChip extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        who,
+                LayoutBuilder(
+                  builder: (context, box) {
+                    // Narrow phone: the name wins. "› L1" only shows when
+                    // the whole name still fits beside it (audit F020).
+                    final scaler = MediaQuery.textScalerOf(context);
+                    final base = DefaultTextStyle.of(context).style;
+                    double w(String t, TextStyle st) {
+                      final tp = TextPainter(
+                        // Same merge as Text: inherit the default style.
+                        text: TextSpan(text: t, style: base.merge(st)),
+                        textDirection: TextDirection.ltr,
+                        textScaler: scaler,
                         maxLines: 1,
-                        softWrap: false,
-                        overflow: TextOverflow.ellipsis,
-                        style: GameTheme.combat(color: GameTheme.parchment),
-                      ),
-                    ),
-                    if (selected && roomy)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 2),
-                        child: GameIcon.glyph(
-                          UiGlyph.next,
-                          size: 8,
-                          color: GameTheme.torchHot,
+                      )..layout();
+                      final width = tp.width;
+                      tp.dispose();
+                      return width;
+                    }
+
+                    final nameW = w(
+                      who,
+                      GameTheme.combat(color: GameTheme.parchment),
+                    );
+                    final levelW =
+                        w(
+                          ' L$level',
+                          GameTheme.readable(color: GameTheme.parchment),
+                        ) +
+                        (selected ? 10 : 0);
+                    final showLevel = roomy && nameW + levelW <= box.maxWidth;
+                    return Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            who,
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.ellipsis,
+                            style: GameTheme.combat(color: GameTheme.parchment),
+                          ),
                         ),
-                      ),
-                    if (roomy)
-                      Text(
-                        ' L$level',
-                        maxLines: 1,
-                        softWrap: false,
-                        style: GameTheme.readable(color: GameTheme.parchment),
-                      ),
-                  ],
+                        if (selected && showLevel)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 2),
+                            child: GameIcon.glyph(
+                              UiGlyph.next,
+                              size: 8,
+                              color: GameTheme.torchHot,
+                            ),
+                          ),
+                        if (showLevel)
+                          Text(
+                            ' L$level',
+                            key: PartyCornerHud.chipLevelKey,
+                            maxLines: 1,
+                            softWrap: false,
+                            style: GameTheme.readable(
+                              color: GameTheme.parchment,
+                            ),
+                          ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 1),
                 Row(

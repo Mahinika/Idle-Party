@@ -1143,6 +1143,16 @@ String _firstBossBit(GameState state, int floor) {
   if (state.inGauntlet || state.inAnyRiftMode || state.inWorldBoss) return '';
   final boss = GameLogic.bossFloorFor(state);
   if (floor == boss) return ' · BOSS';
-  if (floor + 1 == boss) return ' · BOSS NEXT';
+  if (floor + 1 == boss) {
+    // The first-climb coach line already says "Boss on floor N". Do not
+    // say it twice on the same screen (audit F094).
+    if (FirstClimbCoach.line(state, inDungeon: true) != null) return '';
+    return ' · BOSS NEXT';
+  }
   return '';
 }
+
+/// Test hook for the first-climb boss suffix.
+@visibleForTesting
+String firstBossBitForTest(GameState state, int floor) =>
+    _firstBossBit(state, floor);

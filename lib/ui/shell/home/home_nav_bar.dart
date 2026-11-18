@@ -137,37 +137,41 @@ class HomeNavBar extends StatelessWidget {
 
   static const String _bossHint = 'Boss F2';
 
-  String _essenceHint() =>
-      MenuTabs.showGold(state) ? '1st essence' : _bossHint;
+  String _essenceHint() => MenuTabs.showGold(state) ? '1st essence' : _bossHint;
 
-  /// A padlock and what opens it, so the slot is never blank.
+  /// A padlock over the tab's real name, dimmed; what opens it is in the
+  /// tooltip and semantics. Four tabs all reading "Boss F2" said nothing
+  /// about what they were (audit F038).
   Widget _locked(String label, String hint) {
-    return Semantics(
-      label: '$label locked · $hint',
-      excludeSemantics: true,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-        child: Opacity(
-          opacity: 0.75,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const GameIcon.glyph(
-                UiGlyph.lock,
-                size: 18,
-                color: GameTheme.buyGreyText,
-              ),
-              const SizedBox(height: 3),
-              Flexible(
-                child: Text(
-                  hint,
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.hint(color: GameTheme.buyGreyText),
+    return Tooltip(
+      message: '$label opens at $hint',
+      child: Semantics(
+        label: '$label locked · $hint',
+        excludeSemantics: true,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+          child: Opacity(
+            opacity: 0.75,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const GameIcon.glyph(
+                  UiGlyph.lock,
+                  size: 18,
+                  color: GameTheme.buyGreyText,
                 ),
-              ),
-            ],
+                const SizedBox(height: 3),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.hint(color: GameTheme.buyGreyText),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -260,12 +264,7 @@ class HomeNavBar extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               GameIcon.asset(icon, size: 20),
-              if (alert)
-                const Positioned(
-                  right: -3,
-                  top: -3,
-                  child: _Dot(),
-                ),
+              if (alert) const Positioned(right: -3, top: -3, child: _Dot()),
               // Small close mark on the lit tab: tap again closes.
               if (selected)
                 Positioned(
@@ -296,10 +295,7 @@ class HomeNavBar extends StatelessWidget {
             ),
           ),
           if (timer != null)
-            Text(
-              timer,
-              style: GameTheme.hint(color: GameTheme.torchHot),
-            ),
+            Text(timer, style: GameTheme.hint(color: GameTheme.torchHot)),
         ],
       ),
     );
@@ -338,38 +334,40 @@ class HomeNavBar extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
             child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            // The frame paints over the slot so the label keeps its width.
-            decoration: BoxDecoration(
-              // Lit plum face on the open tab (dusk palette, F045).
-              gradient: selected
-                  ? const LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        GameTheme.toggleOnShine,
-                        GameTheme.toggleOnTop,
-                        GameTheme.toggleOnBottom,
-                      ],
-                      stops: [0, 0.08, 1],
-                    )
-                  : null,
-              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-            ),
-            foregroundDecoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-              border: Border.all(
-                color: selected ? GameTheme.toggleOnAccent : Colors.transparent,
-                width: 1,
+              duration: const Duration(milliseconds: 120),
+              // The frame paints over the slot so the label keeps its width.
+              decoration: BoxDecoration(
+                // Lit plum face on the open tab (dusk palette, F045).
+                gradient: selected
+                    ? const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          GameTheme.toggleOnShine,
+                          GameTheme.toggleOnTop,
+                          GameTheme.toggleOnBottom,
+                        ],
+                        stops: [0, 0.08, 1],
+                      )
+                    : null,
+                borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              ),
+              foregroundDecoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                border: Border.all(
+                  color: selected
+                      ? GameTheme.toggleOnAccent
+                      : Colors.transparent,
+                  width: 1,
+                ),
+              ),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: child,
+                ),
               ),
             ),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: child,
-              ),
-            ),
-          ),
           ),
         ),
       ),

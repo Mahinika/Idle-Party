@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/hub_endgame_act.dart';
 import '../../models/dungeon_def.dart';
 import '../../assets/custom_assets.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
 import '../shell/shell_layout.dart';
@@ -303,9 +304,7 @@ class ZonePathMap extends StatelessWidget {
             ),
           );
         }
-        final innerH = !rawH.isFinite
-            ? fullH
-            : math.max(rawH, minBoardHeight);
+        final innerH = !rawH.isFinite ? fullH : math.max(rawH, minBoardHeight);
         final board = _board(context, Size(boxW, innerH));
         if (rawH.isFinite && rawH + 0.5 < innerH) {
           return SingleChildScrollView(
@@ -469,6 +468,9 @@ class MapZoneMarker extends StatelessWidget {
   final String statusWord;
   final VoidCallback onTap;
 
+  /// Padlock on a locked cave marker.
+  static const Key lockKey = ValueKey('map-zone-lock');
+
   Color get _statusColor {
     if (selected) return GameTheme.torchHot;
     if (cleared) return GameTheme.mossLit;
@@ -553,7 +555,36 @@ class MapZoneMarker extends StatelessWidget {
               SizedBox(
                 width: hitSize,
                 height: hitSize,
-                child: Center(child: disc),
+                child: Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  children: [
+                    disc,
+                    // Locked caves get a padlock, not only a grey disc (F050).
+                    if (!unlocked)
+                      Positioned(
+                        right: (hitSize - discSize) / 2 - 3,
+                        bottom: (hitSize - discSize) / 2 - 3,
+                        child: ExcludeSemantics(
+                          child: DecoratedBox(
+                            key: MapZoneMarker.lockKey,
+                            decoration: BoxDecoration(
+                              color: GameTheme.stoneDeep.withValues(alpha: 0.7),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.all(2),
+                              child: GameIcon.glyph(
+                                UiGlyph.lock,
+                                size: 9,
+                                color: GameTheme.parchment,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
               if (statusWord.isNotEmpty)
                 Text(

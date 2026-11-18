@@ -64,12 +64,19 @@ void main() {
     for (final tab in ['ESSENCE', 'MAP', 'SHOP']) {
       expect(lockSemantics(tab), findsOneWidget, reason: tab);
     }
-    expect(find.text('Boss F2'), findsNWidgets(3));
-    final locks = find.byWidgetPredicate(
-      (w) => w is GameIcon && w.glyph == UiGlyph.lock,
+    // Real names, dimmed, under the padlock (audit F038).
+    expect(find.text('Boss F2'), findsNothing);
+    // Scoped to the nav: the FORGE/CAMP/MARKET dock has its own padlocks
+    // since audit F039.
+    final locks = find.descendant(
+      of: find.byType(HomeNavBar),
+      matching: find.byWidgetPredicate(
+        (w) => w is GameIcon && w.glyph == UiGlyph.lock,
+      ),
     );
     expect(locks, findsNWidgets(3));
-    expect(find.text('SHOP'), findsNothing);
+    expect(find.text('SHOP'), findsOneWidget);
+    expect(find.text('MAP'), findsOneWidget);
     expect(find.text('HEROES'), findsOneWidget);
   });
 
@@ -123,7 +130,7 @@ void main() {
       greaterThanOrEqualTo(label.getMaxIntrinsicWidth(1e9) - 0.5),
       reason: 'FIGHT is whole at 1.45',
     );
-    expect(find.text('Boss F2'), findsNWidgets(3));
+    expect(lockSemantics('SHOP'), findsOneWidget);
     expect(find.byType(FittedBox), findsNothing);
   });
 }

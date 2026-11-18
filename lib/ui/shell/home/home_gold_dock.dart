@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
+import '../../../core/game_state.dart';
+import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
@@ -13,33 +15,41 @@ import 'upgrade_panel.dart';
 /// Thin FORGE / CAMP / MARKET row when the fight uses FULL height.
 /// Opens a sheet so upgrades do not steal the cave viewport.
 class HomeGoldDock extends StatelessWidget {
-  const HomeGoldDock({
-    super.key,
-    required this.director,
-    required this.router,
-  });
+  const HomeGoldDock({super.key, required this.director, required this.router});
 
   final GameDirector director;
   final MenuRouter router;
+
+  /// FORGE / CAMP / MARKET: true when that sheet has an affordable buy.
+  static List<bool> dots(GameState state) => !MenuTabs.showGold(state)
+      ? const [false, false, false]
+      : [
+          MenuAlerts.forgeAlert(state).count > 0,
+          MenuAlerts.essenceAlert(state).count > 0,
+          MenuAlerts.marketAlert(state).count > 0,
+        ];
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: GameTheme.panel,
       child: Padding(
-          // The raised FIGHT circle rises over this row. Keep the
-          // segments above it.
-          padding: ShellLayout.seamPadding.copyWith(
-            top: 2,
-            bottom: 2 + HomeNavBar.fightOverhang(context),
-          ),
-          child: MenuChrome.segmented(
-            dense: true,
-            labels: const ['FORGE', 'CAMP', 'MARKET'],
-            icons: UiIcon.goldDockSegment,
-            selectedIndex: -1,
-            onSelect: (i) => _openSheet(context, HomeGoldPanel.values[i]),
-          ),
+        // The raised FIGHT circle rises over this row. Keep the
+        // segments above it.
+        padding: ShellLayout.seamPadding.copyWith(
+          top: 2,
+          bottom: 2 + HomeNavBar.fightOverhang(context),
+        ),
+        child: MenuChrome.segmented(
+          dense: true,
+          labels: const ['FORGE', 'CAMP', 'MARKET'],
+          icons: UiIcon.goldDockSegment,
+          // Which rows have something to buy, like Brick (audit F022).
+          dots: dots(director.state),
+          locked: !MenuTabs.showGold(director.state),
+          selectedIndex: -1,
+          onSelect: (i) => _openSheet(context, HomeGoldPanel.values[i]),
+        ),
       ),
     );
   }
@@ -119,7 +129,11 @@ class _HomeGoldSheetState extends State<HomeGoldSheet> {
                         dense: true,
                         labels: const ['FORGE', 'CAMP', 'MARKET'],
                         icons: UiIcon.goldDockSegment,
-                        selectedIndex: _panel.index,
+                        // Locked: padlocks, and no lit plum tab (F039).
+                        locked: !MenuTabs.showGold(widget.director.state),
+                        selectedIndex: MenuTabs.showGold(widget.director.state)
+                            ? _panel.index
+                            : -1,
                         onSelect: (i) =>
                             setState(() => _panel = HomeGoldPanel.values[i]),
                       ),
