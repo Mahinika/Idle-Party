@@ -341,6 +341,13 @@ class PartyHero {
     return spec.roleTag.plainLabel;
   }
 
+  /// The hero's own name (Aegis, Vale…), as the party strip shows it; the
+  /// role label when a save has no name. One name on every screen (F010).
+  String displayName({required bool plainEnglish}) {
+    final n = name.trim();
+    return n.isEmpty ? displayRoleLabel(plainEnglish: plainEnglish) : n;
+  }
+
   String get passiveLabel => ClassKits.kitSummaryForSpec(specId, level);
 
   PartyHero healToFull() => copyWith(currentHp: maxHp);

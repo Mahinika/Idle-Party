@@ -42,6 +42,15 @@ class InventoryDock extends StatefulWidget {
 
   /// "Need 5,000g more for BAG +5" under a gold bag buy the wallet cannot
   /// cover.
+  /// BAG help line (audit F053).
+  static const String bagHint = 'Tap an item to pick it. Hold for details.';
+
+  /// Empty MERGE slot prompts (audit F056).
+  static const String mergePickFirst = 'Pick a bag item';
+  static const String mergePickSecond = 'Pick one, same slot';
+  static const Key mergeOpenBagKey = ValueKey('merge_open_bag');
+  static const Key mergeButtonKey = ValueKey('merge_button');
+
   static String bagNeedLine(GameState state) {
     final short = RunStashShop.goldBuyCost(state) - state.gold;
     return 'Need ${formatGold(short < 0 ? 0 : short)} more for '
@@ -728,14 +737,14 @@ class _InventoryDockState extends State<InventoryDock>
               ),
             ] else if (!mergeOpen)
               Text(
-                'Tap item to select · long-press for tip.',
+                InventoryDock.bagHint,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.hint(color: GameTheme.parchmentDim),
               )
             else
               Text(
-                'Tap item to select · long-press for tip · ADD TO MERGE for MERGE tab.',
+                InventoryDock.bagHint,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.hint(color: GameTheme.parchmentDim),
@@ -862,8 +871,18 @@ class _InventoryDockState extends State<InventoryDock>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          MenuChrome.sectionLabelScoped('MERGE', scope: MenuScope.run),
-          const SizedBox(height: 4),
+          // The sheet title already says MERGE (audit F054). With nothing
+          // loaded, the one way forward leads (F014).
+          if (primary == null && secondary == null) ...[
+            GameButton(
+              key: InventoryDock.mergeOpenBagKey,
+              label: 'OPEN BAG',
+              onPressed: () => widget.onPanelChanged(GearPanel.bag),
+              style: GameButtonStyle.brown,
+              primary: true,
+            ),
+            const SizedBox(height: 8),
+          ],
           Text(
             'Two bag items, same slot. MERGE spends them for one stronger piece. Worn gear stays.'
             '${state.metaDepth.combinatorLuck > 0 ? ' Charm luck ${state.metaDepth.combinatorLuck}/5 · −${state.metaDepth.combinatorLuck * 3}g on MERGE.' : ''}',
@@ -879,7 +898,7 @@ class _InventoryDockState extends State<InventoryDock>
           const SizedBox(height: 8),
           _CombineSlot(
             label: 'FIRST',
-            emptyHint: 'Bag item',
+            emptyHint: InventoryDock.mergePickFirst,
             item: primary,
             onClear: combineA == null ? null : onClearCombineA,
           ),
@@ -893,7 +912,7 @@ class _InventoryDockState extends State<InventoryDock>
           ),
           _CombineSlot(
             label: 'SECOND',
-            emptyHint: 'Same slot',
+            emptyHint: InventoryDock.mergePickSecond,
             item: secondary,
             onClear: combineB == null ? null : onClearCombineB,
           ),
@@ -936,7 +955,7 @@ class _InventoryDockState extends State<InventoryDock>
                   if (primary != null && secondary != null) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Cost $cost g · '
+                      'Cost ${formatGold(cost)} · '
                       '${GameLogic.rarityNames[primary.rarity]} i${primary.effectiveItemLevel} + '
                       '${GameLogic.rarityNames[secondary.rarity]} i${secondary.effectiveItemLevel}'
                       ' › ${GameLogic.rarityNames[preview.rarity]} i${preview.effectiveItemLevel}',
@@ -964,18 +983,20 @@ class _InventoryDockState extends State<InventoryDock>
           ),
           const SizedBox(height: 8),
           GameButton(
-            label: goldOk
-                ? 'MERGE  $cost g'
-                : (canCombine ? 'MERGE  $cost g' : 'MERGE'),
+            key: InventoryDock.mergeButtonKey,
+            label: canCombine ? 'MERGE  ${formatGold(cost)}' : 'MERGE',
             onPressed: goldOk ? onCombine : null,
             style: GameButtonStyle.red,
-            primary: true,
+            primary: canCombine,
+            // Small until two items are loaded (F014).
+            dense: !canCombine,
           ),
           const SizedBox(height: 6),
           GameButton(
             label: 'AUTO MERGE',
             onPressed: state.gearStash.length < 2 ? null : onAutoMerge,
             style: GameButtonStyle.grey,
+            dense: !canCombine,
           ),
           ShellLayout.gap(4),
           ShellLayout.hint(
@@ -986,7 +1007,7 @@ class _InventoryDockState extends State<InventoryDock>
             ),
             maxLines: 4,
           ),
-          if (primary == null || secondary == null) ...[
+          if ((primary == null) != (secondary == null)) ...[
             const SizedBox(height: 6),
             GameButton(
               label: 'OPEN BAG',

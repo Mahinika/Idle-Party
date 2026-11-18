@@ -11,7 +11,6 @@ import '../../../core/menu_router.dart';
 import '../../first_session_tips.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
-import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import '../menu_surface.dart';
 import 'director_select.dart';
@@ -171,7 +170,6 @@ class _HomeShellState extends State<HomeShell> {
             ),
           ),
           if (_showBack) _backRow(),
-          if (route == MenuRoute.gear) _gearThumb(state),
           HomeNavBar(state: state, router: router, alerts: alerts),
         ],
       ),
@@ -306,34 +304,6 @@ class _HomeShellState extends State<HomeShell> {
       ),
     );
   }
-
-  Widget _gearThumb(GameState state) {
-    final panels = MenuRouter.visibleGearPanels(state);
-    if (panels.isEmpty) return const SizedBox.shrink();
-    final labels = panels.map(_gearLabel).toList();
-    final selected = panels
-        .indexOf(router.gearPanel)
-        .clamp(0, panels.length - 1);
-    return Material(
-      color: GameTheme.panel,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-        child: MenuChrome.segmented(
-          dense: true,
-          labels: labels,
-          selectedIndex: selected,
-          onSelect: (i) => router.gearPanel = panels[i],
-        ),
-      ),
-    );
-  }
-
-  String _gearLabel(GearPanel panel) => switch (panel) {
-    GearPanel.gear => 'GEAR',
-    GearPanel.bag => 'BAG',
-    GearPanel.merge => 'MERGE',
-    GearPanel.roster => 'ROSTER',
-  };
 
   Widget _sheet() {
     return MenuSurface(director: director, router: router, home: true);

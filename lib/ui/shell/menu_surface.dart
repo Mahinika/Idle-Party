@@ -6,6 +6,7 @@ import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
 import '../../core/nav_intent.dart';
+import '../menu_chrome.dart';
 import 'essence_dock.dart';
 import 'gold_dock.dart';
 import 'inventory_dock.dart';
@@ -24,6 +25,16 @@ import 'home/map_screen.dart';
 class MenuSurface extends StatefulWidget {
   /// Subtitle of the home ESSENCE tile hub.
   static const essenceHubHint = 'Lasting upgrades for the party';
+
+  /// Home GEAR sub-tabs, under the sheet title (audit F046).
+  static const Key gearTabsKey = ValueKey('home_gear_tabs');
+
+  static String gearTabLabel(GearPanel panel) => switch (panel) {
+    GearPanel.gear => 'GEAR',
+    GearPanel.bag => 'BAG',
+    GearPanel.merge => 'MERGE',
+    GearPanel.roster => 'ROSTER',
+  };
 
   const MenuSurface({
     super.key,
@@ -168,6 +179,24 @@ class _MenuSurfaceState extends State<MenuSurface> {
     );
   }
 
+  Widget _gearTabs() {
+    final panels = MenuRouter.visibleGearPanels(state);
+    if (panels.isEmpty) return const SizedBox.shrink();
+    final selected = panels
+        .indexOf(router.gearPanel)
+        .clamp(0, panels.length - 1);
+    return Padding(
+      key: MenuSurface.gearTabsKey,
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+      child: MenuChrome.segmented(
+        dense: true,
+        labels: [for (final p in panels) MenuSurface.gearTabLabel(p)],
+        selectedIndex: selected,
+        onSelect: (i) => router.gearPanel = panels[i],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final d = widget.director;
@@ -208,7 +237,17 @@ class _MenuSurfaceState extends State<MenuSurface> {
       showClose: !navOwnedClose,
       onClose: router.close,
       child: switch (router.route) {
-        MenuRoute.gear => _inventoryDock(),
+        // Home: GEAR / BAG / MERGE / ROSTER sit under the title, not as a
+        // second tab row on top of the bottom nav (audit F046).
+        MenuRoute.gear => widget.home
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _gearTabs(),
+                  Expanded(child: _inventoryDock()),
+                ],
+              )
+            : _inventoryDock(),
         MenuRoute.gold => GoldDock(
           director: d,
           panel: router.goldPanel,

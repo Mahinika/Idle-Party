@@ -69,9 +69,13 @@ class _CombineSlot extends StatelessWidget {
               ),
             ] else
               Expanded(
+                // Muted italic prompt, so it does not read as a picked
+                // value (audit F056).
                 child: Text(
                   emptyHint,
-                  style: GameTheme.readable(color: GameTheme.parchmentDim),
+                  style: GameTheme.hint(
+                    color: GameTheme.parchmentDim,
+                  ).copyWith(fontStyle: FontStyle.italic),
                 ),
               ),
           ],

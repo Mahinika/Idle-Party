@@ -317,7 +317,7 @@ void main() {
     final secondP = tester.renderObject<RenderParagraph>(find.text('SECOND'));
     final inkRight = tester.getRect(find.text('SECOND')).left +
         secondP.getMaxIntrinsicWidth(double.infinity);
-    final value = tester.getRect(find.text('Same slot'));
+    final value = tester.getRect(find.text(InventoryDock.mergePickSecond));
     expect(inkRight + 4, lessThanOrEqualTo(value.left));
   });
 
@@ -326,7 +326,8 @@ void main() {
     router.open(MenuRoute.gear, gear: GearPanel.gear);
     await _settle(tester);
     for (final h in director.state.heroes) {
-      final role = find.text(h.displayRoleLabel(plainEnglish: false));
+      // Chips carry the hero name since audit F010.
+      final role = find.text(h.displayName(plainEnglish: false));
       expect(role, findsWidgets);
       final r = tester.getRect(role.first);
       expect(r.right, lessThanOrEqualTo(360));
