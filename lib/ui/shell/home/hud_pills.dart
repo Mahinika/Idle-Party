@@ -14,6 +14,7 @@ class HudPill extends StatelessWidget {
     required this.text,
     this.sub,
     this.edge = GameTheme.hudWellBorder,
+    this.reserveSub = false,
   });
 
   final String icon;
@@ -22,6 +23,10 @@ class HudPill extends StatelessWidget {
   /// Small green rate line under [text] (gold per minute).
   final String? sub;
   final Color edge;
+
+  /// Keeps an empty rate line so a pill matches a sibling that has [sub]
+  /// (the HUD row reads as one height).
+  final bool reserveSub;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +61,14 @@ class HudPill extends StatelessWidget {
                     softWrap: false,
                     overflow: TextOverflow.ellipsis,
                     style: GameTheme.hint(color: GameTheme.gainGreen),
+                  )
+                else if (reserveSub)
+                  ExcludeSemantics(
+                    child: Text(
+                      ' ',
+                      maxLines: 1,
+                      style: GameTheme.hint(color: GameTheme.gainGreen),
+                    ),
                   ),
               ],
             ),

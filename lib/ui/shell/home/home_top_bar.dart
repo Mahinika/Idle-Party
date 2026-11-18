@@ -20,14 +20,15 @@ import 'hud_pills.dart';
 
 /// AL, essence, gold, a context currency, speed, and MENU.
 class HomeTopBar extends StatelessWidget {
-  const HomeTopBar({
-    super.key,
-    required this.director,
-    required this.router,
-  });
+  const HomeTopBar({super.key, required this.director, required this.router});
 
   final GameDirector director;
   final MenuRouter router;
+
+  /// AL and essence pills wait until either means something: first ascend,
+  /// first essence, or first boss. A new save does not open on two zeros.
+  static bool showsMetaPills(GameState s) =>
+      s.ascensionLevel > 0 || s.essence > 0 || s.bossVictories > 0;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +40,7 @@ class HomeTopBar extends StatelessWidget {
           select: (s) {
             final chase = HubChase.forState(s).title;
             return '${s.ascensionLevel}|${s.essence}|${s.gold}|${s.combatPace}|'
+                '${s.bossVictories}|'
                 '${s.metaDepth.adTickets}|${s.metaDepth.cinders}|'
                 '${s.metaDepth.embers}|${s.hardmodeLevel}|$chase|'
                 '${s.keystoneRunActive}|${s.keystoneTimerMs}|'
@@ -59,15 +61,14 @@ class HomeTopBar extends StatelessWidget {
     EssencePanel essencePanel,
   ) {
     final textScale = MediaQuery.textScalerOf(context).scale(1);
-    final chase = NavCopy.playerText(
-      _chaseLine(state),
-      HomeLayout.home,
-    );
+    final chase = NavCopy.playerText(_chaseLine(state), HomeLayout.home);
     final third = _third(context, state, route, essencePanel);
-    final compactTop =
-        state.homeLayout == HomeLayout.home && state.inDungeon;
+    final compactTop = state.homeLayout == HomeLayout.home && state.inDungeon;
     final perMin = GoldIncome.hubGoldPerMinute(state);
     final fast = state.combatPace >= 2;
+    final goldHasSub = perMin > 0;
+    final showMeta = HomeTopBar.showsMetaPills(state);
+    final menuCaption = textScale <= 1.1;
     // Stone fills the cutout. The words start below it.
     final topInset = MenuChrome.systemTopInset(context);
     return Material(
@@ -79,17 +80,21 @@ class HomeTopBar extends StatelessWidget {
           children: [
             Row(
               children: [
-                HudPill(
-                  icon: UiIcon.ascend,
-                  text: 'AL ${state.ascensionLevel}',
-                  edge: GameTheme.levelAccent,
-                ),
-                const SizedBox(width: 4),
-                HudPill(
-                  icon: UiIcon.essence,
-                  text: '${state.essence}',
-                  edge: GameTheme.levelAccent,
-                ),
+                if (showMeta) ...[
+                  HudPill(
+                    icon: UiIcon.ascend,
+                    text: 'AL ${state.ascensionLevel}',
+                    edge: GameTheme.levelAccent,
+                    reserveSub: goldHasSub,
+                  ),
+                  const SizedBox(width: 4),
+                  HudPill(
+                    icon: UiIcon.essence,
+                    text: formatCount(state.essence),
+                    edge: GameTheme.levelAccent,
+                    reserveSub: goldHasSub,
+                  ),
+                ],
                 if (compactTop && state.keystoneRunActive) ...[
                   const SizedBox(width: 4),
                   Text(
@@ -122,30 +127,53 @@ class HomeTopBar extends StatelessWidget {
                   _tap(
                     label: third.$1,
                     onTap: third.$3,
-                    child: HudPill(icon: third.$4, text: third.$2),
+                    child: HudPill(
+                      icon: third.$4,
+                      text: third.$2,
+                      reserveSub: goldHasSub,
+                    ),
                   ),
                 ],
-                const SizedBox(width: 4),
-                _tap(
-                  label: fast ? 'SPEED 2×' : 'SPEED 1×',
-                  onTap: director.cycleCombatPace,
-                  child: ChunkyFace(
-                    tone: fast ? ChunkyTone.orange : ChunkyTone.stone,
-                    minWidth: 40,
-                    minHeight: GameTheme.chunkyFaceDense,
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Text(
-                      fast ? '2×' : '1×',
-                      maxLines: 1,
-                      style: GameTheme.button(
-                        size: GameTheme.typeButtonDense,
-                        color: fast
-                            ? ChunkyFace.textOn(ChunkyTone.orange)
-                            : GameTheme.parchment,
+                if (state.inDungeon) ...[
+                  const SizedBox(width: 4),
+                  _tap(
+                    label: fast ? 'SPEED 2×' : 'SPEED 1×',
+                    onTap: director.cycleCombatPace,
+                    child: ChunkyFace(
+                      tone: fast ? ChunkyTone.orange : ChunkyTone.stone,
+                      minWidth: 40,
+                      minHeight: GameTheme.chunkyFaceDense,
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ExcludeSemantics(
+                            child: Text(
+                              '▸',
+                              maxLines: 1,
+                              style: GameTheme.button(
+                                size: GameTheme.typeButtonDense,
+                                color: fast
+                                    ? ChunkyFace.textOn(ChunkyTone.orange)
+                                    : GameTheme.parchmentDim,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            fast ? '2×' : '1×',
+                            maxLines: 1,
+                            style: GameTheme.button(
+                              size: GameTheme.typeButtonDense,
+                              color: fast
+                                  ? ChunkyFace.textOn(ChunkyTone.orange)
+                                  : GameTheme.parchment,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
+                ],
                 const SizedBox(width: 4),
                 _tap(
                   label: 'MENU',
@@ -155,7 +183,31 @@ class HomeTopBar extends StatelessWidget {
                     minWidth: 36,
                     minHeight: GameTheme.chunkyFaceDense,
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: GameIcon.asset(UiIcon.menu, size: 20),
+                    child: menuCaption
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GameIcon.asset(UiIcon.menu, size: 14),
+                              // Fixed width: the caption never widens
+                              // the face past its 36 dp minimum.
+                              ExcludeSemantics(
+                                child: SizedBox(
+                                  width: 28,
+                                  child: Text(
+                                    'MENU',
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    overflow: TextOverflow.clip,
+                                    textAlign: TextAlign.center,
+                                    style: GameTheme.hint(
+                                      color: GameTheme.parchment,
+                                    ).copyWith(height: 1),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : GameIcon.asset(UiIcon.menu, size: 20),
                   ),
                 ),
               ],
@@ -215,7 +267,7 @@ class HomeTopBar extends StatelessWidget {
     if (route == MenuRoute.shop) {
       return (
         'Tickets',
-        '${state.metaDepth.adTickets}',
+        formatCount(state.metaDepth.adTickets),
         () => router.open(MenuRoute.shop),
         UiIcon.ticket,
       );
@@ -224,7 +276,7 @@ class HomeTopBar extends StatelessWidget {
       final embers = essencePanel == EssencePanel.keep;
       return (
         embers ? 'Embers' : 'Cinders',
-        '${embers ? state.metaDepth.embers : state.metaDepth.cinders}',
+        formatCount(embers ? state.metaDepth.embers : state.metaDepth.cinders),
         () {
           router.essencePanel = embers
               ? EssencePanel.keep

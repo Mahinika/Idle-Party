@@ -35,8 +35,30 @@ String _compactScale(double value, String suffix) {
   return '$raw$suffix';
 }
 
+/// Short-scale suffixes past a million: M, B, T, Qa, Qi. Display only.
+const _bigSuffixes = <(double, String)>[
+  (1e18, 'Qi'),
+  (1e15, 'Qa'),
+  (1e12, 'T'),
+  (1e9, 'B'),
+  (1e6, 'M'),
+];
+
 String formatCount(int n) {
-  if (n >= 1000000) return _compactScale(n / 1000000, 'M');
+  if (n < 0) return '-${formatCount(-n)}';
+  for (var i = 0; i < _bigSuffixes.length; i++) {
+    final (scale, suffix) = _bigSuffixes[i];
+    if (n >= scale) {
+      final v = n / scale;
+      // 999.96M would round to "1000M"; step up to "1B" instead.
+      if (v >= 999.95 && i > 0) {
+        final (up, upSuffix) = _bigSuffixes[i - 1];
+        return _compactScale(n / up, upSuffix);
+      }
+      return _compactScale(v, suffix);
+    }
+  }
+  if (n >= 999950) return '1M';
   if (n >= 10000) return _compactScale(n / 1000, 'k');
   if (n >= 1000) {
     final s = n.toString();
