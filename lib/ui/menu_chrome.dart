@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'chunky_face.dart';
 import 'game_button.dart';
 import 'game_icon.dart';
 import 'game_theme.dart';
@@ -263,8 +264,14 @@ abstract final class MenuChrome {
     required String sign,
     VoidCallback? onPressed,
     double size = GameTheme.minTouch,
+    bool chunky = false,
   }) {
     final enabled = onPressed != null;
+    final glyph = GameIcon.glyph(
+      sign == '-' ? UiGlyph.remove : UiGlyph.add,
+      size: GameTheme.iconList,
+      color: enabled ? GameTheme.parchment : GameTheme.parchmentDim,
+    );
     return WebClickScope(
       label: label,
       onPressed: onPressed,
@@ -281,19 +288,26 @@ abstract final class MenuChrome {
             borderRadius: BorderRadius.circular(GameTheme.radiusSm),
             child: Opacity(
               opacity: enabled ? 1 : 0.4,
-              child: Container(
-                width: size,
-                height: size,
-                alignment: Alignment.center,
-                decoration: cardBox(inset: true),
-                child: GameIcon.glyph(
-                  sign == '-' ? UiGlyph.remove : UiGlyph.add,
-                  size: GameTheme.iconList,
-                  color: enabled
-                      ? GameTheme.parchment
-                      : GameTheme.parchmentDim,
-                ),
-              ),
+              child: chunky
+                  // Raised stone face, like the other chunky buttons.
+                  ? SizedBox(
+                      width: size,
+                      height: size,
+                      child: ChunkyFace(
+                        tone: ChunkyTone.stone,
+                        raised: enabled,
+                        minHeight: size - 4,
+                        padding: EdgeInsets.zero,
+                        child: Center(child: glyph),
+                      ),
+                    )
+                  : Container(
+                      width: size,
+                      height: size,
+                      alignment: Alignment.center,
+                      decoration: cardBox(inset: true),
+                      child: glyph,
+                    ),
             ),
           ),
         ),
@@ -1114,6 +1128,9 @@ abstract final class MenuChrome {
   }
 
   /// Expand/collapse block — replaces Material ExpansionTile in menus.
+  /// ▸ / ▾ beside SHOW / HIDE on a [fold].
+  static const Key foldChevronKey = ValueKey('fold-chevron');
+
   static Widget fold({
     required String title,
     String? subtitle,
@@ -1283,6 +1300,17 @@ class _MenuFoldState extends State<_MenuFold> {
                   Text(
                     _open ? widget.collapseLabel : widget.expandLabel,
                     style: GameTheme.hint(color: GameTheme.parchmentDim),
+                  ),
+                  // ▸ closed, ▾ open (audit F087).
+                  const SizedBox(width: 4),
+                  RotatedBox(
+                    key: MenuChrome.foldChevronKey,
+                    quarterTurns: _open ? 1 : 0,
+                    child: const GameIcon.glyph(
+                      UiGlyph.next,
+                      size: 10,
+                      color: GameTheme.parchmentDim,
+                    ),
                   ),
                 ],
               ),

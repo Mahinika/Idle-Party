@@ -23,11 +23,13 @@ import '../redeem_coupon_dialog.dart';
 
 /// Bottom-tab SHOP: real-money catalog via Play Billing.
 class ShopDock extends StatefulWidget {
-  const ShopDock({
-    super.key,
-    required this.director,
-    this.homeCompact = false,
-  });
+  const ShopDock({super.key, required this.director, this.homeCompact = false});
+
+  /// Price line while Play has no price for a pack.
+  static const String noPrice = '—';
+
+  /// The one-row "Waiting for Play billing" banner.
+  static const Key billingBannerKey = ValueKey('shop-billing-banner');
 
   /// Widget/golden tests only — bypasses Play catalog when set.
   @visibleForTesting
@@ -41,11 +43,10 @@ class ShopDock extends StatefulWidget {
   static String conveniencePolicyLead({
     required bool showEssence,
     HomeLayout layout = HomeLayout.classic,
-  }) =>
-      NavCopy.playerText(
-        'Free tickets are SCROLLS on the hub.',
-        layout,
-      );
+  }) => NavCopy.playerText(
+    'Bag and pets use gold or Cinders in GEAR — not real money.',
+    layout,
+  );
 
   static String conveniencePolicyBody({
     required bool showEssence,
@@ -53,9 +54,8 @@ class ShopDock extends StatefulWidget {
   }) {
     final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
     final raw =
+        'Free tickets are SCROLLS on the hub. '
         'Ad-free, Long Away, and Supporter are here. '
-        'Bag space and pet errands use gold or Cinders in GEAR'
-        '${showEssence ? ' and ESSENCE' : ''} — not real money. '
         'Gold is under GOLD.$essenceBit';
     return NavCopy.playerText(raw, layout);
   }
@@ -66,7 +66,8 @@ class ShopDock extends StatefulWidget {
     HomeLayout layout = HomeLayout.classic,
   }) {
     final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
-    final raw = 'Free tickets are SCROLLS on the hub. '
+    final raw =
+        'Free tickets are SCROLLS on the hub. '
         'Ad-free, Long Away, and Supporter are here. '
         'Bag space and pet errands use gold or Cinders in GEAR'
         '${showEssence ? ' and ESSENCE' : ''} — not real money. '
@@ -109,7 +110,7 @@ class _ShopDockState extends State<ShopDock> {
         if (ShopStore.storeLists(item.id)) item.id,
     };
     final items = RemoteTune.pin(ShopCatalog.shelf(playListed: playListed));
-  final ids = [for (final item in items) item.id];
+    final ids = [for (final item in items) item.id];
     if (listEquals(ids, _pendingProductViewLog)) return;
     _pendingProductViewLog = ids;
     for (final id in ids) {
@@ -154,9 +155,12 @@ class _ShopDockState extends State<ShopDock> {
         final items = RemoteTune.pin(ShopCatalog.shelf(playListed: playListed));
         _scheduleProductViewLog();
         final featured = ShopHubOffer.featuredItem(state);
-        final showFeatured = featured != null &&
+        final showFeatured =
+            featured != null &&
             (_priceReady(featured) || ShopBilling.isOwned(state, featured));
-        final hint = ShopDock.convenienceLine(
+        // One line on top; the full policy is in "How the shop works"
+        // (audit F027).
+        final hint = ShopDock.conveniencePolicyLead(
           showEssence: MenuTabs.showCamp(state),
           layout: state.homeLayout,
         );
@@ -183,7 +187,9 @@ class _ShopDockState extends State<ShopDock> {
     final test = ShopDock.goldenTestPriceLabel;
     if (test.isNotEmpty) return test;
     final live = ShopStore.storePriceLabel(item.id)?.trim();
-    if (live == null || live.isEmpty) return 'Unavailable';
+    // The button already says UNAVAILABLE; the price line is a dash
+    // (audit F071).
+    if (live == null || live.isEmpty) return ShopDock.noPrice;
     return live;
   }
 
@@ -211,8 +217,7 @@ class _ShopDockState extends State<ShopDock> {
             label: 'Show picks only',
             onTap: onToggleAllPacks,
           ),
-        // Six lines: at the 1.45 text cap four cut the last sentence.
-        ShellLayout.hint(hint, maxLines: 6),
+        ShellLayout.hint(hint, maxLines: 2),
         ShellLayout.gap(4),
         MenuChrome.fold(
           title: 'How the shop works',
@@ -242,7 +247,8 @@ class _ShopDockState extends State<ShopDock> {
             item: featured,
             owned: ShopBilling.isOwned(state, featured),
             priceLabel: _priceLabel(featured),
-            available: _priceReady(featured) ||
+            available:
+                _priceReady(featured) ||
                 ShopCatalog.playChargeableIds.contains(featured.id),
             compact: false,
             featuredPrimary: true,
@@ -257,29 +263,35 @@ class _ShopDockState extends State<ShopDock> {
                 ShopDock.goldenTestPriceLabel.isNotEmpty)) ...[
           ShellLayout.gap(4),
           if (storeLine.startsWith('Waiting for')) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (!ShopStore.productsReady && ShopBilling.billingReady) ...[
-                  const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Expanded(
-                  child: ShellLayout.hint(storeLine, maxLines: 2),
+            // One compact row, not a full-width RETRY above the products
+            // (audit F026). Products below show "—" until Play answers.
+            DecoratedBox(
+              key: ShopDock.billingBannerKey,
+              decoration: MenuChrome.listCard(inset: true),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 2, 2, 2),
+                child: Row(
+                  children: [
+                    if (!ShopStore.productsReady &&
+                        ShopBilling.billingReady) ...[
+                      const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(child: ShellLayout.hint(storeLine, maxLines: 2)),
+                    GameButton(
+                      label: 'RETRY',
+                      style: GameButtonStyle.ghost,
+                      dense: true,
+                      expanded: false,
+                      onPressed: _refresh,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            GameButton(
-              label: 'RETRY',
-              style: GameButtonStyle.grey,
-              dense: true,
-              expanded: false,
-              onPressed: _refresh,
+              ),
             ),
           ] else
             ShellLayout.hint(storeLine, maxLines: 2),
@@ -434,86 +446,86 @@ class _ShopRow extends StatelessWidget {
       button: canBuy || owned,
       label: semanticsLabel,
       child: Container(
-      padding: EdgeInsets.all(compact ? 8 : 10),
-      decoration: MenuChrome.listCard(selected: owned || highlighted),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (mark != null) ...[
-                GameIcon.asset(
-                  mark,
-                  size: ShellLayout.shellIconSize + 2,
-                  color: owned ? GameTheme.torchHot : null,
+        padding: EdgeInsets.all(compact ? 8 : 10),
+        decoration: MenuChrome.listCard(selected: owned || highlighted),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (mark != null) ...[
+                  GameIcon.asset(
+                    mark,
+                    size: ShellLayout.shellIconSize + 2,
+                    color: owned ? GameTheme.torchHot : null,
+                  ),
+                  const SizedBox(width: GameTheme.clusterGap),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        titleOverride ?? shortTitle(item),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.readable(color: GameTheme.torchHot),
+                      ),
+                      Text(
+                        priceLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.section(color: GameTheme.parchmentDim),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: GameTheme.clusterGap),
               ],
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      titleOverride ?? shortTitle(item),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.readable(color: GameTheme.torchHot),
-                    ),
-                    Text(
-                      priceLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.section(color: GameTheme.parchmentDim),
-                    ),
-                  ],
-                ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              tag(item),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.hint(color: GameTheme.mossLit),
+            ),
+            if (!compact) ...[
+              const SizedBox(height: 4),
+              // Same hint size as the SHOP intro and tags; the full terms
+              // stay (no line cap) because this is what the player buys.
+              Text(
+                NavCopy.playerText(item.description, layout),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
             ],
-          ),
-          const SizedBox(height: 2),
-          Text(
-            tag(item),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GameTheme.hint(color: GameTheme.mossLit),
-          ),
-          if (!compact) ...[
-            const SizedBox(height: 4),
-            // Same hint size as the SHOP intro and tags; the full terms
-            // stay (no line cap) because this is what the player buys.
-            Text(
-              NavCopy.playerText(item.description, layout),
-              style: GameTheme.hint(color: GameTheme.parchmentDim),
-            ),
-          ],
-          const SizedBox(height: 8),
-          if (featuredPrimary && canBuy)
-            GameButton(
-              label: buyLabel,
-              style: GameButtonStyle.brown,
-              primary: true,
-              onPressed: onBuy,
-            )
-          else
-            Align(
-              alignment: Alignment.centerRight,
-              child: GameButton(
+            const SizedBox(height: 8),
+            if (featuredPrimary && canBuy)
+              GameButton(
                 label: buyLabel,
-                tip: owned
-                    ? 'Already on this save'
-                    : available
-                    ? null
-                    : 'Google Play has not listed this pack',
-                style: GameButtonStyle.grey,
-                expanded: false,
-                dense: true,
-                onPressed: canBuy ? onBuy : null,
+                style: GameButtonStyle.brown,
+                primary: true,
+                onPressed: onBuy,
+              )
+            else
+              Align(
+                alignment: Alignment.centerRight,
+                child: GameButton(
+                  label: buyLabel,
+                  tip: owned
+                      ? 'Already on this save'
+                      : available
+                      ? null
+                      : 'Google Play has not listed this pack',
+                  style: GameButtonStyle.grey,
+                  expanded: false,
+                  dense: true,
+                  onPressed: canBuy ? onBuy : null,
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
 }

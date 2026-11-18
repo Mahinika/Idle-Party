@@ -365,7 +365,8 @@ class MenuRouter extends ChangeNotifier {
 
       MoreSection.craft => 'Apex gear',
 
-      MoreSection.quests => 'Daily · Bounty · Side · Week · Contract',
+      // A plain line, not five words that look like tabs (audit F075).
+      MoreSection.quests => 'Daily goals for gold and essence',
 
     },
 

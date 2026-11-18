@@ -77,7 +77,10 @@ class HubPowerupsFab extends StatelessWidget {
               ),
               child: ShellLayout.hubCard(
                 selected: false,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 child: Row(
                   children: [
                     SizedBox(
@@ -148,6 +151,19 @@ class _TicketBadge extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Copy and keys for the SCROLLS sheet.
+abstract final class ScrollsSheet {
+  static const Key ticketPillKey = ValueKey('scrolls-ticket-pill');
+
+  static String _tickets(int n) => n == 1 ? '1 ticket' : '$n tickets';
+
+  /// "USE · 1 ticket" on a scroll row.
+  static String useLabel(int cost) => 'USE · ${_tickets(cost)}';
+
+  /// Under a scroll row the player cannot afford yet.
+  static String needTickets(int short) => 'Need ${_tickets(short)}';
 }
 
 /// Bottom sheet: earn tickets (WATCH) + spend on buffs.
@@ -280,28 +296,52 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                   ShellLayout.gap(4),
                   ShellLayout.hint(
                     adFree
-                        ? 'Ad-free: no WATCH AD earn — claim one free daily ticket, then spend here.'
+                        ? 'Ad-free: no ads. Claim one free ticket each day, then spend it here.'
                         : 'Watch for a ticket, then spend it here.',
                   ),
                   ShellLayout.gap(6),
                   ShellLayout.divider(),
                   ShellLayout.gap(8),
-                  ShellLayout.card(
-                    selected: true,
-                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Ad Tickets',
-                            style: GameTheme.readable(color: GameTheme.parchmentDim),
-                          ),
+                  // A wallet pill like gold / essence, not a text field
+                  // look-alike (audit F073).
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Semantics(
+                      label: 'Ad Tickets ${md.adTickets}',
+                      excludeSemantics: true,
+                      child: Container(
+                        key: ScrollsSheet.ticketPillKey,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
                         ),
-                        Text(
-                          '${md.adTickets}',
-                          style: GameTheme.title(color: GameTheme.torchHot),
+                        decoration: MenuChrome.cardBox(inset: true),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GameIcon.glyph(
+                              UiGlyph.scroll,
+                              size: 18,
+                              color: GameTheme.torchHot,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Ad Tickets',
+                              style: GameTheme.readable(
+                                color: GameTheme.parchmentDim,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${md.adTickets}',
+                              style: GameTheme.button(
+                                size: GameTheme.typeSection,
+                                color: GameTheme.torchHot,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                   ShellLayout.gap(6),
@@ -454,7 +494,7 @@ class _ScrollWellBlock extends StatelessWidget {
         );
       }
       return Text(
-        'Daily ticket already claimed (UTC day).',
+        'Today\'s free ticket is claimed. Next one after the daily reset.',
         style: GameTheme.section(color: GameTheme.parchmentDim),
       );
     }
@@ -468,15 +508,12 @@ class _ScrollWellBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          progress,
-          style: GameTheme.section(color: GameTheme.torchHot),
-        ),
+        Text(progress, style: GameTheme.section(color: GameTheme.torchHot)),
         const SizedBox(height: 4),
         Text(
           ladderDone
               ? 'Daily bonus done. Extra WATCH ads still grant tickets.'
-              : '1 free ticket, then 2 ad steps each UTC day.',
+              : '1 free ticket, then 2 ad steps each day.',
           style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
@@ -602,12 +639,18 @@ class _BuffRow extends StatelessWidget {
                     offer.effect,
                     style: GameTheme.hint(color: GameTheme.mossLit),
                   ),
+                  // Say why USE is off (audit F029).
+                  if (!can)
+                    Text(
+                      ScrollsSheet.needTickets(offer.ticketCost - tickets),
+                      style: GameTheme.hint(color: GameTheme.torchHot),
+                    ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
             GameButton(
-              label: 'USE · ${offer.ticketCost}',
+              label: ScrollsSheet.useLabel(offer.ticketCost),
               style: GameButtonStyle.grey,
               primary: false,
               expanded: false,
@@ -626,8 +669,7 @@ class _BuffRow extends StatelessWidget {
 Widget scrollsSheetForTest({
   required GameDirector director,
   MenuRouter? router,
-}) =>
-    _PowerupsSheet(director: director, router: router);
+}) => _PowerupsSheet(director: director, router: router);
 
 /// One WATCH gold pile after a fresh install with no prior save file.
 class ReinstallPouchFab extends StatelessWidget {

@@ -42,6 +42,21 @@ class EssenceKeepPanel extends StatelessWidget {
 
   const EssenceKeepPanel({super.key, required this.director});
 
+  static const String introLine =
+      'God Hand upgrades and lasting buys.';
+  static const String aboutTitle = 'About Blessing';
+  static const Key blessingLineKey = ValueKey('keep-blessing-line');
+  static Key masteryGoalKey(String id) => ValueKey('keep-mastery-$id');
+
+  /// What a God Hand milestone needs, with progress.
+  static String masteryNeed(GameState state, String id) => switch (id) {
+    'gh_dmg_5' => 'Needs Damage Lv5 · ${GodHandMastery.progressLabel(state, id)}',
+    'gh_cd_4' => 'Needs CD Lv4 · ${GodHandMastery.progressLabel(state, id)}',
+    'gh_smash_100' =>
+      'Smash ${GodHandMastery.smashMilestone} times · ${GodHandMastery.progressLabel(state, id)}',
+    _ => GodHandMastery.progressLabel(state, id),
+  };
+
   final GameDirector director;
 
   Widget _label(String title) {
@@ -76,24 +91,31 @@ class EssenceKeepPanel extends StatelessWidget {
           style: GameTheme.readable(color: GameTheme.torchHot),
         ),
         ShellLayout.gap(4),
-        ShellLayout.hint(
-          'God Hand · Ascend Blessing · lasting buys. '
-          'CAMP / Relics / Pets live on other ESSENCE tabs.',
-          maxLines: 2,
+        // One short line, then the God Hand buttons; the rest folds
+        // (audit F096). Rule text wraps instead of cutting (F040).
+        ShellLayout.hint(EssenceKeepPanel.introLine, maxLines: 3),
+        MenuChrome.fold(
+          title: EssenceKeepPanel.aboutTitle,
+          children: [
+            Text(
+              _blessingLine(state),
+              key: EssenceKeepPanel.blessingLineKey,
+              style: GameTheme.hint(color: GameTheme.mossLit),
+            ),
+            ShellLayout.hint(
+              'CAMP, Relics, and Pets are on the other ESSENCE tiles.',
+              maxLines: 4,
+            ),
+            if (GameLogic.canAscend(state))
+              Text(
+                GameLogic.endgameUnlocked(state)
+                    ? 'Ascend is optional — today\'s job is KEY / ENDGAME. '
+                          'The hub button says ASCEND — not a buy here.'
+                    : 'The hub button says ASCEND — not a buy here.',
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              ),
+          ],
         ),
-        ShellLayout.gap(4),
-        Text(
-          _blessingLine(state),
-          style: GameTheme.hint(color: GameTheme.mossLit),
-        ),
-        if (GameLogic.canAscend(state))
-          Text(
-            GameLogic.endgameUnlocked(state)
-                ? 'Ascend is optional — today\'s job is KEY / ENDGAME. '
-                    'The hub button says ASCEND — not a buy here.'
-                : 'The hub button says ASCEND — not a buy here.',
-            style: GameTheme.hint(color: GameTheme.parchmentDim),
-          ),
 
         _label('GOD HAND'),
         Text(
@@ -152,19 +174,54 @@ class EssenceKeepPanel extends StatelessWidget {
         ),
         if (masteryOpen.isNotEmpty) ...[
           const SizedBox(height: 6),
+          // Goals, not greyed buys: say what each needs (audit F041).
           for (final m in masteryOpen)
             Padding(
               padding: const EdgeInsets.only(top: 3),
-              child: GameButton(
-                label: GodHandMastery.ready(state, m.$1)
-                    ? 'CLAIM · ${m.$2} · +12e · ${GodHandMastery.progressLabel(state, m.$1)}'
-                    : '${m.$2} · +12e · ${GodHandMastery.progressLabel(state, m.$1)}',
-                style: GameButtonStyle.grey,
-                dense: true,
-                onPressed: GodHandMastery.ready(state, m.$1)
-                    ? () => director.claimGodHandMastery(m.$1)
-                    : null,
-              ),
+              child: GodHandMastery.ready(state, m.$1)
+                  ? GameButton(
+                      label:
+                          'CLAIM · ${m.$2} · +12e · ${GodHandMastery.progressLabel(state, m.$1)}',
+                      style: GameButtonStyle.essence,
+                      primary: true,
+                      dense: true,
+                      onPressed: () => director.claimGodHandMastery(m.$1),
+                    )
+                  : Container(
+                      key: EssenceKeepPanel.masteryGoalKey(m.$1),
+                      padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                      decoration: MenuChrome.listCard(),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  m.$2,
+                                  style: GameTheme.readable(
+                                    color: GameTheme.parchment,
+                                  ),
+                                ),
+                                Text(
+                                  EssenceKeepPanel.masteryNeed(state, m.$1),
+                                  style: GameTheme.hint(
+                                    color: GameTheme.parchmentDim,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '+12e',
+                            style: GameTheme.readable(
+                              color: GameTheme.torchHot,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
             ),
         ],
 

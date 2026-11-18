@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
+import '../../../core/relics.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
 import '../../apex_forge_panel.dart';
@@ -17,11 +18,25 @@ import '../beast_overlay.dart';
 import '../essence_keep_panel.dart';
 import '../power_upgrade_row.dart';
 import '../relics_overlay.dart';
+import '../shell_common.dart';
 
 /// ESSENCE tiles. CAMP upgrades stay in the fight panel.
 class EssenceTilesScreen extends StatelessWidget {
   /// Icon tile on each ESSENCE tile (fits the 1.15x touch CRAFT row).
   static const double iconTile = 36;
+
+  /// Gold "can buy" dot on an ESSENCE tile.
+  static const Key buyDotKey = ValueKey('essence-tile-buy-dot');
+
+  static String blessingStatus(GameState s) =>
+      'Hand Lv${s.godHandLevel} · next '
+      '${formatCount(GameLogic.godHandUpgradeCost(s.godHandLevel))}e';
+
+  static String relicStatus(GameState s) {
+    final owned = s.unlockedRelics.length;
+    return '$owned/${RelicCatalog.all.length} · next '
+        '${RelicCatalog.discoverCost(owned)} embers';
+  }
 
   /// Padlock on a locked ESSENCE tile.
   static const Key lockKey = ValueKey('essence-tile-lock');
@@ -66,6 +81,10 @@ class EssenceTilesScreen extends StatelessWidget {
                     router.pushSub();
                   },
                   active: router.essenceHubLit == EssencePanel.keep,
+                  status: EssenceTilesScreen.blessingStatus(state),
+                  canBuy:
+                      state.essence >=
+                      GameLogic.godHandUpgradeCost(state.godHandLevel),
                 ),
                 _tile(
                   context,
@@ -79,6 +98,10 @@ class EssenceTilesScreen extends StatelessWidget {
                     router.pushSub();
                   },
                   active: router.essenceHubLit == EssencePanel.relics,
+                  status: EssenceTilesScreen.relicStatus(state),
+                  canBuy:
+                      state.metaDepth.embers >=
+                      RelicCatalog.discoverCost(state.unlockedRelics.length),
                 ),
               ),
               const SizedBox(height: 6),
@@ -157,6 +180,8 @@ class EssenceTilesScreen extends StatelessWidget {
     VoidCallback onTap, {
     bool fullWidth = false,
     bool active = false,
+    String? status,
+    bool canBuy = false,
   }) {
     // The panel the ESSENCE tab reopens: amber rim and a soft glow (the
     // selected-toggle amber), so the hub shows where you were.
@@ -241,6 +266,37 @@ class EssenceTilesScreen extends StatelessWidget {
                               : GameTheme.parchmentDim,
                         ),
                       ),
+                      // Level / owned and the next price, plus a gold dot
+                      // when it is affordable (audit F051).
+                      if (open && status != null) ...[
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                status,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GameTheme.hint(
+                                  color: GameTheme.parchmentDim,
+                                ),
+                              ),
+                            ),
+                            if (canBuy) ...[
+                              const SizedBox(width: 4),
+                              Container(
+                                key: EssenceTilesScreen.buyDotKey,
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: GameTheme.torchHot,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
                       if (!open) ...[
                         const SizedBox(height: 2),
                         Text(

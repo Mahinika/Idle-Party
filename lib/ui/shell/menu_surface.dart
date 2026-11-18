@@ -262,7 +262,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
                 panel: router.essencePanel,
                 onPanelChanged: (panel) => router.essencePanel = panel,
               ),
-        MenuRoute.key => KeystoneSheet(director: d),
+        MenuRoute.key => KeystoneSheet(director: d, router: router),
         MenuRoute.map => widget.home
             ? MapScreen(director: d, router: router)
             : const SizedBox.shrink(),

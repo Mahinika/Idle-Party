@@ -4,8 +4,10 @@ import '../../core/game_director.dart';
 import '../../core/game_state.dart';
 import '../../core/mission_board.dart';
 import '../../models/mission.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
+import '../menu_chrome.dart';
 import 'home/director_select.dart';
 import 'shell_common.dart';
 import 'shell_layout.dart';
@@ -38,7 +40,24 @@ class JobsOverlay extends StatelessWidget {
   static String rerollAdLine() => 'Swap for a new goal after a short ad.';
 
   static String rerollButtonTip({required int rerollsLeft}) =>
-      'Rewarded ad · new Daily or Side goal · $rerollsLeft left today (UTC)';
+      'Rewarded ad · new Daily or Side goal · $rerollsLeft left today';
+
+  static Key rerollKey(int i) => ValueKey('quest-reroll-$i');
+  static Key progressKey(int i) => ValueKey('quest-progress-$i');
+  static Key barKey(int i) => ValueKey('quest-bar-$i');
+
+  static Widget _rewardChip(String icon, String label) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+    decoration: MenuChrome.cardBox(inset: true),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GameIcon.asset(icon, size: 14),
+        const SizedBox(width: 3),
+        Text(label, style: GameTheme.hint(color: GameTheme.parchment)),
+      ],
+    ),
+  );
 
   static String _slotBadge(int index) => switch (index) {
     0 => 'DAILY',
@@ -174,6 +193,10 @@ class JobsOverlay extends StatelessWidget {
         ),
       );
     }
+    final rerollLabel = rerollButtonLabel(
+      adFree: director.state.metaDepth.adFree,
+      rerollsLeft: rerollsLeft,
+    );
     return ShellLayout.card(
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
       child: Column(
@@ -191,37 +214,64 @@ class JobsOverlay extends StatelessWidget {
                   style: titleStyle,
                 ),
               ),
+              // A small swap button in the corner, not a full-width slab
+              // on every card (audit F031). The label stays in semantics.
+              if (showReroll)
+                Tooltip(
+                  message: rerollButtonTip(rerollsLeft: rerollsLeft),
+                  child: GameIconButton(
+                    key: rerollKey(index),
+                    label: rerollLabel,
+                    asset: UiIcon.watchAd,
+                    size: 18,
+                    onPressed: () => director.rerollQuestSlot(index),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 2),
-          // Reward moves to its own line when tight (1.45) instead of
-          // being cut to "+3 e…".
+          // "0/20" on the left, the reward as chips on the right
+          // (audit F076); it wraps under at large text.
           Wrap(
             spacing: 6,
+            runSpacing: 2,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
-                'Progress ${mission.progress}/${mission.target} ·',
+                '${mission.progress}/${mission.target}',
+                key: progressKey(index),
                 style: GameTheme.section(),
               ),
-              Text(
-                rewardLine(
-                  gold: mission.goldReward,
-                  essence: mission.essenceReward,
-                ),
-                style: GameTheme.section(),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _rewardChip(
+                    UiIcon.gold,
+                    '+${formatGold(mission.goldReward)}',
+                  ),
+                  if (mission.essenceReward > 0) ...[
+                    const SizedBox(width: 4),
+                    _rewardChip(UiIcon.essence, '+${mission.essenceReward}'),
+                  ],
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
+          // A plum bar with a visible track, even at 0 (audit F030).
           ClipRRect(
+            key: barKey(index),
             borderRadius: BorderRadius.circular(GameTheme.radiusSm),
             child: LinearProgressIndicator(
               value: mission.target <= 0
                   ? 0
                   : (mission.progress / mission.target).clamp(0.0, 1.0),
-              minHeight: 8,
-              backgroundColor: GameTheme.panelInset,
-              color: mission.canClaim ? GameTheme.mossLit : GameTheme.torchHot,
+              minHeight: 6,
+              backgroundColor: GameTheme.levelAccentDeep,
+              color: mission.canClaim
+                  ? GameTheme.mossLit
+                  : GameTheme.levelAccent,
             ),
           ),
           if (mission.canClaim) ...[
@@ -235,31 +285,6 @@ class JobsOverlay extends StatelessWidget {
                 onPressed: () => director.claimMission(mission.id),
                 style: GameButtonStyle.brown,
                 primary: true,
-                dense: true,
-                expanded: false,
-              ),
-            ),
-          ],
-          if (showReroll) ...[
-            if (!director.state.metaDepth.adFree) ...[
-              const SizedBox(height: 2),
-              Text(
-                rerollAdLine(),
-                textAlign: TextAlign.right,
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
-              ),
-            ],
-            const SizedBox(height: 4),
-            Align(
-              alignment: Alignment.centerRight,
-              child: GameButton(
-                label: rerollButtonLabel(
-                  adFree: director.state.metaDepth.adFree,
-                  rerollsLeft: rerollsLeft,
-                ),
-                tip: rerollButtonTip(rerollsLeft: rerollsLeft),
-                onPressed: () => director.rerollQuestSlot(index),
-                style: GameButtonStyle.grey,
                 dense: true,
                 expanded: false,
               ),

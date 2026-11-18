@@ -6,12 +6,16 @@ import '../../core/friend_referral.dart';
 import '../../core/game_director.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
+import '../menu_chrome.dart';
 
 /// SCROLLS → EARN: share a Play link, or paste a friend's code.
 class FriendTipBlock extends StatefulWidget {
   const FriendTipBlock({super.key, required this.director});
 
   final GameDirector director;
+
+  static const Key tipKey = ValueKey('friend-tip');
+  static const String haveCode = 'Have a code?';
 
   @override
   State<FriendTipBlock> createState() => _FriendTipBlockState();
@@ -52,10 +56,13 @@ class _FriendTipBlockState extends State<FriendTipBlock> {
           ),
         ],
         const SizedBox(height: 6),
+        // Quiet outline: the free ticket above is the main action (F028).
         GameButton(
+          key: FriendTipBlock.tipKey,
           label: 'TIP A FRIEND',
           tip: 'Opens the share sheet. Messages, mail, Discord, and more.',
-          style: GameButtonStyle.brown,
+          style: GameButtonStyle.ghost,
+          dense: true,
           onPressed: () => unawaited(widget.director.shareFriendInvite()),
         ),
         if (own.isNotEmpty) ...[
@@ -72,27 +79,37 @@ class _FriendTipBlockState extends State<FriendTipBlock> {
             style: GameTheme.section(color: GameTheme.parchmentDim),
           )
         else
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          // Most players never paste a code: fold it (audit F074).
+          MenuChrome.fold(
+            title: FriendTipBlock.haveCode,
             children: [
-              Expanded(child: _codeField()),
-              const SizedBox(width: 8),
-              GameButton(
-                label: 'APPLY',
-                style: GameButtonStyle.grey,
-                expanded: false,
-                dense: true,
-                onPressed: () {
-                  final raw = _code.text;
-                  unawaited(() async {
-                    await widget.director.applyFriendCode(raw);
-                    if (!mounted) return;
-                    if (widget.director.state.metaDepth.friendInviteUsed
-                        .isNotEmpty) {
-                      _code.clear();
-                    }
-                  }());
-                },
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child: _codeField()),
+                  const SizedBox(width: 8),
+                  GameButton(
+                    label: 'APPLY',
+                    style: GameButtonStyle.grey,
+                    expanded: false,
+                    dense: true,
+                    onPressed: () {
+                      final raw = _code.text;
+                      unawaited(() async {
+                        await widget.director.applyFriendCode(raw);
+                        if (!mounted) return;
+                        if (widget
+                            .director
+                            .state
+                            .metaDepth
+                            .friendInviteUsed
+                            .isNotEmpty) {
+                          _code.clear();
+                        }
+                      }());
+                    },
+                  ),
+                ],
               ),
             ],
           ),
