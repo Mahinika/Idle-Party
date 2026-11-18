@@ -103,7 +103,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(router.route, MenuRoute.gear);
-    expect(find.text('CLOSE'), findsOneWidget);
+    // The open tab keeps its name (audit F045).
+    expect(find.bySemanticsLabel(HomeNavBar.tabSemantics('HEROES', selected: true)), findsOneWidget);
     await tester.tapAt(Offset(circle.center.dx, nav.top + 20));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));

@@ -190,12 +190,12 @@ class _MenuSurfaceState extends State<MenuSurface> {
         !router.homeAtSub;
     return OverlayScrim(
       title: homeMenuGrid
-          ? ''
+          ? 'MENU'
           : essenceHub
           ? 'ESSENCE'
           : router.title,
       subtitle: homeMenuGrid
-          ? ''
+          ? HomeMenuGrid.hint
           : essenceHub
           ? MenuSurface.essenceHubHint
           : router.jobHintFor(state),
@@ -238,6 +238,8 @@ class _MenuSurfaceState extends State<MenuSurface> {
           director: d,
           section: router.moreSection,
           initialInfoPane: router.moreInfoPane,
+          showSectionRail: !widget.home,
+          showPatchNotes: !widget.home,
           onSectionChanged: (sec) => router.moreSection = sec,
           onOpenWhatsNew: () => WhatsNewOverlay.show(context, d),
           onClose: router.close,

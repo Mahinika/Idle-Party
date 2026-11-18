@@ -142,6 +142,11 @@ class MenuRouter extends ChangeNotifier {
 
   EssencePanel _essencePanel = EssencePanel.tracks;
 
+  /// True once a player (or a deep link) picked an ESSENCE panel. The hub
+  /// lights a tile only then: the default [EssencePanel.tracks] is not a
+  /// choice, so a plain nav open lights nothing (audit F004).
+  bool _essencePicked = false;
+
   MoreSection _moreSection = MoreSection.info;
 
   int _moreInfoPane = 0;
@@ -162,6 +167,9 @@ class MenuRouter extends ChangeNotifier {
   GoldPanel get goldPanel => _goldPanel;
 
   EssencePanel get essencePanel => _essencePanel;
+
+  /// The ESSENCE hub tile to light, or null when no panel was picked.
+  EssencePanel? get essenceHubLit => _essencePicked ? _essencePanel : null;
 
   MoreSection get moreSection => _moreSection;
 
@@ -272,7 +280,8 @@ class MenuRouter extends ChangeNotifier {
 
     MenuRoute.essence => switch (_essencePanel) {
 
-      EssencePanel.tracks => 'ESSENCE',
+      // The CODEX tile opens the tracks panel as a sub-screen (F004).
+      EssencePanel.tracks => _homeDepth > 0 ? 'CODEX' : 'ESSENCE',
 
       EssencePanel.keep => 'BLESSING',
 
@@ -452,13 +461,23 @@ class MenuRouter extends ChangeNotifier {
 
     }
 
+    if (route == MenuRoute.essence) {
+      if (essence != null) {
+        _essencePicked = true;
+      } else if (_route != MenuRoute.essence) {
+        _essencePicked = false;
+      }
+    }
+
     if (route == MenuRoute.more && _route == MenuRoute.none && more == null) {
       _moreSection = MoreSection.info;
     }
 
     _route = route;
 
-    _homeDepth = 0;
+    // A deep link to a MENU section lands on that section, not on the MENU
+    // grid one step early (audit F080). BACK still returns to the grid.
+    _homeDepth = route == MenuRoute.more && more != null ? 1 : 0;
 
     _emitNav(before);
 
@@ -607,6 +626,11 @@ class MenuRouter extends ChangeNotifier {
 
 
   set essencePanel(EssencePanel panel) {
+
+    if (!_essencePicked) {
+      _essencePicked = true;
+      if (_essencePanel == panel) notifyListeners();
+    }
 
     if (_essencePanel == panel) return;
 

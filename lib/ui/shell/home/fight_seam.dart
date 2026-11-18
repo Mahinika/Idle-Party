@@ -230,13 +230,13 @@ class FightFieldControls extends StatelessWidget {
                 if (full && seamFitsExtras) ...[
                   const SizedBox(width: 4),
                   _seamTap(
-                    label: 'MORE menu',
+                    label: 'Open MENU',
                     onTap: () => router.open(MenuRoute.more),
                     child: ChunkyFace(
                       tone: ChunkyTone.stone,
                       minHeight: GameTheme.chunkyFace,
                       child: Text(
-                        'MORE',
+                        'MENU',
                         style: GameTheme.readable(color: GameTheme.torchHot),
                       ),
                     ),

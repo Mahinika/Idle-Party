@@ -62,7 +62,7 @@ class EssenceTilesScreen extends StatelessWidget {
                     router.essencePanel = EssencePanel.keep;
                     router.pushSub();
                   },
-                  active: router.essencePanel == EssencePanel.keep,
+                  active: router.essenceHubLit == EssencePanel.keep,
                 ),
                 _tile(
                   context,
@@ -75,7 +75,7 @@ class EssenceTilesScreen extends StatelessWidget {
                     router.essencePanel = EssencePanel.relics;
                     router.pushSub();
                   },
-                  active: router.essencePanel == EssencePanel.relics,
+                  active: router.essenceHubLit == EssencePanel.relics,
                 ),
               ),
               const SizedBox(height: 6),
@@ -91,7 +91,7 @@ class EssenceTilesScreen extends StatelessWidget {
                     router.essencePanel = EssencePanel.pets;
                     router.pushSub();
                   },
-                  active: router.essencePanel == EssencePanel.pets,
+                  active: router.essenceHubLit == EssencePanel.pets,
                 ),
                 _tile(
                   context,
@@ -104,7 +104,7 @@ class EssenceTilesScreen extends StatelessWidget {
                     router.essencePanel = EssencePanel.tracks;
                     router.pushSub();
                   },
-                  active: router.essencePanel == EssencePanel.tracks,
+                  active: router.essenceHubLit == EssencePanel.tracks,
                 ),
               ),
               const SizedBox(height: 6),

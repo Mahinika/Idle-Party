@@ -16,11 +16,11 @@ import 'shell_common.dart';
 /// MORE list: INFO / Settings / Credits plus QUESTS / Craft as tabs (like GEAR).
 class MoreList extends StatefulWidget {
   /// MORE → CREDITS. Studio name, owned art — not a third-party pack credit.
-  static const creditsBody = 'Idle Party\n\n'
+  static const creditsBody =
+      'Idle Party\n\n'
       'Cognifox Studio\n\n'
       'Sprites and world art: Idle Party\n\n'
       'Made for portrait phones.';
-
 
   const MoreList({
     super.key,
@@ -30,7 +30,16 @@ class MoreList extends StatefulWidget {
     required this.onOpenWhatsNew,
     required this.onClose,
     this.initialInfoPane = 0,
+    this.showSectionRail = true,
+    this.showPatchNotes = true,
   });
+
+  /// Home: the MENU grid already lists every section, so the sheet shows its
+  /// title + BACK only, no second rail of sections (audit F044).
+  final bool showSectionRail;
+
+  /// Home: PATCH NOTES is its own MENU tile (F044 / F099).
+  final bool showPatchNotes;
 
   final GameDirector director;
   final MoreSection section;
@@ -90,26 +99,27 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MenuChrome.tabRail(
-          controller: _tabs.controller,
-          onTap: (i) {
-            if (i >= 0 && i < sections.length) {
-              widget.onSectionChanged(sections[i]);
-            }
-            setState(() {});
-          },
-          tabs: [
-            for (var i = 0; i < sections.length; i++)
-              MenuChrome.bridgedTab(
-                sections[i].rowLabel,
-                onSelect: () {
-                  _tabs.controller.animateTo(i);
-                  widget.onSectionChanged(sections[i]);
-                  setState(() {});
-                },
-              ),
-          ],
-        ),
+        if (widget.showSectionRail)
+          MenuChrome.tabRail(
+            controller: _tabs.controller,
+            onTap: (i) {
+              if (i >= 0 && i < sections.length) {
+                widget.onSectionChanged(sections[i]);
+              }
+              setState(() {});
+            },
+            tabs: [
+              for (var i = 0; i < sections.length; i++)
+                MenuChrome.bridgedTab(
+                  sections[i].rowLabel,
+                  onSelect: () {
+                    _tabs.controller.animateTo(i);
+                    widget.onSectionChanged(sections[i]);
+                    setState(() {});
+                  },
+                ),
+            ],
+          ),
         if (!alert.isQuiet && section == MoreSection.info)
           MenuChrome.tabBanner(alert.reason),
         const SizedBox(height: 8),
@@ -151,7 +161,7 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (MenuTabs.showWhatsNew(s)) ...[
+        if (widget.showPatchNotes && MenuTabs.showWhatsNew(s)) ...[
           GameButton(
             label: 'PATCH NOTES',
             style: GameButtonStyle.grey,

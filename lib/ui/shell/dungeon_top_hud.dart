@@ -243,7 +243,7 @@ class DungeonTopHud extends StatelessWidget {
       items.add(
         PopupMenuItem(
           value: 'more',
-          child: Text('MORE', style: GameTheme.combat()),
+          child: Text('MENU', style: GameTheme.combat()),
         ),
       );
       items.add(

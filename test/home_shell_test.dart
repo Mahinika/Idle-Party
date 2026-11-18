@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/ui/shell/home/home_nav_bar.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_guides.dart';
 import 'package:idle_party/core/game_logic.dart';
@@ -116,8 +117,8 @@ void main() {
 
     router.open(MenuRoute.gear);
     await tester.pump();
-    expect(find.bySemanticsLabel('CLOSE'), findsWidgets);
-    expect(find.bySemanticsLabel('Close HEROES'), findsWidgets);
+    // The open tab keeps its name and says how to close (audit F045).
+    expect(find.bySemanticsLabel(HomeNavBar.tabSemantics('HEROES', selected: true)), findsWidgets);
     expect(tester.takeException(), isNull);
 
     router.open(MenuRoute.gold);

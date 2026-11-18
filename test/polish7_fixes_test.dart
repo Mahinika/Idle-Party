@@ -144,43 +144,27 @@ void main() {
   // SETTINGS · CREDITS) scrolled the first tab off ("UESTS").
   for (final size in _sizes) {
     for (final scale in _scales) {
-      _testHome('MORE rail labels are whole and on screen '
+      // Home MENU sections have no second rail of sections any more (audit
+      // F044); the MENU grid itself is the list. Its labels stay whole and
+      // a tile still lands on its section.
+      _testHome('MENU grid labels are whole and on screen '
           '${_label(size, scale)}', (tester) async {
         final (_, router) = await _pump(tester, size, scale);
         router.open(MenuRoute.more);
         await _settle(tester);
-        await tester.tap(find.text('SETTINGS').first);
-        await _settle(tester);
-        for (final label in [
-          'QUESTS',
-          'CRAFT',
-          'INFO',
-          'SETTINGS',
-          'CREDITS',
-        ]) {
+        for (final label in ['INFO', 'SETTINGS', 'REDEEM']) {
           final f = find.text(label);
           expect(f, findsWidgets, reason: label);
-          final r = tester.getRect(f.first);
+          final r = tester.getRect(f.last);
           expect(r.left, greaterThanOrEqualTo(0), reason: label);
           expect(r.right, lessThanOrEqualTo(size.width), reason: label);
-          _expectWhole(tester, f.first);
+          _expectWhole(tester, f.last);
         }
-        if (scale > 1.2) {
-          // The rows layout: 48 dp cells, and a tap still picks the tab.
-          final grid = find.byKey(MenuChrome.tabGridKey);
-          expect(grid, findsWidgets);
-          final cell = find.ancestor(
-            of: find.text('CREDITS').first,
-            matching: find.byType(InkWell),
-          );
-          expect(
-            tester.getSize(cell.first).height,
-            greaterThanOrEqualTo(GameTheme.primaryTouch - 0.01),
-          );
-          await tester.tap(find.text('CREDITS').first);
-          await _settle(tester);
-          expect(router.moreSection, MoreSection.credits);
-        }
+        await tester.tap(find.text('SETTINGS').last);
+        await _settle(tester);
+        expect(router.moreSection, MoreSection.settings);
+        expect(router.homeAtSub, isTrue);
+        expect(find.byKey(MenuChrome.tabGridKey), findsNothing);
       });
     }
   }

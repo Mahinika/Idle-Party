@@ -259,7 +259,9 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
-  bool get _showBack => router.homeAtSub || router.route == MenuRoute.key;
+  // BACK only when it goes somewhere the header CLOSE does not; on KEY it
+  // just closed the sheet, a third exit next to CLOSE and FIGHT (F009).
+  bool get _showBack => router.homeAtSub;
 
   /// Full-width strip with BACK at the left edge: the raised round FIGHT
   /// sits in the middle of the nav right below, and a centred pill landed

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/ui/shell/home/home_nav_bar.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
@@ -202,7 +203,7 @@ void main() {
     expect(router.route, MenuRoute.gear);
     expect(router.gearPanel, GearPanel.roster);
     expect(find.textContaining('Pick up to'), findsOneWidget);
-    await tester.tap(find.bySemanticsLabel('Close HEROES'));
+    await tester.tap(find.bySemanticsLabel(HomeNavBar.tabSemantics('HEROES', selected: true)));
     await tester.pump();
     expect(router.isOpen, isFalse);
     await tapBuilding(tester, TownBuildingId.inn);

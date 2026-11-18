@@ -144,7 +144,7 @@ class WhatsNewOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ShellLayout.hint(
-          'MORE · INFO · PATCH NOTES',
+          'MENU · INFO · PATCH NOTES',
           maxLines: 1,
         ),
         ShellLayout.gap(4),

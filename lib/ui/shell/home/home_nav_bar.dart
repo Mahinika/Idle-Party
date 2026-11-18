@@ -234,12 +234,17 @@ class HomeNavBar extends StatelessWidget {
     );
   }
 
+  /// Screen-reader label of a nav tab. The open tab keeps its name and says
+  /// how to close it (audit F045: the label used to swap to CLOSE).
+  static String tabSemantics(String label, {required bool selected}) =>
+      selected ? '$label, selected. Tap to close' : label;
+
   Widget _tab(MenuRoute route, String label, String icon, {String? timer}) {
     final selected = router.route == route;
-    final alert = _alert(route);
+    final alert = !selected && _alert(route);
     return _button(
       label: selected ? 'Close $label' : label,
-      semantics: selected ? 'Close $label' : label,
+      semantics: tabSemantics(label, selected: selected),
       selected: selected,
       onTap: () {
         if (selected) {
@@ -248,65 +253,55 @@ class HomeNavBar extends StatelessWidget {
           router.open(route);
         }
       },
-      child: selected
-          ? Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Semantics(
-                  label: 'CLOSE',
-                  child: GameIcon.asset(UiIcon.closeTab, size: 20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              GameIcon.asset(icon, size: 20),
+              if (alert)
+                const Positioned(
+                  right: -3,
+                  top: -3,
+                  child: _Dot(),
                 ),
-                const SizedBox(height: 2),
-                Flexible(
+              // Small close mark on the lit tab: tap again closes.
+              if (selected)
+                Positioned(
+                  right: -6,
+                  top: -5,
                   child: ExcludeSemantics(
-                    child: Text(
-                      'CLOSE',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: GameTheme.typeHint,
-                        color: GameTheme.torchHot,
-                      ),
-                    ),
+                    child: GameIcon.asset(UiIcon.closeTab, size: 10),
                   ),
                 ),
-              ],
-            )
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    GameIcon.asset(icon, size: 20),
-                    if (alert)
-                      const Positioned(
-                        right: -3,
-                        top: -3,
-                        child: _Dot(),
-                      ),
-                  ],
+            ],
+          ),
+          const SizedBox(height: 2),
+          Flexible(
+            child: ExcludeSemantics(
+              excluding: selected,
+              child: Text(
+                label,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.body(
+                  size: GameTheme.typeHint,
+                  color: selected
+                      ? GameTheme.toggleOnText
+                      : GameTheme.parchment,
                 ),
-                const SizedBox(height: 2),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 2,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(
-                      size: GameTheme.typeHint,
-                      color: GameTheme.parchment,
-                    ),
-                  ),
-                ),
-                if (timer != null)
-                  Text(
-                    timer,
-                    style: GameTheme.hint(color: GameTheme.torchHot),
-                  ),
-              ],
+              ),
             ),
+          ),
+          if (timer != null)
+            Text(
+              timer,
+              style: GameTheme.hint(color: GameTheme.torchHot),
+            ),
+        ],
+      ),
     );
   }
 
@@ -346,15 +341,25 @@ class HomeNavBar extends StatelessWidget {
             duration: const Duration(milliseconds: 120),
             // The frame paints over the slot so the label keeps its width.
             decoration: BoxDecoration(
-              color: selected
-                  ? GameTheme.torch.withValues(alpha: 0.16)
-                  : Colors.transparent,
+              // Lit plum face on the open tab (dusk palette, F045).
+              gradient: selected
+                  ? const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        GameTheme.toggleOnShine,
+                        GameTheme.toggleOnTop,
+                        GameTheme.toggleOnBottom,
+                      ],
+                      stops: [0, 0.08, 1],
+                    )
+                  : null,
               borderRadius: BorderRadius.circular(GameTheme.radiusSm),
             ),
             foregroundDecoration: BoxDecoration(
               borderRadius: BorderRadius.circular(GameTheme.radiusSm),
               border: Border.all(
-                color: selected ? GameTheme.torchHot : Colors.transparent,
+                color: selected ? GameTheme.toggleOnAccent : Colors.transparent,
                 width: 1,
               ),
             ),
