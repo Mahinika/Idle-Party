@@ -281,10 +281,17 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
           ...cards.take(1),
           // Large text: the header has no room, so the free level sits
           // under the first card (that card stays whole above the fold).
-          if (watchChip != null && !UpgradePanel.campWatchInHeader(context))
+          if (watchFree && !UpgradePanel.campWatchInHeader(context))
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
-              child: Align(alignment: Alignment.centerLeft, child: watchChip),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: UpgradePanel.campWatchCompact(
+                  label: SanctuaryOverlay.watchFreeLabel(state),
+                  onTap: director.watchCampAd,
+                  key: UpgradePanel.campWatchListKey,
+                ),
+              ),
             ),
           ...cards.skip(1),
         ],

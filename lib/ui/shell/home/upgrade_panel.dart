@@ -47,6 +47,50 @@ class UpgradePanel extends StatefulWidget {
   /// The CAMP free-level button in the split header.
   static const campWatchKey = ValueKey('upgrade-panel-camp-watch');
 
+  /// CAMP's free level as one compact 48x48 button. The same button sits
+  /// in the header at 1.0 and under the first card at large text (F058).
+  static Widget campWatchCompact({
+    required String label,
+    required VoidCallback onTap,
+    required Key key,
+  }) {
+    return WebClickScope(
+      label: label,
+      onPressed: onTap,
+      child: Semantics(
+        button: true,
+        label: label,
+        excludeSemantics: true,
+        onTap: onTap,
+        child: Tooltip(
+          message: label,
+          child: Material(
+            key: key,
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              child: SizedBox.square(
+                dimension: GameTheme.primaryTouch,
+                child: Center(
+                  child: ChunkyFace(
+                    tone: ChunkyTone.stone,
+                    highlight: true,
+                    minHeight: GameTheme.chunkyFace,
+                    padding: const EdgeInsets.all(4),
+                    child: GameIcon.asset(UiIcon.watchAd, size: 24),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  /// The free-level button under the first CAMP card at large text.
+  static const campWatchListKey = ValueKey('upgrade-panel-camp-watch-list');
+
   /// The one lock card while FORGE / CAMP / MARKET are still closed.
   static const lockedCardKey = ValueKey('upgrade-panel-locked');
 
@@ -217,43 +261,12 @@ class _UpgradePanelState extends State<UpgradePanel> {
 
   /// CAMP's free level, in the header like MARKET's reroll, so the track
   /// list starts with a buy card. 48x48 tap; the label is in semantics.
-  Widget _campWatchButton(GameState state) {
-    final label = SanctuaryOverlay.watchFreeLabel(state);
-    final onTap = widget.director.watchCampAd;
-    return WebClickScope(
-      label: label,
-      onPressed: onTap,
-      child: Semantics(
-        button: true,
-        label: label,
-        excludeSemantics: true,
-        onTap: onTap,
-        child: Tooltip(
-          message: label,
-          child: Material(
-            key: UpgradePanel.campWatchKey,
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-              child: SizedBox.square(
-                dimension: GameTheme.primaryTouch,
-                child: Center(
-                  child: ChunkyFace(
-                    tone: ChunkyTone.stone,
-                    highlight: true,
-                    minHeight: GameTheme.chunkyFace,
-                    padding: const EdgeInsets.all(4),
-                    child: GameIcon.asset(UiIcon.watchAd, size: 24),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _campWatchButton(GameState state) => UpgradePanel.campWatchCompact(
+    label: SanctuaryOverlay.watchFreeLabel(state),
+    onTap: widget.director.watchCampAd,
+    key: UpgradePanel.campWatchKey,
+  );
+
 
   void _pickSlice() {
     ForgeOverlay.pickWalletSlice(

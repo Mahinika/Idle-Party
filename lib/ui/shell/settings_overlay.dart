@@ -160,23 +160,26 @@ class _SettingsOverlayState extends State<SettingsOverlay>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Tab + one line; the long rules fold (audit F084).
         Text(
           'Music, ambience, combat sound, and vibration.',
           style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
-        ShellLayout.gap(),
-        MenuChrome.sectionLabel('SOUND'),
-        ShellLayout.gap(4),
-        Text(
-          NavCopy.playerText(
-            'Mute turns everything off. Music stays on in the hub and in a cave. '
-            'It rises for a boss and marks a cleared floor. '
-            'Ambience is the soft bed underneath. SFX is combat and UI.',
-            state.homeLayout,
-          ),
-          style: GameTheme.hint(color: GameTheme.parchmentDim),
+        MenuChrome.fold(
+          title: 'How sound works',
+          children: [
+            Text(
+              NavCopy.playerText(
+                'Mute turns everything off. Music stays on in the hub and in a cave. '
+                'It rises for a boss and marks a cleared floor. '
+                'Ambience is the soft bed underneath. SFX is combat and UI.',
+                state.homeLayout,
+              ),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         _SettingsToggle(
           label: 'Mute all sound',
           value: state.soundMuted,

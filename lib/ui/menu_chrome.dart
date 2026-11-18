@@ -1081,16 +1081,19 @@ abstract final class MenuChrome {
 
   /// Square pixel toggle thumb (settings rows) — not Material Switch.
   static Widget toggleMark({required bool value}) {
+    // A real switch, not a 20 px box: 52x30 stadium, amber when on
+    // (audit F085).
     return AnimatedContainer(
+      key: toggleMarkKey,
       duration: const Duration(milliseconds: 140),
-      width: 44,
-      height: 24,
+      width: 52,
+      height: 30,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: value
-            ? GameTheme.mossLit.withValues(alpha: 0.55)
+            ? GameTheme.torch.withValues(alpha: 0.55)
             : GameTheme.stone.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(GameTheme.radiusHud),
+        borderRadius: BorderRadius.circular(15),
         border: Border.all(
           color: value ? GameTheme.torchHot : GameTheme.border,
           width: value ? 1.5 : 1,
@@ -1098,15 +1101,20 @@ abstract final class MenuChrome {
       ),
       alignment: value ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        width: 16,
-        height: 16,
+        width: 22,
+        height: 22,
         decoration: BoxDecoration(
           color: value ? GameTheme.torchHot : GameTheme.parchmentDim,
-          borderRadius: BorderRadius.circular(GameTheme.radiusHud),
+          shape: BoxShape.circle,
+          boxShadow: const [
+            BoxShadow(color: GameTheme.chunkyShadow, offset: Offset(0, 1)),
+          ],
         ),
       ),
     );
   }
+
+  static const Key toggleMarkKey = ValueKey('toggle-mark');
 
   /// Discrete horizontal slider (text scale / bag filters).
   static Widget slider({

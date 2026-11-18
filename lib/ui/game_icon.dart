@@ -60,19 +60,11 @@ enum UiGlyph { add, remove, close, prev, next, scroll, wisp, lock }
 
 /// Pixel mark: a [UiIcon] sprite or a [UiGlyph] painted in-theme.
 class GameIcon extends StatelessWidget {
-  const GameIcon.asset(
-    this.asset, {
-    super.key,
-    this.size = 16,
-    this.color,
-  }) : glyph = null;
+  const GameIcon.asset(this.asset, {super.key, this.size = 16, this.color})
+    : glyph = null;
 
-  const GameIcon.glyph(
-    this.glyph, {
-    super.key,
-    this.size = 16,
-    this.color,
-  }) : asset = null;
+  const GameIcon.glyph(this.glyph, {super.key, this.size = 16, this.color})
+    : asset = null;
 
   final String? asset;
   final UiGlyph? glyph;
@@ -98,15 +90,15 @@ class GameIcon extends StatelessWidget {
   }
 
   static List<String> _rowsFor(UiGlyph g) => switch (g) {
-        UiGlyph.add => _kAdd,
-        UiGlyph.remove => _kRemove,
-        UiGlyph.close => _kClose,
-        UiGlyph.prev => _kPrev,
-        UiGlyph.next => _kNext,
-        UiGlyph.scroll => _kScroll,
-        UiGlyph.wisp => _kWisp,
-        UiGlyph.lock => _kLock,
-      };
+    UiGlyph.add => _kAdd,
+    UiGlyph.remove => _kRemove,
+    UiGlyph.close => _kClose,
+    UiGlyph.prev => _kPrev,
+    UiGlyph.next => _kNext,
+    UiGlyph.scroll => _kScroll,
+    UiGlyph.wisp => _kWisp,
+    UiGlyph.lock => _kLock,
+  };
 }
 
 /// 44dp tap target for settings / close / hero arrows.
@@ -121,9 +113,14 @@ class GameIconButton extends StatelessWidget {
     this.color,
     this.width = GameTheme.minTouch,
     this.height = GameTheme.minTouch,
+    this.tooltip,
   }) : assert(asset != null || glyph != null);
 
   final String label;
+
+  /// Long-press / hover hint. Defaults to [label] so no icon-only button
+  /// is a mystery tap (audit F097).
+  final String? tooltip;
   final VoidCallback? onPressed;
   final String? asset;
   final UiGlyph? glyph;
@@ -139,7 +136,8 @@ class GameIconButton extends StatelessWidget {
         ? GameIcon.glyph(
             glyph!,
             size: size,
-            color: color ??
+            color:
+                color ??
                 (enabled ? GameTheme.parchment : GameTheme.parchmentDim),
           )
         : GameIcon.asset(asset!, size: size, color: color);
@@ -152,13 +150,19 @@ class GameIconButton extends StatelessWidget {
         label: label,
         onTap: onPressed,
         excludeSemantics: true,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-          child: SizedBox(
-            width: width,
-            height: height,
-            child: Center(child: Opacity(opacity: enabled ? 1 : 0.35, child: mark)),
+        child: Tooltip(
+          message: tooltip ?? label,
+          excludeFromSemantics: true,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: SizedBox(
+              width: width,
+              height: height,
+              child: Center(
+                child: Opacity(opacity: enabled ? 1 : 0.35, child: mark),
+              ),
+            ),
           ),
         ),
       ),

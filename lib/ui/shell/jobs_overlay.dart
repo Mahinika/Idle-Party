@@ -217,15 +217,13 @@ class JobsOverlay extends StatelessWidget {
               // A small swap button in the corner, not a full-width slab
               // on every card (audit F031). The label stays in semantics.
               if (showReroll)
-                Tooltip(
-                  message: rerollButtonTip(rerollsLeft: rerollsLeft),
-                  child: GameIconButton(
-                    key: rerollKey(index),
-                    label: rerollLabel,
-                    asset: UiIcon.watchAd,
-                    size: 18,
-                    onPressed: () => director.rerollQuestSlot(index),
-                  ),
+                GameIconButton(
+                  key: rerollKey(index),
+                  label: rerollLabel,
+                  tooltip: rerollButtonTip(rerollsLeft: rerollsLeft),
+                  asset: UiIcon.watchAd,
+                  size: 18,
+                  onPressed: () => director.rerollQuestSlot(index),
                 ),
             ],
           ),

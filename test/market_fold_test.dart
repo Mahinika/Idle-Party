@@ -261,10 +261,15 @@ void main() {
             expect(para.didExceedMaxLines, isFalse, reason: label);
           }
           if (tab == 'CAMP' && scale > 1.2) {
-            // Large text: the free level sits under the first card.
-            final chip = tester.getRect(find.text('Watch · free level'));
+            // Large text: the same compact button sits under the first
+            // card (audit F058: no full-width chip at 1.45).
+            final chip = tester.getRect(
+              find.byKey(UpgradePanel.campWatchListKey),
+            );
             expect(chip.top, greaterThanOrEqualTo(card.bottom));
+            expect(chip.width, greaterThanOrEqualTo(GameTheme.primaryTouch - 0.01));
             expect(find.byKey(UpgradePanel.campWatchKey), findsNothing);
+            expect(find.text('Watch · free level'), findsNothing);
           }
           if (tab == 'CAMP' && scale <= 1.2) {
             // The free level moved to the header: one 48x48 tap, on screen.
