@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Fonts are bundled under `assets/fonts/`. Never hit fonts.gstatic.com.
@@ -320,6 +321,26 @@ abstract final class GameTheme {
     );
   }
 
+  /// VT323 and Cinzel have no arrows (→ ← ↑ ↓) or ▸ ▾ ▲ ★ ↻. Every text
+  /// style falls back to [glyphFallbackFamily] for those, so copy can keep
+  /// "→" without a hole in the line.
+  static const String glyphFallbackFamily = 'IdleArrows';
+  static const List<String> glyphFallback = [glyphFallbackFamily];
+  static const String glyphFallbackAsset =
+      'assets/fonts/IdleArrows-Regular.ttf';
+
+  /// Registers [glyphFallbackFamily] from the bundle. The app gets it from
+  /// the pubspec font list; tests (asset fonts off) call this.
+  static Future<void> loadGlyphFallback() async {
+    if (_glyphFallbackLoaded) return;
+    _glyphFallbackLoaded = true;
+    final loader = FontLoader(glyphFallbackFamily)
+      ..addFont(rootBundle.load(glyphFallbackAsset));
+    await loader.load();
+  }
+
+  static bool _glyphFallbackLoaded = false;
+
   /// Menu / sheet titles — premium forge display (not pixel glitter).
   static TextStyle menuTitle({double size = 18, Color color = parchment}) {
     final key = Object.hash(size, color.toARGB32());
@@ -331,7 +352,7 @@ abstract final class GameTheme {
         fontWeight: FontWeight.w700,
         letterSpacing: 1.2,
         height: 1.15,
-      ),
+      ).copyWith(fontFamilyFallback: glyphFallback),
     );
   }
 
@@ -340,7 +361,11 @@ abstract final class GameTheme {
     final key = Object.hash(size, color.toARGB32());
     return _bodyCache.putIfAbsent(
       key,
-      () => GoogleFonts.vt323(fontSize: size, color: color, height: 1.2),
+      () => GoogleFonts.vt323(
+        fontSize: size,
+        color: color,
+        height: 1.2,
+      ).copyWith(fontFamilyFallback: glyphFallback),
     );
   }
 
@@ -355,7 +380,7 @@ abstract final class GameTheme {
         height: 1.05,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.8,
-      ),
+      ).copyWith(fontFamilyFallback: glyphFallback),
     );
   }
 

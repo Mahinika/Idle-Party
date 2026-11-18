@@ -159,6 +159,14 @@ flutter:
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
 
+  # Original pixel glyphs (→ ← ↑ ↓ ▸ ▾ ▲ ★ ↻) that VT323 / Cinzel lack.
+  # GameTheme uses it as fontFamilyFallback; built by polish7's
+  # make_arrows_font.py on VT323's 40-unit pixel grid.
+  fonts:
+    - family: IdleArrows
+      fonts:
+        - asset: assets/fonts/IdleArrows-Regular.ttf
+
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
   # "family" key with the font family name, and a "fonts" key with a

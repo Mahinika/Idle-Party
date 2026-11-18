@@ -21,6 +21,7 @@ String get shellGoldenRoot =>
     const String.fromEnvironment('GOLDEN_ROOT', defaultValue: 'goldens/after');
 
 Future<void> ensureShellGoldenFonts() async {
+  await GameTheme.loadGlyphFallback();
   await GoogleFonts.pendingFonts([
     GoogleFonts.pressStart2p(fontSize: 12),
     GoogleFonts.vt323(fontSize: 17, fontWeight: FontWeight.w600),

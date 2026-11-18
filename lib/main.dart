@@ -130,6 +130,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         textTheme: GoogleFonts.vt323TextTheme(base.textTheme).apply(
           bodyColor: GameTheme.parchment,
           displayColor: GameTheme.torchHot,
+          fontFamilyFallback: GameTheme.glyphFallback,
         ),
         colorScheme: const ColorScheme.dark(
           primary: GameTheme.torch,
