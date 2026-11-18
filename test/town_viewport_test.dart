@@ -83,11 +83,11 @@ void main() {
       expect(TownAccess.innOpen(s), isFalse);
       expect(TownAccess.guildOpen(s), isFalse);
       expect(TownAccess.vaultClaimable(s), isFalse);
-      expect(TownAccess.lockedCopy(TownBuildingId.forge, s), contains('FORGE'));
+      expect(TownAccess.lockedCopy(TownBuildingId.forge, s), contains('CRAFT'));
       expect(TownAccess.lockedCopy(TownBuildingId.inn, s), contains('Ascend'));
     });
 
-    test('first boss opens FORGE, MARKET, QUESTS', () {
+    test('first boss opens CRAFT, MARKET, QUESTS', () {
       final s = afterBoss();
       expect(TownAccess.forgeOpen(s), isTrue);
       expect(TownAccess.marketOpen(s), isTrue);
@@ -219,33 +219,30 @@ void main() {
       await pumpTown(tester);
       await tapBuilding(tester, TownBuildingId.forge);
       expect(router.isOpen, isFalse);
-      expect(find.text('FORGE opens after the first boss.'), findsOneWidget);
+      expect(find.text('CRAFT opens after the first boss.'), findsOneWidget);
       expect(find.text('FORGE opens after the first boss (F2).'), findsNothing);
       await tester.tap(find.text('CLOSE'));
       await tester.pump();
-      expect(find.text('FORGE opens after the first boss.'), findsNothing);
+      expect(find.text('CRAFT opens after the first boss.'), findsNothing);
       await tapBuilding(tester, TownBuildingId.forge);
-      expect(find.text('FORGE opens after the first boss.'), findsOneWidget);
+      expect(find.text('CRAFT opens after the first boss.'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
-    // CRAFT lives only in MENU (audit F099): FORGE is the gold forge.
-    testWidgets('unlocked FORGE opens the gold forge, not CRAFT', (
-      tester,
-    ) async {
+    testWidgets('unlocked FORGE opens CRAFT Apex station', (tester) async {
       director = GameDirector.preview(initialState: afterBoss());
       router = MenuRouter();
       await pumpTown(tester);
       await tapBuilding(tester, TownBuildingId.forge);
-      expect(router.route, MenuRoute.gold);
-      expect(router.goldPanel, GoldPanel.tracks);
-      expect(find.textContaining('Tap a hero, pick a slot'), findsNothing);
+      expect(router.route, MenuRoute.more);
+      expect(router.moreSection, MoreSection.craft);
+      expect(find.text('CRAFT'), findsWidgets);
+      expect(find.textContaining('Tap a hero, pick a slot'), findsOneWidget);
       await tester.tap(find.text('CLOSE').first);
       await tester.pump();
       expect(router.isOpen, isFalse);
       await tapBuilding(tester, TownBuildingId.forge);
-      expect(router.route, MenuRoute.gold);
-      expect(router.moreSection, isNot(MoreSection.craft));
+      expect(router.moreSection, MoreSection.craft);
       expect(tester.takeException(), isNull);
     });
 

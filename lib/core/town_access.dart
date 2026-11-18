@@ -7,8 +7,7 @@ import 'menu_alerts.dart';
 ///
 /// No new save fields. Locked taps never open a different sheet.
 abstract final class TownAccess {
-  /// FORGE is the gold forge. CRAFT lives only in MENU (audit F099).
-  static bool forgeOpen(GameState s) => MenuTabs.showGold(s);
+  static bool forgeOpen(GameState s) => MenuTabs.showCraft(s);
 
   static bool marketOpen(GameState s) => MenuTabs.showGold(s);
 
@@ -34,7 +33,7 @@ abstract final class TownAccess {
       };
 
   static String lockedCopy(TownBuildingId id, GameState s) => switch (id) {
-        TownBuildingId.forge => 'FORGE opens after the first boss.',
+        TownBuildingId.forge => 'CRAFT opens after the first boss.',
         TownBuildingId.market => 'MARKET opens after the first boss.',
         TownBuildingId.inn =>
           'Party swaps unlock at first Ascend. Until then the starter three rest here.',

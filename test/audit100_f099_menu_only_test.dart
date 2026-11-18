@@ -25,7 +25,7 @@ void main() {
     expect(labels['CODEX'], [HomePlace.menuGrid]);
   });
 
-  test('source scan: only MENU opens CRAFT or shows the codex', () {
+  test('source scan: only MENU (and the town FORGE) opens CRAFT', () {
     final craftOpeners = <String>[];
     final codexHosts = <String>[];
     for (final f in Directory('lib').listSync(recursive: true)) {
@@ -34,7 +34,13 @@ void main() {
       if (text.contains('more: MoreSection.craft')) craftOpeners.add(f.path);
       if (text.contains('CodexOverlay(director')) codexHosts.add(f.path);
     }
-    expect(craftOpeners, ['lib/ui/shell/home/home_catalog.dart']);
+    // MENU grid, plus the town FORGE building: the one documented extra
+    // entry to CRAFT (Robert kept it on purpose).
+    craftOpeners.sort();
+    expect(craftOpeners, [
+      'lib/ui/shell/home/home_catalog.dart',
+      'lib/ui/shell/home/town_viewport.dart',
+    ]);
     expect(codexHosts, ['lib/ui/shell/power_meta_pillars.dart']);
   });
 

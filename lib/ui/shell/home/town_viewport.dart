@@ -80,7 +80,10 @@ class _TownViewportState extends State<TownViewport> {
           return;
         }
         _clearLocked();
-        router.open(MenuRoute.gold, gold: GoldPanel.tracks);
+        // The one entry to CRAFT outside the MENU grid, on purpose
+        // (Robert, audit F099): the town FORGE is the Apex station.
+        router.open(MenuRoute.more, more: MoreSection.craft);
+        router.pushSub();
       case TownBuildingId.market:
         if (!TownAccess.marketOpen(state)) {
           _showLocked(
