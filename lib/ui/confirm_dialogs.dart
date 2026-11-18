@@ -498,7 +498,7 @@ Future<void> confirmDailyRun(
           ),
           GameButton(
             label: 'START',
-            style: GameButtonStyle.brown,
+            style: GameButtonStyle.go,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),

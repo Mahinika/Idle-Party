@@ -661,14 +661,29 @@ class MarketHeaderControls extends StatelessWidget {
           )
         else
           _chip(
-            label: 'Reroll ${formatGold(refreshCost)}',
+            key: rerollKey,
+            label: canReroll
+                ? 'Reroll ${formatGold(refreshCost)}'
+                : 'Reroll ${formatGold(refreshCost)}. '
+                      'Need ${formatGold(refreshCost - state.gold)} more',
             onTap: canReroll ? director.refreshMarketListings : null,
-            child: Text(
-              'Reroll ${compactGold(refreshCost)}',
-              maxLines: 1,
-              style: GameTheme.hint(
-                color: canReroll ? GameTheme.torchHot : GameTheme.buyGreyText,
-              ),
+            // Gold = can pay now; grey = short. Same rule as every buy.
+            tone: canReroll ? ChunkyTone.gold : ChunkyTone.grey,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const GameIcon.asset(UiIcon.gold, size: 14),
+                const SizedBox(width: 3),
+                Text(
+                  'Reroll ${compactGold(refreshCost)}',
+                  maxLines: 1,
+                  style: GameTheme.hint(
+                    color: ChunkyFace.textOn(
+                      canReroll ? ChunkyTone.gold : ChunkyTone.grey,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
       ],
@@ -677,16 +692,20 @@ class MarketHeaderControls extends StatelessWidget {
 
   /// Chip text for the active filter.
   static const String filterUpgradesShort = 'UPG';
+  static const Key rerollKey = ValueKey('market-reroll');
   static const String filterAllShort = 'ALL';
 
   Widget _chip({
+    Key? key,
     required String label,
     required Widget child,
     String? value,
     VoidCallback? onTap,
+    ChunkyTone tone = ChunkyTone.stone,
   }) {
     final face = ChunkyFace(
-      tone: ChunkyTone.stone,
+      key: key,
+      tone: tone,
       raised: onTap != null,
       minWidth: GameTheme.chunkyFace,
       minHeight: GameTheme.chunkyFace,

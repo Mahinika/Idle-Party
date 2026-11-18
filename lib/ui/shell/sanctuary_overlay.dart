@@ -462,6 +462,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       label: _essencePriceLabel(price),
       primary: recommended && live,
       quantity: live ? (bulk ? buyN : 1) : null,
+      essence: true,
       onPressed: bulk
           ? () {
               director.upgradeSanctuaryBulk(track, maxLevels: buyN);

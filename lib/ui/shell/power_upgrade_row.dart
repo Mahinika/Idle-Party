@@ -242,11 +242,15 @@ class PowerUpgradePriceChip extends StatelessWidget {
     required this.onPressed,
     this.primary = false,
     this.quantity,
+    this.essence = false,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool primary;
+
+  /// The price is essence, not gold: the face uses the essence tone.
+  final bool essence;
 
   /// Buys per tap. Null hides the badge.
   final int? quantity;
@@ -266,7 +270,9 @@ class PowerUpgradePriceChip extends StatelessWidget {
     final enabled = onPressed != null;
     final q = quantity;
     final face = ChunkyFace(
-      tone: enabled ? ChunkyTone.gold : ChunkyTone.grey,
+      tone: !enabled
+          ? ChunkyTone.grey
+          : (essence ? ChunkyTone.essence : ChunkyTone.gold),
       raised: enabled,
       highlight: primary && enabled,
       minWidth: minFaceWidth,
@@ -278,7 +284,9 @@ class PowerUpgradePriceChip extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: GameTheme.button(
           size: GameTheme.typeBody,
-          color: enabled ? GameTheme.buyGoldText : GameTheme.buyGreyText,
+          color: !enabled
+              ? GameTheme.buyGreyText
+              : (essence ? GameTheme.essenceBuyText : GameTheme.buyGoldText),
         ),
       ),
     );
@@ -305,7 +313,9 @@ class PowerUpgradePriceChip extends StatelessWidget {
                   clipBehavior: Clip.none,
                   children: [
                     face,
-                    if (q != null && enabled)
+                    // ×1 is what the selector already says; the badge only
+                    // speaks when one tap buys more than once.
+                    if (q != null && q > 1 && enabled)
                       Positioned(
                         top: -badgeLift - 1,
                         right: -3,

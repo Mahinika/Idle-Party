@@ -287,7 +287,7 @@ class _MapScreenState extends State<MapScreen> {
       padding: ShellLayout.listPadding,
       child: GameButton(
         label: 'ENTER',
-        style: GameButtonStyle.brown,
+        style: GameButtonStyle.go,
         primary: true,
         onPressed: () => _enter(state, mean, endgame),
       ),

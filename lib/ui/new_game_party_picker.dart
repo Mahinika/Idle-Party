@@ -114,7 +114,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
             ),
             GameButton(
               label: 'START',
-              style: GameButtonStyle.brown,
+              style: GameButtonStyle.go,
               expanded: false,
               onPressed: () => Navigator.pop(ctx, true),
             ),
@@ -506,7 +506,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                   Expanded(
                     child: GameButton(
                       label: 'START',
-                      style: GameButtonStyle.brown,
+                      style: GameButtonStyle.go,
                       onPressed: (_ready && !_starting)
                           ? () {
                               unawaited(_tryStart());

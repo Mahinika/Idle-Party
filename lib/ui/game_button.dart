@@ -5,7 +5,9 @@ import 'web_click_bridge.dart';
 
 /// [gold]: a purchase you can afford (muted buy gold, like the price chips
 /// on FORGE / CAMP / MARKET cards). Brown stays for non-buys.
-enum GameButtonStyle { brown, grey, red, ghost, gold }
+/// brown = neutral action, gold = buy, go = start / enter / claim (amber),
+/// essence = an essence spend, grey = secondary, red = leave, ghost = quiet.
+enum GameButtonStyle { brown, grey, red, ghost, gold, go, essence }
 
 /// Action button.
 class GameButton extends StatelessWidget {
@@ -69,6 +71,22 @@ class GameButton extends StatelessWidget {
       glow: GameTheme.torch.withValues(alpha: 0.22),
       edge: GameTheme.buyGoldEdge,
     ),
+    GameButtonStyle.go => (
+      top: GameTheme.goTop,
+      bottom: GameTheme.goBottom,
+      border: GameTheme.goShine,
+      text: GameTheme.goText,
+      glow: GameTheme.torch.withValues(alpha: 0.26),
+      edge: GameTheme.buyGoldEdge,
+    ),
+    GameButtonStyle.essence => (
+      top: GameTheme.essenceBuyTop,
+      bottom: GameTheme.essenceBuyBottom,
+      border: GameTheme.essenceBuyShine,
+      text: GameTheme.essenceBuyText,
+      glow: GameTheme.levelAccent.withValues(alpha: 0.22),
+      edge: GameTheme.essenceBuyEdge,
+    ),
     GameButtonStyle.ghost => (
       top: GameTheme.panelInset.withValues(alpha: 0.55),
       bottom: GameTheme.panelInset.withValues(alpha: 0.35),
@@ -129,7 +147,7 @@ class GameButton extends StatelessWidget {
             // Chunky face: dark rim, a hard drop shadow when it can be
             // pressed, and a light top edge (see [ChunkyFace]).
             border: Border.all(
-              color: enabled ? palette.edge : GameTheme.buyGreyEdge,
+              color: enabled ? palette.edge : GameTheme.border,
               width: GameTheme.chunkyRim,
             ),
             boxShadow: enabled && style != GameButtonStyle.ghost

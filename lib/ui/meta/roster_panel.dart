@@ -128,7 +128,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
                     state.essence >= GameLogic.partySlot5EssenceCost
                 ? 'UNLOCK SLOT 5 · ${formatCount(GameLogic.partySlot5EssenceCost)}e'
                 : '${formatCount(GameLogic.partySlot5EssenceCost)}e · needs Ascend ${GameLogic.partySlot5MinAscension}',
-            style: GameButtonStyle.gold,
+            style: GameButtonStyle.essence,
             dense: true,
             onPressed:
                 state.ascensionLevel >= GameLogic.partySlot5MinAscension &&

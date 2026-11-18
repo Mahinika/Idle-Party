@@ -502,14 +502,16 @@ void main() {
     expect(buy.style, GameButtonStyle.gold);
   });
 
-  _testHome('God Hand Damage / CD are gold buys', (tester) async {
+  // Audit 100 F017: essence prices use the essence face (was gold, which
+  // read as a gold price).
+  _testHome('God Hand Damage / CD are essence buys', (tester) async {
     final (director, router) = await _pump(tester, const Size(360, 780), 1);
     router.open(MenuRoute.essence, essence: EssencePanel.keep);
     router.pushSub();
     await _settle(tester);
     expect(director.state.essence, greaterThan(0));
-    expect(buttonWith(tester, 'Damage').style, GameButtonStyle.gold);
-    expect(buttonWith(tester, 'CD').style, GameButtonStyle.gold);
+    expect(buttonWith(tester, 'Damage').style, GameButtonStyle.essence);
+    expect(buttonWith(tester, 'CD').style, GameButtonStyle.essence);
   });
 
 }

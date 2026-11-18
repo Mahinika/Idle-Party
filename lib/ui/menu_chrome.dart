@@ -332,7 +332,22 @@ abstract final class MenuChrome {
     );
   }
 
-  /// GEAR-style inset tab rail (torch wash on selected tab).
+  /// Selected tab: the plum "picked" face, same as every other toggle.
+  static const BoxDecoration _tabSelectedBox = BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        GameTheme.toggleOnShine,
+        GameTheme.toggleOnTop,
+        GameTheme.toggleOnBottom,
+      ],
+      stops: [0, 0.08, 1],
+    ),
+    borderRadius: BorderRadius.all(Radius.circular(GameTheme.radiusSm - 2)),
+  );
+
+  /// GEAR-style inset tab rail (plum face on the selected tab).
   ///
   /// On phone width (or 5+ tabs), scrolls instead of crushing labels.
   static Widget tabRail({
@@ -503,14 +518,7 @@ abstract final class MenuChrome {
               onTap: select,
               borderRadius: BorderRadius.circular(GameTheme.radiusSm - 2),
               child: Ink(
-                decoration: selected
-                    ? BoxDecoration(
-                        color: GameTheme.torch.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(
-                          GameTheme.radiusSm - 2,
-                        ),
-                      )
-                    : null,
+                decoration: selected ? _tabSelectedBox : null,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
                     minHeight: GameTheme.primaryTouch,
@@ -521,7 +529,7 @@ abstract final class MenuChrome {
                       child: DefaultTextStyle.merge(
                         style: GameTheme.readable(
                           color: selected
-                              ? GameTheme.torchHot
+                              ? GameTheme.toggleOnText
                               : GameTheme.parchmentDim,
                         ),
                         softWrap: false,
@@ -585,11 +593,8 @@ abstract final class MenuChrome {
               labelStyle: GameTheme.readable(),
               unselectedLabelStyle: GameTheme.readable(),
               indicatorSize: TabBarIndicatorSize.tab,
-              indicator: BoxDecoration(
-                color: GameTheme.torch.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(GameTheme.radiusSm - 2),
-              ),
-              labelColor: GameTheme.torchHot,
+              indicator: _tabSelectedBox,
+              labelColor: GameTheme.toggleOnText,
               unselectedLabelColor: GameTheme.parchmentDim,
               dividerColor: Colors.transparent,
               tabs: tabs,

@@ -4,8 +4,9 @@ import 'game_theme.dart';
 
 /// One meaning per tone. Gold = buy / can afford. Grey = locked or cannot
 /// afford. Rose = the picked toggle. Red = leave / danger. Stone = a plain
-/// action that is neither. Orange = a live boost (2× speed).
-enum ChunkyTone { gold, grey, rose, red, stone, orange }
+/// action that is neither. Orange = a live boost (2× speed). Go = amber
+/// "start this" (ENTER / START / CLAIM). Essence = an essence price.
+enum ChunkyTone { gold, grey, rose, red, stone, orange, go, essence }
 
 /// Chunky pixel button face: dark outline, a light top edge, and a hard
 /// drop shadow so it reads as pressable. Pure paint; callers own the tap,
@@ -79,6 +80,18 @@ class ChunkyFace extends StatelessWidget {
           GameTheme.buyGoldShine,
           GameTheme.buyGoldEdge,
         ),
+        ChunkyTone.go => (
+          GameTheme.goTop,
+          GameTheme.goBottom,
+          GameTheme.goShine,
+          GameTheme.buyGoldEdge,
+        ),
+        ChunkyTone.essence => (
+          GameTheme.essenceBuyTop,
+          GameTheme.essenceBuyBottom,
+          GameTheme.essenceBuyShine,
+          GameTheme.essenceBuyEdge,
+        ),
       };
 
   /// Readable label color on [tone].
@@ -89,6 +102,8 @@ class ChunkyFace extends StatelessWidget {
     ChunkyTone.red => GameTheme.parchment,
     ChunkyTone.stone => GameTheme.parchment,
     ChunkyTone.orange => GameTheme.buyGoldText,
+    ChunkyTone.go => GameTheme.goText,
+    ChunkyTone.essence => GameTheme.essenceBuyText,
   };
 
   @override

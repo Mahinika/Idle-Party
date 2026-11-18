@@ -62,7 +62,8 @@ abstract final class GameTheme {
   static const Color hudFarmGreen = Color(0xFF3A5018);
 
   /// RUN / TODAY / ACCOUNT scope tones (hub + POWER section headers).
-  static const Color scopeRun = mossLit;
+  /// Run scope is dusk lavender: green stays reserved for "this goes up".
+  static const Color scopeRun = levelAccent;
   static const Color scopeToday = accentWarn;
   /// Account-scope section labels (MENU, ROSTER, ACTIVE, SOUND): muted
   /// gold from the dusk palette, not the old off-theme blue (6.6:1 on panel).
@@ -107,9 +108,10 @@ abstract final class GameTheme {
   static const Color buttonGreyBottom = Color(0xFF211A1E);
   static const Color buttonRedTop = Color(0xFF94402D);
   static const Color buttonRedBottom = Color(0xFF62261A);
-  static const Color buttonDisabledTop = Color(0xFF1A1316);
+  static const Color buttonDisabledTop = Color(0xFF211A1E);
   static const Color buttonDisabledBottom = Color(0xFF120D10);
-  static const Color buttonDisabledText = Color(0xFF6E6264);
+  // ≥ 4.5:1 on the disabled face: a dead button reads as dead, not absent.
+  static const Color buttonDisabledText = Color(0xFF948789);
   static const Color buttonDisabledBorder = buttonGreyTop;
 
   /// Buy semantics (Brick-style layout). Few colors, one meaning each:
@@ -121,6 +123,21 @@ abstract final class GameTheme {
   static const Color buyGoldShine = Color(0xFFEED79E);
   static const Color buyGoldEdge = Color(0xFF2A190B);
   static const Color buyGoldText = Color(0xFF24140A);
+  /// "Go" face (ENTER, START, CLAIM): warm amber, distinct from the muted
+  /// gold that means buy / can afford.
+  static const Color goTop = Color(0xFFE6A24C);
+  static const Color goBottom = Color(0xFFC47C34);
+  static const Color goShine = Color(0xFFF7D196);
+  static const Color goText = Color(0xFF24140A);
+
+  /// Essence spend face: the essence lavender, so an essence price never
+  /// looks like a gold price.
+  static const Color essenceBuyTop = Color(0xFF9C88CC);
+  static const Color essenceBuyBottom = Color(0xFF8C78BC);
+  static const Color essenceBuyShine = Color(0xFFC9BCEA);
+  static const Color essenceBuyEdge = Color(0xFF1E1530);
+  static const Color essenceBuyText = Color(0xFF160F22);
+
   static const Color buyGreyTop = Color(0xFF3D3337);
   static const Color buyGreyBottom = Color(0xFF2A2226);
   static const Color buyGreyShine = Color(0xFF52464B);

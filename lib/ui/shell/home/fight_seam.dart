@@ -17,6 +17,8 @@ import 'fight_seam_rails.dart';
 /// fight. FARM / PUSH, the fist, and LEAVE sit on the field itself
 /// ([FightFieldControls]) so the buy list keeps its rows.
 class FightSeam extends StatelessWidget {
+  static const Key leaveFaceKey = ValueKey('fight-seam-leave');
+
   const FightSeam({
     super.key,
     required this.director,
@@ -212,14 +214,16 @@ class FightFieldControls extends StatelessWidget {
                 _seamTap(
                   label: 'LEAVE',
                   onTap: onLeave,
+                  // Outline, not a solid red slab: leaving is a quiet
+                  // exit beside the mode toggle, not the loudest button.
                   child: ChunkyFace(
-                    tone: ChunkyTone.red,
+                    key: FightSeam.leaveFaceKey,
+                    tone: ChunkyTone.stone,
+                    edgeColor: GameTheme.blood,
                     minHeight: GameTheme.chunkyFace,
                     child: Text(
                       'LEAVE',
-                      style: GameTheme.readable(
-                        color: ChunkyFace.textOn(ChunkyTone.red),
-                      ),
+                      style: GameTheme.readable(color: GameTheme.bloodLit),
                     ),
                   ),
                 ),

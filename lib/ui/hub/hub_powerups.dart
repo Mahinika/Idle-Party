@@ -483,7 +483,7 @@ class _ScrollWellBlock extends StatelessWidget {
         if (canFree)
           GameButton(
             label: 'FREE · +1 TICKET',
-            style: GameButtonStyle.brown,
+            style: GameButtonStyle.go,
             primary: true,
             onPressed: onClaimWellFree,
           ),

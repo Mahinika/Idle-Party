@@ -37,6 +37,16 @@ class InventoryDock extends StatefulWidget {
 
   /// One empty-bag line; the MARKET nudge is a chip, not repeated text.
   static const String emptyBagLine = 'Bag empty — farm for loot.';
+
+  static const Key bagGoldBuyKey = ValueKey('bag-gold-buy');
+
+  /// "Need 5,000g more for BAG +5" under a gold bag buy the wallet cannot
+  /// cover.
+  static String bagNeedLine(GameState state) {
+    final short = RunStashShop.goldBuyCost(state) - state.gold;
+    return 'Need ${formatGold(short < 0 ? 0 : short)} more for '
+        'BAG +${RunStashShop.slotsPerGoldBuy}';
+  }
   static const String marketNudgeLabel = 'Need gear? › MARKET';
 
   static bool bagScrolls(double bodyHeight, double textScale) =>
@@ -475,34 +485,6 @@ class _InventoryDockState extends State<InventoryDock>
                     : GameTheme.mossLit,
               ),
             ),
-            if (!RunStashShop.goldBuysAtCap(state.metaDepth) ||
-                !RunStashShop.cinderBuysAtCap(state.metaDepth)) ...[
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: [
-                  if (!RunStashShop.goldBuysAtCap(state.metaDepth))
-                    GameButton(
-                      label: RunStashShop.goldBuyLabel(state),
-                      dense: true,
-                      style: RunStashShop.canBuyGold(state)
-                          ? GameButtonStyle.gold
-                          : GameButtonStyle.grey,
-                      onPressed: director.buyGoldBagExpansion,
-                    ),
-                  if (!RunStashShop.cinderBuysAtCap(state.metaDepth))
-                    GameButton(
-                      label: RunStashShop.cinderBuyLabel(state),
-                      dense: true,
-                      style: RunStashShop.canBuyCinders(state)
-                          ? GameButtonStyle.gold
-                          : GameButtonStyle.grey,
-                      onPressed: director.buyCinderBagExpansion,
-                    ),
-                ],
-              ),
-            ],
             const SizedBox(height: 4),
             Wrap(
               spacing: 6,
@@ -758,6 +740,49 @@ class _InventoryDockState extends State<InventoryDock>
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
+            // Bag space is a purchase, not the bag: it sits under the
+            // bag's own buttons with its price state spelled out.
+            if (!RunStashShop.goldBuysAtCap(state.metaDepth) ||
+                !RunStashShop.cinderBuysAtCap(state.metaDepth)) ...[
+              const SizedBox(height: 8),
+              MenuChrome.sectionLabel('EXPAND BAG'),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  if (!RunStashShop.goldBuysAtCap(state.metaDepth))
+                    GameButton(
+                      key: InventoryDock.bagGoldBuyKey,
+                      label: RunStashShop.goldBuyLabel(state),
+                      dense: true,
+                      style: RunStashShop.canBuyGold(state)
+                          ? GameButtonStyle.gold
+                          : GameButtonStyle.grey,
+                      onPressed: director.buyGoldBagExpansion,
+                    ),
+                  if (!RunStashShop.cinderBuysAtCap(state.metaDepth))
+                    GameButton(
+                      label: RunStashShop.cinderBuyLabel(state),
+                      dense: true,
+                      style: RunStashShop.canBuyCinders(state)
+                          ? GameButtonStyle.gold
+                          : GameButtonStyle.grey,
+                      onPressed: director.buyCinderBagExpansion,
+                    ),
+                ],
+              ),
+              if (!RunStashShop.goldBuysAtCap(state.metaDepth) &&
+                  !RunStashShop.canBuyGold(state)) ...[
+                const SizedBox(height: 2),
+                Text(
+                  InventoryDock.bagNeedLine(state),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
+                ),
+              ],
+            ],
           ],
         );
         if (!scroll) return column;

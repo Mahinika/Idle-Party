@@ -247,6 +247,8 @@ class _TownViewportState extends State<TownViewport> {
                   ),
                   child: GameButton(
                     label: label,
+                    style: GameButtonStyle.go,
+                    primary: true,
                     onPressed: () => runChasePlan(
                       context: context,
                       director: director,
