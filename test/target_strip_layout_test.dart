@@ -11,6 +11,7 @@ import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/dungeon_target_hud.dart';
 import 'package:idle_party/ui/shell/dungeon_top_hud.dart';
 import 'package:idle_party/ui/shell/home/home_top_bar.dart';
+import 'package:idle_party/ui/feedback_toast.dart';
 import 'package:idle_party/ui/shell/play_shell.dart';
 
 const _sizes = <Size>[
@@ -241,6 +242,81 @@ void main() {
     expect(find.text(chaseTitle), findsOneWidget);
   });
 
+  testWidgets('quest chip inlines on wide phone with one claimable', (tester) async {
+    tester.view.physicalSize = const Size(411, 891);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final director = await _fightDirector();
+    var directorLive = true;
+    addTearDown(() {
+      if (directorLive) director.dispose();
+    });
+    director.debugHoldSave(
+      director.state.copyWith(
+        homePanelFull: true,
+        missions: [
+          Mission(
+            id: 't1',
+            type: MissionType.defeatEnemies,
+            title: 'Test',
+            target: 1,
+            progress: 1,
+            goldReward: 10,
+            essenceReward: 1,
+          ),
+        ],
+      ),
+    );
+    expect(HubChase.forState(director.state).kind, HubChaseKind.claimMissions);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            size: const Size(411, 891),
+            textScaler: TextScaler.noScaling,
+          ),
+          child: child!,
+        ),
+        home: Scaffold(
+          body: PlayShell(director: director, router: router),
+        ),
+      ),
+    );
+    for (var i = 0; i < 60; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+      if (director.dungeonTilesReady &&
+          find.byKey(TargetCornerHud.stripKey).evaluate().isNotEmpty &&
+          find.textContaining('QUESTS ·').evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    await tester.pump(const Duration(milliseconds: 400));
+
+    final hex = tester.getRect(
+      find.bySemanticsLabel(
+        'Floor ${director.state.currentRoom.floorNumber}, open floor list',
+      ),
+    );
+    final chip = tester.getRect(find.textContaining('QUESTS ·'));
+    expect(chip.top, lessThan(95), reason: 'chip should sit on the target row');
+    expect(chip.top, greaterThan(hex.top - 6));
+
+    final title = tester.widget<Text>(find.byKey(TargetCornerHud.titleKey));
+    final label = title.data ?? '';
+    expect(label, isNot(contains('…')));
+    expect(label.length, greaterThan(10));
+    expect(tester.takeException(), isNull);
+    director.dispose();
+    directorLive = false;
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 20));
+  });
+
   testWidgets('quest chase moves beside floor badge, not under it', (tester) async {
     tester.view.physicalSize = const Size(360, 780);
     tester.view.devicePixelRatio = 1;
@@ -257,6 +333,7 @@ void main() {
     );
     var state = GameLogic.enterDungeon(base);
     state = state.copyWith(
+      homePanelFull: true,
       missions: [
         Mission(
           id: 't1',
@@ -293,8 +370,42 @@ void main() {
       ),
     );
     final chip = tester.getRect(find.textContaining('QUESTS ·'));
-    expect(chip.top, greaterThan(hex.bottom - 1));
+    expect(chip.top, lessThan(95), reason: 'chip should sit on the target row');
+    expect(chip.top, greaterThan(hex.top - 6));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('achievement toast wraps without clip at 360 and 411', (tester) async {
+    const msg = 'Achievement unlocked · +18e · Bulwark Thrown on';
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+    for (final width in [360.0, 411.0]) {
+      tester.view.physicalSize = Size(width, 800);
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              size: Size(width, 800),
+              textScaler: TextScaler.noScaling,
+            ),
+            child: child!,
+          ),
+          home: Scaffold(
+            body: Center(
+              child: FeedbackToast(message: msg, maxLines: 2),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      final textFinder = find.textContaining('Achievement unlocked');
+      final toastText = tester.widget<Text>(textFinder);
+      expect(toastText.maxLines, 2);
+      expect(toastText.softWrap, isTrue);
+      expect(tester.getSize(find.byType(FeedbackToast)).width, lessThanOrEqualTo(width + 1));
+    }
   });
 }
 

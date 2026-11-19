@@ -1060,6 +1060,23 @@ class MissionClaimChip extends StatelessWidget {
   final VoidCallback? onLongPress;
   final bool dense;
 
+  /// Layout width for inline fight-row placement (no [FittedBox]).
+  static double layoutWidth(BuildContext context, int count, {bool dense = false}) {
+    final label = 'QUESTS · $count';
+    final scaler = MediaQuery.textScalerOf(context);
+    final painter = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: GameTheme.combat(color: GameTheme.toggleOnText),
+      ),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    final hPad = (dense ? 6 : 8) * 2.0;
+    return painter.width + hPad;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Semantics(

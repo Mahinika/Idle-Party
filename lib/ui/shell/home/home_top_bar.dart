@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
+import '../../../core/party_meter.dart';
 import '../../../core/hub_chase.dart';
 import '../../../core/keystone.dart';
 import '../../../core/game_state.dart';
@@ -258,50 +259,15 @@ class HomeTopBar extends StatelessWidget {
             ),
             if (compactTop) ...[
               SizedBox(height: textScale > 1.4 ? 0 : 2),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: ListenableBuilder(
-                      listenable: director.combatFrame,
-                      builder: (context, _) => TargetCornerHud(
-                        director: director,
-                        edgeInset: false,
-                        minTitleWidth: 108,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  _tap(
-                    label:
-                        'Floor ${state.currentRoom.floorNumber}, open floor list',
-                    onTap: () => showFloorJumpSheet(context, director),
-                    child: ExcludeSemantics(
-                      child: HexBadge(
-                        label: 'F${state.currentRoom.floorNumber}',
-                        semanticLabel:
-                            'Floor ${state.currentRoom.floorNumber}',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  HudDpsPill(director: director),
-                ],
+              _DungeonTargetRow(
+                director: director,
+                router: router,
+                state: state,
+                questReady: questReady,
+                questCount: state.missions.where((m) => m.canClaim).length,
+                textScale: textScale,
+                onFloorTap: () => showFloorJumpSheet(context, director),
               ),
-              if (questReady) ...[
-                SizedBox(height: textScale > 1.4 ? 0 : 2),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    MissionClaimChip(
-                      count: state.missions.where((m) => m.canClaim).length,
-                      dense: true,
-                      onTap: director.claimAllReadyMissions,
-                      onLongPress: () => router.apply(NavIntent.quests),
-                    ),
-                  ],
-                ),
-              ],
               if (chase.isNotEmpty) ...[
                 SizedBox(height: textScale > 1.4 ? 0 : 1),
                 Text(
@@ -447,6 +413,37 @@ class HomeTopBar extends StatelessWidget {
     );
   }
 
+  static double _hexBadgeLayoutWidth(
+    BuildContext context,
+    String floorLabel,
+  ) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final painter = TextPainter(
+      text: TextSpan(
+        text: floorLabel,
+        style: GameTheme.hint(color: GameTheme.parchment),
+      ),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    return painter.width + 18;
+  }
+
+  static double _dpsPillLayoutWidth(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final painter = TextPainter(
+      text: TextSpan(
+        text: '999 dps',
+        style: GameTheme.combat(color: GameTheme.parchment, height: 1.2),
+      ),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    return painter.width + 12;
+  }
+
   Widget _tap({
     required String label,
     required VoidCallback onTap,
@@ -466,6 +463,134 @@ class HomeTopBar extends StatelessWidget {
               minHeight: GameTheme.minTouch,
             ),
             child: Center(child: child),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DungeonTargetRow extends StatelessWidget {
+  const _DungeonTargetRow({
+    required this.director,
+    required this.router,
+    required this.state,
+    required this.questReady,
+    required this.questCount,
+    required this.textScale,
+    required this.onFloorTap,
+  });
+
+  final GameDirector director;
+  final MenuRouter router;
+  final GameState state;
+  final bool questReady;
+  final int questCount;
+  final double textScale;
+  final VoidCallback onFloorTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final floorLabel = 'F${state.currentRoom.floorNumber}';
+    final chip = MissionClaimChip(
+      count: questCount,
+      dense: true,
+      onTap: director.claimAllReadyMissions,
+      onLongPress: () => router.apply(NavIntent.quests),
+    );
+    return ListenableBuilder(
+      listenable: director.combatFrame,
+      builder: (context, _) => LayoutBuilder(
+        builder: (context, constraints) {
+        const gap = 4.0;
+        final hexW = HomeTopBar._hexBadgeLayoutWidth(context, floorLabel);
+        final chipW = questReady
+            ? MissionClaimChip.layoutWidth(context, questCount, dense: true)
+            : 0.0;
+        final world = director.spatial;
+        final dpsLive =
+            world != null &&
+            world.combatElapsed > 0.05 &&
+            PartyMeter.fromHeroes(
+              world.heroes,
+              elapsed: world.combatElapsed,
+            ).chipLabel !=
+                '0 DPS';
+        final dpsW = dpsLive ? HomeTopBar._dpsPillLayoutWidth(context) : 0.0;
+        final trailingWithChip = hexW +
+            gap +
+            dpsW +
+            (dpsW > 0 ? gap : 0) +
+            (questReady ? gap + chipW : 0);
+        final minStrip = TargetCornerHud.minLayoutWidth(context);
+        const stripSlack = 4.0;
+        final inlineQuest = questReady &&
+            constraints.maxWidth - trailingWithChip >= minStrip - stripSlack;
+
+        final targetRow = Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: ListenableBuilder(
+                listenable: director.combatFrame,
+                builder: (context, _) => TargetCornerHud(
+                  director: director,
+                  edgeInset: false,
+                ),
+              ),
+            ),
+            const SizedBox(width: gap),
+            _floorBadge(context, floorLabel),
+            const SizedBox(width: gap),
+            HudDpsPill(director: director),
+            if (inlineQuest) ...[
+              const SizedBox(width: gap),
+              chip,
+            ],
+          ],
+        );
+
+        if (questReady && !inlineQuest) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              targetRow,
+              SizedBox(height: textScale > 1.4 ? 0 : 2),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [chip],
+              ),
+            ],
+          );
+        }
+        return targetRow;
+        },
+      ),
+    );
+  }
+
+  Widget _floorBadge(BuildContext context, String floorLabel) {
+    return WebClickScope(
+      label: 'Floor ${state.currentRoom.floorNumber}, open floor list',
+      onPressed: onFloorTap,
+      child: Semantics(
+        button: true,
+        label: 'Floor ${state.currentRoom.floorNumber}, open floor list',
+        child: InkWell(
+          onTap: onFloorTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: GameTheme.minTouch,
+              minHeight: GameTheme.minTouch,
+            ),
+            child: Center(
+              child: ExcludeSemantics(
+                child: HexBadge(
+                  label: floorLabel,
+                  semanticLabel: 'Floor ${state.currentRoom.floorNumber}',
+                ),
+              ),
+            ),
           ),
         ),
       ),

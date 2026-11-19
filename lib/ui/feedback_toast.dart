@@ -11,7 +11,7 @@ class FeedbackToast extends StatelessWidget {
     super.key,
     required this.message,
     this.kind = NoticeKind.tip,
-    this.maxLines = 4,
+    this.maxLines = 2,
     this.alignment = const Alignment(0, -0.42),
     this.docked = false,
   });
@@ -49,11 +49,14 @@ class FeedbackToast extends StatelessWidget {
           ),
         };
 
+    const hMargin = 16.0;
+    final maxToastWidth = MediaQuery.sizeOf(context).width - hMargin * 2;
     final card = Semantics(
           liveRegion: true,
           label: message,
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
+            constraints: BoxConstraints(maxWidth: maxToastWidth),
+            margin: const EdgeInsets.symmetric(horizontal: hMargin),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -87,6 +90,7 @@ class FeedbackToast extends StatelessWidget {
                 message,
                 textAlign: TextAlign.center,
                 maxLines: maxLines,
+                softWrap: true,
                 overflow: TextOverflow.ellipsis,
                 style: kind == NoticeKind.celebrate
                     ? GameTheme.hint(color: text)
@@ -104,7 +108,13 @@ class FeedbackToast extends StatelessWidget {
       );
     }
     return IgnorePointer(
-      child: Align(alignment: alignment, child: card),
+      child: Align(
+        alignment: alignment,
+        child: SizedBox(
+          width: MediaQuery.sizeOf(context).width,
+          child: Center(child: card),
+        ),
+      ),
     );
   }
 }

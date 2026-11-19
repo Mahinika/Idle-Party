@@ -82,6 +82,32 @@ class TargetCornerHud extends StatelessWidget {
 
   static const Key stripKey = ValueKey('target-strip-hud');
 
+  /// Smallest target strip the row should reserve before wrapping quest chips.
+  static double minLayoutWidth(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final titleStyle = GameTheme.combat(color: GameTheme.parchment);
+    final hintStyle = GameTheme.hint(color: GameTheme.parchmentDim);
+    final title = TextPainter(
+      text: TextSpan(text: 'MELEE · GOBL', style: titleStyle),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    final hpNum = TextPainter(
+      text: TextSpan(text: '99', style: hintStyle),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    const wellPadding = 16.0;
+    const innerPadding = 8.0 * 2;
+    const gaps = 12.0;
+    const hpBar = _hpBarWidth;
+    return title.width + hpNum.width + hpBar + wellPadding + innerPadding + gaps;
+  }
+
+  static const double _hpBarWidth = 44;
+
   static String _archetypeLabel(EnemyArchetype a) => switch (a) {
     EnemyArchetype.swarm => 'SWARM',
     EnemyArchetype.brute => 'MELEE',
@@ -275,9 +301,9 @@ class TargetCornerHud extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 4),
           SizedBox(
-            width: 56,
+            width: _hpBarWidth,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(1),
               child: LinearProgressIndicator(
