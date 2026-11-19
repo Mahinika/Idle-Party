@@ -28,6 +28,14 @@ if (hasReleaseKeystore) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+// Test-package sideload key only. Never used for Play (IDLE_TEST_PACKAGE unset).
+val testKeystorePropertiesFile = rootProject.file("test-key.properties")
+val testKeystoreProperties = Properties()
+val hasTestKeystore = idleTestPackage && testKeystorePropertiesFile.exists()
+if (hasTestKeystore) {
+    testKeystoreProperties.load(FileInputStream(testKeystorePropertiesFile))
+}
+
 val admobProperties = Properties()
 val admobPropertiesFile = rootProject.file("admob.properties")
 if (admobPropertiesFile.exists()) {
@@ -66,6 +74,14 @@ android {
     }
 
     signingConfigs {
+        if (hasTestKeystore) {
+            create("test") {
+                keyAlias = testKeystoreProperties["keyAlias"] as String
+                keyPassword = testKeystoreProperties["keyPassword"] as String
+                storeFile = file(testKeystoreProperties["storeFile"] as String)
+                storePassword = testKeystoreProperties["storePassword"] as String
+            }
+        }
         if (hasReleaseKeystore) {
             create("release") {
                 keyAlias = keystoreProperties["keyAlias"] as String
@@ -89,11 +105,12 @@ android {
             ndk {
                 debugSymbolLevel = "FULL"
             }
-            // Use key.properties when present; otherwise debug keys for local `flutter run --release`.
-            signingConfig = if (hasReleaseKeystore) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
+            // Test package uses test-key.properties when present. Play builds
+            // never set IDLE_TEST_PACKAGE, so they still use key.properties or debug.
+            signingConfig = when {
+                hasTestKeystore -> signingConfigs.getByName("test")
+                hasReleaseKeystore -> signingConfigs.getByName("release")
+                else -> signingConfigs.getByName("debug")
             }
         }
     }

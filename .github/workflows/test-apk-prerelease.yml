@@ -87,6 +87,28 @@ jobs:
       - name: Patch Android for test package
         run: python3 tool/ci/patch_android_test_apk.py apply
 
+      # Dedicated test key for com.idleparty.app.test only. Never the Play keystore.
+      # If these secrets are missing, the APK stays debug-signed (previous behavior).
+      - name: Decode test keystore (optional)
+        id: test_sign
+        env:
+          TEST_KEYSTORE_BASE64: ${{ secrets.TEST_KEYSTORE_BASE64 }}
+          TEST_KEYSTORE_PASSWORD: ${{ secrets.TEST_KEYSTORE_PASSWORD }}
+          TEST_KEY_ALIAS: ${{ secrets.TEST_KEY_ALIAS }}
+          TEST_KEY_PASSWORD: ${{ secrets.TEST_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TEST_KEYSTORE_BASE64}" ] || [ -z "${TEST_KEYSTORE_PASSWORD}" ] \
+            || [ -z "${TEST_KEY_ALIAS}" ] || [ -z "${TEST_KEY_PASSWORD}" ]; then
+            echo "No test keystore secrets; test APKs will use debug signing."
+            echo "signed=debug" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "$TEST_KEYSTORE_BASE64" | base64 -d > android/test-upload-keystore.jks
+          test -s android/test-upload-keystore.jks
+          python3 tool/ci/write_test_key_properties.py
+          echo "signed=test" >> "$GITHUB_OUTPUT"
+
       - name: Build test APKs (arm64 phone + x86_64 emulator)
         env:
           IDLE_TEST_PACKAGE: '1'
@@ -128,7 +150,12 @@ jobs:
             *) echo "Tag must start with test- (got $tag)." >&2; exit 1 ;;
           esac
           if [ -z "$NOTES_INPUT" ]; then
-            notes="Sideload only. Not for Play. Debug-signed.
+            if [ "${{ steps.test_sign.outputs.signed }}" = "test" ]; then
+              sign_line="Signed with the dedicated test key, not the Play key. First install of this key needs one uninstall of the old debug-signed Idle Party Test app (com.idleparty.app.test only). The Play app is not affected."
+            else
+              sign_line="Debug-signed."
+            fi
+            notes="Sideload only. Not for Play. ${sign_line}
 
           idle-party-test-arm64.apk — phones (arm64), including Samsung A56
           idle-party-test-x86_64.apk — x86_64 Android emulators

@@ -1,0 +1,6 @@
+# Copy to android/test-key.properties for a local test-package build (do not commit).
+# Used only when IDLE_TEST_PACKAGE=1. Play builds ignore this file.
+storePassword=replace-me
+keyPassword=replace-me
+keyAlias=idleparty-test
+storeFile=../test-upload-keystore.jks
