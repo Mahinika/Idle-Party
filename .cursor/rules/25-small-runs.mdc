@@ -1,0 +1,16 @@
+---
+description: Small runs and cheap models. One batch per run, commit each batch, resume from git.
+alwaysApply: true
+---
+
+# Small runs
+
+One batch per run. Write the plan to a checked-in file or a `/tmp` plan
+file. Commit after each batch. Resume from git state, not from chat
+memory.
+
+**Models:** default Composer 2.5 with `fast: false`. Step up to Grok 4.7
+at medium effort with `fast: false` only when needed. No Fast mode. No
+third-party models.
+
+Details: `.cursor/skills/small-runs`.

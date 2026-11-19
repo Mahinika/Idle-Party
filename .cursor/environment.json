@@ -1,0 +1,4 @@
+{
+  "name": "Idle Party",
+  "install": "bash tool/ci/install_flutter_pinned.sh"
+}

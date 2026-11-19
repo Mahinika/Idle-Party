@@ -47,6 +47,9 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -83,6 +86,28 @@ jobs:
 
       - name: Patch Android for test package
         run: python3 tool/ci/patch_android_test_apk.py apply
+
+      # Dedicated test key for com.idleparty.app.test only. Never the Play keystore.
+      # If these secrets are missing, the APK stays debug-signed (previous behavior).
+      - name: Decode test keystore (optional)
+        id: test_sign
+        env:
+          TEST_KEYSTORE_BASE64: ${{ secrets.TEST_KEYSTORE_BASE64 }}
+          TEST_KEYSTORE_PASSWORD: ${{ secrets.TEST_KEYSTORE_PASSWORD }}
+          TEST_KEY_ALIAS: ${{ secrets.TEST_KEY_ALIAS }}
+          TEST_KEY_PASSWORD: ${{ secrets.TEST_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TEST_KEYSTORE_BASE64}" ] || [ -z "${TEST_KEYSTORE_PASSWORD}" ] \
+            || [ -z "${TEST_KEY_ALIAS}" ] || [ -z "${TEST_KEY_PASSWORD}" ]; then
+            echo "No test keystore secrets; test APKs will use debug signing."
+            echo "signed=debug" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "$TEST_KEYSTORE_BASE64" | base64 -d > android/test-upload-keystore.jks
+          test -s android/test-upload-keystore.jks
+          python3 tool/ci/write_test_key_properties.py
+          echo "signed=test" >> "$GITHUB_OUTPUT"
 
       - name: Build test APKs (arm64 phone + x86_64 emulator)
         env:
@@ -125,7 +150,12 @@ jobs:
             *) echo "Tag must start with test- (got $tag)." >&2; exit 1 ;;
           esac
           if [ -z "$NOTES_INPUT" ]; then
-            notes="Sideload only. Not for Play. Debug-signed.
+            if [ "${{ steps.test_sign.outputs.signed }}" = "test" ]; then
+              sign_line="Signed with the dedicated test key, not the Play key. First install of this key needs one uninstall of the old debug-signed Idle Party Test app (com.idleparty.app.test only). The Play app is not affected."
+            else
+              sign_line="Debug-signed."
+            fi
+            notes="Sideload only. Not for Play. ${sign_line}
 
           idle-party-test-arm64.apk — phones (arm64), including Samsung A56
           idle-party-test-x86_64.apk — x86_64 Android emulators
@@ -147,3 +177,23 @@ jobs:
             --notes "$notes" \
             idle-party-test-arm64.apk \
             idle-party-test-x86_64.apk
+
+      # No-op until FIREBASE_APP_DISTRIBUTION_CREDENTIALS is set.
+      # App Distribution is free on Spark. Do not use the Play service account.
+      # Robert must: create a service account with role "Firebase App Distribution
+      # Admin", put its JSON key in that secret, and in Firebase Console >
+      # App Distribution for "Idle Party Test" create testers group "robert"
+      # with only his email.
+      - name: Skip Firebase App Distribution when unconfigured
+        if: ${{ secrets.FIREBASE_APP_DISTRIBUTION_CREDENTIALS == '' }}
+        run: echo "No FIREBASE_APP_DISTRIBUTION_CREDENTIALS; skipping App Distribution."
+
+      - name: Upload arm64 test APK to Firebase App Distribution
+        if: ${{ secrets.FIREBASE_APP_DISTRIBUTION_CREDENTIALS != '' }}
+        uses: wzieba/Firebase-Distribution-Github-Action@v1.7.1
+        with:
+          appId: 1:900067828121:android:a612149094a9324290b308
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_APP_DISTRIBUTION_CREDENTIALS }}
+          groups: robert
+          file: idle-party-test-arm64.apk
+          releaseNotes: "Idle Party Test arm64, not for Play. ${{ github.sha }}"

@@ -64,6 +64,7 @@ app.*.map.json
 # Release signing (never commit secrets)
 /android/key.properties
 /android/admob.properties
+/android/test-key.properties
 *.jks
 *.keystore
 
@@ -108,6 +109,7 @@ IdleSword*
 !.cursor/commands/
 !.cursor/commands/**/
 !.cursor/mcp.json
+!.cursor/environment.json
 
 # Local MCP venv
 /tool/mcp_idle_party/.venv/
