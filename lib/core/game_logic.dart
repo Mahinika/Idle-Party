@@ -1581,9 +1581,14 @@ class GameLogic {
     required int essenceGained,
     bool canOpenGold = false,
     bool canOpenEssence = false,
+    bool prizeWaiting = false,
+    String nextLabel = 'ENTER DUNGEON',
   }) {
     if (goldGained <= 0 && essenceGained <= 0) {
-      return 'No gold or essence this time. The button below is the next fight.';
+      // A chest / check-in / pet prize still waits: do not say "nothing"
+      // right above "+400 essence" (polish7 P016).
+      if (prizeWaiting) return 'No fight loot this time. Your prize is below.';
+      return 'No gold or essence this time. $nextLabel is the next fight.';
     }
     PartyUpgradeType? cheapest;
     var cost = 1 << 30;

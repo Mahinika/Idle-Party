@@ -118,6 +118,9 @@ Future<void> showOfflineProgressDialog(
     essenceGained: summary?.essenceGained ?? 0,
     canOpenGold: canSpend && MenuTabs.showGold(rewardState),
     canOpenEssence: canSpend && MenuTabs.showCamp(rewardState),
+    prizeWaiting:
+        chestLine.isNotEmpty || petLine.isNotEmpty || checkInLine.isNotEmpty,
+    nextLabel: returnLabel,
   );
   final canBuy = gainLine.contains(GameLogic.returnCanBuy);
   final campBuy = gainLine.contains(GameLogic.returnCampBuy);

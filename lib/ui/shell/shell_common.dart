@@ -154,9 +154,19 @@ class FlexTabs {
     if (controller.indexIsChanging) return;
     final want = ids.indexOf(selected);
     if (want >= 0 && want != controller.index) {
-      controller.index = want;
+      // Called from build: a programmatic snap must not echo back through
+      // [onChanged] (that would notify the router mid-build). The owner already
+      // knows [selected]; locked-panel fallbacks are reported post-frame.
+      _quiet = true;
+      try {
+        controller.index = want;
+      } finally {
+        _quiet = false;
+      }
     }
   }
+
+  bool _quiet = false;
 
   final TickerProvider vsync;
   final ValueChanged<int> onChanged;
@@ -184,7 +194,7 @@ class FlexTabs {
       initialIndex: initialIndex.clamp(0, length - 1),
     );
     controller.addListener(() {
-      if (!controller.indexIsChanging) onChanged(controller.index);
+      if (!_quiet && !controller.indexIsChanging) onChanged(controller.index);
     });
   }
 

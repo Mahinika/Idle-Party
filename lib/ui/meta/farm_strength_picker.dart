@@ -18,7 +18,11 @@ class FarmStrengthPicker extends StatelessWidget {
     required this.director,
     this.inRun = false,
     this.compact = false,
+    this.showTitle = true,
   });
+
+  /// False when the host draws the title itself (seam sheet title row).
+  final bool showTitle;
 
   final GameDirector director;
 
@@ -94,15 +98,13 @@ class FarmStrengthPicker extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   MenuChrome.sheetHandle(),
-                  Stack(
-                    children: [
-                      FarmStrengthPicker(director: director, inRun: true),
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: MenuChrome.sheetCloseX(ctx),
-                      ),
-                    ],
+                  // Title row owns the X so it never sits on the 4× tile
+                  // (polish7 P033).
+                  MenuChrome.sheetTitleRow(ctx, title),
+                  FarmStrengthPicker(
+                    director: director,
+                    inRun: true,
+                    showTitle: false,
                   ),
                 ],
               ),
@@ -126,8 +128,10 @@ class FarmStrengthPicker extends StatelessWidget {
       key: pickerKey,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(title, style: GameTheme.hint(color: GameTheme.torchHot)),
-        const SizedBox(height: 2),
+        if (showTitle) ...[
+          Text(title, style: GameTheme.hint(color: GameTheme.torchHot)),
+          const SizedBox(height: 2),
+        ],
         Row(
           children: [
             for (var i = 0; i < FarmIntensity.allowed.length; i++) ...[
