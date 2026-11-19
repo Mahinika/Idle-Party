@@ -160,10 +160,10 @@ void main() {
           router.open(MenuRoute.gear, gear: GearPanel.bag);
           await _settle(tester);
           expect(tester.takeException(), isNull);
-          final filters = find.text('FILTERS');
+          // The bag action row is pinned under the grid: FILTERS is in
+          // view without scrolling.
+          final filters = find.byKey(InventoryDock.bagFiltersKey);
           expect(filters, findsOneWidget);
-          await tester.ensureVisible(filters);
-          await _settle(tester);
           final r = tester.getRect(filters);
           final nav = tester.getRect(
             find.byWidgetPredicate(

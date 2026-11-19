@@ -12,6 +12,7 @@ import '../../models/hero.dart';
 import '../../models/loot.dart';
 import '../../models/proficiency.dart';
 import '../character_equip_panel.dart';
+import '../chunky_face.dart';
 import '../equipment_icon.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
@@ -27,15 +28,15 @@ import 'shell_layout.dart';
 
 part 'bag_equip_hero_chip.dart';
 part 'bag_slot.dart';
+part 'bag_actions.dart';
 part 'bag_combine_slot.dart';
 
 class InventoryDock extends StatefulWidget {
-  /// BAG keeps its buttons pinned under a filling grid only when the body
-  /// is at least this tall (+60 per 1.0 of text scale). Shorter bodies
-  /// (360x640, or 1.45) scroll as one page so no button is cut off.
+  /// Below this body height (+60 per 1.0 of text scale) the picked-item
+  /// details ride in the bag scroll instead of under the action row.
   static const double bagPinnedMinHeight = 480;
 
-  /// One empty-bag line; the MARKET nudge is a chip, not repeated text.
+  /// One empty-bag line; the MARKET nudge is a chip there, a link otherwise.
   static const String emptyBagLine = 'Bag empty — farm for loot.';
 
   static const Key bagGoldBuyKey = ValueKey('bag-gold-buy');
@@ -56,8 +57,26 @@ class InventoryDock extends StatefulWidget {
     return 'Need ${formatGold(short < 0 ? 0 : short)} more for '
         'BAG +${RunStashShop.slotsPerGoldBuy}';
   }
+
   static const String marketNudgeLabel = 'Need gear? › MARKET';
 
+  /// BAG grid: 4 square tiles a row, 6 dp apart.
+  static const int bagColumns = 4;
+  static const double bagGridGap = 6;
+  static const Key bagScrollKey = ValueKey('bag-scroll');
+  static const Key bagFiltersKey = ValueKey('bag-filters');
+  static const Key bagAutoEquipKey = ValueKey('bag-auto-equip');
+
+  /// At or above this text scale the action row uses short labels
+  /// ("EQUIP 14" instead of "EQUIP BEST 14").
+  static const double bagCompactLabelScale = 1.2;
+
+  /// The MARKET link sits under the count only while the bag holds at most
+  /// this many pieces; otherwise it waits at the bottom of the scroll.
+  static const int marketLinkMaxItems = 4;
+
+  /// Short bodies move the picked-item details into the scroll so the grid
+  /// keeps its rows (true below 480 dp, +60 per 1.0 of text scale).
   static bool bagScrolls(double bodyHeight, double textScale) =>
       bodyHeight < bagPinnedMinHeight + 60 * (textScale - 1);
 
@@ -444,372 +463,438 @@ class _InventoryDockState extends State<InventoryDock>
           if (item != null && isUpgradeForAny(state, item)) item,
       ];
     }
-    // Short sheets (360x640, or text scale 1.45) scroll as one page so the
-    // buttons under the grid stay reachable; tall sheets keep the grid
-    // filling the middle with the buttons pinned below it.
+    final selected = selectedId == null
+        ? null
+        : GameLogic.findGear(state, selectedId!);
+    // The grid is the page: it fills the middle and scrolls. One compact
+    // action row stays pinned under it. Bag space (EXPAND BAG), help and
+    // the MARKET link sit at the bottom of the scroll.
     return LayoutBuilder(
       builder: (context, box) {
         final textScale = MediaQuery.textScalerOf(context).scale(1);
-        final scroll = InventoryDock.bagScrolls(box.maxHeight, textScale);
-        final column = Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    nearFull && filled >= cap
-                        ? 'BAG FULL'
-                        : nearFull
-                        ? 'NEARLY FULL'
-                        : 'CAPACITY',
-                    style: GameTheme.readable(
-                      color: nearFull
-                          ? GameTheme.accentWarn
-                          : GameTheme.parchmentDim,
+        final short = InventoryDock.bagScrolls(box.maxHeight, textScale);
+        final hero = state.heroes.isEmpty
+            ? null
+            : state.heroes[equipHeroIndex.clamp(0, state.heroes.length - 1)];
+
+        Widget gridSliver() {
+          if (_showFilters) {
+            return SliverToBoxAdapter(
+              child: BagCleanupFilters(
+                director: widget.director,
+                compact: true,
+              ),
+            );
+          }
+          if (filled == 0 || filteredSlots.isEmpty) {
+            return SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Column(
+                  children: [
+                    Text(
+                      filled > 0 && (filter != null || _upgradesOnlyFilter)
+                          ? 'No pieces in this filter.'
+                          : InventoryDock.emptyBagLine,
+                      textAlign: TextAlign.center,
+                      style: GameTheme.section(color: GameTheme.parchmentDim),
                     ),
-                  ),
+                    if (filled == 0 && showMarketChip) ...[
+                      const SizedBox(height: 6),
+                      MenuChrome.chip(
+                        label: InventoryDock.marketNudgeLabel,
+                        onTap: onOpenMarket,
+                      ),
+                    ],
+                  ],
                 ),
-                Text(
-                  '$filled / $cap',
-                  style: GameTheme.readable(
-                    color: nearFull
-                        ? GameTheme.accentWarn
-                        : GameTheme.parchment,
-                  ),
-                ),
-              ],
+              ),
+            );
+          }
+          return SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: InventoryDock.bagColumns,
+              mainAxisSpacing: InventoryDock.bagGridGap,
+              crossAxisSpacing: InventoryDock.bagGridGap,
+              childAspectRatio: 1,
             ),
-            const SizedBox(height: 4),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(99),
-              child: LinearProgressIndicator(
-                value: cap <= 0 ? 0 : (filled / cap).clamp(0.0, 1.0),
-                minHeight: 5,
-                backgroundColor: GameTheme.panelInset,
-                color: filled >= cap
-                    ? GameTheme.bloodLit
-                    : nearFull
-                    ? GameTheme.accentWarn
-                    : GameTheme.mossLit,
+            delegate: SliverChildBuilderDelegate(
+              childCount: filteredSlots.length,
+              (context, index) {
+                final item = filteredSlots[index];
+                final picked = item != null && item.id == selectedId;
+                final inCombine =
+                    item != null &&
+                    (item.id == combineA || item.id == combineB);
+                final combineFiltered =
+                    primary != null &&
+                    item != null &&
+                    item.slot != primary.slot;
+                return _BagSlot(
+                  item: item,
+                  state: state,
+                  hero: hero,
+                  highlight: picked || inCombine,
+                  dimmed: combineFiltered,
+                  onTap: item == null || combineFiltered
+                      ? null
+                      : () => onSelect(item.id),
+                  onLongPress: item == null || combineFiltered
+                      ? null
+                      : () {
+                          if (!_longPressTipShown) {
+                            _longPressTipShown = true;
+                            widget.director.showToast(
+                              'Long-press shows grade and stat tip',
+                              life: 2.2,
+                            );
+                          }
+                        },
+                );
+              },
+            ),
+          );
+        }
+
+        final details = selected == null
+            ? null
+            : _bagSelectionDetails(selected, mergeOpen: mergeOpen);
+
+        final scroll = CustomScrollView(
+          key: InventoryDock.bagScrollKey,
+          slivers: [
+            if (short && details != null)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: details,
+                ),
+              ),
+            gridSliver(),
+            SliverToBoxAdapter(
+              child: _bagScrollFooter(
+                filled: filled,
+                showMarketLink: showMarketChip && filled > 0,
+                panelHint: filter == null && !nearFull ? bagHint : '',
               ),
             ),
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                // Nothing to filter in an empty bag.
-                if (filled > 0)
-                  MenuChrome.chip(
-                    label: 'UPGRADES',
-                    selected: _upgradesOnlyFilter,
-                    onTap: () => setState(
-                      () => _upgradesOnlyFilter = !_upgradesOnlyFilter,
+          ],
+        );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _bagCapacityRow(filled: filled, cap: cap, nearFull: nearFull),
+            if (filter != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    MenuChrome.chip(
+                      label: filterLabel ?? filter.name,
+                      selected: true,
+                      tone: GameTheme.torchHot,
                     ),
-                  ),
-                if (filter != null) ...[
-                  MenuChrome.chip(
-                    label: filterLabel ?? filter.name,
-                    selected: true,
-                    tone: GameTheme.torchHot,
-                  ),
-                  Text(
-                    filteredSlots.isEmpty
-                        ? 'none in bag'
-                        : '${filteredSlots.length} in bag',
-                    style: GameTheme.hint(color: GameTheme.parchmentDim),
-                  ),
-                  MenuChrome.chip(
-                    label: 'ALL SLOTS',
-                    onTap: onClearBagSlotFilter,
-                  ),
-                ],
-              ],
-            ),
-            if (filter == null && bagHint.isNotEmpty) ...[
+                    Text(
+                      filteredSlots.isEmpty
+                          ? 'none in bag'
+                          : '${filteredSlots.length} in bag',
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    ),
+                    MenuChrome.chip(
+                      label: 'ALL SLOTS',
+                      onTap: onClearBagSlotFilter,
+                    ),
+                  ],
+                ),
+              ),
+            // A full bag is a warning: keep its line in view.
+            if (filter == null && nearFull && bagHint.isNotEmpty) ...[
               ShellLayout.gap(4),
               ShellLayout.hint(bagHint, maxLines: 2),
             ],
+            // Nearly empty bag: the MARKET link sits right under the count.
+            if (showMarketChip &&
+                filled > 0 &&
+                filled <= InventoryDock.marketLinkMaxItems)
+              Align(alignment: Alignment.centerLeft, child: _marketLink()),
+            const SizedBox(height: 6),
+            Expanded(child: scroll),
             const SizedBox(height: 4),
-            // Empty bag: the MARKET nudge sits inside the empty state instead.
-            if (showMarketChip && filled > 0)
-              Center(
-                child: MenuChrome.chip(
-                  label: InventoryDock.marketNudgeLabel,
-                  onTap: onOpenMarket,
-                ),
-              ),
-            if (showMarketChip && filled > 0) const SizedBox(height: 6),
-            _bagGridArea(
-              scroll: scroll,
-              child: _showFilters
-                  ? (scroll
-                        ? BagCleanupFilters(
-                            director: widget.director,
-                            compact: true,
-                          )
-                        : SingleChildScrollView(
-                            child: BagCleanupFilters(
-                              director: widget.director,
-                              compact: true,
-                            ),
-                          ))
-                  : filled == 0
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            InventoryDock.emptyBagLine,
-                            textAlign: TextAlign.center,
-                            style: GameTheme.section(
-                              color: GameTheme.parchmentDim,
-                            ),
-                          ),
-                          if (showMarketChip) ...[
-                            const SizedBox(height: 6),
-                            MenuChrome.chip(
-                              label: InventoryDock.marketNudgeLabel,
-                              onTap: onOpenMarket,
-                            ),
-                          ],
-                        ],
-                      ),
-                    )
-                  : filteredSlots.isEmpty
-                  ? Center(
-                      child: Text(
-                        filter != null || _upgradesOnlyFilter
-                            ? 'No pieces in this filter.'
-                            : InventoryDock.emptyBagLine,
-                        textAlign: TextAlign.center,
-                        style: GameTheme.section(color: GameTheme.parchmentDim),
-                      ),
-                    )
-                  : LayoutBuilder(
-                      builder: (context, gridConstraints) {
-                        return GridView.builder(
-                          shrinkWrap: scroll,
-                          physics: scroll
-                              ? const NeverScrollableScrollPhysics()
-                              : null,
-                          itemCount: filteredSlots.length,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                mainAxisSpacing: 8,
-                                crossAxisSpacing: 8,
-                                mainAxisExtent: 72,
-                              ),
-                          itemBuilder: (context, index) {
-                            final item = filteredSlots[index];
-                            final selected =
-                                item != null && item.id == selectedId;
-                            final inCombine =
-                                item != null &&
-                                (item.id == combineA || item.id == combineB);
-                            final combineFiltered =
-                                primary != null &&
-                                item != null &&
-                                item.slot != primary.slot;
-                            return _BagSlot(
-                              item: item,
-                              state: state,
-                              hero: state.heroes.isEmpty
-                                  ? null
-                                  : state.heroes[equipHeroIndex.clamp(
-                                      0,
-                                      state.heroes.length - 1,
-                                    )],
-                              highlight: selected || inCombine,
-                              dimmed: combineFiltered,
-                              onTap: item == null || combineFiltered
-                                  ? null
-                                  : () => onSelect(item.id),
-                              onLongPress: item == null || combineFiltered
-                                  ? null
-                                  : () {
-                                      if (!_longPressTipShown) {
-                                        _longPressTipShown = true;
-                                        widget.director.showToast(
-                                          'Long-press shows grade and stat tip',
-                                          life: 2.2,
-                                        );
-                                      }
-                                    },
-                            );
-                          },
-                        );
-                      },
-                    ),
-            ),
-            const SizedBox(height: 4),
-            GameButton(
-              label: state.autoEquipUpgrades
-                  ? 'AUTO EQUIP ON'
-                  : 'AUTO EQUIP OFF',
-              tip: state.autoEquipUpgrades
-                  ? 'Wears upgrades during the fight and while the app is closed. Tap to stop.'
-                  : 'Tap to wear upgrades during the fight and while the app is closed.',
-              style: state.autoEquipUpgrades
-                  ? GameButtonStyle.brown
-                  : GameButtonStyle.grey,
-              dense: true,
-              onPressed: () => widget.director.setAutoEquipUpgrades(
-                !state.autoEquipUpgrades,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Expanded(child: _autoEquipButton(dense: true, expanded: true)),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: GameButton(
-                    label: 'SELL JUNK',
-                    tip: MenuAlerts.bagCleanButtonTip(state),
-                    onPressed: state.gearStash.isEmpty ? null : onCleanBag,
-                    style: GameButtonStyle.grey,
-                    dense: true,
-                    expanded: true,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            GameButton(
-              label: 'FILTERS',
-              tip: MenuAlerts.bagFiltersButtonTip(state, showing: _showFilters),
-              onPressed: () => setState(() => _showFilters = !_showFilters),
-              style: _showFilters
-                  ? GameButtonStyle.brown
-                  : GameButtonStyle.grey,
-              dense: true,
-              expanded: true,
-            ),
-            if (mergeOpen && selectedId != null) ...[
+            _bagActionRow(textScale: textScale),
+            if (!short && details != null) ...[
               const SizedBox(height: 4),
-              GameButton(
-                label: 'ADD TO MERGE',
-                onPressed: GameLogic.findStashGear(state, selectedId!) == null
-                    ? null
-                    : () => onPutCombine(selectedId!),
-                style: GameButtonStyle.grey,
-              ),
-            ],
-            if (selectedId != null) ...[
-              const SizedBox(height: 4),
-              Builder(
-                builder: (context) {
-                  final selected = GameLogic.findGear(state, selectedId!);
-                  if (selected == null) {
-                    return const SizedBox.shrink();
-                  }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        selected.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GameTheme.readable(
-                          color: itemRarityColor(selected.rarity),
-                        ),
-                      ),
-                      Text(
-                        selected.statsLine,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GameTheme.hint(color: GameTheme.torchHot),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Equip on:',
-                        style: GameTheme.hint(color: GameTheme.parchmentDim),
-                      ),
-                      const SizedBox(height: 3),
-                      _equipHeroChipsFor(selected),
-                    ],
-                  );
-                },
-              ),
-            ] else if (!mergeOpen)
-              Text(
-                InventoryDock.bagHint,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
-              )
-            else
-              Text(
-                InventoryDock.bagHint,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
-              ),
-            // Bag space is a purchase, not the bag: it sits under the
-            // bag's own buttons with its price state spelled out.
-            if (!RunStashShop.goldBuysAtCap(state.metaDepth) ||
-                !RunStashShop.cinderBuysAtCap(state.metaDepth)) ...[
-              const SizedBox(height: 8),
-              MenuChrome.sectionLabel('EXPAND BAG'),
-              const SizedBox(height: 4),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: [
-                  if (!RunStashShop.goldBuysAtCap(state.metaDepth))
-                    GameButton(
-                      key: InventoryDock.bagGoldBuyKey,
-                      label: RunStashShop.goldBuyLabel(state),
-                      dense: true,
-                      style: RunStashShop.canBuyGold(state)
-                          ? GameButtonStyle.gold
-                          : GameButtonStyle.grey,
-                      onPressed: director.buyGoldBagExpansion,
-                    ),
-                  if (!RunStashShop.cinderBuysAtCap(state.metaDepth))
-                    GameButton(
-                      label: RunStashShop.cinderBuyLabel(state),
-                      dense: true,
-                      style: RunStashShop.canBuyCinders(state)
-                          ? GameButtonStyle.gold
-                          : GameButtonStyle.grey,
-                      onPressed: director.buyCinderBagExpansion,
-                    ),
-                ],
-              ),
-              if (!RunStashShop.goldBuysAtCap(state.metaDepth) &&
-                  !RunStashShop.canBuyGold(state)) ...[
-                const SizedBox(height: 2),
-                Text(
-                  InventoryDock.bagNeedLine(state),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.hint(color: GameTheme.parchmentDim),
-                ),
-              ],
+              details,
             ],
           ],
-        );
-        if (!scroll) return column;
-        return SingleChildScrollView(
-          padding: EdgeInsets.only(bottom: NavClearance.of(context)),
-          child: column,
         );
       },
     );
   }
 
-  /// Grid / empty / filters area of BAG: fills the middle when pinned,
-  /// sizes to its content when the whole tab scrolls.
-  Widget _bagGridArea({required bool scroll, required Widget child}) {
-    if (!scroll) return Expanded(child: child);
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 72),
-      child: child,
+  /// "CAPACITY 14 / 50 ▬▬▬ [UPGRADES]" on one line.
+  Widget _bagCapacityRow({
+    required int filled,
+    required int cap,
+    required bool nearFull,
+  }) {
+    final tone = nearFull ? GameTheme.accentWarn : GameTheme.parchmentDim;
+    return Row(
+      children: [
+        Text(
+          nearFull && filled >= cap
+              ? 'BAG FULL'
+              : nearFull
+              ? 'NEARLY FULL'
+              : 'CAPACITY',
+          style: GameTheme.hint(color: tone),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '$filled / $cap',
+          style: GameTheme.readable(
+            color: nearFull ? GameTheme.accentWarn : GameTheme.parchment,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: cap <= 0 ? 0 : (filled / cap).clamp(0.0, 1.0),
+              minHeight: 5,
+              backgroundColor: GameTheme.panelInset,
+              color: filled >= cap
+                  ? GameTheme.bloodLit
+                  : nearFull
+                  ? GameTheme.accentWarn
+                  : GameTheme.mossLit,
+            ),
+          ),
+        ),
+        // Nothing to filter in an empty bag.
+        if (filled > 0) ...[
+          const SizedBox(width: 8),
+          MenuChrome.chip(
+            label: 'UPGRADES',
+            selected: _upgradesOnlyFilter,
+            onTap: () =>
+                setState(() => _upgradesOnlyFilter = !_upgradesOnlyFilter),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// AUTO EQUIP switch · EQUIP · SELL JUNK · FILTERS, one row.
+  Widget _bagActionRow({required double textScale}) {
+    final upgrades = MenuAlerts.bagUpgradeCount(state);
+    final roomy = textScale < InventoryDock.bagCompactLabelScale;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _AutoEquipSwitch(
+          on: state.autoEquipUpgrades,
+          onChanged: (v) => widget.director.setAutoEquipUpgrades(v),
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          flex: 5,
+          child: GameButton(
+            label: upgrades > 0
+                ? (roomy ? 'EQUIP BEST $upgrades' : 'EQUIP $upgrades')
+                : 'EQUIP',
+            tip: upgrades > 0
+                ? 'One tap: equip all $upgrades upgrades now'
+                : MenuAlerts.bagEquipIdleTip(state),
+            onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
+            style: upgrades > 0 ? GameButtonStyle.brown : GameButtonStyle.grey,
+            dense: true,
+            expanded: true,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          flex: 4,
+          child: GameButton(
+            label: 'SELL JUNK',
+            tip: MenuAlerts.bagCleanButtonTip(state),
+            onPressed: state.gearStash.isEmpty ? null : onCleanBag,
+            style: GameButtonStyle.grey,
+            dense: true,
+            expanded: true,
+          ),
+        ),
+        const SizedBox(width: 4),
+        _BagFiltersButton(
+          showing: _showFilters,
+          tip: MenuAlerts.bagFiltersButtonTip(state, showing: _showFilters),
+          onTap: () => setState(() => _showFilters = !_showFilters),
+        ),
+      ],
+    );
+  }
+
+  /// Small "Need gear? › MARKET" text link (44 dp tall tap area).
+  Widget _marketLink() {
+    return WebClickScope(
+      label: InventoryDock.marketNudgeLabel,
+      onPressed: onOpenMarket,
+      child: Semantics(
+        button: true,
+        label: InventoryDock.marketNudgeLabel,
+        excludeSemantics: true,
+        child: InkWell(
+          onTap: onOpenMarket,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                widthFactor: 1,
+                child: Text(
+                  InventoryDock.marketNudgeLabel,
+                  style: GameTheme.hint(color: GameTheme.torchHot).copyWith(
+                    decoration: TextDecoration.underline,
+                    decorationColor: GameTheme.torchHot,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Bottom of the bag scroll: help, MARKET link, then EXPAND BAG.
+  Widget _bagScrollFooter({
+    required int filled,
+    required bool showMarketLink,
+    required String panelHint,
+  }) {
+    final canExpand =
+        !RunStashShop.goldBuysAtCap(state.metaDepth) ||
+        !RunStashShop.cinderBuysAtCap(state.metaDepth);
+    return Padding(
+      padding: EdgeInsets.only(top: 8, bottom: NavClearance.of(context)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (filled > 0 && selectedId == null)
+            Text(
+              InventoryDock.bagHint,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
+            ),
+          if (panelHint.isNotEmpty) ...[
+            ShellLayout.gap(4),
+            ShellLayout.hint(panelHint, maxLines: 2),
+          ],
+          if (showMarketLink && filled > InventoryDock.marketLinkMaxItems)
+            Align(alignment: Alignment.centerLeft, child: _marketLink()),
+          // Bag space is a purchase, not the bag: it sits at the bottom of
+          // the scroll with its price state spelled out.
+          if (canExpand) ...[
+            const SizedBox(height: 8),
+            MenuChrome.sectionLabel('EXPAND BAG'),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                if (!RunStashShop.goldBuysAtCap(state.metaDepth))
+                  GameButton(
+                    key: InventoryDock.bagGoldBuyKey,
+                    label: RunStashShop.goldBuyLabel(state),
+                    dense: true,
+                    style: RunStashShop.canBuyGold(state)
+                        ? GameButtonStyle.gold
+                        : GameButtonStyle.grey,
+                    onPressed: director.buyGoldBagExpansion,
+                  ),
+                if (!RunStashShop.cinderBuysAtCap(state.metaDepth))
+                  GameButton(
+                    label: RunStashShop.cinderBuyLabel(state),
+                    dense: true,
+                    style: RunStashShop.canBuyCinders(state)
+                        ? GameButtonStyle.gold
+                        : GameButtonStyle.grey,
+                    onPressed: director.buyCinderBagExpansion,
+                  ),
+              ],
+            ),
+            if (!RunStashShop.goldBuysAtCap(state.metaDepth) &&
+                !RunStashShop.canBuyGold(state)) ...[
+              const SizedBox(height: 2),
+              Text(
+                InventoryDock.bagNeedLine(state),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Picked item: name, stats, ADD TO MERGE and the hero chips.
+  Widget _bagSelectionDetails(
+    EquipmentItem selected, {
+    required bool mergeOpen,
+  }) {
+    final inStash = GameLogic.findStashGear(state, selected.id) != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    selected.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.readable(
+                      color: itemRarityColor(selected.rarity),
+                    ),
+                  ),
+                  Text(
+                    selected.statsLine,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.hint(color: GameTheme.torchHot),
+                  ),
+                ],
+              ),
+            ),
+            if (mergeOpen) ...[
+              const SizedBox(width: 6),
+              GameButton(
+                label: 'ADD TO MERGE',
+                onPressed: inStash ? () => onPutCombine(selected.id) : null,
+                style: GameButtonStyle.grey,
+                dense: true,
+                expanded: false,
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 3),
+        Text('Equip on:', style: GameTheme.hint(color: GameTheme.parchmentDim)),
+        const SizedBox(height: 3),
+        _equipHeroChipsFor(selected),
+      ],
     );
   }
 

@@ -77,14 +77,20 @@ void main() {
 
   testWidgets('F017 an essence price uses the essence face', (tester) async {
     await tester.pumpWidget(chip(essence: true, q: 1));
-    expect(tester.widget<ChunkyFace>(find.byType(ChunkyFace)).tone,
-        ChunkyTone.essence);
+    expect(
+      tester.widget<ChunkyFace>(find.byType(ChunkyFace)).tone,
+      ChunkyTone.essence,
+    );
     await tester.pumpWidget(chip(essence: false, q: 1));
-    expect(tester.widget<ChunkyFace>(find.byType(ChunkyFace)).tone,
-        ChunkyTone.gold);
+    expect(
+      tester.widget<ChunkyFace>(find.byType(ChunkyFace)).tone,
+      ChunkyTone.gold,
+    );
     await tester.pumpWidget(chip(essence: true, enabled: false));
-    expect(tester.widget<ChunkyFace>(find.byType(ChunkyFace)).tone,
-        ChunkyTone.grey);
+    expect(
+      tester.widget<ChunkyFace>(find.byType(ChunkyFace)).tone,
+      ChunkyTone.grey,
+    );
   });
 
   testWidgets('F059 ×1 has no badge; ×10 does', (tester) async {
@@ -113,21 +119,45 @@ void main() {
     }
   });
 
-  a100TestHome('F013 bag space sits under the bag with a need line', (
-    tester,
-  ) async {
-    final (_, router) =
-        await a100Pump(tester, const Size(360, 780), 1, gold: 100);
-    router.open(MenuRoute.gear, gear: GearPanel.bag);
-    await a100Settle(tester);
-    final buy = find.byKey(InventoryDock.bagGoldBuyKey);
-    expect(buy, findsOneWidget);
-    expect(tester.widget<GameButton>(buy).style, GameButtonStyle.grey);
-    expect(find.textContaining('Need '), findsWidgets);
-    final auto = find.textContaining('AUTO EQUIP');
-    expect(tester.getRect(buy).top,
-        greaterThan(tester.getRect(auto.first).bottom));
-  });
+  a100TestHome(
+    'F013 bag space sits at the end of the bag scroll with a need line',
+    (tester) async {
+      final (_, router) = await a100Pump(
+        tester,
+        const Size(360, 780),
+        1,
+        gold: 100,
+      );
+      router.open(MenuRoute.gear, gear: GearPanel.bag);
+      await a100Settle(tester);
+      final buy = find.byKey(InventoryDock.bagGoldBuyKey);
+      expect(buy, findsOneWidget);
+      expect(tester.widget<GameButton>(buy).style, GameButtonStyle.grey);
+      expect(find.textContaining('Need '), findsWidgets);
+      // EXPAND BAG lives in the bag scroll, after the items, not among the
+      // pinned bag buttons.
+      expect(
+        find.descendant(
+          of: find.byKey(InventoryDock.bagScrollKey),
+          matching: buy,
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(InventoryDock.bagScrollKey),
+          matching: find.text(InventoryDock.emptyBagLine),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.getRect(buy).top,
+        greaterThan(
+          tester.getRect(find.text(InventoryDock.emptyBagLine)).bottom,
+        ),
+      );
+    },
+  );
 
   a100TestHome('F023 LEAVE is an outline, not a red slab', (tester) async {
     await a100Pump(tester, const Size(360, 780), 1);
@@ -154,8 +184,12 @@ void main() {
     a100TestHome('F024 reroll is gold when payable, grey when short ($gold)', (
       tester,
     ) async {
-      final (director, _) =
-          await a100Pump(tester, const Size(360, 780), 1, gold: gold);
+      final (director, _) = await a100Pump(
+        tester,
+        const Size(360, 780),
+        1,
+        gold: gold,
+      );
       await a100Settle(tester);
       await tester.tap(find.text('MARKET').first);
       await a100Settle(tester);
@@ -170,9 +204,9 @@ void main() {
   a100TestHome('F043 town ENTER is the amber go face', (tester) async {
     await a100Pump(tester, const Size(360, 780), 1, inDungeon: false);
     await a100Settle(tester);
-    final go = tester.widgetList<GameButton>(find.byType(GameButton)).where(
-          (b) => b.style == GameButtonStyle.go,
-        );
+    final go = tester
+        .widgetList<GameButton>(find.byType(GameButton))
+        .where((b) => b.style == GameButtonStyle.go);
     expect(go, isNotEmpty);
   });
 }

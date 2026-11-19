@@ -6,6 +6,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/core/meta_systems.dart';
+import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/vfx_quality.dart';
 import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
@@ -25,6 +26,7 @@ Future<GameDirector> a100Director({
   int? gold,
   int? essence,
   bool full = false,
+  List<EquipmentItem>? stash,
 }) => withShellGoldenWeek(() async {
   final base = GameLogic.createInitialState(now: shellGoldenNow);
   var s = fresh
@@ -58,6 +60,7 @@ Future<GameDirector> a100Director({
   if (gold != null) s = s.copyWith(gold: gold);
   if (essence != null) s = s.copyWith(essence: essence);
   if (full) s = s.copyWith(homePanelFull: true);
+  if (stash != null) s = s.copyWith(gearStash: stash);
   if (inDungeon) s = GameLogic.enterDungeon(s);
   final d = GameDirector.preview(initialState: s);
   await d.boot(deferCombatLoop: true);
@@ -78,6 +81,7 @@ Future<(GameDirector, MenuRouter)> a100Pump(
   bool full = false,
   // Rebuild the shell on director changes, like PlayShell does.
   bool live = false,
+  List<EquipmentItem>? stash,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -91,6 +95,7 @@ Future<(GameDirector, MenuRouter)> a100Pump(
     gold: gold,
     essence: essence,
     full: full,
+    stash: stash,
   );
   final router = MenuRouter();
   a100Live = (director, router);
@@ -116,6 +121,38 @@ Future<(GameDirector, MenuRouter)> a100Pump(
 }
 
 (GameDirector, MenuRouter)? a100Live;
+
+/// A mixed bag: every rarity, many slots, item levels 8..60.
+List<EquipmentItem> a100Stash([int count = 14]) {
+  const slots = [
+    EquipmentSlot.weapon,
+    EquipmentSlot.shoulder,
+    EquipmentSlot.offHand,
+    EquipmentSlot.head,
+    EquipmentSlot.chest,
+    EquipmentSlot.boots,
+    EquipmentSlot.ring,
+    EquipmentSlot.neck,
+    EquipmentSlot.hands,
+    EquipmentSlot.legs,
+    EquipmentSlot.cloak,
+    EquipmentSlot.trinket,
+    EquipmentSlot.waist,
+    EquipmentSlot.wrist,
+  ];
+  return [
+    for (var i = 0; i < count; i++)
+      EquipmentItem(
+        id: 'a100_bag_$i',
+        name: 'Test Piece $i',
+        slot: slots[i % slots.length],
+        rarity: LootRarity.values[i % LootRarity.values.length],
+        attackBonus: 4 + i,
+        strengthBonus: 2 + i,
+        itemLevel: 8 + i * 4,
+      ),
+  ];
+}
 
 /// testWidgets that tears the shell down before the timer check.
 void a100TestHome(String name, Future<void> Function(WidgetTester) body) {
