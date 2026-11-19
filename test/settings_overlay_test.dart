@@ -134,7 +134,7 @@ void main() {
     );
     await tester.pump();
     expect(find.text('BACK'), findsNothing);
-    expect(find.textContaining('Claim 3 in a row'), findsOneWidget);
+    expect(find.textContaining('Every 3rd quest claimed'), findsOneWidget);
   });
 }
 

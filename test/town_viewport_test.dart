@@ -324,7 +324,7 @@ void main() {
       expect(router.moreSection, MoreSection.quests);
       expect(find.text('QUESTS'), findsWidgets);
       expect(
-        find.textContaining('Claim 3 in a row'),
+        find.textContaining('Every 3rd quest claimed'),
         findsOneWidget,
       );
       await tester.tap(find.text('CLOSE').first);

@@ -20,6 +20,10 @@ import 'rift_hub_panel.dart';
 /// Hub ENDGAME tab is the other door to the same hunts.
 class KeystoneSheet extends StatelessWidget {
   const KeystoneSheet({super.key, required this.director, this.router});
+
+  /// One intro for the sheet (polish7 P048).
+  static const String intro =
+      'Turn the KEY dial, then ENTER from town. The hunts are their own modes.';
   final GameDirector director;
 
   /// Closes the menu before ENTER from the dial.
@@ -55,7 +59,7 @@ class KeystoneSheet extends StatelessWidget {
             ShellLayout.gap(4),
           ],
           ShellLayout.hint(
-            'Turn the dial, then ENTER. The hunts below are separate from PATH caves.',
+            KeystoneSheet.intro,
             maxLines: 3,
           ),
           ShellLayout.gap(8),
@@ -67,7 +71,7 @@ class KeystoneSheet extends StatelessWidget {
                 children: [
                   MenuChrome.fold(
                     title: 'KEY',
-                    subtitle: 'Dial, then ENTER',
+                    subtitle: 'Harder caves, better loot',
                     initiallyExpanded: hunt == null,
                     children: [
                       ChallengeToggles(
@@ -81,6 +85,9 @@ class KeystoneSheet extends StatelessWidget {
                       ),
                     ],
                   ),
+                  // One intro above, then groups (polish7 P048).
+                  ShellLayout.gap(6),
+                  MenuChrome.sectionLabel('HUNTS'),
                   MenuChrome.fold(
                     title: 'GAUNTLET',
                     subtitle: 'Boss every 5 · not a 16th cave',
@@ -106,6 +113,8 @@ class KeystoneSheet extends StatelessWidget {
                     initiallyExpanded: hunt == HubEndgameHunt.ashen,
                     children: [AshenCrownHubPanel(director: d)],
                   ),
+                  ShellLayout.gap(6),
+                  MenuChrome.sectionLabel('RANKS'),
                   MenuChrome.fold(
                     title: 'BOARDS',
                     subtitle: "This month's ranks",

@@ -571,8 +571,10 @@ class _SlotCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
+                // Name on top, class under it: the same order as the rest
+                // of the game (polish7 P004).
                 Text(
-                  def?.shortLabel ?? 'Pick spec',
+                  def == null ? 'Pick spec' : PartyHero.shownNameFor(hero?.name ?? def.defaultName),
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

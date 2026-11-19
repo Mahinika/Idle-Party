@@ -338,13 +338,13 @@ class MenuRouter extends ChangeNotifier {
 
     },
 
-    MenuRoute.shop => 'SCROLLS · Cinders · ad-free',
+    MenuRoute.shop => 'Scrolls, Cinders, and ad-free',
 
     MenuRoute.essence => switch (_essencePanel) {
 
       EssencePanel.tracks => 'Camp · Blessing',
 
-      EssencePanel.keep => 'God Hand · Blessing · Ascend',
+      EssencePanel.keep => 'What stays after Ascend',
 
       EssencePanel.relics => 'Embers discover · Cinders vault',
 
@@ -356,9 +356,9 @@ class MenuRouter extends ChangeNotifier {
 
     MenuRoute.more => switch (_moreSection) {
 
-      MoreSection.info => 'Guides · Patch Notes',
+      MoreSection.info => 'How the game works',
 
-      MoreSection.settings => 'Sound · zoom · save',
+      MoreSection.settings => 'Sound, display, bag, and account',
 
       MoreSection.credits => 'Art credits',
 

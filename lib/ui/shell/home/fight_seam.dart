@@ -7,6 +7,7 @@ import '../../../core/game_state.dart';
 import '../../../core/menu_router.dart';
 import '../../../models/dungeon_mode.dart';
 import '../../chunky_face.dart';
+import '../../first_session_tips.dart';
 import '../../game_theme.dart';
 import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
@@ -133,10 +134,11 @@ class FightFieldControls extends StatelessWidget {
     final state = director.state;
     final plain = GameLogic.plainPlayerChrome(state);
     final world = director.spatial;
-    final farmLabel = plain ? 'Repeat' : 'FARM';
-    final pushLabel = plain ? 'Next' : 'PUSH';
+    // One word pair from the first floor on (polish7 P005).
+    const farmLabel = 'FARM';
+    const pushLabel = 'PUSH';
     final modeHint = plain
-        ? 'Repeat loots. Next goes deeper.'
+        ? FirstSessionTips.farmPushPlain
         : 'FARM loops. PUSH climbs.';
     final osScale = WidgetsBinding.instance.platformDispatcher.textScaleFactor;
     final seamFitsExtras = osScale <= GameTheme.typeScaleMax;
@@ -355,8 +357,8 @@ void _setFightMode(
     barrierColor: MenuChrome.scrim,
     builder: (ctx) => MenuChrome.dialog(
       title: mode == DungeonMode.farm
-          ? (plain ? 'Switch to Repeat?' : 'Switch to FARM?')
-          : (plain ? 'Switch to Next?' : 'Switch to PUSH?'),
+          ? 'Switch to FARM?'
+          : 'Switch to PUSH?',
       content: Text(
         'You are mid-fight. Switch anyway?',
         style: GameTheme.readable(color: GameTheme.parchment),

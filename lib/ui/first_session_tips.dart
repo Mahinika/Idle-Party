@@ -29,6 +29,10 @@ class CoachHint {
 class FirstSessionTips extends StatelessWidget {
   const FirstSessionTips({super.key, required this.director});
 
+  /// Early FARM/PUSH help: same names as later, plainer words (polish7 P005).
+  static const String farmPushPlain =
+      'FARM repeats this floor for loot. PUSH goes deeper.';
+
   final GameDirector director;
 
   /// Button-anchored tips only (order = priority).
@@ -50,8 +54,8 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'farm_push',
-      title: 'Repeat / Next',
-      body: 'Repeat loots. Next goes deeper.',
+      title: 'FARM / PUSH',
+      body: FirstSessionTips.farmPushPlain,
     ),
     (
       id: 'kit_abilities',
@@ -127,7 +131,7 @@ class FirstSessionTips extends StatelessWidget {
   /// FARM/PUSH labels match the dungeon mode chips when jargon is on.
   static String _farmPushLine(GameState s) {
     if (GameLogic.plainPlayerChrome(s)) {
-      return 'Repeat loots. Next goes deeper.';
+      return FirstSessionTips.farmPushPlain;
     }
     return 'FARM loops loot. PUSH climbs.';
   }

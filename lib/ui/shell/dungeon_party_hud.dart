@@ -35,7 +35,7 @@ bool _chipJustFired(ClassAbilityDef ability, double cdLeft) {
 
 /// The person on the crawl strip. An empty name falls back to the role.
 String partyStripName(PartyHero hero, {required bool plainEnglish}) {
-  final name = hero.name.trim();
+  final name = hero.shownName.trim();
   if (name.isEmpty) {
     return hero.displayRoleLabel(plainEnglish: plainEnglish);
   }
@@ -351,7 +351,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                 child: _HomePartyChip(
                   hero: hero,
                   partyIndex: i,
-                  name: hero.name,
+                  name: hero.shownName,
                   level: hero.level,
                   hp: spatial?.hp ?? hero.currentHp,
                   maxHp:

@@ -2527,7 +2527,7 @@ class GameDirector extends ChangeNotifier {
         hero.level,
       ).where((d) => d.unlockLevel > oldLevel && d.unlockLevel <= hero.level);
       for (final ability in unlocked) {
-        bits.add('${hero.name}: ${ability.shortLabel}');
+        bits.add('${hero.shownName}: ${ability.shortLabel}');
       }
     }
     if (!leveled) return;

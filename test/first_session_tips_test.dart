@@ -290,7 +290,7 @@ void main() {
     director.dispose();
   });
 
-  test('Repeat/Next coach after first floor clear', () {
+  test('FARM/PUSH coach after first floor clear', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       inDungeon: true,
       highestFloorCleared: 1,
@@ -302,7 +302,7 @@ void main() {
     );
     expect(
       FirstSessionTips.lineFor(state, CoachTarget.farmPush, inDungeon: true),
-      'Repeat loots. Next goes deeper.',
+      'FARM repeats this floor for loot. PUSH goes deeper.',
     );
   });
 }

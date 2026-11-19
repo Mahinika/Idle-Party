@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
+import '../../../core/game_state.dart';
+import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
@@ -13,6 +15,27 @@ const floorJumpEmptyKey = ValueKey('floor_jump_empty');
 
 String floorJumpEmptyLine(int here) =>
     'No other floor yet. Clear F$here to open F${here + 1} here.';
+
+/// Floors below [here] the party can jump back to.
+List<int> floorJumpCleared(GameState state) {
+  final here = state.currentRoom.floorNumber;
+  return [
+    for (var f = 1; f < here; f++)
+      if (GameLogic.canTravelToFloor(state, f)) f,
+  ];
+}
+
+/// Top line. The KEY clock note waits until KEY is in play (polish7 P047).
+String floorJumpHint(GameState state) {
+  final here = state.currentRoom.floorNumber;
+  final keyOn = state.hardmodeLevel > 0;
+  return keyOn
+      ? 'Now F$here. A jump keeps the KEY clock running.'
+      : 'Now F$here. Tap a floor to go there.';
+}
+
+/// Chevron: these rows are taps, not a list to read.
+const Widget _go = GameIcon.glyph(UiGlyph.next, size: 14);
 
 /// Same floor list the classic HUD menu used. Calls [GameDirector.travelToFloor].
 Future<void> showFloorJumpSheet(
@@ -29,10 +52,9 @@ Future<void> showFloorJumpSheet(
   }
   final here = state.currentRoom.floorNumber;
   final maxFloor = state.maxReachableFloor;
-  final clearedFloors = <int>[
-    for (var f = 1; f <= maxFloor; f++)
-      if (f != here && GameLogic.canTravelToFloor(state, f)) f,
-  ];
+  // Below this floor only: a higher floor sits under Higher, never in both
+  // lists (polish7 P047).
+  final clearedFloors = floorJumpCleared(state);
   final noJumps = clearedFloors.isEmpty &&
       ![
         for (var f = here + 1; f <= maxFloor; f++)
@@ -54,7 +76,7 @@ Future<void> showFloorJumpSheet(
         child: ListView(
           shrinkWrap: true,
           children: [
-            ShellLayout.hint('Now F$here. Jump keeps the KEY clock running.', maxLines: 2),
+            ShellLayout.hint(floorJumpHint(state), maxLines: 2),
             if (noJumps) ...[
               ShellLayout.gap(6),
               Text(
@@ -102,6 +124,7 @@ Future<void> showFloorJumpSheet(
                         'F$f',
                         style: GameTheme.readable(color: GameTheme.parchment),
                       ),
+                      trailing: _go,
                       onTap: () => Navigator.pop(ctx, f),
                     ),
                   ),
@@ -139,6 +162,9 @@ Future<void> showFloorJumpSheet(
                               : GameTheme.parchmentDim,
                         ),
                       ),
+                      trailing: GameLogic.canTravelToFloor(state, f)
+                          ? _go
+                          : null,
                       onTap: GameLogic.canTravelToFloor(state, f)
                           ? () => Navigator.pop(ctx, f)
                           : null,

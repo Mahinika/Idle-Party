@@ -55,7 +55,7 @@ abstract final class LocalReminders {
   static const String optInTitle = 'A quiet ping?';
 
   static String get optInBody =>
-      'Morning names today\'s job. Evening pings when a prize is waiting. '
+      'In the morning: today\'s job. In the evening: a prize is waiting. '
       'Never between 10pm and 8am. Turn off anytime in SETTINGS.';
 
   static bool milestoneReached(GameState state) {

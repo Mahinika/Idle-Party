@@ -419,11 +419,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Automatic cleanup when the run bag gets crowded.',
-          style: GameTheme.hint(color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 8),
+        // The filters carry their own one-line intro (polish7 P038).
         BagCleanupFilters(director: director),
       ],
     );

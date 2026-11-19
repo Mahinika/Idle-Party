@@ -254,7 +254,7 @@ void main() {
           matching: find.byWidgetPredicate(
             (w) =>
                 w is RichText &&
-                w.text.toPlainText().startsWith('Claim 3 in a row'),
+                w.text.toPlainText().startsWith('Every 3rd quest claimed'),
           ),
         ),
       );
@@ -336,12 +336,15 @@ void main() {
   });
 
   for (final size in _sizes) {
-    _testHome('first-session Repeat/Next are whole ${_label(size, 1.45)}', (
+    // polish7 P005: one word pair from the first floor on.
+    _testHome('first-session FARM/PUSH are whole ${_label(size, 1.45)}', (
       tester,
     ) async {
       await _pump(tester, size, 1.45, fresh: true);
-      _expectWhole(tester, find.text('Repeat'));
-      _expectWhole(tester, find.text('Next'));
+      _expectWhole(tester, find.text('FARM'));
+      _expectWhole(tester, find.text('PUSH'));
+      expect(find.text('Repeat'), findsNothing);
+      expect(find.text('Next'), findsNothing);
     });
   }
 
@@ -448,7 +451,7 @@ void main() {
       final hud = find.byType(PartyCornerHud);
       expect(hud, findsOneWidget);
       for (final h in director.state.heroes) {
-        final name = find.descendant(of: hud, matching: find.text(h.name));
+        final name = find.descendant(of: hud, matching: find.text(h.shownName));
         expect(name, findsOneWidget, reason: h.name);
         final p = tester.renderObject<RenderParagraph>(name);
         expect(p.didExceedMaxLines, isFalse, reason: h.name);

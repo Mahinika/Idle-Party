@@ -384,10 +384,10 @@ void main() {
   test('wipe mode line names FARM/PUSH and INFO', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(dungeonMode: DungeonMode.farm);
-    expect(WipeAdvice.modeLineFor(state), contains('Repeat'));
+    expect(WipeAdvice.modeLineFor(state), contains('FARM'));
     expect(WipeAdvice.modeLineFor(state), contains('INFO'));
     state = state.copyWith(dungeonMode: DungeonMode.push);
-    expect(WipeAdvice.modeLineFor(state), contains('Next'));
+    expect(WipeAdvice.modeLineFor(state), contains('PUSH'));
     expect(WipeAdvice.modeLineFor(state), contains('INFO'));
     state = state.copyWith(bossVictories: 1, dungeonMode: DungeonMode.farm);
     expect(WipeAdvice.modeLineFor(state), contains('FARM'));

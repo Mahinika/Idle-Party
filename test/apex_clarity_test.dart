@@ -311,8 +311,10 @@ void main() {
       await tester.pump();
       expect(director.toast, contains('Crafted'));
       expect(find.text('UPGRADE → R2'), findsOneWidget);
-      expect(find.textContaining('Now ·'), findsOneWidget);
-      expect(find.textContaining('Next ·'), findsOneWidget);
+      // polish7 P021: NOW / NEXT RANK labels over stat chips.
+      expect(find.text('NOW'), findsOneWidget);
+      expect(find.text('NEXT RANK'), findsOneWidget);
+      expect(find.textContaining('Item Lv'), findsWidgets);
 
       await tester.ensureVisible(find.text('UPGRADE → R2'));
       await tester.pump();

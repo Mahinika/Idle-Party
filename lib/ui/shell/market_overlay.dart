@@ -492,7 +492,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
         listing.slot,
         pairingStash: state.gearStash,
       );
-      if (cmp.isUpgrade) return hero.name;
+      if (cmp.isUpgrade) return hero.shownName;
     }
     for (final hero in state.heroes) {
       final cmp = GearScorer.compareForHeroSlot(
@@ -501,7 +501,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
         listing.slot,
         pairingStash: state.gearStash,
       );
-      if (cmp.isUpgrade) return hero.name;
+      if (cmp.isUpgrade) return hero.shownName;
     }
     return null;
   }

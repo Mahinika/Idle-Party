@@ -7,6 +7,7 @@ import '../../core/game_state.dart';
 import '../../core/god_hand_mastery.dart';
 import '../../core/menu_alerts.dart';
 import '../confirm_dialogs.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -87,7 +88,7 @@ class EssenceKeepPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '${formatCount(state.essence)}e · keeps on Ascend',
+          '${formatCount(state.essence)} essence · keeps on Ascend',
           style: GameTheme.readable(color: GameTheme.torchHot),
         ),
         ShellLayout.gap(4),
@@ -128,11 +129,12 @@ class EssenceKeepPanel extends StatelessWidget {
           children: [
             Expanded(
               child: GameButton(
-                label: 'Damage · ${formatCount(dmgCost)}e',
+                label: 'Damage · ${formatCount(dmgCost)}',
+                icon: UiIcon.essence,
                 style: GameButtonStyle.essence,
                 tip: state.essence >= dmgCost
                     ? null
-                    : 'Need ${formatCount(dmgCost - state.essence)}e more',
+                    : 'Need ${formatCount(dmgCost - state.essence)} more essence',
                 dense: true,
                 onPressed: state.essence >= dmgCost
                     ? director.upgradeGodHand
@@ -142,13 +144,14 @@ class EssenceKeepPanel extends StatelessWidget {
             const SizedBox(width: 6),
             Expanded(
               child: GameButton(
-                label: cdMaxed ? 'CD · MAX' : 'CD · ${formatCount(cdCost)}e',
+                label: cdMaxed ? 'CD · MAX' : 'CD · ${formatCount(cdCost)}',
+                icon: cdMaxed ? null : UiIcon.essence,
                 style: GameButtonStyle.essence,
                 tip: cdMaxed
                     ? 'Cooldown is maxed'
                     : (state.essence >= cdCost
                           ? null
-                          : 'Need ${formatCount(cdCost - state.essence)}e more'),
+                          : 'Need ${formatCount(cdCost - state.essence)} more essence'),
                 dense: true,
                 onPressed: cdMaxed
                     ? null
@@ -181,7 +184,8 @@ class EssenceKeepPanel extends StatelessWidget {
               child: GodHandMastery.ready(state, m.$1)
                   ? GameButton(
                       label:
-                          'CLAIM · ${m.$2} · +12e · ${GodHandMastery.progressLabel(state, m.$1)}',
+                          'CLAIM · ${m.$2} · +12 · ${GodHandMastery.progressLabel(state, m.$1)}',
+                      icon: UiIcon.essence,
                       style: GameButtonStyle.essence,
                       primary: true,
                       dense: true,
@@ -213,10 +217,22 @@ class EssenceKeepPanel extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            '+12e',
-                            style: GameTheme.readable(
-                              color: GameTheme.torchHot,
+                          // Icon + number, never an "e" suffix (P003/P055).
+                          Semantics(
+                            label: '+12 essence',
+                            excludeSemantics: true,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '+12',
+                                  style: GameTheme.readable(
+                                    color: GameTheme.torchHot,
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                GameIcon.asset(UiIcon.essence, size: 14),
+                              ],
                             ),
                           ),
                         ],
@@ -277,7 +293,8 @@ class EssenceKeepPanel extends StatelessWidget {
             !state.metaDepth.partySlot5Unlocked) ...[
           _label('5TH SLOT'),
           GameButton(
-            label: 'UNLOCK · ${GameLogic.partySlot5EssenceCost}e',
+            label: 'UNLOCK · ${GameLogic.partySlot5EssenceCost}',
+            icon: UiIcon.essence,
             style: GameButtonStyle.essence,
             dense: true,
             onPressed: state.essence >= GameLogic.partySlot5EssenceCost

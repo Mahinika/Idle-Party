@@ -222,7 +222,7 @@ class _ActiveSlotChip extends StatelessWidget {
         ? (locked
               ? TeamCompositionOverlay.emptyLocked
               : TeamCompositionOverlay.emptyOpen)
-        : '${hero!.name} · ${hero!.spec.name}';
+        : '${hero!.shownName} · ${hero!.spec.name}';
     if (locked) {
       // Read-only row in a cave: normal ink, not a greyed-out button.
       return Semantics(

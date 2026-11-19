@@ -38,7 +38,7 @@ void main() {
     await tester.pump();
     expect(find.textContaining('ROOT'), findsWidgets);
     for (final hero in director.state.heroes) {
-      expect(find.text(hero.name), findsWidgets);
+      expect(find.text(hero.shownName), findsWidgets);
     }
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
@@ -115,7 +115,7 @@ void main() {
     final levels = find.textContaining(' L').evaluate().length;
     expect(levels, inInclusiveRange(0, 3));
     for (final h in director.state.heroes) {
-      final name = find.text(h.name.trim());
+      final name = find.text(h.shownName.trim());
       expect(name, findsOneWidget);
       final p = tester.renderObject<RenderParagraph>(name);
       expect(p.didExceedMaxLines, isFalse, reason: h.name);

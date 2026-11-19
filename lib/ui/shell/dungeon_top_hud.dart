@@ -569,17 +569,17 @@ class DungeonTopHud extends StatelessWidget {
             director: director,
             child: MenuChrome.dialog(
               title: mode == DungeonMode.farm
-                  ? (plain ? 'Switch to Repeat?' : 'Switch to FARM?')
-                  : (plain ? 'Switch to Next?' : 'Switch to PUSH?'),
+                  ? 'Switch to FARM?'
+                  : 'Switch to PUSH?',
               content: Text(
                 mode == DungeonMode.farm
                     ? (plain
-                          ? 'Repeat stays on this floor after clear for more loot. No essence.\n\n'
+                          ? 'FARM stays on this floor after clear for more loot. No essence.\n\n'
                                 'You are mid-fight — switch anyway?'
                           : 'FARM loops the same floor after clear for more loot. No essence.\n\n'
                                 'You are mid-fight — switch anyway?')
                     : (plain
-                          ? 'Next advances toward the boss after each clear. +1 essence a clear, +2 on a boss.\n\n'
+                          ? 'PUSH goes to the next floor after each clear. +1 essence a clear, +2 on a boss.\n\n'
                                 'You are mid-fight — switch anyway?'
                           : 'PUSH advances toward the boss after each clear. +1 essence a clear, +2 on a boss.\n\n'
                                 'You are mid-fight — switch anyway?'),

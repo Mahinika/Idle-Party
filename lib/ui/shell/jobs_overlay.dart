@@ -19,7 +19,8 @@ class JobsOverlay extends StatelessWidget {
   /// One line so the last claim is not pushed under the bottom bar.
   /// The 3rd claim always pays +5 essence.
   static String introLine({required int chainCount}) {
-    return 'Claim 3 in a row for +5 essence. Progress: $chainCount/3.';
+    // Not "in a row": any 3 claims, no days involved (polish7 P019).
+    return 'Every 3rd quest claimed adds +5 essence. Progress: $chainCount/3.';
   }
 
   static String rewardLine({required int gold, required int essence}) {

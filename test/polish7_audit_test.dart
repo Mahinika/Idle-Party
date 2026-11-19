@@ -21,6 +21,15 @@ import 'package:idle_party/ui/shell/home/home_shell.dart';
 import 'package:idle_party/ui/shell/home/rail_button.dart';
 import 'package:idle_party/ui/shell/home/upgrade_panel.dart';
 import 'package:idle_party/core/gold_income.dart';
+import 'package:idle_party/core/local_reminders.dart';
+import 'package:idle_party/core/wipe_advice.dart';
+import 'package:idle_party/models/dungeon_mode.dart';
+import 'package:idle_party/models/hero.dart';
+import 'package:idle_party/ui/apex_forge_panel.dart';
+import 'package:idle_party/ui/first_session_tips.dart';
+import 'package:idle_party/ui/meta/keystone_sheet.dart';
+import 'package:idle_party/ui/shell/home/floor_jump_sheet.dart';
+import 'package:idle_party/ui/shell/jobs_overlay.dart';
 
 import 'audit100_harness.dart';
 import 'shell_golden_harness.dart';
@@ -520,6 +529,94 @@ void main() {
       expect(find.text(HubIncomeSheetKeys.howLine), findsOneWidget);
       await t.pumpWidget(const SizedBox.shrink());
       d.dispose();
+    });
+  });
+
+  // ---------------------------------------------------------------- batch 4
+  group('batch 4 terms and texts', () {
+    final s0 = GameLogic.createInitialState(now: shellGoldenNow);
+
+    test('P005 one word pair: FARM/PUSH from the first floor on', () {
+      expect(GameLogic.plainPlayerChrome(s0), isTrue);
+      expect(
+        GameLogic.dungeonModeChipLabel(DungeonMode.farm, s0),
+        contains('FARM'),
+      );
+      expect(
+        GameLogic.dungeonModeChipLabel(DungeonMode.push, s0),
+        contains('PUSH'),
+      );
+      expect(FirstSessionTips.farmPushPlain, contains('FARM'));
+      expect(FirstSessionTips.farmPushPlain, isNot(contains('Repeat')));
+      for (final mode in DungeonMode.values) {
+        final line = WipeAdvice.modeLineFor(s0.copyWith(dungeonMode: mode));
+        expect(line, isNot(contains('Repeat')));
+        expect(line, isNot(startsWith('Next')));
+      }
+    });
+
+    test('P019 the quest streak does not say "in a row"', () {
+      final line = JobsOverlay.introLine(chainCount: 1);
+      expect(line, isNot(contains('in a row')));
+      expect(line, contains('+5 essence'));
+      expect(line, contains('1/3'));
+    });
+
+    test('P037/P043 sheet subtitles match their tabs', () {
+      final r = MenuRouter();
+      r.open(MenuRoute.more, more: MoreSection.settings);
+      expect(r.jobHint, isNot(contains('zoom')));
+      expect(r.jobHint, contains('account'));
+      r.open(MenuRoute.more, more: MoreSection.info);
+      expect(r.jobHint, isNot(contains('Patch Notes')));
+    });
+
+    test('P047 FLOORS lists a floor once and hides KEY talk early', () {
+      final s = s0.copyWith(inDungeon: true);
+      expect(floorJumpHint(s), isNot(contains('KEY')));
+      expect(floorJumpHint(s.copyWith(hardmodeLevel: 2)), contains('KEY'));
+      final here = s.currentRoom.floorNumber;
+      expect(floorJumpCleared(s).every((f) => f < here), isTrue);
+    });
+
+    test('P048 KEY sheet: one intro, no "Dial, then ENTER" twice', () {
+      expect(KeystoneSheet.intro, contains('ENTER'));
+    });
+
+    test('P059 the reminder opt-in reads plainly', () {
+      expect(LocalReminders.optInBody, isNot(contains('names')));
+      expect(LocalReminders.optInBody, contains('In the morning'));
+    });
+
+    testWidgets('P021 craft stats read as chips, item level spelled out', (
+      t,
+    ) async {
+      await t.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ApexHubPanel.statChips('i50 · 1H mace · +20 Str · +2% CRIT'),
+          ),
+        ),
+      );
+      expect(find.text('Item Lv 50'), findsOneWidget);
+      expect(find.text('+20 Str'), findsOneWidget);
+      expect(find.textContaining('i50'), findsNothing);
+    });
+  });
+
+  group('hero names never read as a currency', () {
+    test('the fire mage shows as Blaze, but keeps its saved name and id', () {
+      final party = GameLogic.createInitialState().heroes;
+      final fire = party.firstWhere((h) => h.name == 'Ember');
+      expect(fire.shownName, 'Blaze');
+      expect(fire.displayName(plainEnglish: true), 'Blaze');
+      expect(fire.toJson()['name'], 'Ember');
+      expect(PartyHero.specForName('Ember'), fire.specId);
+      expect(PartyHero.shownNameFor('Aegis'), 'Aegis');
+      for (final h in party) {
+        expect(h.shownName.toLowerCase(), isNot(contains('ember')));
+        expect(h.shownName.toLowerCase(), isNot(contains('cinder')));
+      }
     });
   });
 }
