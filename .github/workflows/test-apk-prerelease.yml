@@ -35,6 +35,9 @@ permissions:
 jobs:
   test-apk:
     runs-on: ubuntu-latest
+    env:
+      # Step `if:` cannot read `secrets`; read this env copy instead.
+      FAD_CREDENTIALS: ${{ secrets.FIREBASE_APP_DISTRIBUTION_CREDENTIALS }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -185,15 +188,15 @@ jobs:
       # App Distribution for "Idle Party Test" create testers group "robert"
       # with only his email.
       - name: Skip Firebase App Distribution when unconfigured
-        if: ${{ secrets.FIREBASE_APP_DISTRIBUTION_CREDENTIALS == '' }}
+        if: ${{ env.FAD_CREDENTIALS == '' }}
         run: echo "No FIREBASE_APP_DISTRIBUTION_CREDENTIALS; skipping App Distribution."
 
       - name: Upload arm64 test APK to Firebase App Distribution
-        if: ${{ secrets.FIREBASE_APP_DISTRIBUTION_CREDENTIALS != '' }}
+        if: ${{ env.FAD_CREDENTIALS != '' }}
         uses: wzieba/Firebase-Distribution-Github-Action@v1.7.1
         with:
           appId: 1:900067828121:android:a612149094a9324290b308
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_APP_DISTRIBUTION_CREDENTIALS }}
+          serviceCredentialsFileContent: ${{ env.FAD_CREDENTIALS }}
           groups: robert
           file: idle-party-test-arm64.apk
           releaseNotes: "Idle Party Test arm64, not for Play. ${{ github.sha }}"
