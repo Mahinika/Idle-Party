@@ -13,6 +13,9 @@ final bool bundledGoogleFonts = () {
 abstract final class GameTheme {
   // —— Surfaces (cooler charcoal with warm torch accents) ——————————————
   static const Color ink = Color(0xFF0B0709);
+
+  /// Android launch / system splash (`splash_ink` in colors.xml).
+  static const Color systemSplashInk = Color(0xFF06080C);
   static const Color stoneDeep = Color(0xFF140D11);
   static const Color stone = Color(0xFF1C1318);
   static const Color stoneRaised = Color(0xFF291D23);
@@ -65,6 +68,7 @@ abstract final class GameTheme {
   /// Run scope is dusk lavender: green stays reserved for "this goes up".
   static const Color scopeRun = levelAccent;
   static const Color scopeToday = accentWarn;
+
   /// Account-scope section labels (MENU, ROSTER, ACTIVE, SOUND): muted
   /// gold from the dusk palette, not the old off-theme blue (6.6:1 on panel).
   static const Color scopeAccount = statSpeed;
@@ -123,6 +127,7 @@ abstract final class GameTheme {
   static const Color buyGoldShine = Color(0xFFEED79E);
   static const Color buyGoldEdge = Color(0xFF2A190B);
   static const Color buyGoldText = Color(0xFF24140A);
+
   /// "Go" face (ENTER, START, CLAIM): warm amber, distinct from the muted
   /// gold that means buy / can afford.
   static const Color goTop = Color(0xFFE6A24C);

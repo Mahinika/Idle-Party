@@ -42,6 +42,7 @@ void main() {
     expect(find.text('AUTO-SELL · GOLD'), findsNothing);
     expect(find.text('RATE ON PLAY'), findsOneWidget);
     expect(find.text('JOIN DISCORD'), findsOneWidget);
+    expect(find.text('SAVES'), findsOneWidget);
   });
 
   testWidgets('ACCOUNT shows away reminders after first loot', (tester) async {
@@ -50,11 +51,7 @@ void main() {
       GameLogic.createInitialState(now: now),
       now,
     ).state;
-    state = FunnelAnalytics.onFirstEnter(
-      state,
-      now,
-      dungeonId: 'sandy',
-    ).state;
+    state = FunnelAnalytics.onFirstEnter(state, now, dungeonId: 'sandy').state;
     state = FunnelAnalytics.onFirstReward(state).state;
     final director = GameDirector.preview(initialState: state);
     addTearDown(director.dispose);
@@ -144,10 +141,7 @@ Widget _host(GameDirector director) {
       body: SizedBox(
         width: 360,
         height: 700,
-        child: SettingsOverlay(
-          director: director,
-          onClose: () {},
-        ),
+        child: SettingsOverlay(director: director, onClose: () {}),
       ),
     ),
   );

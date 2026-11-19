@@ -7,7 +7,9 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/app_analytics.dart';
+import 'core/app_memory.dart';
 import 'core/boot_clock.dart';
+import 'core/cold_start_phase.dart';
 import 'core/remote_tune_boot.dart';
 import 'core/boot_funnel.dart';
 import 'core/funnel_analytics.dart';
@@ -42,6 +44,7 @@ Future<void> _bootFirebase() async {
 void main() {
   BootClock.mark('main');
   WidgetsFlutterBinding.ensureInitialized();
+  AppMemory.configureImageCache();
   // Press Start 2P, VT323, and Cinzel are in assets/fonts/. No runtime fetch.
   GoogleFonts.config.allowRuntimeFetching = false;
   LicenseRegistry.addLicense(() async* {
@@ -146,54 +149,54 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         return _LiveTextScale(
           director: _director,
           builder: (context, scaler) {
-        final platform = MediaQuery.of(context);
-        if (!kIsWeb) {
-          return MediaQuery(
-            data: platform.copyWith(textScaler: scaler),
-            child: content,
-          );
-        }
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            // Samsung Galaxy A56: 1080×2340 @ DPR 3 → 360×780 CSS.
-            // Always letterbox to that phone frame so web playtest matches the
-            // APK — never stretch to a tall/wide Cursor browser panel.
-            const phoneW = 360.0;
-            const phoneH = 780.0;
-            // Approx status bar + gesture home indicator (logical / CSS px).
-            const padTop = 28.0;
-            const padBottom = 20.0;
-            final mq = platform.copyWith(textScaler: scaler);
-            return ColoredBox(
-              color: const Color(0xFF05070A),
-              child: Center(
-                child: FittedBox(
-                  fit: BoxFit.contain,
-                  child: SizedBox(
-                    width: phoneW,
-                    height: phoneH,
-                    child: MediaQuery(
-                      data: mq.copyWith(
-                        size: const Size(phoneW, phoneH),
-                        padding: const EdgeInsets.only(
-                          top: padTop,
-                          bottom: padBottom,
+            final platform = MediaQuery.of(context);
+            if (!kIsWeb) {
+              return MediaQuery(
+                data: platform.copyWith(textScaler: scaler),
+                child: content,
+              );
+            }
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                // Samsung Galaxy A56: 1080×2340 @ DPR 3 → 360×780 CSS.
+                // Always letterbox to that phone frame so web playtest matches the
+                // APK — never stretch to a tall/wide Cursor browser panel.
+                const phoneW = 360.0;
+                const phoneH = 780.0;
+                // Approx status bar + gesture home indicator (logical / CSS px).
+                const padTop = 28.0;
+                const padBottom = 20.0;
+                final mq = platform.copyWith(textScaler: scaler);
+                return ColoredBox(
+                  color: const Color(0xFF05070A),
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: SizedBox(
+                        width: phoneW,
+                        height: phoneH,
+                        child: MediaQuery(
+                          data: mq.copyWith(
+                            size: const Size(phoneW, phoneH),
+                            padding: const EdgeInsets.only(
+                              top: padTop,
+                              bottom: padBottom,
+                            ),
+                            viewPadding: const EdgeInsets.only(
+                              top: padTop,
+                              bottom: padBottom,
+                            ),
+                            viewInsets: EdgeInsets.zero,
+                            devicePixelRatio: 3,
+                          ),
+                          child: content,
                         ),
-                        viewPadding: const EdgeInsets.only(
-                          top: padTop,
-                          bottom: padBottom,
-                        ),
-                        viewInsets: EdgeInsets.zero,
-                        devicePixelRatio: 3,
                       ),
-                      child: content,
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             );
-          },
-        );
           },
         );
       },
@@ -213,10 +216,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 /// [AnimatedBuilder] sits under this [MediaQuery], so a slider move has to
 /// update the scaler here or the percent and the menus disagree.
 class _LiveTextScale extends StatefulWidget {
-  const _LiveTextScale({
-    required this.director,
-    required this.builder,
-  });
+  const _LiveTextScale({required this.director, required this.builder});
 
   final GameDirector director;
   final Widget Function(BuildContext context, TextScaler scaler) builder;
@@ -326,8 +326,9 @@ class _GameHomePageState extends State<GameHomePage>
       case AppLifecycleState.paused:
       case AppLifecycleState.hidden:
       case AppLifecycleState.detached:
-        GameAudio.onAppPaused();
+        GameAudio.onAppPaused(release: true);
         _director.setAppPaused(true);
+        AppMemory.trimForBackground();
       case AppLifecycleState.inactive:
         // Control-center / notification shade — mute audio only; keep sim
         // so a brief swipe does not stutter combat.
@@ -419,19 +420,22 @@ class _GameHomePageState extends State<GameHomePage>
   }
 
   void _enterAfterBootChecks() {
-    if (_director.saveRecoveryBlocked) {
-      setState(() => _phase = _AppPhase.saveRecovery);
-      return;
-    }
-    final firstRun = widget.showIntro && !_director.hasAnySave;
+    final decided = decideColdStartPhase(
+      showIntro: widget.showIntro,
+      saveRecoveryBlocked: _director.saveRecoveryBlocked,
+      validSaveCount: _director.validSaveCount,
+      hasExistingSave: _director.hasExistingSave,
+    );
     setState(() {
-      _phase = !widget.showIntro
-          ? _AppPhase.play
-          : firstRun
-          ? _AppPhase.startMenu
-          : _AppPhase.bootIntro;
+      _phase = switch (decided) {
+        ColdStartPhase.saveRecovery => _AppPhase.saveRecovery,
+        ColdStartPhase.startMenu => _AppPhase.startMenu,
+        ColdStartPhase.bootIntro => _AppPhase.bootIntro,
+        ColdStartPhase.play => _AppPhase.play,
+      };
     });
     if (_phase == _AppPhase.play) {
+      _director.continueGame();
       _director.ensureCombatLoop();
     } else if (_phase == _AppPhase.bootIntro) {
       unawaited(BootFunnel.note(FunnelAnalytics.bootIntroShown));
@@ -743,7 +747,9 @@ class _GameHomePageState extends State<GameHomePage>
     // Intro is outside the director AnimatedBuilder so toast/combat notifies
     // cannot rebuild or accidentally dismiss the title card.
     if (_phase == _AppPhase.loading) {
-      return const LoadingSplash();
+      // System splash already showed the icon. Stay on the same ink so
+      // Flutter does not add a second studio card or a dwell timer.
+      return const LoadingSplash(branded: false);
     }
 
     if (_phase == _AppPhase.playUpdateRequired) {

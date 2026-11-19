@@ -8,14 +8,27 @@ import 'menu_chrome.dart';
 
 /// Cold-start splash while [GameDirector.boot] runs. No minimum dwell.
 ///
-/// Same Cognifox lockup as the boot intro studio card so a fast boot feels
-/// like one screen. Native Android launch uses ink + Play icon only; this
-/// picks up once Flutter paints.
+/// Production uses [branded] false so Android 12+ system splash hands off
+/// onto the same ink, with no second studio card. The branded lockup is
+/// kept for tests and any caller that still wants the studio mark.
 class LoadingSplash extends StatelessWidget {
-  const LoadingSplash({super.key});
+  const LoadingSplash({super.key, this.branded = true});
+
+  /// When false, only the system-splash ink and a loading label remain.
+  final bool branded;
 
   @override
   Widget build(BuildContext context) {
+    if (!branded) {
+      return Scaffold(
+        backgroundColor: GameTheme.systemSplashInk,
+        body: Semantics(
+          label: 'Loading Idle Party',
+          liveRegion: true,
+          child: SizedBox.expand(),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: GameTheme.ink,
       body: Semantics(
@@ -86,10 +99,8 @@ class _LoadingTorchState extends State<_LoadingTorch>
     if (blink == null) return torch;
     return AnimatedBuilder(
       animation: blink,
-      builder: (context, child) => Opacity(
-        opacity: 0.45 + (blink.value * 0.55),
-        child: child,
-      ),
+      builder: (context, child) =>
+          Opacity(opacity: 0.45 + (blink.value * 0.55), child: child),
       child: torch,
     );
   }

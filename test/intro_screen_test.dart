@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/party_name_filter.dart';
 import 'package:idle_party/core/story_lore.dart';
@@ -28,6 +29,14 @@ Future<void> skipBootIntro(WidgetTester tester) async {
   await tester.pump(const Duration(seconds: 3));
 }
 
+Future<GameDirector> twoSaveDirector({GameState? initialState}) async {
+  final seed = initialState ?? GameLogic.createInitialState();
+  final storage = InMemoryGameStorage(seed);
+  final second = seed.copyWith(partyName: 'Second Banner');
+  await storage.writeSlotRaw(1, GameLogic.exportSaveJson(second));
+  return GameDirector(storage, initialState: seed, enableSpatialLoop: false);
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -35,7 +44,7 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    final director = GameDirector.preview();
+    final director = await twoSaveDirector();
 
     await tester.binding.setSurfaceSize(const Size(400, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -69,7 +78,7 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    final director = GameDirector.preview();
+    final director = await twoSaveDirector();
 
     await tester.binding.setSurfaceSize(const Size(400, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -125,7 +134,7 @@ void main() {
     'boot intro stays on painted beats while cinematic is unbundled',
     (tester) async {
       SharedPreferences.setMockInitialValues({});
-      final director = GameDirector.preview();
+      final director = await twoSaveDirector();
 
       await tester.binding.setSurfaceSize(const Size(400, 800));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -152,7 +161,7 @@ void main() {
 
   testWidgets('start menu shows Continue and New Game', (tester) async {
     SharedPreferences.setMockInitialValues({});
-    final director = GameDirector.preview();
+    final director = await twoSaveDirector();
 
     await tester.binding.setSurfaceSize(const Size(400, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -220,7 +229,7 @@ void main() {
           lifetimeGoldEarned: 17,
           lastUpdated: DateTime.now(),
         );
-    final director = GameDirector.preview(initialState: seeded);
+    final director = await twoSaveDirector(initialState: seeded);
 
     await tester.binding.setSurfaceSize(const Size(360, 780));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -258,7 +267,7 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    final director = GameDirector.preview();
+    final director = await twoSaveDirector();
 
     await tester.binding.setSurfaceSize(const Size(400, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -269,7 +278,7 @@ void main() {
     await skipBootIntro(tester);
     await tester.pump(const Duration(milliseconds: 500));
 
-    // preview() seeds SAVE 1, so NEW GAME uses the next empty file.
+    // Two occupied files, so NEW GAME uses the next empty file (SAVE 3).
     expect(director.hasExistingSave, isTrue);
 
     await tester.tap(find.text('NEW GAME'));
@@ -289,8 +298,9 @@ void main() {
     // Hub CTA and the first-run tip both say ENTER DUNGEON.
     expect(find.text('ENTER DUNGEON'), findsWidgets);
     expect(director.state.heroes.length, 3);
-    expect(director.activeSaveSlot, 1);
+    expect(director.activeSaveSlot, 2);
     expect(director.saveSlots[0].occupied, isTrue);
+    expect(director.saveSlots[1].occupied, isTrue);
     expect(director.state.partyName, PartyNameFilter.defaultName);
     expect(
       director.state.heroes.map((h) => h.specId).toSet(),
@@ -476,4 +486,38 @@ void main() {
       expect(startButton.onPressed, isNull);
     },
   );
+
+  testWidgets('a single returning save skips intro and the start menu', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final seeded = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 9, 27),
+      partyName: 'Cave Company',
+    ).copyWith(gold: 4242, highestFloorCleared: 1, lastUpdated: DateTime.now());
+    final director = GameDirector.preview(initialState: seeded);
+
+    await tester.binding.setSurfaceSize(const Size(360, 780));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: true),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.byType(BootIntroScreen), findsNothing);
+    expect(find.byType(StartMenuScreen), findsNothing);
+    expect(director.state.partyName, 'Cave Company');
+    expect(director.state.gold, 4242);
+    expect(find.textContaining('Floor 2'), findsWidgets);
+
+    director.requestStartMenu();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.byType(StartMenuScreen), findsOneWidget);
+    expect(find.text('CONTINUE'), findsOneWidget);
+    expect(find.text('NEW GAME'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 500));
+  });
 }

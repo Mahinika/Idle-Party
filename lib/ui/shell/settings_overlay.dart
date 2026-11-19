@@ -1,7 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../core/ad_rewarded.dart';
 import '../../core/build_stamp.dart';
 import '../../core/community_links.dart';
@@ -271,8 +273,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         Builder(
           builder: (context) {
             final wide = MediaQuery.sizeOf(context).width >= 400;
-            final largeType =
-                MediaQuery.textScalerOf(context).scale(1) > 1.2;
+            final largeType = MediaQuery.textScalerOf(context).scale(1) > 1.2;
             final percent = '${(state.uiTextScale * 100).round()}%';
             final slider = Semantics(
               slider: true,
@@ -294,11 +295,11 @@ class _SettingsOverlayState extends State<SettingsOverlay>
                 children: [
                   Expanded(child: slider),
                   SizedBox(
-                    width: 40 *
-                            MediaQuery.textScalerOf(context).scale(1).clamp(
-                              1.0,
-                              2.0,
-                            ) +
+                    width:
+                        40 *
+                            MediaQuery.textScalerOf(context)
+                                .scale(1)
+                                .clamp(1.0, 2.0) +
                         12,
                     child: Text(
                       percent,
@@ -355,8 +356,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         const SizedBox(height: 8),
         _SettingsCycle(
           label: state.combatPace >= 2 ? 'Fight speed 2×' : 'Fight speed 1×',
-          hint:
-              'How fast the cave plays. Gold while you are away does not change.',
+          hint: 'How fast the cave plays. Gold while you are away does not change.',
           onCycle: director.cycleCombatPace,
         ),
         const SizedBox(height: 8),
@@ -464,6 +464,16 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           ),
         ],
         SaveTransferSection(director: director),
+        const SizedBox(height: 12),
+        GameButton(
+          label: 'SAVES',
+          tip: 'Open the title screen to continue, start, or switch saves',
+          style: GameButtonStyle.grey,
+          onPressed: () {
+            widget.onClose();
+            director.requestStartMenu();
+          },
+        ),
         const SizedBox(height: 12),
         GameButton(
           label: 'REDEEM CODE',

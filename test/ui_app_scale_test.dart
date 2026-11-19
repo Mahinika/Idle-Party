@@ -27,10 +27,7 @@ void main() {
   }) {
     tester.view.devicePixelRatio = 2;
     tester.view.physicalSize = Size(logical.width * 2, logical.height * 2);
-    tester.view.viewPadding = FakeViewPadding(
-      top: top * 2,
-      bottom: bottom * 2,
-    );
+    tester.view.viewPadding = FakeViewPadding(top: top * 2, bottom: bottom * 2);
     tester.view.padding = FakeViewPadding(top: top * 2, bottom: bottom * 2);
     tester.platformDispatcher.textScaleFactorTestValue = os;
     addTearDown(tester.view.resetPhysicalSize);
@@ -46,16 +43,27 @@ void main() {
     required bool dungeon,
     bool showIntro = false,
   }) async {
-    var state = GameLogic.createInitialState(
-      now: DateTime(2026, 11, 7),
-    ).copyWith(
-      homeLayout: HomeLayout.home,
-      uiTextScale: game,
-      bossVictories: 1,
-      highestFloorCleared: 2,
-    );
+    var state = GameLogic.createInitialState(now: DateTime(2026, 11, 7))
+        .copyWith(
+          homeLayout: HomeLayout.home,
+          uiTextScale: game,
+          bossVictories: 1,
+          highestFloorCleared: 2,
+        );
     if (dungeon) state = GameLogic.enterDungeon(state);
-    final director = GameDirector.preview(initialState: state);
+    final storage = InMemoryGameStorage(state);
+    if (showIntro) {
+      // Two occupied slots still open the studio card + title menu.
+      await storage.writeSlotRaw(
+        1,
+        GameLogic.exportSaveJson(state.copyWith(partyName: 'Second Banner')),
+      );
+    }
+    final director = GameDirector(
+      storage,
+      initialState: state,
+      enableSpatialLoop: false,
+    );
     await director.boot();
     await tester.pumpWidget(
       MyApp(director: director, autoStartLoop: false, showIntro: showIntro),
@@ -84,9 +92,15 @@ void main() {
     director.setUiTextScale(kUiTextScaleMax);
     await tester.pump();
     expect(tester.takeException(), isNull);
-    expect(scaleOf(tester, find.text('FIGHT')), closeTo(kUiTextScaleMax, 0.001));
+    expect(
+      scaleOf(tester, find.text('FIGHT')),
+      closeTo(kUiTextScaleMax, 0.001),
+    );
     expect(scaleOf(tester, find.text('FARM')), closeTo(kUiTextScaleMax, 0.001));
-    expect(scaleOf(tester, find.text('FORGE')), closeTo(kUiTextScaleMax, 0.001));
+    expect(
+      scaleOf(tester, find.text('FORGE')),
+      closeTo(kUiTextScaleMax, 0.001),
+    );
     expect(find.text('145%'), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -94,7 +108,10 @@ void main() {
 
     await pumpApp(tester, game: kUiTextScaleMax, dungeon: true);
     expect(tester.takeException(), isNull);
-    expect(scaleOf(tester, find.text('FIGHT')), closeTo(kUiTextScaleMax, 0.001));
+    expect(
+      scaleOf(tester, find.text('FIGHT')),
+      closeTo(kUiTextScaleMax, 0.001),
+    );
     expect(scaleOf(tester, find.text('CAMP')), closeTo(kUiTextScaleMax, 0.001));
   });
 
@@ -108,10 +125,7 @@ void main() {
     );
     expect(tester.takeException(), isNull);
     expect(find.text('SKIP'), findsOneWidget);
-    expect(
-      scaleOf(tester, find.text('SKIP')),
-      closeTo(kUiTextScaleMax, 0.001),
-    );
+    expect(scaleOf(tester, find.text('SKIP')), closeTo(kUiTextScaleMax, 0.001));
     await tester.tap(find.text('SKIP'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
@@ -129,8 +143,14 @@ void main() {
     phone(tester, logical: const Size(360, 780), os: 2);
     await pumpApp(tester, game: 1, dungeon: true);
     expect(tester.takeException(), isNull);
-    expect(scaleOf(tester, find.text('FIGHT')), closeTo(GameTheme.typeScaleMax, 0.001));
-    expect(scaleOf(tester, find.text('FARM')), closeTo(GameTheme.typeScaleMax, 0.001));
+    expect(
+      scaleOf(tester, find.text('FIGHT')),
+      closeTo(GameTheme.typeScaleMax, 0.001),
+    );
+    expect(
+      scaleOf(tester, find.text('FARM')),
+      closeTo(GameTheme.typeScaleMax, 0.001),
+    );
   });
 
   for (final logical in const [Size(360, 780), Size(360, 640)]) {
@@ -158,10 +178,7 @@ void main() {
           tester.getSize(find.text('FORGE').first).height,
           greaterThan(10),
         );
-        expect(
-          tester.getSize(find.text('FORGE').first).width,
-          greaterThan(28),
-        );
+        expect(tester.getSize(find.text('FORGE').first).width, greaterThan(28));
       });
 
       testWidgets(
@@ -191,7 +208,9 @@ void main() {
     expect(find.text('FIGHT'), findsOneWidget);
   });
 
-  testWidgets('short phone keeps a 44 top and 34 bottom margin', (tester) async {
+  testWidgets('short phone keeps a 44 top and 34 bottom margin', (
+    tester,
+  ) async {
     phone(tester, logical: const Size(360, 640), top: 44, bottom: 34);
     await pumpApp(tester, game: kUiTextScaleMax, dungeon: false);
     expect(tester.takeException(), isNull);
@@ -207,13 +226,12 @@ void main() {
   ) async {
     phone(tester, logical: const Size(360, 640), os: 2);
     Future<void> shell({required bool dungeon}) async {
-      var state = GameLogic.createInitialState(
-        now: DateTime(2026, 11, 7),
-      ).copyWith(
-        homeLayout: HomeLayout.home,
-        bossVictories: 1,
-        highestFloorCleared: 2,
-      );
+      var state = GameLogic.createInitialState(now: DateTime(2026, 11, 7))
+          .copyWith(
+            homeLayout: HomeLayout.home,
+            bossVictories: 1,
+            highestFloorCleared: 2,
+          );
       if (dungeon) state = GameLogic.enterDungeon(state);
       final director = GameDirector.preview(initialState: state);
       final router = MenuRouter();
@@ -263,12 +281,7 @@ void main() {
 
   testWidgets('top 44 keeps the start title below the cutout', (tester) async {
     phone(tester, logical: const Size(360, 780), top: 44);
-    await pumpApp(
-      tester,
-      game: 1,
-      dungeon: false,
-      showIntro: true,
-    );
+    await pumpApp(tester, game: 1, dungeon: false, showIntro: true);
     expect(tester.takeException(), isNull);
     expect(find.text('SKIP'), findsOneWidget);
     await tester.tap(find.text('SKIP'));
@@ -290,9 +303,7 @@ void main() {
       builder: (context) => MenuChrome.dialog(
         title: 'REDEEM CODE',
         content: const Text('Paste a code from a friend.'),
-        actions: [
-          TextButton(onPressed: () {}, child: const Text('CLOSE')),
-        ],
+        actions: [TextButton(onPressed: () {}, child: const Text('CLOSE'))],
       ),
     );
     await tester.pump();
