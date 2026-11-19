@@ -700,6 +700,10 @@ class _InventoryDockState extends State<InventoryDock>
           on: state.autoEquipUpgrades,
           onChanged: (v) => widget.director.setAutoEquipUpgrades(v),
         ),
+        // Empty bag: no dead EQUIP / SELL JUNK faces, only the AUTO switch
+        // and FILTERS that still do something (polish7 P052).
+        if (state.gearStash.isEmpty) const Spacer(),
+        if (state.gearStash.isNotEmpty) ...[
         const SizedBox(width: 4),
         Expanded(
           flex: 5,
@@ -728,6 +732,7 @@ class _InventoryDockState extends State<InventoryDock>
             expanded: true,
           ),
         ),
+        ],
         const SizedBox(width: 4),
         _BagFiltersButton(
           showing: _showFilters,
@@ -963,8 +968,10 @@ class _InventoryDockState extends State<InventoryDock>
               key: InventoryDock.mergeOpenBagKey,
               label: 'OPEN BAG',
               onPressed: () => widget.onPanelChanged(GearPanel.bag),
+              // Still first (F014), but a normal-size face, not a giant
+              // primary slab (polish7 P053).
               style: GameButtonStyle.brown,
-              primary: true,
+              dense: true,
             ),
             const SizedBox(height: 8),
           ],
@@ -1058,14 +1065,18 @@ class _InventoryDockState extends State<InventoryDock>
               ],
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            status,
-            textAlign: TextAlign.center,
-            maxLines: 3,
-            overflow: TextOverflow.visible,
-            style: GameTheme.hint(color: GameTheme.parchmentDim),
-          ),
+          // Nothing loaded: the intro above already says this; one
+          // instruction, not two (polish7 P053).
+          if (primary != null || secondary != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              status,
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.visible,
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
+            ),
+          ],
           const SizedBox(height: 8),
           GameButton(
             key: InventoryDock.mergeButtonKey,

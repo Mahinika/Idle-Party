@@ -13,6 +13,9 @@ import '../shell/shell_common.dart';
 import '../shell/shell_layout.dart';
 
 class TeamCompositionOverlay extends StatefulWidget {
+  /// Takes a hero out of the active party (polish7 P025).
+  static const benchKey = ValueKey('roster-bench');
+
   /// In a cave the party is read-only; this chip says why (audit F015).
   static const String leaveToSwap = 'Leave the cave to swap';
   static const Key leaveToSwapKey = ValueKey('roster_leave_to_swap');
@@ -256,14 +259,15 @@ class _ActiveSlotChip extends StatelessWidget {
         ),
         if (onClear != null && !locked) ...[
           const SizedBox(width: 6),
-          SizedBox(
-            width: 52,
-            child: GameButton(
-              label: 'X',
-              style: GameButtonStyle.grey,
-              expanded: false,
-              onPressed: onClear,
-            ),
+          // BENCH, not an "X" that reads as close (polish7 P025).
+          GameButton(
+            key: TeamCompositionOverlay.benchKey,
+            label: 'BENCH',
+            style: GameButtonStyle.ghost,
+            expanded: false,
+            dense: true,
+            tip: 'Move this hero to the bench',
+            onPressed: onClear,
           ),
         ],
       ],

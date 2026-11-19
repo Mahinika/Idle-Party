@@ -131,7 +131,7 @@ void main() {
       expect(
         EssenceTilesScreen.petStatus(s),
         '${s.ownedPets.length}/$cap · hatch '
-        '${formatCount(GameLogic.hatchPetCost(s))}e',
+        '${formatCount(GameLogic.hatchPetCost(s))} essence',
       );
     });
 

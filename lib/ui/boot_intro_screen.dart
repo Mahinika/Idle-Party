@@ -308,9 +308,14 @@ class _BootIntroScreenState extends State<BootIntroScreen>
             ),
           ),
         const SizedBox(height: 10),
+        // Tap goes to the next card; SKIP ends the intro. A quiet ghost
+        // button so the two do not read as the same thing (polish7 P008).
         GameButton(
           label: 'SKIP',
-          style: GameButtonStyle.grey,
+          style: GameButtonStyle.ghost,
+          expanded: false,
+          dense: true,
+          tip: 'Skip the whole intro',
           onPressed: _inputUnlocked ? _finish : null,
         ),
       ],

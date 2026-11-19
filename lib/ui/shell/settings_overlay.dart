@@ -15,6 +15,7 @@ import '../../core/game_state.dart';
 import '../../core/home_layout.dart';
 import '../../core/nav_copy.dart';
 import '../../models/dungeon_zoom.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -242,11 +243,21 @@ class _SettingsOverlayState extends State<SettingsOverlay>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // One short line; the rule folds (polish7 P038).
         Text(
-          'Text size is this slider times the phone’s own text size, '
-          'then capped at the slider’s maximum. Dungeon view is the cave camera, '
-          'not this text size.',
+          'Text size and the cave view.',
           style: GameTheme.hint(color: GameTheme.parchmentDim),
+        ),
+        MenuChrome.fold(
+          title: 'How text size works',
+          children: [
+            Text(
+              'Text size is this slider times the phone’s own text size, '
+              'then capped at the slider’s maximum. Dungeon view is the cave '
+              'camera, not this text size.',
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         MenuChrome.sectionLabel('DISPLAY'),
@@ -255,17 +266,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           'UI text scale',
           style: GameTheme.section(color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 6),
-        () {
-          final scaleIdx = SettingsOverlay.textPresets.indexWhere(
-            (p) => (state.uiTextScale - p.$2).abs() < 0.02,
-          );
-          return MenuChrome.segmented(
-            labels: [for (final preset in SettingsOverlay.textPresets) preset.$1],
-            selectedIndex: scaleIdx,
-            onSelect: (i) => director.setUiTextScale(SettingsOverlay.textPresets[i].$2),
-          );
-        }(),
+        // One control for one setting: the slider (polish7 P039).
         const SizedBox(height: 6),
         Builder(
           builder: (context) {
@@ -785,9 +786,11 @@ class _SettingsCycle extends StatelessWidget {
                   ],
                 ),
               ),
-              Text(
-                'TAP',
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              // A chevron, not the word "TAP" (polish7 P039).
+              const GameIcon.glyph(
+                UiGlyph.next,
+                size: 14,
+                color: GameTheme.parchmentDim,
               ),
             ],
           ),

@@ -10,6 +10,7 @@ import '../../confirm_dialogs.dart';
 import '../../../assets/custom_assets.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
+import '../shell_layout.dart';
 import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
 import '../beast_overlay.dart';
@@ -28,7 +29,7 @@ class EssenceTilesScreen extends StatelessWidget {
 
   static String blessingStatus(GameState s) =>
       'Hand Lv${s.godHandLevel} · next '
-      '${formatCount(GameLogic.godHandUpgradeCost(s.godHandLevel))}e';
+      '${formatCount(GameLogic.godHandUpgradeCost(s.godHandLevel))} essence';
 
   static String relicStatus(GameState s) {
     final owned = s.unlockedRelics.length;
@@ -41,12 +42,18 @@ class EssenceTilesScreen extends StatelessWidget {
     final cap = s.metaDepth.basePetRosterCap;
     final owned = s.ownedPets.length;
     if (owned >= cap) return '$owned/$cap · roster full';
-    return '$owned/$cap · hatch ${formatCount(GameLogic.hatchPetCost(s))}e';
+    return '$owned/$cap · hatch ${formatCount(GameLogic.hatchPetCost(s))} essence';
   }
 
   static bool petCanBuy(GameState s) =>
       s.ownedPets.length < s.metaDepth.basePetRosterCap &&
       s.essence >= GameLogic.hatchPetCost(s);
+
+  /// Where essence comes from (polish7 P054).
+  static const Key howKey = ValueKey('essence-how');
+  static const String howLine =
+      'Essence drops from PUSH clears, bosses, and quests. '
+      'It stays after Ascend and buys lasting power here and at CAMP.';
 
   /// Padlock on a locked ESSENCE tile.
   static const Key lockKey = ValueKey('essence-tile-lock');
@@ -132,6 +139,18 @@ class EssenceTilesScreen extends StatelessWidget {
                 fullWidth: true,
                 status: EssenceTilesScreen.petStatus(state),
                 canBuy: EssenceTilesScreen.petCanBuy(state),
+              ),
+              // Say where essence comes from and what the tiles are for,
+              // so the hub is not three tiles over an empty sheet (P054).
+              const SizedBox(height: 10),
+              KeyedSubtree(
+                key: EssenceTilesScreen.howKey,
+                child: ShellLayout.card(
+                child: ShellLayout.hint(
+                  EssenceTilesScreen.howLine,
+                  maxLines: 4,
+                ),
+              ),
               ),
             ],
           ),

@@ -28,6 +28,18 @@ class ShopDock extends StatefulWidget {
   /// Price line while Play has no price for a pack.
   static const String noPrice = '—';
 
+  /// Store line while Play billing is not connected (polish7 P058).
+  static const String needsPlayLine =
+      'The store needs Google Play. Prices show once it connects.';
+
+  /// True for a store line that waits on Play: it gets the one-row banner
+  /// with RETRY (audit F026, polish7 P058).
+  static bool isWaitingLine(String line) =>
+      line == needsPlayLine || line.startsWith('Waiting for');
+
+  /// A card's note in place of a dead UNAVAILABLE button (polish7 P058).
+  static const String needsPlay = 'Needs Google Play';
+
   /// The one-row "Waiting for Play billing" banner.
   static const Key billingBannerKey = ValueKey('shop-billing-banner');
 
@@ -145,7 +157,7 @@ class _ShopDockState extends State<ShopDock> {
             ? (catalogOk
                   ? 'Prices come from Google Play.'
                   : 'Waiting for Play catalog…')
-            : 'Waiting for Play billing…';
+            : ShopDock.needsPlayLine;
         final playListed = ShopStore.productsReady
             ? {
                 for (final item in ShopCatalog.offered)
@@ -259,10 +271,10 @@ class _ShopDockState extends State<ShopDock> {
           ShellLayout.blockGapWidget(),
         ],
         if (storeLine.isNotEmpty &&
-            !(storeLine.startsWith('Waiting for') &&
+            !(ShopDock.isWaitingLine(storeLine) &&
                 ShopDock.goldenTestPriceLabel.isNotEmpty)) ...[
           ShellLayout.gap(4),
-          if (storeLine.startsWith('Waiting for')) ...[
+          if (ShopDock.isWaitingLine(storeLine)) ...[
             // One compact row, not a full-width RETRY above the products
             // (audit F026). Products below show "—" until Play answers.
             DecoratedBox(
@@ -472,12 +484,14 @@ class _ShopRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: GameTheme.readable(color: GameTheme.torchHot),
                       ),
-                      Text(
-                        priceLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GameTheme.section(color: GameTheme.parchmentDim),
-                      ),
+                      // No lone "—" when Play has no price (polish7 P058).
+                      if (owned || priceLabel != ShopDock.noPrice)
+                        Text(
+                          priceLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.section(color: GameTheme.parchmentDim),
+                        ),
                     ],
                   ),
                 ),
@@ -500,7 +514,17 @@ class _ShopRow extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 8),
-            if (featuredPrimary && canBuy)
+            // Not on Play yet: a quiet note, not a dead grey button. The
+            // offer itself stays listed (polish7 P058).
+            if (!owned && !available)
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  ShopDock.needsPlay,
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
+                ),
+              )
+            else if (featuredPrimary && canBuy)
               GameButton(
                 label: buyLabel,
                 style: GameButtonStyle.brown,

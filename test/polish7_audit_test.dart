@@ -35,6 +35,8 @@ import 'package:idle_party/ui/shell/relics_overlay.dart';
 import 'package:idle_party/ui/shell/home/map_screen.dart';
 import 'package:idle_party/ui/new_game_party_picker.dart';
 import 'package:idle_party/models/dungeon_def.dart';
+import 'package:idle_party/ui/shell/shop_dock.dart';
+import 'package:idle_party/ui/shell/home/essence_tiles_screen.dart';
 
 import 'audit100_harness.dart';
 import 'shell_golden_harness.dart';
@@ -704,6 +706,67 @@ void main() {
         expect(t.takeException(), isNull);
       });
     }
+  });
+
+  // ---------------------------------------------------------------- batch 6
+  group('batch 6 empty states and finish', () {
+    for (final scale in _scales) {
+      testWidgets('P058 SHOP without Play: notes, no dead buttons @$scale', (
+        t,
+      ) async {
+        await bind(t, _sizes.first, scale);
+        final d = await a100Director();
+        await t.pumpWidget(
+          MaterialApp(home: Scaffold(body: ShopDock(director: d))),
+        );
+        await t.pump();
+        expect(find.text('UNAVAILABLE'), findsNothing);
+        expect(find.text(ShopDock.noPrice), findsNothing);
+        expect(find.textContaining('Waiting for Play billing'), findsNothing);
+        // The plain line sits in the one-row banner, with RETRY beside it.
+        if (ShopDock.goldenTestPriceLabel.isEmpty) {
+          final banner = find.byKey(ShopDock.billingBannerKey);
+          expect(banner, findsOneWidget);
+          expect(
+            find.descendant(
+              of: banner,
+              matching: find.text(ShopDock.needsPlayLine),
+            ),
+            findsOneWidget,
+          );
+          expect(
+            find.descendant(of: banner, matching: find.text('RETRY')),
+            findsOneWidget,
+          );
+        }
+        expect(t.takeException(), isNull);
+        await t.pumpWidget(const SizedBox.shrink());
+        d.dispose();
+        await t.pump(const Duration(milliseconds: 20));
+      });
+    }
+
+    test('P054 ESSENCE hub says where essence comes from', () {
+      expect(EssenceTilesScreen.howLine, contains('Essence'));
+      final s = GameLogic.createInitialState(now: shellGoldenNow);
+      expect(EssenceTilesScreen.petStatus(s), isNot(matches(RegExp(r'\de$'))));
+      expect(EssenceTilesScreen.blessingStatus(s), endsWith('essence'));
+    });
+
+    test('P058 a Play-less store line counts as waiting', () {
+      expect(ShopDock.isWaitingLine(ShopDock.needsPlayLine), isTrue);
+      expect(ShopDock.isWaitingLine('Waiting for Play catalog…'), isTrue);
+      expect(ShopDock.isWaitingLine('Prices come from Google Play.'), isFalse);
+    });
+
+    test('P037/P058 SHOP subtitle does not fight the policy line', () {
+      final r = MenuRouter();
+      r.open(MenuRoute.shop);
+      // Names what is sold (packs), not where Cinders are spent.
+      expect(r.jobHint, contains('Ad-free'));
+      expect(r.jobHint, contains('Cinder packs'));
+      expect(r.jobHint, isNot(contains('SCROLLS')));
+    });
   });
 }
 

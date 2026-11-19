@@ -338,7 +338,7 @@ class MenuRouter extends ChangeNotifier {
 
     },
 
-    MenuRoute.shop => 'Scrolls, Cinders, and ad-free',
+    MenuRoute.shop => 'Ad-free, Long Away, and Cinder packs',
 
     MenuRoute.essence => switch (_essencePanel) {
 

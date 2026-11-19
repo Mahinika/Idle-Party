@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
+import '../../core/meta_systems.dart';
+import 'shell_layout.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -21,6 +23,8 @@ class MoreList extends StatefulWidget {
       'Cognifox Studio\n\n'
       'Sprites and world art: Idle Party\n\n'
       'Made for portrait phones.';
+
+  static const creditsKey = ValueKey('more-credits');
 
   const MoreList({
     super.key,
@@ -136,13 +140,7 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
         director: d,
         onClose: widget.onClose,
       ),
-      MoreSection.credits => SingleChildScrollView(
-        padding: const EdgeInsets.all(8),
-        child: Text(
-          MoreList.creditsBody,
-          style: GameTheme.readable(color: GameTheme.parchment),
-        ),
-      ),
+      MoreSection.credits => const _CreditsPane(),
       MoreSection.craft => CraftOverlay(director: d),
       MoreSection.quests => SingleChildScrollView(
         padding: const EdgeInsets.only(bottom: 12),
@@ -184,6 +182,63 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
             2 => AchievementsOverlay(director: d),
             _ => GuidesOverlay(state: s),
           },
+        ),
+      ],
+    );
+  }
+}
+
+/// MORE → CREDITS grouped in cards, with the version and the open-source
+/// licences (polish7 P045). Same words as [MoreList.creditsBody].
+class _CreditsPane extends StatelessWidget {
+  const _CreditsPane();
+
+  static const _groups = <(String, String)>[
+    ('GAME', 'Idle Party'),
+    ('MADE BY', 'Cognifox Studio'),
+    ('ART', 'Sprites and world art: Idle Party'),
+    ('BUILT FOR', 'Made for portrait phones.'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      key: MoreList.creditsKey,
+      padding: ShellLayout.listPadding,
+      children: [
+        for (final g in _groups)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: ShellLayout.card(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  MenuChrome.sectionLabel(g.$1),
+                  const SizedBox(height: 2),
+                  Text(
+                    g.$2,
+                    style: GameTheme.readable(color: GameTheme.parchment),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        Text(
+          'Version ${MetaSystems.currentVersion}',
+          textAlign: TextAlign.center,
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        GameButton(
+          label: 'LICENSES',
+          style: GameButtonStyle.grey,
+          dense: true,
+          tip: 'Open-source licences used by the app',
+          onPressed: () => showLicensePage(
+            context: context,
+            applicationName: 'Idle Party',
+            applicationVersion: MetaSystems.currentVersion,
+          ),
         ),
       ],
     );

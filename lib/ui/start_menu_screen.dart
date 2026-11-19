@@ -18,6 +18,9 @@ import 'web_click_bridge.dart';
 
 /// Cold-start menu: brand scene + Continue / New Game.
 class StartMenuScreen extends StatefulWidget {
+  static const wordmarkKey = ValueKey('start-wordmark');
+  static const saveSummaryKey = ValueKey('start-save-summary');
+
   const StartMenuScreen({
     super.key,
     required this.canContinue,
@@ -172,10 +175,25 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                             child: Semantics(
                               header: true,
                               label: 'Idle Party',
-                              child: Text(
-                                'IDLE PARTY',
-                                textAlign: TextAlign.center,
-                                style: GameTheme.hint(color: GameTheme.torchHot),
+                              // A crest and a real wordmark, not a small
+                              // label over body text (polish7 P006).
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const GameIcon.asset(
+                                    UiIcon.shieldRound,
+                                    size: GameTheme.iconShowcase,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'IDLE PARTY',
+                                    key: StartMenuScreen.wordmarkKey,
+                                    textAlign: TextAlign.center,
+                                    style: GameTheme.title(
+                                      color: GameTheme.torchHot,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -188,7 +206,9 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                               style: GameTheme.readable(color: GameTheme.parchment),
                             ),
                           ),
-                          if (!tight) ...[
+                          // One line of copy under the wordmark; the long
+                          // AFK line waits for a returning-free first visit.
+                          if (!tight && !widget.canContinue) ...[
                             const SizedBox(height: 6),
                             Opacity(
                               opacity: copyOpacity,
@@ -231,12 +251,29 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                   if (widget.saveSummary != null &&
                                       widget.saveSummary!.isNotEmpty) ...[
                                     const SizedBox(height: 6),
-                                    Text(
-                                      widget.saveSummary!,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GameTheme.section(color: GameTheme.torchHot),
+                                    // On a dark plate, not straight on the
+                                    // art (polish7 P007).
+                                    Container(
+                                      key: StartMenuScreen.saveSummaryKey,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: GameTheme.ink.withValues(
+                                          alpha: 0.78,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          GameTheme.radiusSm,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        widget.saveSummary!,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GameTheme.section(color: GameTheme.torchHot),
+                                      ),
                                     ),
                                   ],
                                   const SizedBox(height: 8),
