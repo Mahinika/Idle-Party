@@ -10,6 +10,7 @@ import '../core/meta_systems.dart';
 import '../core/story_lore.dart';
 import 'cave_atmosphere.dart';
 import '../assets/custom_assets.dart';
+import 'game_icon.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
@@ -17,6 +18,9 @@ import 'web_click_bridge.dart';
 
 /// Cold-start menu: brand scene + Continue / New Game.
 class StartMenuScreen extends StatefulWidget {
+  static const wordmarkKey = ValueKey('start-wordmark');
+  static const saveSummaryKey = ValueKey('start-save-summary');
+
   const StartMenuScreen({
     super.key,
     required this.canContinue,
@@ -171,10 +175,25 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                             child: Semantics(
                               header: true,
                               label: 'Idle Party',
-                              child: Text(
-                                'IDLE PARTY',
-                                textAlign: TextAlign.center,
-                                style: GameTheme.hint(color: GameTheme.torchHot),
+                              // A crest and a real wordmark, not a small
+                              // label over body text (polish7 P006).
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const GameIcon.asset(
+                                    UiIcon.shieldRound,
+                                    size: GameTheme.iconShowcase,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'IDLE PARTY',
+                                    key: StartMenuScreen.wordmarkKey,
+                                    textAlign: TextAlign.center,
+                                    style: GameTheme.title(
+                                      color: GameTheme.torchHot,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -187,7 +206,9 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                               style: GameTheme.readable(color: GameTheme.parchment),
                             ),
                           ),
-                          if (!tight) ...[
+                          // One line of copy under the wordmark; the long
+                          // AFK line waits for a returning-free first visit.
+                          if (!tight && !widget.canContinue) ...[
                             const SizedBox(height: 6),
                             Opacity(
                               opacity: copyOpacity,
@@ -230,12 +251,29 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                   if (widget.saveSummary != null &&
                                       widget.saveSummary!.isNotEmpty) ...[
                                     const SizedBox(height: 6),
-                                    Text(
-                                      widget.saveSummary!,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GameTheme.section(color: GameTheme.torchHot),
+                                    // On a dark plate, not straight on the
+                                    // art (polish7 P007).
+                                    Container(
+                                      key: StartMenuScreen.saveSummaryKey,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: GameTheme.ink.withValues(
+                                          alpha: 0.78,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          GameTheme.radiusSm,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        widget.saveSummary!,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GameTheme.section(color: GameTheme.torchHot),
+                                      ),
                                     ),
                                   ],
                                   const SizedBox(height: 8),
@@ -475,7 +513,10 @@ class _SaveSlotRow extends StatelessWidget {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
-                      child: Column(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -494,10 +535,31 @@ class _SaveSlotRow extends StatelessWidget {
                           if (slot.detail != null)
                             Text(
                               slot.detail!,
-                              maxLines: 1,
+                              // Wraps at 1.45 beside PLAY (polish7 P009).
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: GameTheme.hint(color: GameTheme.parchmentDim),
                             ),
+                        ],
+                            ),
+                          ),
+                          // The row is the button: say what a tap does
+                          // (polish7 P009).
+                          if (open != null) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              slot.occupied ? 'PLAY' : 'NEW GAME',
+                              key: ValueKey('save-slot-go-${slot.index}'),
+                              style: GameTheme.hint(
+                                color: slot.occupied
+                                    ? GameTheme.torchHot
+                                    : GameTheme.parchmentDim,
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            GameIcon.glyph(UiGlyph.next, size: 12),
+                            const SizedBox(width: 6),
+                          ],
                         ],
                       ),
                     ),
@@ -509,9 +571,12 @@ class _SaveSlotRow extends StatelessWidget {
           if (onErase != null)
             Padding(
               padding: const EdgeInsets.only(right: 6),
+              // Erase is the rare, dangerous action: a quiet face, not a
+              // red block as big as the save (polish7 P009). Still asks first.
               child: GameButton(
-                label: 'ERASE ${slot.index + 1}',
-                style: GameButtonStyle.red,
+                label: 'ERASE',
+                tip: 'Erase save ${slot.index + 1}',
+                style: GameButtonStyle.ghost,
                 dense: true,
                 expanded: false,
                 onPressed: enabled ? onErase : null,

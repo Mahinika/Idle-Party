@@ -161,17 +161,16 @@ int _dailyVaultClaimPreviewEssence(GameState state, {DateTime? now}) {
 }
 
 String _dungeonModeChipLabel(DungeonMode mode, GameState state) {
-  if (GameLogic.plainPlayerChrome(state)) {
-    return mode == DungeonMode.farm ? '↻ Repeat' : '▲ Next';
-  }
+  // One word pair from the first floor on (polish7 P005); early players get
+  // the plain tip below, not different names.
   return mode == DungeonMode.farm ? '↻ FARM' : '▲ PUSH';
 }
 
 String _dungeonModeChipTip(DungeonMode mode, GameState state) {
   if (GameLogic.plainPlayerChrome(state)) {
     return mode == DungeonMode.farm
-        ? 'Stay on this floor after clear for more loot'
-        : 'Advance toward the boss after each clear';
+        ? 'FARM: stay on this floor after clear for more loot'
+        : 'PUSH: advance toward the boss after each clear';
   }
   return mode == DungeonMode.farm
       ? 'LOOP FARM — loop this floor after clear for loot'

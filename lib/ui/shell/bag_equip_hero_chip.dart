@@ -42,7 +42,7 @@ class _EquipHeroChip extends StatelessWidget {
                     : GameTheme.parchmentDim));
     return Semantics(
       button: true,
-      label: 'Equip on ${hero.displayRoleLabel(plainEnglish: plainEnglish)}',
+      label: 'Equip on ${hero.displayName(plainEnglish: plainEnglish)}',
       child: InkWell(
       onTap: onTap,
       child: ConstrainedBox(
@@ -71,7 +71,7 @@ class _EquipHeroChip extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    hero.displayRoleLabel(plainEnglish: plainEnglish),
+                    hero.displayName(plainEnglish: plainEnglish),
                     style: GameTheme.hint(color: GameTheme.parchment),
                   ),
                   if (isBest) ...[

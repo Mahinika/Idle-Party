@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/chase_dispatcher.dart';
 import '../../../core/first_climb_coach.dart';
 import '../../../core/return_week.dart';
 import '../../../core/game_director.dart';
@@ -11,7 +12,6 @@ import '../../../core/menu_router.dart';
 import '../../first_session_tips.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
-import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import '../menu_surface.dart';
 import 'director_select.dart';
@@ -20,12 +20,32 @@ import 'fight_viewport.dart';
 import 'home_gold_dock.dart';
 import 'home_nav_bar.dart';
 import 'home_prompts.dart';
+import 'nav_clearance.dart';
 import 'home_top_bar.dart';
 import 'town_viewport.dart';
 import 'upgrade_panel.dart';
 
 /// Fight-first shell. Out of the cave the party rests in town.
 class HomeShell extends StatefulWidget {
+  /// BACK strip above the nav (tests check it clears the FIGHT button).
+  static const backRowKey = ValueKey('home-back-row');
+
+  /// The town card's one big button label (same rule as [TownViewport]).
+  static String townCtaLabel(GameState state) =>
+      ChaseDispatcher.plan(HubChase.forState(state), state: state).label ??
+      'ENTER';
+
+  /// True when a town coach line points somewhere the big button does not,
+  /// or repeats its claim (polish7 P012).
+  static bool coachDisagreesWithTownCta(String? line, GameState state) {
+    if (line == null || line.isEmpty) return false;
+    final cta = townCtaLabel(state).toUpperCase();
+    final text = line.toUpperCase();
+    if (text.startsWith('TAP ENTER') && !cta.startsWith('ENTER')) return true;
+    if (cta.startsWith('CLAIM') && text.startsWith('CLAIM')) return true;
+    return false;
+  }
+
   const HomeShell({
     super.key,
     required this.director,
@@ -39,6 +59,16 @@ class HomeShell extends StatefulWidget {
 
   @override
   State<HomeShell> createState() => _HomeShellState();
+
+  /// Global y of the bottom of the HUD (top bar + climb row), or null outside
+  /// a home shell. Sheets opened from the rails start here so the HUD stays
+  /// on screen, like the menu panels (audit F048).
+  static double? topChromeBottom(BuildContext context) {
+    final st = context.findAncestorStateOfType<_HomeShellState>();
+    final box = st?._topChromeKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return box.localToGlobal(Offset(0, box.size.height)).dy;
+  }
 }
 
 class _HomeShellState extends State<HomeShell> {
@@ -47,6 +77,7 @@ class _HomeShellState extends State<HomeShell> {
   HomeGoldPanel _goldFocus = HomeGoldPanel.forge;
   int _goldFocusGen = 0;
   bool _farmPushSeamAcked = false;
+  final GlobalKey _topChromeKey = GlobalKey();
 
   @override
   void initState() {
@@ -102,65 +133,79 @@ class _HomeShellState extends State<HomeShell> {
     return Material(
       color: GameTheme.stoneDeep,
       child: Column(
-      children: [
-        HomeTopBar(director: director, router: router),
-        _climbRow(state, sheet: sheet),
-        Expanded(
-          child: Stack(
-            fit: StackFit.expand,
+        children: [
+          Column(
+            key: _topChromeKey,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Column(
-                children: [
-                  Expanded(
-                    flex: showPanel ? (full ? 1 : 4) : 5,
-                    child: RepaintBoundary(
-                      child: state.inDungeon
-                          ? FightViewport(
-                              director: director,
-                              router: router,
-                              onLeave: widget.onLeave,
-                            )
-                          : TownViewport(director: director, router: router),
-                    ),
-                  ),
-                  if (showPanel)
-                    FightSeam(
-                      director: director,
-                      router: router,
-                      onLeave: widget.onLeave,
-                      hideRails: full,
-                    ),
-                  if (showPanel && !full)
+              HomeTopBar(director: director, router: router),
+              _climbRow(state, sheet: sheet),
+            ],
+          ),
+          Expanded(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Column(
+                  children: [
                     Expanded(
-                      flex: 2,
+                      flex: showPanel ? (full ? 1 : 3) : 5,
                       child: RepaintBoundary(
-                        child: DirectorSelect<int>(
-                          director: director,
-                          select: (s) => s.gold + s.essence,
-                          builder: (context, _) => UpgradePanel(
+                        child: state.inDungeon
+                            ? FightViewport(
+                                director: director,
+                                router: router,
+                                onLeave: widget.onLeave,
+                                controls: showPanel,
+                              )
+                            : NavClearance(
+                                bottom: HomeNavBar.fightOverhang(context),
+                                child: TownViewport(
+                                  director: director,
+                                  router: router,
+                                ),
+                              ),
+                      ),
+                    ),
+                    if (showPanel)
+                      FightSeam(
+                        director: director,
+                        router: router,
+                        onLeave: widget.onLeave,
+                        hideRails: full,
+                      ),
+                    if (showPanel && !full)
+                      Expanded(
+                        flex: 2,
+                        child: RepaintBoundary(
+                          child: DirectorSelect<int>(
                             director: director,
-                            router: router,
-                            focusPanel: _goldFocus,
-                            focusGeneration: _goldFocusGen,
+                            select: (s) => s.gold + s.essence,
+                            builder: (context, _) => NavClearance(
+                              bottom: HomeNavBar.fightOverhang(context),
+                              child: UpgradePanel(
+                                director: director,
+                                router: router,
+                                focusPanel: _goldFocus,
+                                focusGeneration: _goldFocusGen,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  if (showPanel && full)
-                    HomeGoldDock(director: director, router: router),
-                ],
-              ),
-              if (sheet) _sheet(),
-              const IgnorePointer(child: SizedBox.shrink()),
-              HomePromptHost(director: director, router: router),
-            ],
+                    if (showPanel && full)
+                      HomeGoldDock(director: director, router: router),
+                  ],
+                ),
+                if (sheet) _sheet(),
+                const IgnorePointer(child: SizedBox.shrink()),
+                HomePromptHost(director: director, router: router),
+              ],
+            ),
           ),
-        ),
-        if (_showBack)
-          _backRow(),
-        if (route == MenuRoute.gear) _gearThumb(state),
-        HomeNavBar(state: state, router: router, alerts: alerts),
-      ],
+          if (_showBack) _backRow(),
+          HomeNavBar(state: state, router: router, alerts: alerts),
+        ],
       ),
     );
   }
@@ -178,13 +223,20 @@ class _HomeShellState extends State<HomeShell> {
     final tip = !state.inDungeon && climb == null && back == null
         ? FirstSessionTips.active(state, inDungeon: false)
         : null;
-    final text = climb ??
+    final text =
+        climb ??
         back ??
         (tip == null ? null : FirstSessionTips.displayLine(tip, state));
     // The top bar already paints this chase title. A second copy steals
     // rows from the cave. A real first-climb tip stays, even when it matches.
     final duplicateCoach = climb == null && _duplicatesChaseLine(text, state);
-    final shown = duplicateCoach ? null : text;
+    // In town the coach must agree with the one big button (polish7 P012):
+    // no "Tap ENTER." over CLAIM VAULT, no "Claim …" over a CLAIM button.
+    final offCta =
+        climb == null &&
+        !state.inDungeon &&
+        HomeShell.coachDisagreesWithTownCta(text, state);
+    final shown = duplicateCoach || offCta ? null : text;
     final showClaim = state.inDungeon && GameLogic.canClaimDailyVault(state);
     if (shown == null && !showClaim) return const SizedBox.shrink();
     return Padding(
@@ -245,37 +297,45 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
-  bool get _showBack =>
-      router.homeAtSub || router.route == MenuRoute.key;
+  // BACK only when it goes somewhere the header CLOSE does not; on KEY it
+  // just closed the sheet, a third exit next to CLOSE and FIGHT (F009).
+  bool get _showBack => router.homeAtSub;
 
+  /// Full-width strip with BACK at the left edge: the raised round FIGHT
+  /// sits in the middle of the nav right below, and a centred pill landed
+  /// on top of it.
   Widget _backRow() {
     return Material(
+      key: HomeShell.backRowKey,
       color: GameTheme.panel,
-      child: WebClickScope(
-        label: 'BACK',
-        onPressed: router.back,
-        child: Semantics(
-          button: true,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: WebClickScope(
           label: 'BACK',
-          child: InkWell(
-            onTap: router.back,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                minWidth: GameTheme.minTouch,
-                minHeight: GameTheme.minTouch,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GameIcon.glyph(UiGlyph.prev, size: 14),
-                    const SizedBox(width: 6),
-                    Text(
-                      'BACK',
-                      style: GameTheme.readable(color: GameTheme.parchment),
-                    ),
-                  ],
+          onPressed: router.back,
+          child: Semantics(
+            button: true,
+            label: 'BACK',
+            child: InkWell(
+              onTap: router.back,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minWidth: GameTheme.minTouch,
+                  minHeight: GameTheme.minTouch,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GameIcon.glyph(UiGlyph.prev, size: 14),
+                      const SizedBox(width: 6),
+                      Text(
+                        'BACK',
+                        style: GameTheme.readable(color: GameTheme.parchment),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -284,32 +344,6 @@ class _HomeShellState extends State<HomeShell> {
       ),
     );
   }
-
-  Widget _gearThumb(GameState state) {
-    final panels = MenuRouter.visibleGearPanels(state);
-    if (panels.isEmpty) return const SizedBox.shrink();
-    final labels = panels.map(_gearLabel).toList();
-    final selected = panels.indexOf(router.gearPanel).clamp(0, panels.length - 1);
-    return Material(
-      color: GameTheme.panel,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-        child: MenuChrome.segmented(
-          dense: true,
-          labels: labels,
-          selectedIndex: selected,
-          onSelect: (i) => router.gearPanel = panels[i],
-        ),
-      ),
-    );
-  }
-
-  String _gearLabel(GearPanel panel) => switch (panel) {
-        GearPanel.gear => 'GEAR',
-        GearPanel.bag => 'BAG',
-        GearPanel.merge => 'MERGE',
-        GearPanel.roster => 'ROSTER',
-      };
 
   Widget _sheet() {
     return MenuSurface(director: director, router: router, home: true);

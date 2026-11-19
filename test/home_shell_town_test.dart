@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/ui/shell/home/home_nav_bar.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
@@ -202,7 +203,7 @@ void main() {
     expect(router.route, MenuRoute.gear);
     expect(router.gearPanel, GearPanel.roster);
     expect(find.textContaining('Pick up to'), findsOneWidget);
-    await tester.tap(find.bySemanticsLabel('Close HEROES'));
+    await tester.tap(find.bySemanticsLabel(HomeNavBar.tabSemantics('HEROES', selected: true)));
     await tester.pump();
     expect(router.isOpen, isFalse);
     await tapBuilding(tester, TownBuildingId.inn);
@@ -221,7 +222,7 @@ void main() {
     await tapBuilding(tester, TownBuildingId.guild);
     expect(router.route, MenuRoute.more);
     expect(router.moreSection, MoreSection.quests);
-    expect(find.textContaining('Claim 3 in a row'), findsOneWidget);
+    expect(find.textContaining('Every 3rd quest claimed'), findsOneWidget);
     await tester.tap(find.text('CLOSE').first);
     await tester.pump();
     expect(router.isOpen, isFalse);
@@ -311,13 +312,25 @@ void main() {
     expect(find.text('WATCH'), findsNothing);
     expect(find.text('WISP'), findsNothing);
     expect(find.text('POUCH'), findsNothing);
-    expect(find.text('SCROLLS'), findsWidgets);
+    // Town has no quick rail (F100); SCROLLS waits in MENU.
     final railIds = FightSeamRails.visibleEntries(director.state, director)
         .map((e) => e.id)
         .toSet();
-    expect(railIds.contains('watch'), isFalse);
-    expect(railIds.contains('wisp'), isFalse);
-    expect(railIds, contains('scrolls'));
+    expect(railIds, isEmpty);
+    expect(find.text('SCROLLS'), findsNothing);
+    final menuIds = HomeCatalog.of(HomePlace.menuGrid, town: true)
+        .where((e) => e.visible(director.state, director))
+        .map((e) => e.id)
+        .toSet();
+    expect(menuIds, contains('menu_scrolls'));
+    expect(menuIds.contains('menu_watch'), isFalse);
+    expect(menuIds.contains('menu_wisp'), isFalse);
+    await tester.tap(find.bySemanticsLabel(RegExp(r'^MENU')).first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('WATCH'), findsNothing);
+    expect(find.text('WISP'), findsNothing);
+    expect(find.text('SCROLLS'), findsOneWidget);
     await tester.tap(find.text('SCROLLS').first);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));

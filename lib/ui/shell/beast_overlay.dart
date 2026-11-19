@@ -8,6 +8,7 @@ import '../../core/pet_service.dart';
 import '../../models/dungeon_def.dart';
 import '../../models/pet.dart';
 import '../../assets/custom_assets.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../kenney_sprite.dart';
@@ -130,6 +131,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
             const SizedBox(height: 6),
             GameButton(
               label: 'CLAIM',
+              style: GameButtonStyle.go,
               onPressed: director.claimPetErrand,
             ),
           ],
@@ -443,8 +445,11 @@ class _BeastOverlayState extends State<BeastOverlay> {
         Row(
           children: [
             Expanded(
+              // Same template as HATCH: currency icon + amount (P003/P057).
               child: GameButton(
-                label: 'EGG · ${PetService.cinderEggCost} CINDERS',
+                label: 'EGG · ${PetService.cinderEggCost}',
+                icon: UiIcon.cinders,
+                tip: 'Hatch an egg for ${PetService.cinderEggCost} Cinders',
                 dense: true,
                 style: state.metaDepth.cinders >= PetService.cinderEggCost
                     ? GameButtonStyle.brown
@@ -460,7 +465,13 @@ class _BeastOverlayState extends State<BeastOverlay> {
               child: GameButton(
                 label: state.ownedPets.length >= cap
                     ? 'ROSTER FULL'
-                    : 'HATCH ${GameLogic.hatchPetCost(state)}e',
+                    : 'HATCH · ${GameLogic.hatchPetCost(state)}',
+                icon: state.ownedPets.length >= cap ? null : UiIcon.essence,
+                tip: 'Hatch for ${GameLogic.hatchPetCost(state)} essence',
+                dense: true,
+                style: state.essence >= GameLogic.hatchPetCost(state)
+                    ? GameButtonStyle.essence
+                    : GameButtonStyle.grey,
                 onPressed:
                     state.ownedPets.length < cap &&
                         state.essence >= GameLogic.hatchPetCost(state)

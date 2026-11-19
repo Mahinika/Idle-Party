@@ -529,7 +529,7 @@ class HubChase {
         }
       }
       if (step.heroIndex >= 0 && step.heroIndex < state.heroes.length) {
-        heroBit = state.heroes[step.heroIndex].name;
+        heroBit = state.heroes[step.heroIndex].shownName;
       }
       slotBit = _equipSlotLabel(step.slot);
     }

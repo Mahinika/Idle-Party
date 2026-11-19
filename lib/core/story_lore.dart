@@ -96,8 +96,10 @@ abstract final class StoryLore {
     String dungeonId, {
     int floor = 1,
     int rewardEssence = 25,
+    bool withReward = true,
   }) {
     final def = DungeonCatalog.byId(dungeonId);
+    if (!withReward) return 'Daily echo — ${def.name} F$floor. Clear 1 floor.';
     return 'Daily echo — ${def.name} F$floor. Clear 1 floor · +${rewardEssence}e';
   }
 

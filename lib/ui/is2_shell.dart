@@ -27,6 +27,12 @@ import 'shell/scroll_buff_stack.dart';
 
 /// Idle Party dungeon scene: full-bleed stage + corner HUD.
 /// Shared menu sheets + bottom bar are owned by [PlayShell], not this scene.
+/// Home fight: the floor line ("F1 · many foes · 8 next") sits at top 2 of
+/// the viewport, full width. The target card starts under it so the two
+/// never overlap (polish7 P027). Line = hint size × 1.2, plus HOLD padding.
+double homeTargetTop(TextScaler scaler) =>
+    2 + scaler.scale(GameTheme.typeHint) * 1.2 + 6 + 4;
+
 class Is2Shell extends StatefulWidget {
   const Is2Shell({
     super.key,
@@ -442,7 +448,9 @@ class _Is2CombatCornerChromeState extends State<_Is2CombatCornerChrome> {
           Positioned(
             right: hudSide,
             top: widget.homeChrome
-                ? (state.inRift || state.inGreaterRift ? 38 : 4)
+                ? (state.inRift || state.inGreaterRift
+                      ? 38
+                      : homeTargetTop(MediaQuery.textScalerOf(context)))
                 : 22,
             child: TargetCornerHud(director: d),
           ),

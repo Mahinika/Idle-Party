@@ -341,6 +341,25 @@ class PartyHero {
     return spec.roleTag.plainLabel;
   }
 
+  /// Saved names that read differently on screen. The fire mage is saved as
+  /// 'Ember' (save data and hero ids stay as they are) but shows as 'Blaze',
+  /// so a hero never shares a word with the Embers currency (polish7).
+  static const Map<String, String> shownNameAliases = {'Ember': 'Blaze'};
+
+  /// [raw] as players see it: the alias above, else unchanged.
+  static String shownNameFor(String raw) =>
+      shownNameAliases[raw.trim()] ?? raw;
+
+  /// This hero's name as players see it (display only; [name] is saved).
+  String get shownName => shownNameFor(name);
+
+  /// The hero's own name (Aegis, Vale…), as the party strip shows it; the
+  /// role label when a save has no name. One name on every screen (F010).
+  String displayName({required bool plainEnglish}) {
+    final n = shownName.trim();
+    return n.isEmpty ? displayRoleLabel(plainEnglish: plainEnglish) : n;
+  }
+
   String get passiveLabel => ClassKits.kitSummaryForSpec(specId, level);
 
   PartyHero healToFull() => copyWith(currentHp: maxHp);

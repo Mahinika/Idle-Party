@@ -23,10 +23,14 @@ class _CombineSlot extends StatelessWidget {
         decoration: MenuChrome.cardBox(inset: true, selected: item != null),
         child: Row(
           children: [
+            // Label column grows with text scale: a fixed 44 made
+            // "SECOND" run into its value at 1.45.
             SizedBox(
-              width: 44,
+              width: MediaQuery.textScalerOf(context).scale(44) + 4,
               child: Text(
                 label,
+                maxLines: 1,
+                softWrap: false,
                 style: GameTheme.hint(color: item != null
                       ? GameTheme.torchHot
                       : GameTheme.parchmentDim),
@@ -65,9 +69,13 @@ class _CombineSlot extends StatelessWidget {
               ),
             ] else
               Expanded(
+                // Muted italic prompt, so it does not read as a picked
+                // value (audit F056).
                 child: Text(
                   emptyHint,
-                  style: GameTheme.readable(color: GameTheme.parchmentDim),
+                  style: GameTheme.hint(
+                    color: GameTheme.parchmentDim,
+                  ).copyWith(fontStyle: FontStyle.italic),
                 ),
               ),
           ],

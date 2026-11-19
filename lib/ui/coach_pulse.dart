@@ -22,22 +22,36 @@ class CoachPulse extends StatefulWidget {
 }
 
 class _CoachPulseState extends State<CoachPulse>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _pulse;
 
+  /// No pulse while the app is in the background.
+  bool _foreground = true;
+
   bool get _shouldAnimate =>
+      _foreground &&
       widget.enabled &&
       widget.active &&
       !MediaQuery.disableAnimationsOf(context);
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final fg = state == AppLifecycleState.resumed;
+    if (fg == _foreground) return;
+    setState(() => _foreground = fg);
+    _syncPulse();
+  }
+
+  @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    final life = WidgetsBinding.instance.lifecycleState;
+    _foreground = life == null || life == AppLifecycleState.resumed;
     _pulse = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    if (widget.active && widget.enabled) _pulse.repeat(reverse: true);
   }
 
   @override
@@ -63,6 +77,7 @@ class _CoachPulseState extends State<CoachPulse>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pulse.dispose();
     super.dispose();
   }

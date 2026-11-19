@@ -34,6 +34,38 @@ abstract final class TownNavPolicy {
     'menu_pouch',
   };
 
+  /// F100 (Robert, Nov 19): in town the buildings are the entry points and
+  /// the quick rail is hidden. Every rail entry keeps one home in town:
+  /// a building (`building:<id>`) or its MENU grid cell. In the dungeon the
+  /// rail is unchanged.
+  static const Map<String, String> townHomeOfRail = {
+    'quests': 'building:guild',
+    'vault': 'building:vault',
+    'scrolls': 'menu_scrolls',
+    'starter_pouch': 'menu_pouch',
+    'daily': 'menu_daily',
+    'update': 'menu_update',
+  };
+
+  /// MENU cells that only show in town, standing in for hidden rail entries
+  /// that have no building.
+  static const Set<String> townMenuFromRail = {
+    'menu_scrolls',
+    'menu_pouch',
+    'menu_daily',
+    'menu_update',
+  };
+
+  /// Town MENU grid: the usual cells plus the rail entries with no building.
+  static bool keepOnTownMenuGrid(String id) =>
+      keepOnMenuGrid(id) || townMenuFromRail.contains(id);
+
+  static List<T> filterTownMenuGrid<T>(
+    Iterable<T> entries,
+    String Function(T) idOf,
+  ) =>
+      entries.where((e) => keepOnTownMenuGrid(idOf(e))).toList();
+
   static bool isDuplicatePowerupShortcut(String id) =>
       duplicatePowerupIds.contains(id);
 

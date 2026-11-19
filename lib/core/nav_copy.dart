@@ -14,6 +14,9 @@ abstract final class NavCopy {
     next = next.replaceAll('GEAR → BAG', 'HEROES → BAG');
     next = next.replaceAll('GEAR →', 'HEROES →');
     next = next.replaceAll('MORE →', 'MENU →');
+    // One name for the menu button (audit F081).
+    next = next.replaceAll('MORE ·', 'MENU ·');
+    next = next.replaceAll('badge on MORE', 'badge on MENU');
     next = next.replaceAll('SCROLLS on the hub', 'SCROLLS on the fight rail');
     next = next.replaceAll('in GEAR', 'in HEROES');
     next = next.replaceAll('Gold is under GOLD', 'Gold and forge sit under the fight');

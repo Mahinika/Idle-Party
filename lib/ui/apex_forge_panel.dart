@@ -17,6 +17,43 @@ import 'menu_chrome.dart';
 
 /// MORE → CRAFT: pick a hero, pick a slot, then CRAFT / UPGRADE.
 class ApexHubPanel extends StatefulWidget {
+  /// CRAFT slot chips (wrap, polish7 P020).
+  static const slotChipsKey = ValueKey('apex-slot-chips');
+
+  /// "i50 · 1H mace · +20 Str" as chips: item level spelled out, one stat a
+  /// chip, so the line reads as parts, not a wall of jargon (polish7 P021).
+  static Widget statChips(String line, {bool dim = false}) {
+    String plain(String t) {
+      final m = RegExp(r'^i(\d+)(?:→i(\d+))?$').firstMatch(t);
+      if (m == null) return t;
+      return m.group(2) == null
+          ? 'Item Lv ${m.group(1)}'
+          : 'Item Lv ${m.group(1)} → ${m.group(2)}';
+    }
+
+    final parts = [
+      for (final t in line.split(' · '))
+        if (t.trim().isNotEmpty) plain(t.trim()),
+    ];
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        for (final t in parts)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: MenuChrome.listCard(inset: true),
+            child: Text(
+              t,
+              style: GameTheme.hint(
+                color: dim ? GameTheme.parchmentDim : GameTheme.parchment,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   const ApexHubPanel({super.key, required this.director});
 
   final GameDirector director;
@@ -400,10 +437,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     if (existing != null && existing.apexRank >= ApexCraft.maxRank) {
       return [
         const SizedBox(height: 4),
-        Text(
-          existing.statsLine,
-          style: GameTheme.hint(color: GameTheme.parchment),
-        ),
+        ApexHubPanel.statChips(existing.statsLine),
       ];
     }
     final next = ApexCraft.buildItem(
@@ -420,24 +454,22 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           'Crafts at AL${state.ascensionLevel}',
           style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
-        Text(
-          next.statsLine,
-          style: GameTheme.hint(color: GameTheme.parchment),
-        ),
+        const SizedBox(height: 4),
+        ApexHubPanel.statChips(next.statsLine),
       ];
     }
     return [
       const SizedBox(height: 4),
-      Text(
-        'Now · ${existing.statsLine}',
-        style: GameTheme.hint(color: GameTheme.parchmentDim),
-      ),
-      Text(
-        'Next · ${_statDelta(existing, next)}',
-        style: GameTheme.hint(color: GameTheme.parchment),
-      ),
+      Text('NOW', style: GameTheme.hint(color: GameTheme.parchmentDim)),
+      const SizedBox(height: 2),
+      ApexHubPanel.statChips(existing.statsLine, dim: true),
+      const SizedBox(height: 4),
+      Text('NEXT RANK', style: GameTheme.hint(color: GameTheme.torchHot)),
+      const SizedBox(height: 2),
+      ApexHubPanel.statChips(_statDelta(existing, next)),
     ];
   }
+
 
   static String _statDelta(EquipmentItem from, EquipmentItem to) {
     final bits = <String>[];
@@ -489,19 +521,20 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         style: GameTheme.section(color: GameTheme.parchmentDim),
       );
     }
-    return SizedBox(
-      height: GameTheme.minTouch,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: heroes.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (context, i) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (var i = 0; i < heroes.length; i++)
+          Builder(builder: (context) {
           final h = heroes[i];
           final classId = h.spec.classId;
           final role = h.spec.roleTag;
           final selected = _apexClass == classId && _apexRole == role;
+          // Name first, class second, as everywhere else (polish7 P004).
+          final name = h.displayName(plainEnglish: false);
           return MenuChrome.chip(
-            label: h.roleLabel,
+            label: name == h.roleLabel ? name : '$name · ${h.roleLabel}',
             selected: selected,
             onTap: () {
               final keepSlot =
@@ -514,20 +547,21 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
               _setCraftGoal(classId, role, slot);
             },
           );
-        },
-      ),
+          }),
+      ],
     );
   }
 
   Widget _slotPicker(GameState state) {
     final slots = ApexCraft.craftSlotsFor(_apexClass, _apexRole);
-    return SizedBox(
-      height: GameTheme.minTouch,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: slots.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (context, i) {
+    // Wraps to a second row instead of cutting "LEG" at 360 (polish7 P020).
+    return Wrap(
+      key: ApexHubPanel.slotChipsKey,
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (var i = 0; i < slots.length; i++)
+          Builder(builder: (context) {
           final slot = slots[i];
           final rank =
               _existingPiece(state, _apexClass, _apexRole, slot)?.apexRank ?? 0;
@@ -538,8 +572,8 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
             selected: _apexSlot == slot,
             onTap: () => _setCraftGoal(_apexClass, _apexRole, slot),
           );
-        },
-      ),
+          }),
+      ],
     );
   }
 

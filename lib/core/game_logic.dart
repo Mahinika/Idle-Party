@@ -1566,6 +1566,10 @@ class GameLogic {
     );
   }
 
+  /// Return line markers: the wallet covers the next buy.
+  static const String returnCanBuy = 'You can buy';
+  static const String returnCampBuy = 'a CAMP upgrade now';
+
   /// What this return's gold or essence can actually pay for.
   ///
   /// Uses the wallet after the credit and the next forge or CAMP price.
@@ -1577,9 +1581,14 @@ class GameLogic {
     required int essenceGained,
     bool canOpenGold = false,
     bool canOpenEssence = false,
+    bool prizeWaiting = false,
+    String nextLabel = 'ENTER DUNGEON',
   }) {
     if (goldGained <= 0 && essenceGained <= 0) {
-      return 'No gold or essence this time. The button below is the next fight.';
+      // A chest / check-in / pet prize still waits: do not say "nothing"
+      // right above "+400 essence" (polish7 P016).
+      if (prizeWaiting) return 'No fight loot this time. Your prize is below.';
+      return 'No gold or essence this time. $nextLabel is the next fight.';
     }
     PartyUpgradeType? cheapest;
     var cost = 1 << 30;
@@ -1593,17 +1602,17 @@ class GameLogic {
     final name = _returnForgeName(cheapest ?? PartyUpgradeType.attack);
     final camp = cheapestSanctuaryNextCost(state);
     if (goldGained > 0 && state.gold >= cost) {
-      final open = canOpenGold ? ' Open GOLD.' : '';
-      return 'You brought back ${OfflineProgressResult.groupedCount(goldGained)} gold. The wallet covers '
-          '$name ($cost g).$open';
+      // Plain copy, "83g" like everywhere else (audit F086). The OPEN GOLD
+      // button under the text is the way there.
+      return 'You brought back ${OfflineProgressResult.groupedCount(goldGained)} gold. '
+          '$returnCanBuy $name now (${OfflineProgressResult.groupedCount(cost)}g).';
     }
     if (essenceGained > 0 && state.essence >= camp) {
       final brought = goldGained > 0
           ? 'You brought back ${OfflineProgressResult.groupedCount(goldGained)} gold and ${OfflineProgressResult.groupedCount(essenceGained)} essence. '
           : 'You brought back ${OfflineProgressResult.groupedCount(essenceGained)} essence. ';
-      final open = canOpenEssence ? 'Open ESSENCE.' : '';
-      return '${brought}The wallet covers CAMP (${OfflineProgressResult.groupedCount(camp)} essence). $open'
-          .trim();
+      return '$brought$returnCanBuy $returnCampBuy '
+          '(${OfflineProgressResult.groupedCount(camp)} essence).';
     }
     if (goldGained > 0) {
       final short = cost - state.gold;
@@ -3516,8 +3525,8 @@ class OfflineProgressResult {
             : '$bossDelta bosses fell while you were away.';
       }
       return bossDelta == 1
-          ? 'A boss fell while you were away — Ascend moved.'
-          : '$bossDelta bosses fell while you were away — Ascend moved.';
+          ? 'A boss fell while you were away. Ascend is a step closer.'
+          : '$bossDelta bosses fell while you were away. Ascend is closer.';
     }
     if (levelsGained > 0) {
       return levelsGained == 1
@@ -3673,7 +3682,10 @@ enum PartyUpgradeType {
 }
 
 /// How much wallet gold a FORGE GOLD row spends when tapped.
-enum ForgeGoldSpendMode { one, pct5, pct25, pct50, pct100 }
+/// How much one FORGE tap buys. [x10] is up to ten buys at the usual
+/// per-buy price (fewer when the wallet runs out). Not saved; the forge
+/// opens on [one]. New values are appended, never reordered.
+enum ForgeGoldSpendMode { one, pct5, pct25, pct50, pct100, x10 }
 
 extension ForgeGoldSpendModeLabels on ForgeGoldSpendMode {
   String get chipLabel => switch (this) {
@@ -3682,5 +3694,13 @@ extension ForgeGoldSpendModeLabels on ForgeGoldSpendMode {
     ForgeGoldSpendMode.pct25 => '25%',
     ForgeGoldSpendMode.pct50 => '50%',
     ForgeGoldSpendMode.pct100 => '100%',
+    ForgeGoldSpendMode.x10 => '×10',
+  };
+
+  /// Most buys one tap makes; null means the gold budget is the only cap.
+  int? get maxBuys => switch (this) {
+    ForgeGoldSpendMode.one => 1,
+    ForgeGoldSpendMode.x10 => 10,
+    _ => null,
   };
 }

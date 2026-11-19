@@ -446,6 +446,11 @@ Future<void> confirmGreaterRiftRun(
   }
 }
 
+/// DAILY RUN rules, behind the "How it works" fold.
+String dailyRunRules(int echoFloor) =>
+    'One free floor scaled from yesterday\'s PUSH peak (F$echoFloor). '
+    'Separate from Daily Vault and Quests. LEAVE ends it early.';
+
 Future<void> confirmDailyRun(
   BuildContext context,
   GameDirector director,
@@ -471,6 +476,8 @@ Future<void> confirmDailyRun(
                 dungeonId,
                 floor: echoFloor,
                 rewardEssence: rewardE,
+                // The reward line below says it once (audit F077).
+                withReward: false,
               ),
               style: GameTheme.readable(color: GameTheme.parchment),
             ),
@@ -479,13 +486,16 @@ Future<void> confirmDailyRun(
               'Reward: $rewardLabel',
               style: GameTheme.readable(color: GameTheme.torchHot),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'How it works: one free seeded floor scaled from yesterday\'s '
-              'PUSH peak (F$echoFloor) — separate from Daily Vault and Quests. '
-              'Clear it, then return to hub. Leave from the dungeon bar if you '
-              'need out.',
-              style: GameTheme.section(color: GameTheme.parchmentDim),
+            const SizedBox(height: 4),
+            // Rules folded away: START is the first thing to read (F032).
+            MenuChrome.fold(
+              title: 'How it works',
+              children: [
+                Text(
+                  dailyRunRules(echoFloor),
+                  style: GameTheme.section(color: GameTheme.parchmentDim),
+                ),
+              ],
             ),
           ],
         ),
@@ -498,7 +508,7 @@ Future<void> confirmDailyRun(
           ),
           GameButton(
             label: 'START',
-            style: GameButtonStyle.brown,
+            style: GameButtonStyle.go,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),

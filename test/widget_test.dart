@@ -75,7 +75,7 @@ void main() {
     expect(find.text('GEAR'), findsOneWidget);
     expect(find.text('GOLD'), findsNothing);
     expect(find.text('SHOP'), findsNothing);
-    expect(find.text('MORE'), findsOneWidget);
+    expect(find.text('MENU'), findsOneWidget);
     expect(find.textContaining('Boss 0/1'), findsWidgets);
     // Fresh save: KEY jargon gated — no KEYSTONE strip under ENTER.
     expect(find.textContaining('KEYSTONE'), findsNothing);
@@ -99,7 +99,7 @@ void main() {
     expect(find.text('GEAR'), findsOneWidget);
     expect(find.text('GOLD'), findsNothing);
     expect(find.text('SHOP'), findsNothing);
-    expect(find.text('MORE'), findsOneWidget);
+    expect(find.text('MENU'), findsOneWidget);
     expect(find.textContaining('Bosses'), findsNothing);
   });
 
@@ -179,7 +179,7 @@ void main() {
     // Floor art stays on "Loading floor…" in widget tests. The bar is the chrome.
     // Gold and essence stay hidden until the first boss, even after a clear.
     expect(find.text('GEAR'), findsWidgets);
-    expect(find.text('MORE'), findsWidgets);
+    expect(find.text('MENU'), findsWidgets);
     expect(find.text('GOLD'), findsNothing);
     expect(find.text('ESSENCE'), findsNothing);
     expect(find.text('LEAVE'), findsOneWidget);

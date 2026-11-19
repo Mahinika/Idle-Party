@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Fonts are bundled under `assets/fonts/`. Never hit fonts.gstatic.com.
@@ -11,12 +12,12 @@ final bool bundledGoogleFonts = () {
 /// files should use these names (combat VFX may still paint raw hex).
 abstract final class GameTheme {
   // —— Surfaces (cooler charcoal with warm torch accents) ——————————————
-  static const Color ink = Color(0xFF06080C);
-  static const Color stoneDeep = Color(0xFF0C1016);
-  static const Color stone = Color(0xFF141A22);
-  static const Color stoneRaised = Color(0xFF1E2733);
-  static const Color panel = Color(0xFF182028);
-  static const Color panelInset = Color(0xFF0F141C);
+  static const Color ink = Color(0xFF0B0709);
+  static const Color stoneDeep = Color(0xFF140D11);
+  static const Color stone = Color(0xFF1C1318);
+  static const Color stoneRaised = Color(0xFF291D23);
+  static const Color panel = Color(0xFF22181D);
+  static const Color panelInset = Color(0xFF170F14);
 
   /// Loot border colors (bag slots, gear rows).
   static const Color rarityCommon = Color(0xFF5A5040);
@@ -61,9 +62,12 @@ abstract final class GameTheme {
   static const Color hudFarmGreen = Color(0xFF3A5018);
 
   /// RUN / TODAY / ACCOUNT scope tones (hub + POWER section headers).
-  static const Color scopeRun = mossLit;
+  /// Run scope is dusk lavender: green stays reserved for "this goes up".
+  static const Color scopeRun = levelAccent;
   static const Color scopeToday = accentWarn;
-  static const Color scopeAccount = accentInfo;
+  /// Account-scope section labels (MENU, ROSTER, ACTIVE, SOUND): muted
+  /// gold from the dusk palette, not the old off-theme blue (6.6:1 on panel).
+  static const Color scopeAccount = statSpeed;
   static const Color moss = Color(0xFF2F4A3C);
   static const Color mossLit = Color(0xFF7DCF9A);
   static const Color torch = Color(0xFFE4B04A);
@@ -72,11 +76,11 @@ abstract final class GameTheme {
   /// Wisp gift core. Same pixels the overlay used to paint inline.
   static const Color wispGlow = Color(0xFFFFF6D0);
   static const Color parchment = Color(0xFFECE8DF);
-  static const Color parchmentDim = Color(0xFFB4BCC8);
+  static const Color parchmentDim = Color(0xFFC2B4A4);
   static const Color blood = Color(0xFF8B3A2A);
   static const Color bloodLit = Color(0xFFE07058);
   static const Color clear = Color(0xFF7DCF9A);
-  static const Color border = Color(0xFF3D4A5C);
+  static const Color border = Color(0xFF4E3C42);
   static const Color borderLit = Color(0xFFC9A24A);
   static const Color accentInfo = Color(0xFF6EB6FF);
   static const Color accentWarn = Color(0xFFFFB454);
@@ -91,23 +95,97 @@ abstract final class GameTheme {
   static const Color shadowFaint = Color(0x44000000);
 
   /// Menu sheet surfaces (alpha baked so overlays stay `const`).
-  static const Color scrim = Color(0xE006080C);
-  static const Color card = Color(0xB8121820);
-  static const Color cardRaised = Color(0xCC1A2430);
-  static const Color sheet = Color(0xF0121820);
+  static const Color scrim = Color(0xE00B0709);
+  static const Color card = Color(0xB81C1318);
+  static const Color cardRaised = Color(0xCC291D23);
+  static const Color sheet = Color(0xF01C1318);
   static const Color tooltipSheet = Color(0xF0140C08);
 
   /// GameButton faces.
-  static const Color buttonBrownTop = Color(0xFF6B4E2E);
-  static const Color buttonBrownBottom = Color(0xFF3E2A18);
-  static const Color buttonGreyTop = Color(0xFF2A3340);
-  static const Color buttonGreyBottom = Color(0xFF171E28);
-  static const Color buttonRedTop = Color(0xFF9A4030);
-  static const Color buttonRedBottom = Color(0xFF5A2018);
-  static const Color buttonDisabledTop = Color(0xFF151A22);
-  static const Color buttonDisabledBottom = Color(0xFF0E1218);
-  static const Color buttonDisabledText = Color(0xFF5A6270);
+  static const Color buttonBrownTop = Color(0xFF6E4C2E);
+  static const Color buttonBrownBottom = Color(0xFF40291A);
+  static const Color buttonGreyTop = Color(0xFF382D33);
+  static const Color buttonGreyBottom = Color(0xFF211A1E);
+  static const Color buttonRedTop = Color(0xFF94402D);
+  static const Color buttonRedBottom = Color(0xFF62261A);
+  static const Color buttonDisabledTop = Color(0xFF211A1E);
+  static const Color buttonDisabledBottom = Color(0xFF120D10);
+  // ≥ 4.5:1 on the disabled face: a dead button reads as dead, not absent.
+  static const Color buttonDisabledText = Color(0xFF948789);
   static const Color buttonDisabledBorder = buttonGreyTop;
+
+  /// Buy semantics (Brick-style layout). Few colors, one meaning each:
+  /// gold = buy / can afford, grey = locked / cannot afford, rose = the
+  /// picked toggle (×1 / ×10 / MAX), purple = level and progress, green =
+  /// the gain a buy gives, red = leave / danger.
+  static const Color buyGoldTop = Color(0xFFD8B566);
+  static const Color buyGoldBottom = Color(0xFFA47C3A);
+  static const Color buyGoldShine = Color(0xFFEED79E);
+  static const Color buyGoldEdge = Color(0xFF2A190B);
+  static const Color buyGoldText = Color(0xFF24140A);
+  /// "Go" face (ENTER, START, CLAIM): warm amber, distinct from the muted
+  /// gold that means buy / can afford.
+  static const Color goTop = Color(0xFFE6A24C);
+  static const Color goBottom = Color(0xFFC47C34);
+  static const Color goShine = Color(0xFFF7D196);
+  static const Color goText = Color(0xFF24140A);
+
+  /// Essence spend face: the essence lavender, so an essence price never
+  /// looks like a gold price.
+  static const Color essenceBuyTop = Color(0xFF9C88CC);
+  static const Color essenceBuyBottom = Color(0xFF8C78BC);
+  static const Color essenceBuyShine = Color(0xFFC9BCEA);
+  static const Color essenceBuyEdge = Color(0xFF1E1530);
+  static const Color essenceBuyText = Color(0xFF160F22);
+
+  static const Color buyGreyTop = Color(0xFF3D3337);
+  static const Color buyGreyBottom = Color(0xFF2A2226);
+  static const Color buyGreyShine = Color(0xFF52464B);
+  static const Color buyGreyEdge = Color(0xFF110B0E);
+  static const Color buyGreyText = Color(0xFFB3A69C);
+  static const Color toggleOnTop = Color(0xFF7C4A70);
+  static const Color toggleOnBottom = Color(0xFF55304C);
+  static const Color toggleOnText = Color(0xFFF4D7A6);
+  static const Color toggleOnShine = Color(0xFFA47896);
+
+  /// Lantern-amber accent for the selected rim and text on stone
+  /// (dusk theme "Skymning med hjältar"; 6.5:1 on chunkyStoneTop).
+  static const Color toggleOnAccent = Color(0xFFE7A857);
+
+  /// Selected row fill (plum, 33%) under a [toggleOnAccent] rim, for picks
+  /// that are not buttons, such as the selected hero on the party line.
+  static const Color selectedRowFill = Color(0x5555304C);
+
+  // Stat accents for FORGE / CAMP rows (dusk theme, desaturated).
+  static const Color statAttack = Color(0xFFB5523A); // brick
+  static const Color statArmor = Color(0xFF5E6E96); // slate dusk
+  // Dusk rose, not moss: the STA tile matches the brown/plum frames (F061).
+  static const Color statVitality = Color(0xFF9A5A6E); // dusk rose
+  static const Color statMove = Color(0xFFD9A45A); // lantern amber
+  static const Color statSpeed = Color(0xFFC49A4E); // muted gold
+  static const Color statCrit = Color(0xFFC8693A); // pumpkin
+  static const Color statMastery = Color(0xFF8F74B8); // dusk violet
+  static const Color chunkyStoneTop = Color(0xFF382B31);
+  static const Color chunkyStoneBottom = Color(0xFF231A1F);
+  static const Color boostOrangeTop = Color(0xFFD88238);
+  static const Color boostOrangeBottom = Color(0xFFC47030);
+  static const Color levelAccent = Color(0xFF9C88CC);
+  static const Color levelAccentDeep = Color(0xFF3C2D57);
+  static const Color gainGreen = Color(0xFFAFCB8E);
+
+  /// Dark rim under red (leave / danger) chunky buttons.
+  static const Color chunkyRedEdge = Color(0xFF220A06);
+  static const Color chunkyShadow = Color(0x99000000);
+
+  /// Chunky face rim and drop depth. Light on purpose: the faces read as
+  /// buttons without shouting over the town and the cave.
+  static const double chunkyRim = 1;
+  static const double chunkyDepth = 2;
+
+  /// Visible face heights. The tap area around a face stays [minTouch] /
+  /// [primaryTouch]; only the painted part is smaller.
+  static const double chunkyFace = 36;
+  static const double chunkyFaceDense = 32;
 
   /// GEAR doll wash + bag UP/BEST chip.
   static const Color dollGlow = Color(0x5540A090);
@@ -136,6 +214,9 @@ abstract final class GameTheme {
 
   /// Tight HUD corners (not menu [radiusSm]).
   static const double radiusHud = 4;
+
+  /// HUD currency capsules.
+  static const double radiusPill = 12;
 
   /// Cross-platform comfort floor (Apple HIG / WCAG 2.5.5 AAA).
   static const double minTouch = 44;
@@ -243,10 +324,7 @@ abstract final class GameTheme {
   }) {
     // Callers pass hudPixel or hudPixelComfort. Sub-9 requests are not
     // promoted; the type-ramp test rejects them in menu code.
-    assert(
-      size >= hudPixel,
-      'Pixel size $size is below hudPixel $hudPixel',
-    );
+    assert(size >= hudPixel, 'Pixel size $size is below hudPixel $hudPixel');
     final key = Object.hash(size, color.toARGB32(), height);
     return _pixelCache.putIfAbsent(
       key,
@@ -261,6 +339,27 @@ abstract final class GameTheme {
     );
   }
 
+  /// VT323 and Cinzel have no arrows (U+2190..2193) or the small
+  /// triangles, star and circle arrow some copy uses. Every text
+  /// style falls back to [glyphFallbackFamily] for those, so copy can keep
+  /// "→" without a hole in the line.
+  static const String glyphFallbackFamily = 'IdleArrows';
+  static const List<String> glyphFallback = [glyphFallbackFamily];
+  static const String glyphFallbackAsset =
+      'assets/fonts/IdleArrows-Regular.ttf';
+
+  /// Registers [glyphFallbackFamily] from the bundle. The app gets it from
+  /// the pubspec font list; tests (asset fonts off) call this.
+  static Future<void> loadGlyphFallback() async {
+    if (_glyphFallbackLoaded) return;
+    _glyphFallbackLoaded = true;
+    final loader = FontLoader(glyphFallbackFamily)
+      ..addFont(rootBundle.load(glyphFallbackAsset));
+    await loader.load();
+  }
+
+  static bool _glyphFallbackLoaded = false;
+
   /// Menu / sheet titles — premium forge display (not pixel glitter).
   static TextStyle menuTitle({double size = 18, Color color = parchment}) {
     final key = Object.hash(size, color.toARGB32());
@@ -272,7 +371,7 @@ abstract final class GameTheme {
         fontWeight: FontWeight.w700,
         letterSpacing: 1.2,
         height: 1.15,
-      ),
+      ).copyWith(fontFamilyFallback: glyphFallback),
     );
   }
 
@@ -281,7 +380,11 @@ abstract final class GameTheme {
     final key = Object.hash(size, color.toARGB32());
     return _bodyCache.putIfAbsent(
       key,
-      () => GoogleFonts.vt323(fontSize: size, color: color, height: 1.2),
+      () => GoogleFonts.vt323(
+        fontSize: size,
+        color: color,
+        height: 1.2,
+      ).copyWith(fontFamilyFallback: glyphFallback),
     );
   }
 
@@ -296,12 +399,13 @@ abstract final class GameTheme {
         height: 1.05,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.8,
-      ),
+      ).copyWith(fontFamilyFallback: glyphFallback),
     );
   }
 
   /// Semantic ramp. Menus use these. Do not pass a free size.
   static const double typeTitle = 18;
+
   /// Between the page title and body. Must stay above [typeBody].
   static const double typeSection = 16;
   static const double typeBody = 14;

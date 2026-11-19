@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../assets/custom_assets.dart';
 import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
@@ -9,6 +10,9 @@ import '../../../core/reinstall_pouch.dart';
 import '../../../core/town_nav.dart';
 import '../../confirm_dialogs.dart';
 import '../../game_icon.dart';
+import '../../game_button.dart';
+import '../../game_theme.dart';
+import '../../menu_chrome.dart';
 import '../../hub/friend_tip_block.dart';
 import '../../hub/hub_powerups.dart';
 import '../../redeem_coupon_dialog.dart';
@@ -185,16 +189,19 @@ abstract final class HomeCatalog {
         router.pushSub();
       },
     ),
+    // GUIDES used to open this same INFO screen under another name (F082).
+    // CODEX and CRAFT live only in MENU (Robert, audit F099). CODEX is the
+    // INFO screen's CODEX pane, the same place the chase deep link lands.
     HomeEntry(
-      id: 'menu_guides',
+      id: 'menu_codex',
       place: HomePlace.menuGrid,
       order: 50,
-      icon: UiIcon.tome,
-      label: 'GUIDES',
-      visible: (_, _) => true,
+      icon: CustomAssets.iconBook,
+      label: 'CODEX',
+      visible: (s, _) => MenuTabs.showCodex(s),
       badge: (_) => false,
       open: (context, director, router) {
-        router.open(MenuRoute.more, more: MoreSection.info, infoPane: 0);
+        router.open(MenuRoute.more, more: MoreSection.info, infoPane: 1);
         router.pushSub();
       },
     ),
@@ -229,6 +236,8 @@ abstract final class HomeCatalog {
       label: 'SCROLLS',
       visible: (s, _) => MenuTabs.showScrolls(s),
       badge: (s) => s.metaDepth.adTickets > 0,
+      timer: (s) =>
+          s.metaDepth.adTickets > 0 ? '${s.metaDepth.adTickets}' : null,
       open: (context, director, _) => openPowerupsSheet(context, director),
     ),
     HomeEntry(
@@ -321,22 +330,85 @@ abstract final class HomeCatalog {
       director.claimDailyVault();
       return;
     }
-    director.showToast(
-      'Today: clears $clears/$target',
-      life: 2.2,
+    // VAULT used to open the QUESTS board (a screen titled QUESTS). It
+    // now says what the vault needs, in a vault-titled card (audit F005).
+    showDialog<void>(
+      context: context,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: vaultTitle,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              vaultBody(clears: clears, target: target),
+              style: GameTheme.readable(),
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                value: target <= 0 ? 1 : (clears / target).clamp(0.0, 1.0),
+                minHeight: 8,
+                backgroundColor: GameTheme.stoneDeep,
+                color: GameTheme.toggleOnTop,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Today: $clears/$target',
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
+            ),
+          ],
+        ),
+        actions: [
+          // The only action: amber go face (polish7 P036).
+          GameButton(
+            label: 'OK',
+            style: GameButtonStyle.go,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx),
+          ),
+        ],
+      ),
     );
-    router.open(MenuRoute.more, more: MoreSection.quests);
-    router.pushSub();
   }
 
-  static List<HomeEntry> of(HomePlace place) {
+  static const String vaultTitle = 'DAILY VAULT';
+
+  static String vaultBody({required int clears, required int target}) {
+    final left = (target - clears).clamp(0, target);
+    final floors = left == 1 ? 'floor' : 'floors';
+    return 'Clear $left more $floors today. '
+        'Then tap VAULT to take the chest.';
+  }
+
+  /// [town]: out of the dungeon the rails are empty (the buildings are the
+  /// entry points, audit F100) and MENU also holds the rail entries that
+  /// have no building ([TownNavPolicy.townMenuFromRail]).
+  static List<HomeEntry> of(HomePlace place, {bool town = false}) {
     final list = entries.where((e) => e.place == place).toList();
     list.sort((a, b) => a.order.compareTo(b.order));
     if (place == HomePlace.menuGrid) {
-      return TownNavPolicy.filterMenuGrid(list, (e) => e.id);
+      return town
+          ? TownNavPolicy.filterTownMenuGrid(list, (e) => e.id)
+          : TownNavPolicy.filterMenuGrid(list, (e) => e.id);
     }
+    if (town) return const [];
     return TownNavPolicy.filterEntries(list, (e) => e.id);
   }
+
+  /// Red dot on the town MENU button: a cell moved there from the rail has
+  /// something waiting (tickets, the reinstall pouch, an update).
+  static bool townMenuBadge(GameState state, GameDirector director) =>
+      !state.inDungeon &&
+      of(HomePlace.menuGrid, town: true).any(
+        (e) =>
+            TownNavPolicy.townMenuFromRail.contains(e.id) &&
+            e.visible(state, director) &&
+            e.badge(state),
+      );
 }
 
 /// Friend invite sits on the MENU grid. It is a block, not a rail icon.

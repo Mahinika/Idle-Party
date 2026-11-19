@@ -130,6 +130,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         textTheme: GoogleFonts.vt323TextTheme(base.textTheme).apply(
           bodyColor: GameTheme.parchment,
           displayColor: GameTheme.torchHot,
+          fontFamilyFallback: GameTheme.glyphFallback,
         ),
         colorScheme: const ColorScheme.dark(
           primary: GameTheme.torch,
@@ -809,7 +810,7 @@ class _GameHomePageState extends State<GameHomePage>
                 backgroundColor: GameTheme.ink,
                 title: Text('Settings', style: GameTheme.title()),
                 content: Text(
-                  'Start or continue a save, then open MORE → SETTINGS for sound, zoom, and save tools.\n\n'
+                  'Start or continue a save, then open MENU → SETTINGS for sound, zoom, and save tools.\n\n'
                   'Privacy options are on PRIVACY below.',
                   style: GameTheme.readable(color: GameTheme.parchment),
                 ),

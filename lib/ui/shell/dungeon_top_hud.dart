@@ -131,6 +131,7 @@ class DungeonTopHud extends StatelessWidget {
     this.onOpenForge,
     this.onOpenParty,
     this.placeLineOnly = false,
+    this.placeLineDps = true,
     this.onFloorLineTap,
   });
 
@@ -145,6 +146,9 @@ class DungeonTopHud extends StatelessWidget {
 
   /// Home fight already has FARM / PUSH. This paints only the floor line.
   final bool placeLineOnly;
+
+  /// DPS chip after the floor line. Off when the home HUD shows DPS.
+  final bool placeLineDps;
 
   /// Opens the floor jump sheet on the home layout.
   final void Function(BuildContext context)? onFloorLineTap;
@@ -239,7 +243,7 @@ class DungeonTopHud extends StatelessWidget {
       items.add(
         PopupMenuItem(
           value: 'more',
-          child: Text('MORE', style: GameTheme.combat()),
+          child: Text('MENU', style: GameTheme.combat()),
         ),
       );
       items.add(
@@ -499,7 +503,7 @@ class DungeonTopHud extends StatelessWidget {
               elapsed: world.combatElapsed,
             )
           : null;
-      final showDps =
+      final showDps = placeLineDps &&
           snap != null && !snap.isEmpty && snap.chipLabel != '0 DPS';
       final lineColor = awaitingExit || state.isPartyDefeated
           ? GameTheme.clear
@@ -565,17 +569,17 @@ class DungeonTopHud extends StatelessWidget {
             director: director,
             child: MenuChrome.dialog(
               title: mode == DungeonMode.farm
-                  ? (plain ? 'Switch to Repeat?' : 'Switch to FARM?')
-                  : (plain ? 'Switch to Next?' : 'Switch to PUSH?'),
+                  ? 'Switch to FARM?'
+                  : 'Switch to PUSH?',
               content: Text(
                 mode == DungeonMode.farm
                     ? (plain
-                          ? 'Repeat stays on this floor after clear for more loot. No essence.\n\n'
+                          ? 'FARM stays on this floor after clear for more loot. No essence.\n\n'
                                 'You are mid-fight — switch anyway?'
                           : 'FARM loops the same floor after clear for more loot. No essence.\n\n'
                                 'You are mid-fight — switch anyway?')
                     : (plain
-                          ? 'Next advances toward the boss after each clear. +1 essence a clear, +2 on a boss.\n\n'
+                          ? 'PUSH goes to the next floor after each clear. +1 essence a clear, +2 on a boss.\n\n'
                                 'You are mid-fight — switch anyway?'
                           : 'PUSH advances toward the boss after each clear. +1 essence a clear, +2 on a boss.\n\n'
                                 'You are mid-fight — switch anyway?'),
@@ -1139,6 +1143,16 @@ String _firstBossBit(GameState state, int floor) {
   if (state.inGauntlet || state.inAnyRiftMode || state.inWorldBoss) return '';
   final boss = GameLogic.bossFloorFor(state);
   if (floor == boss) return ' · BOSS';
-  if (floor + 1 == boss) return ' · BOSS NEXT';
+  if (floor + 1 == boss) {
+    // The first-climb coach line already says "Boss on floor N". Do not
+    // say it twice on the same screen (audit F094).
+    if (FirstClimbCoach.line(state, inDungeon: true) != null) return '';
+    return ' · BOSS NEXT';
+  }
   return '';
 }
+
+/// Test hook for the first-climb boss suffix.
+@visibleForTesting
+String firstBossBitForTest(GameState state, int floor) =>
+    _firstBossBit(state, floor);

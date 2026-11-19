@@ -23,6 +23,14 @@ import 'shell/shell_common.dart';
 /// Character sheet inspired by classic mobile RPG equip screens:
 /// hero preview, labeled slots around it, big DAMAGE / ARMOR under the doll.
 class CharacterEquipPanel extends StatelessWidget {
+  static const String slotLegend = 'Main · Off · Ranged · Charms · Flask';
+  static const slotLegendKey = ValueKey('equip-slot-legend');
+
+  /// Key stats under the hero name (audit F012). HP is on the line below.
+  static String heroStatsLine({required num atk, required num def}) =>
+      'AP ${atk.round()} · Armor ${def.round()}';
+  static const Key heroStatsLineKey = ValueKey('hero_stats_line');
+
   const CharacterEquipPanel({
     super.key,
     required this.state,
@@ -156,7 +164,8 @@ class CharacterEquipPanel extends StatelessWidget {
     if (heroes.isEmpty) return const SizedBox.shrink();
     final index = heroIndex.clamp(0, heroes.length - 1);
     final hero = heroes[index];
-    final slotSize = compact ? 40.0 : 46.0;
+    // Slots at the 44/48 dp touch size, not 40 (polish7 P050).
+    final slotSize = compact ? 44.0 : 48.0;
     final slotGap = compact ? 4.0 : 5.0;
     final dollSize = compact ? 96.0 : 128.0;
     final weaponSize = compact ? 44.0 : 50.0;
@@ -227,8 +236,17 @@ class CharacterEquipPanel extends StatelessWidget {
               itemBuilder: (context, i) {
                 final h = heroes[i];
                 final active = i == index;
-                final label =
-                    '${h.displayRoleLabel(plainEnglish: GameLogic.plainPlayerChrome(state))} · Lv${h.level}';
+                // Hero names, as on the party strip (audit F010).
+                final role = h.displayName(
+                  plainEnglish: GameLogic.plainPlayerChrome(state),
+                );
+                final label = '$role · Lv${h.level}';
+                // Above 1.2 text scale the chips show the role only, so three
+                // fit on a 360 dp phone; the level is under the doll and in
+                // the semantics label.
+                final chipText = MediaQuery.textScalerOf(context).scale(1) > 1.2
+                    ? role
+                    : label;
                 return Semantics(
                   button: true,
                   selected: active,
@@ -250,15 +268,11 @@ class CharacterEquipPanel extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             if (!compact) ...[
-                              HeroDollSprite(
-                                hero: h,
-                                partyIndex: i,
-                                size: 26,
-                              ),
+                              HeroDollSprite(hero: h, partyIndex: i, size: 26),
                               const SizedBox(width: 6),
                             ],
                             Text(
-                              label,
+                              chipText,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: GameTheme.readable(
@@ -278,57 +292,62 @@ class CharacterEquipPanel extends StatelessWidget {
         ],
         Row(
           children: [
-            GameIconButton(
-              glyph: UiGlyph.prev,
-              label: 'Previous hero',
-              size: 16,
-              color: GameTheme.torchHot,
-              width: GameTheme.minTouch,
-              height: GameTheme.minTouch,
-              onPressed: heroes.length > 1
-                  ? () => onSelectHero(
-                      (index - 1 + heroes.length) % heroes.length,
-                    )
-                  : null,
-            ),
+            // ‹ › only when there is no hero chip strip above (F052).
+            if (!showHeroStrip)
+              GameIconButton(
+                glyph: UiGlyph.prev,
+                label: 'Previous hero',
+                size: 16,
+                color: GameTheme.torchHot,
+                width: GameTheme.minTouch,
+                height: GameTheme.minTouch,
+                onPressed: heroes.length > 1
+                    ? () => onSelectHero(
+                        (index - 1 + heroes.length) % heroes.length,
+                      )
+                    : null,
+              ),
             Expanded(
               child: Column(
                 children: [
                   Text(
-                    hero.spec.name,
+                    hero.displayName(
+                      plainEnglish: GameLogic.plainPlayerChrome(state),
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                     style: GameTheme.title(),
                   ),
-                  if (compact) ...[
-                    const SizedBox(height: 4),
-                    HeroDollSprite(
-                      hero: hero,
-                      partyIndex: index,
-                      size: 28,
-                    ),
-                  ],
+                  // No second, tiny doll here: the big one is right below
+                  // (polish7 P050).
+                  // Class as the sub-line; the key stats up top, above the
+                  // fold on a 640 phone (F010 / F012).
                   Text(
-                    'L${hero.level}',
+                    'L${hero.level} · ${hero.spec.name}',
                     textAlign: TextAlign.center,
                     style: GameTheme.hint(color: GameTheme.parchmentDim),
+                  ),
+                  Text(
+                    CharacterEquipPanel.heroStatsLine(atk: atk, def: def),
+                    key: CharacterEquipPanel.heroStatsLineKey,
+                    textAlign: TextAlign.center,
+                    style: GameTheme.hint(color: GameTheme.parchment),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     () {
                       final avg = _avgDisplayItemLevel(hero);
                       final minIl = _minDisplayItemLevel(hero);
-                      final ilBit = avg == null
-                          ? ''
-                          : minIl == null || minIl == avg
-                          ? ' · iLvl $avg'
-                          : ' · iLvl $avg · min $minIl';
-                      return state.isPartyDefeated
-                          ? '$ilBit  ·  WIPED'.replaceFirst(' ·  ·', ' ·')
-                          : '$ilBit  ·  HP '
-                                '${hero.currentHp.clamp(0, maxHp)}/$maxHp'
-                              .replaceFirst(' ·  ·', ' ·');
+                      // Joined parts: the line never starts with a "·".
+                      return [
+                        if (avg != null) 'iLvl $avg',
+                        if (avg != null && minIl != null && minIl != avg)
+                          'min $minIl',
+                        state.isPartyDefeated
+                            ? 'WIPED'
+                            : 'HP ${hero.currentHp.clamp(0, maxHp)}/$maxHp',
+                      ].join('  ·  ');
                     }(),
                     textAlign: TextAlign.center,
                     style: GameTheme.section(color: GameTheme.parchmentDim),
@@ -336,17 +355,18 @@ class CharacterEquipPanel extends StatelessWidget {
                 ],
               ),
             ),
-            GameIconButton(
-              glyph: UiGlyph.next,
-              label: 'Next hero',
-              size: 16,
-              color: GameTheme.torchHot,
-              width: GameTheme.minTouch,
-              height: GameTheme.minTouch,
-              onPressed: heroes.length > 1
-                  ? () => onSelectHero((index + 1) % heroes.length)
-                  : null,
-            ),
+            if (!showHeroStrip)
+              GameIconButton(
+                glyph: UiGlyph.next,
+                label: 'Next hero',
+                size: 16,
+                color: GameTheme.torchHot,
+                width: GameTheme.minTouch,
+                height: GameTheme.minTouch,
+                onPressed: heroes.length > 1
+                    ? () => onSelectHero((index + 1) % heroes.length)
+                    : null,
+              ),
           ],
         ),
         const SizedBox(height: 6),
@@ -404,7 +424,9 @@ class CharacterEquipPanel extends StatelessWidget {
                           child: Text(
                             'Two-hand — swap 1H + off-hand from BAG',
                             textAlign: TextAlign.center,
-                            style: GameTheme.hint(color: GameTheme.parchmentDim),
+                            style: GameTheme.hint(
+                              color: GameTheme.parchmentDim,
+                            ),
                           ),
                         );
                       }
@@ -457,10 +479,14 @@ class CharacterEquipPanel extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
+                  // Hint size: one line at 1.0, never a ragged 3-line wrap
+                  // at 1.45 (polish7 P051).
                   Text(
-                    'Main · Off · Ranged · Charms · Flask',
+                    CharacterEquipPanel.slotLegend,
+                    key: CharacterEquipPanel.slotLegendKey,
                     textAlign: TextAlign.center,
-                    style: GameTheme.readable(color: GameTheme.parchmentDim),
+                    maxLines: 2,
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 ],
               ),
@@ -489,7 +515,9 @@ class CharacterEquipPanel extends StatelessWidget {
                   selected.name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.readable(color: itemRarityColor(selected.rarity)),
+                  style: GameTheme.readable(
+                    color: itemRarityColor(selected.rarity),
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -520,11 +548,13 @@ class CharacterEquipPanel extends StatelessWidget {
                     '  Armor${GameLogic.formatDelta(compare.defDelta)}'
                     '  STA${GameLogic.formatDelta(compare.vitDelta)}'
                     '${autoWear ? '  UPGRADE' : ''}',
-                    style: GameTheme.hint(color: autoWear
+                    style: GameTheme.hint(
+                      color: autoWear
                           ? GameTheme.clear
                           : (compare.powerDelta < 0
                                 ? GameTheme.bloodLit
-                                : GameTheme.parchmentDim)),
+                                : GameTheme.parchmentDim),
+                    ),
                   ),
                   Text(
                     'Score ${GameLogic.formatDelta(compare.powerDelta)}',
@@ -770,6 +800,9 @@ class PaperDollSlot extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onUnequip;
 
+  /// Dashed frame on an open (empty, not blocked) slot.
+  static const Key emptyFrameKey = ValueKey('paper_doll_empty_frame');
+
   @override
   Widget build(BuildContext context) {
     final blockedOh =
@@ -778,12 +811,13 @@ class PaperDollSlot extends StatelessWidget {
         ClassProficiency.weaponBlocksOffHand(
           hero!.itemIn(EquipmentSlot.weapon),
         );
+    // Empty: a dashed plum frame + "+" says "open slot"; filled: the rarity
+    // edge for every rarity (audit F011).
+    final emptyOpen = item == null && !blockedOh;
     final border = blockedOh
         ? GameTheme.border.withValues(alpha: 0.45)
-        : item == null ||
-              item!.rarity == LootRarity.common ||
-              item!.rarity == LootRarity.uncommon
-        ? GameTheme.border
+        : item == null
+        ? Colors.transparent
         : itemRarityBorder(item!.rarity);
     final ohKind =
         item?.offHandKind ??
@@ -815,9 +849,7 @@ class PaperDollSlot extends StatelessWidget {
             padding: const EdgeInsets.all(2),
             child: EquipmentIcon(item: item!, size: size - 4, hero: hero),
           ),
-          if (selected &&
-              item != null &&
-              gearDisplayIlvl(item!) != null)
+          if (selected && item != null && gearDisplayIlvl(item!) != null)
             Positioned(
               right: 2,
               bottom: 1,
@@ -829,10 +861,15 @@ class PaperDollSlot extends StatelessWidget {
         ],
       );
     } else if (labeled || blockedOh) {
+      // At big text the label alone fills a small slot; drop the faint
+      // icon rather than overflow (no shrink-to-fit).
+      final labelH =
+          MediaQuery.textScalerOf(context).scale(GameTheme.typeHint) * 1.25;
+      final iconFits = size * 0.38 + labelH <= size - 4;
       slotFace = Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (emptyIcon != null)
+          if (emptyIcon != null && iconFits)
             Opacity(
               opacity: blockedOh ? 0.2 : 0.22,
               child: KenneySprite(asset: emptyIcon, size: size * 0.38),
@@ -900,7 +937,29 @@ class PaperDollSlot extends StatelessWidget {
                       : null,
                 ),
                 clipBehavior: Clip.hardEdge,
-                child: slotFace,
+                child: emptyOpen
+                    ? CustomPaint(
+                        key: PaperDollSlot.emptyFrameKey,
+                        foregroundPainter: _DashedFramePainter(
+                          color: GameTheme.toggleOnShine.withValues(alpha: 0.8),
+                        ),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            slotFace,
+                            Positioned(
+                              right: 3,
+                              top: 3,
+                              child: GameIcon.glyph(
+                                UiGlyph.add,
+                                size: 9,
+                                color: GameTheme.toggleOnShine,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : slotFace,
               ),
             ),
           ),
@@ -925,4 +984,33 @@ class PaperDollSlot extends StatelessWidget {
       child: body,
     );
   }
+}
+
+/// Dashed rounded frame for an open gear slot.
+class _DashedFramePainter extends CustomPainter {
+  _DashedFramePainter({required this.color});
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Offset.zero & size,
+          const Radius.circular(6),
+        ).deflate(0.7),
+      );
+    for (final metric in path.computeMetrics()) {
+      for (var d = 0.0; d < metric.length; d += 7) {
+        canvas.drawPath(metric.extractPath(d, d + 4), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedFramePainter old) => old.color != color;
 }

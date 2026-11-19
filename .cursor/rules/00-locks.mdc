@@ -25,6 +25,13 @@ On **2026-11-08** the owner said a source branch, push, or PR does not
 allow a test APK. A `test-*` tag, a `v*` tag, and an APK workflow still
 need the owner to ask in that turn.
 
+From **2026-11-13 to 2026-11-19** the owner added:
+- Test APK from the PR first and merge only after the phone verdict, even when asked to "merge and release".
+- No economy, price, reward, or save-format changes without the owner's yes.
+- Enemy catalog append-only. Camera taus 0.05 / 0.09. DODGE / BLOCK / PARRY stay.
+- `typeScaleMax` 1.45, no `FittedBox` text shrinking, touch targets 44 / 48 dp.
+- Approved versions are frozen; no paid tools.
+
 ## Hard locks (never weaken from this file)
 
 | Lock | Meaning |

@@ -371,7 +371,7 @@ extension GameDirectorCombatLoop on GameDirector {
           bestDrop: bestDrop,
         );
         if (leveled) {
-          final name = _state.heroes[leveledHeroes.first].name;
+          final name = _state.heroes[leveledHeroes.first].shownName;
           final extra = leveledHeroes.length - 1;
           final who = extra > 0 ? '$name +$extra leveled' : '$name leveled';
           if ((clearLine.length + who.length) < 72) {
@@ -435,7 +435,7 @@ extension GameDirectorCombatLoop on GameDirector {
                       d.unlockLevel > oldLevel && d.unlockLevel <= hero.level,
                 );
             for (final ability in unlocked) {
-              bits.add('${hero.name}: ${ability.shortLabel}');
+              bits.add('${hero.shownName}: ${ability.shortLabel}');
             }
           }
           if (bits.isNotEmpty) {

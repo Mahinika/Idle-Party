@@ -8,25 +8,28 @@ import '../../../core/home_layout.dart';
 import '../../../core/hub_chase.dart';
 import '../../../core/menu_router.dart';
 import '../../../core/nav_copy.dart';
+import '../../chunky_face.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../hub/hub_header.dart';
 import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
-import '../dungeon_party_hud.dart';
 import '../shell_common.dart';
 import 'director_select.dart';
+import 'home_catalog.dart';
+import 'hud_pills.dart';
 
 /// AL, essence, gold, a context currency, speed, and MENU.
 class HomeTopBar extends StatelessWidget {
-  const HomeTopBar({
-    super.key,
-    required this.director,
-    required this.router,
-  });
+  const HomeTopBar({super.key, required this.director, required this.router});
 
   final GameDirector director;
   final MenuRouter router;
+
+  /// AL and essence pills wait until either means something: first ascend,
+  /// first essence, or first boss. A new save does not open on two zeros.
+  static bool showsMetaPills(GameState s) =>
+      s.ascensionLevel > 0 || s.essence > 0 || s.bossVictories > 0;
 
   @override
   Widget build(BuildContext context) {
@@ -38,9 +41,13 @@ class HomeTopBar extends StatelessWidget {
           select: (s) {
             final chase = HubChase.forState(s).title;
             return '${s.ascensionLevel}|${s.essence}|${s.gold}|${s.combatPace}|'
+                '${s.bossVictories}|'
                 '${s.metaDepth.adTickets}|${s.metaDepth.cinders}|'
                 '${s.metaDepth.embers}|${s.hardmodeLevel}|$chase|'
-                '${s.keystoneRunActive}|${s.keystoneTimerMs}';
+                '${s.keystoneRunActive}|${s.keystoneTimerMs}|'
+                '${s.inDungeon}|${s.currentRoom.floorNumber}|'
+                '${GoldIncome.hubGoldPerMinute(s)}|'
+                '${HomeCatalog.townMenuBadge(s, director)}';
           },
           builder: (context, state) =>
               _bar(context, state, router.route, router.essencePanel),
@@ -55,31 +62,46 @@ class HomeTopBar extends StatelessWidget {
     MenuRoute route,
     EssencePanel essencePanel,
   ) {
-    final wide = MediaQuery.sizeOf(context).width >= 400;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
-    final chase = NavCopy.playerText(
-      _chaseLine(state),
-      HomeLayout.home,
-    );
+    final chase = NavCopy.playerText(_chaseLine(state), HomeLayout.home);
     final third = _third(context, state, route, essencePanel);
-    final compactTop =
-        state.homeLayout == HomeLayout.home && state.inDungeon;
+    final compactTop = state.homeLayout == HomeLayout.home && state.inDungeon;
+    final perMin = GoldIncome.hubGoldPerMinute(state);
+    final fast = state.combatPace >= 2;
+    final goldHasSub = perMin > 0;
+    final showMeta = HomeTopBar.showsMetaPills(state);
+    final menuCaption = textScale <= 1.1;
+    // Town has no quick rail (F100): SCROLLS / POUCH / UPDATE wait in MENU,
+    // so their red dot moves onto the MENU button.
+    final menuDot = HomeCatalog.townMenuBadge(state, director);
     // Stone fills the cutout. The words start below it.
     final topInset = MenuChrome.systemTopInset(context);
     return Material(
       color: GameTheme.stoneDeep,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(8, 4 + topInset, 8, compactTop ? 2 : 4),
+        padding: EdgeInsets.fromLTRB(8, 2 + topInset, 8, compactTop ? 2 : 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
-                _chip('AL ${state.ascensionLevel}', UiIcon.ascend),
-                const SizedBox(width: 6),
-                _chip('${state.essence}', UiIcon.essence),
+                if (showMeta) ...[
+                  HudPill(
+                    icon: UiIcon.ascend,
+                    text: 'AL ${state.ascensionLevel}',
+                    edge: GameTheme.levelAccent,
+                    reserveSub: goldHasSub,
+                  ),
+                  const SizedBox(width: 4),
+                  HudPill(
+                    icon: UiIcon.essence,
+                    text: formatCount(state.essence),
+                    edge: GameTheme.levelAccent,
+                    reserveSub: goldHasSub,
+                  ),
+                ],
                 if (compactTop && state.keystoneRunActive) ...[
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 4),
                   Text(
                     Keystone.formatTimer(state.keystoneTimerMs),
                     maxLines: 1,
@@ -87,74 +109,142 @@ class HomeTopBar extends StatelessWidget {
                     style: GameTheme.hint(color: GameTheme.torchHot),
                   ),
                 ],
-                const SizedBox(width: 6),
-                if (compactTop)
-                  _tap(
+                const SizedBox(width: 4),
+                Expanded(
+                  child: _tap(
                     label: 'Gold',
                     onTap: () => _openGold(context, state),
-                    child: _chip(formatGold(state.gold), UiIcon.gold),
-                  )
-                else
-                  Expanded(
-                    child: _tap(
-                      label: 'Gold',
-                      onTap: () => _openGold(context, state),
-                      child: _chip(
-                        '${formatGold(state.gold)}  ${GoldIncome.perMinuteLabel(GoldIncome.hubGoldPerMinute(state))}',
-                        UiIcon.gold,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: HudPill(
+                        icon: UiIcon.gold,
+                        text: formatGold(state.gold),
+                        sub: perMin > 0
+                            ? '+${GoldIncome.perMinuteLabel(perMin)}'
+                            : null,
+                        edge: GameTheme.buyGoldBottom,
                       ),
                     ),
                   ),
+                ),
                 if (third != null && !compactTop) ...[
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 4),
                   _tap(
                     label: third.$1,
                     onTap: third.$3,
-                    child: _chip(third.$2, third.$4),
+                    child: HudPill(
+                      icon: third.$4,
+                      text: third.$2,
+                      reserveSub: goldHasSub,
+                    ),
                   ),
                 ],
-                const SizedBox(width: 6),
-                _tap(
-                  label: state.combatPace >= 2 ? 'SPEED 2×' : 'SPEED 1×',
-                  onTap: director.cycleCombatPace,
-                  child: _chip(
-                    state.combatPace >= 2 ? '2×' : '1×',
-                    UiIcon.sword,
+                if (state.inDungeon) ...[
+                  const SizedBox(width: 4),
+                  _tap(
+                    label: fast ? 'SPEED 2×' : 'SPEED 1×',
+                    onTap: director.cycleCombatPace,
+                    child: ChunkyFace(
+                      tone: fast ? ChunkyTone.orange : ChunkyTone.stone,
+                      minWidth: 40,
+                      minHeight: GameTheme.chunkyFaceDense,
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ExcludeSemantics(
+                            child: Text(
+                              '▸',
+                              maxLines: 1,
+                              style: GameTheme.button(
+                                size: GameTheme.typeButtonDense,
+                                color: fast
+                                    ? ChunkyFace.textOn(ChunkyTone.orange)
+                                    : GameTheme.parchmentDim,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            fast ? '2×' : '1×',
+                            maxLines: 1,
+                            style: GameTheme.button(
+                              size: GameTheme.typeButtonDense,
+                              color: fast
+                                  ? ChunkyFace.textOn(ChunkyTone.orange)
+                                  : GameTheme.parchment,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 6),
+                ],
+                const SizedBox(width: 4),
                 _tap(
-                  label: 'MENU',
+                  label: menuDot ? 'MENU, ready' : 'MENU',
                   onTap: () => router.toggle(MenuRoute.more),
-                  child: GameIcon.asset(UiIcon.menu, size: 22),
+                  child: _withDot(
+                    menuDot,
+                    ChunkyFace(
+                    tone: ChunkyTone.stone,
+                    minWidth: 36,
+                    minHeight: GameTheme.chunkyFaceDense,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: menuCaption
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GameIcon.asset(UiIcon.menu, size: 14),
+                              // Fixed width: the caption never widens
+                              // the face past its 36 dp minimum.
+                              ExcludeSemantics(
+                                child: SizedBox(
+                                  width: 28,
+                                  child: Text(
+                                    'MENU',
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    overflow: TextOverflow.clip,
+                                    textAlign: TextAlign.center,
+                                    style: GameTheme.hint(
+                                      color: GameTheme.parchment,
+                                    ).copyWith(height: 1),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : GameIcon.asset(UiIcon.menu, size: 20),
+                    ),
+                  ),
                 ),
               ],
             ),
-            if (compactTop) ...[
-              const SizedBox(height: 2),
-              Text(
-                chase,
-                maxLines: textScale > 1.2 ? 1 : 2,
-                softWrap: true,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
-              ),
-            ] else ...[
-              const SizedBox(height: 2),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      chase,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.hint(color: GameTheme.parchmentDim),
-                    ),
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                if (compactTop) ...[
+                  HexBadge(
+                    label: 'F${state.currentRoom.floorNumber}',
+                    semanticLabel: 'Floor ${state.currentRoom.floorNumber}',
                   ),
-                  if (wide) DpsMeter(director: director, onOpenChanged: (_) {}),
+                  const SizedBox(width: 6),
                 ],
-              ),
-            ],
+                Expanded(
+                  child: Text(
+                    chase,
+                    maxLines: compactTop && textScale <= 1.2 ? 2 : 1,
+                    softWrap: true,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
+                  ),
+                ),
+                if (state.inDungeon) ...[
+                  const SizedBox(width: 4),
+                  HudDpsPill(director: director),
+                ],
+              ],
+            ),
           ],
         ),
       ),
@@ -168,8 +258,9 @@ class HomeTopBar extends StatelessWidget {
     showHubIncomeSheet(
       context,
       incomeLine: GoldIncome.perMinuteLabel(perMin),
-      multiplierLine: '',
-      displayTitle: 'Gold',
+      // What makes up the rate, not a bare " · Gold" (polish7 P034).
+      multiplierLine: GoldIncome.multiplierLine(state),
+      displayTitle: '',
       willRank: '',
       collectionScore: 0,
     );
@@ -185,7 +276,7 @@ class HomeTopBar extends StatelessWidget {
     if (route == MenuRoute.shop) {
       return (
         'Tickets',
-        '${state.metaDepth.adTickets}',
+        formatCount(state.metaDepth.adTickets),
         () => router.open(MenuRoute.shop),
         UiIcon.ticket,
       );
@@ -194,7 +285,7 @@ class HomeTopBar extends StatelessWidget {
       final embers = essencePanel == EssencePanel.keep;
       return (
         embers ? 'Embers' : 'Cinders',
-        '${embers ? state.metaDepth.embers : state.metaDepth.cinders}',
+        formatCount(embers ? state.metaDepth.embers : state.metaDepth.cinders),
         () {
           router.essencePanel = embers
               ? EssencePanel.keep
@@ -215,19 +306,26 @@ class HomeTopBar extends StatelessWidget {
     return null;
   }
 
-  Widget _chip(String text, String icon) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
+  /// Red dot on the MENU button while a moved rail cell has something ready.
+  static const Key menuDotKey = ValueKey('home-top-menu-dot');
+
+  Widget _withDot(bool on, Widget child) {
+    if (!on) return child;
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        GameIcon.asset(icon, size: 14),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GameTheme.hint(color: GameTheme.parchment),
+        child,
+        Positioned(
+          right: -2,
+          top: -2,
+          child: Container(
+            key: menuDotKey,
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: GameTheme.hudHpDamage,
+              shape: BoxShape.circle,
+            ),
           ),
         ),
       ],

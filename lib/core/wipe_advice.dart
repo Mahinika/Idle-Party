@@ -269,7 +269,7 @@ abstract final class WipeAdvice {
     final role = hero.displayRoleLabel(
       plainEnglish: GameLogic.plainPlayerChrome(state),
     );
-    final name = hero.name.trim();
+    final name = hero.shownName.trim();
     if (name.isEmpty) return role;
     if (name == role) return name;
     return '$name ($role)';
@@ -310,14 +310,14 @@ abstract final class WipeAdvice {
     if (state.inGauntlet || state.inAnyRiftMode) return null;
     if (GameLogic.plainPlayerChrome(state)) {
       if (state.dungeonMode == DungeonMode.farm) {
-        return 'Repeat loops this floor for loot. See INFO.';
+        return 'FARM repeats this floor for loot. More in MENU → INFO.';
       }
-      return 'Next climbs after each clear. See INFO.';
+      return 'PUSH goes one floor deeper after each clear. More in MENU → INFO.';
     }
     if (state.dungeonMode == DungeonMode.farm) {
-      return 'FARM loops this floor for loot. See INFO.';
+      return 'FARM loops this floor for loot. More in MENU → INFO.';
     }
-    return 'PUSH climbs after each clear. See INFO.';
+    return 'PUSH climbs after each clear. More in MENU → INFO.';
   }
 
   /// Nudge God Hand after repeated wipes on the same floor (commit path — no redesign).
