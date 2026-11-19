@@ -40,6 +40,9 @@ Future<void> showOfflineProgressDialog(
   final summary = director.offlineSummary;
   final rewardState = summary?.state ?? director.state;
   final now = DateTime.now();
+  if (summary != null && summary.secondsAway < 5 * 60) {
+    return;
+  }
   if (summary == null && !GameLogic.returnCardWaiting(rewardState, now)) {
     return;
   }

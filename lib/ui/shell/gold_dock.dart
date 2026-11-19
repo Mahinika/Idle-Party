@@ -67,7 +67,7 @@ class _GoldDockState extends State<GoldDock> with TickerProviderStateMixin {
       for (final tab in _visible)
         switch (tab) {
           GoldPanel.tracks => (
-            label: 'FORGE',
+            label: 'TRAIN',
             body: ForgeOverlay(director: widget.director),
           ),
           GoldPanel.market => (

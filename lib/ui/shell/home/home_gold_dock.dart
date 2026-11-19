@@ -42,7 +42,7 @@ class HomeGoldDock extends StatelessWidget {
         ),
         child: MenuChrome.segmented(
           dense: true,
-          labels: const ['FORGE', 'CAMP', 'MARKET'],
+          labels: const ['TRAIN', 'CAMP', 'MARKET'],
           icons: UiIcon.goldDockSegment,
           // Which rows have something to buy, like Brick (audit F022).
           dots: dots(director.state),
@@ -131,7 +131,7 @@ class _HomeGoldSheetState extends State<HomeGoldSheet> {
                     Expanded(
                       child: MenuChrome.segmented(
                         dense: true,
-                        labels: const ['FORGE', 'CAMP', 'MARKET'],
+                        labels: const ['TRAIN', 'CAMP', 'MARKET'],
                         icons: UiIcon.goldDockSegment,
                         // Locked: padlocks, and no lit plum tab (F039).
                         locked: !MenuTabs.showGold(widget.director.state),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
 import '../../../core/hub_chase.dart';
+import '../../../core/hub_primary_cta.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
 import '../../../core/town_access.dart';
@@ -47,9 +49,59 @@ class TownViewport extends StatefulWidget {
 class _TownViewportState extends State<TownViewport> {
   String? _lockedTitle;
   String? _lockedBody;
+  DateTime? _tapMuteUntil;
+  Timer? _tapMuteTimer;
 
   GameDirector get director => widget.director;
   MenuRouter get router => widget.router;
+
+  static const Duration _postSheetTapMute = Duration(milliseconds: 350);
+
+  @override
+  void initState() {
+    super.initState();
+    widget.router.addListener(_onRouterClosed);
+  }
+
+  @override
+  void dispose() {
+    _tapMuteTimer?.cancel();
+    widget.router.removeListener(_onRouterClosed);
+    super.dispose();
+  }
+
+  void _onRouterClosed() {
+    if (widget.router.isOpen) return;
+    final until = DateTime.now().add(_postSheetTapMute);
+    _tapMuteTimer?.cancel();
+    if (mounted) {
+      setState(() => _tapMuteUntil = until);
+    } else {
+      _tapMuteUntil = until;
+    }
+    _tapMuteTimer = Timer(_postSheetTapMute, () {
+      if (!mounted) return;
+      if (_tapMuteUntil == until) {
+        setState(() => _tapMuteUntil = null);
+      }
+    });
+  }
+
+  bool get _townTapsMuted =>
+      _tapMuteUntil != null && DateTime.now().isBefore(_tapMuteUntil!);
+
+  ChasePlan _enterDungeonPlan(GameState state, HubChase chase) {
+    final zoneId = GameLogic.recommendedDungeonId(state);
+    return ChasePlan(
+      label: HubPrimaryCta.enterDungeonLabel(
+        chase: chase,
+        chaseActionLabel: null,
+        hardmodeLevel: state.hardmodeLevel,
+      ),
+      op: ChaseOp.enter,
+      zoneId: zoneId,
+    );
+  }
 
   void _clearLocked() {
     if (_lockedTitle == null) return;
@@ -202,6 +254,40 @@ class _TownViewportState extends State<TownViewport> {
     final label = plan.label ?? 'ENTER';
     final cave = DungeonCatalog.byId(state.dungeonId).name;
     final al = state.ascensionLevel;
+    final primaryIsEnter =
+        plan.op == ChaseOp.enter || plan.op == ChaseOp.enterKey;
+    final zoneId = GameLogic.recommendedDungeonId(state);
+    final zoneUnlocked = ChaseDispatcher.zoneUnlocked(state, zoneId);
+    final cta = HubPrimaryCta.resolve(
+      chase: chase,
+      chaseActionLabel: plan.label,
+      hasChaseAction: plan.label != null && plan.op != ChaseOp.none,
+      unlockedSelected: zoneUnlocked,
+      hardmodeLevel: state.hardmodeLevel,
+      showKeystoneJargon: GameLogic.showKeystoneJargon(state),
+      endgameUnlocked: GameLogic.endgameUnlocked(state),
+    );
+    final enterLabel = primaryIsEnter
+        ? null
+        : (cta.secondaryLabel ??
+            (zoneUnlocked
+                ? HubPrimaryCta.enterDungeonLabel(
+                    chase: chase,
+                    chaseActionLabel: null,
+                    hardmodeLevel: state.hardmodeLevel,
+                  )
+                : null));
+    final showSecondaryEnter =
+        !primaryIsEnter && enterLabel != null && zoneUnlocked;
+    final showAscendBesideEnter = showSecondaryEnter &&
+        GameLogic.canAscend(state) &&
+        plan.op != ChaseOp.confirmAscend;
+    final showAscendBelow = !showSecondaryEnter &&
+        GameLogic.canAscend(state) &&
+        plan.op != ChaseOp.confirmAscend &&
+        plan.op != ChaseOp.enter &&
+        plan.op != ChaseOp.enterKey;
+    final enterPlan = _enterDungeonPlan(state, chase);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -258,52 +344,94 @@ class _TownViewportState extends State<TownViewport> {
                   FarmStrengthPicker(director: director, compact: true),
                   const SizedBox(height: 6),
                 ],
-                // The coach says "Tap ENTER." — pulse the button it means
-                // (audit F093).
-                CoachPulse(
-                  key: TownEnterCoach.pulseKey,
-                  active: TownEnterCoach.active(state),
-                  child: WebClickScope(
-                    label: label,
-                    onPressed: () => runChasePlan(
-                      context: context,
-                      director: director,
-                      router: router,
-                      plan: plan,
-                      onEnterDungeon: (id) {
-                        router.close();
-                        director.enterDungeon(dungeonId: id);
-                      },
-                    ),
-                    child: GameButton(
-                      label: label,
-                      style: GameButtonStyle.go,
-                      primary: true,
-                      onPressed: () => runChasePlan(
-                        context: context,
-                        director: director,
-                        router: router,
-                        plan: plan,
-                        onEnterDungeon: (id) {
-                          router.close();
-                          director.enterDungeon(dungeonId: id);
-                        },
+                IgnorePointer(
+                  ignoring: _townTapsMuted,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // The coach says "Tap ENTER." — pulse the button it means
+                      // (audit F093).
+                      CoachPulse(
+                        key: TownEnterCoach.pulseKey,
+                        active: TownEnterCoach.active(state),
+                        child: WebClickScope(
+                          label: label,
+                          onPressed: () => runChasePlan(
+                            context: context,
+                            director: director,
+                            router: router,
+                            plan: plan,
+                            onEnterDungeon: (id) {
+                              router.close();
+                              director.enterDungeon(dungeonId: id);
+                            },
+                          ),
+                          child: GameButton(
+                            label: label,
+                            style: GameButtonStyle.go,
+                            primary: true,
+                            onPressed: () => runChasePlan(
+                              context: context,
+                              director: director,
+                              router: router,
+                              plan: plan,
+                              onEnterDungeon: (id) {
+                                router.close();
+                                director.enterDungeon(dungeonId: id);
+                              },
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      if (showSecondaryEnter) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GameButton(
+                                label: enterLabel,
+                                style: GameButtonStyle.brown,
+                                primary: true,
+                                onPressed: () => runChasePlan(
+                                  context: context,
+                                  director: director,
+                                  router: router,
+                                  plan: enterPlan,
+                                  onEnterDungeon: (id) {
+                                    router.close();
+                                    director.enterDungeon(dungeonId: id);
+                                  },
+                                ),
+                              ),
+                            ),
+                            if (showAscendBesideEnter) ...[
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: GameButton(
+                                  label: 'ASCEND',
+                                  style: GameButtonStyle.brown,
+                                  primary: true,
+                                  onPressed: () =>
+                                      confirmAscend(context, director),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                      if (showAscendBelow) ...[
+                        const SizedBox(height: 6),
+                        GameButton(
+                          label: 'ASCEND',
+                          style: GameButtonStyle.brown,
+                          primary: true,
+                          onPressed: () => confirmAscend(context, director),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                if (GameLogic.canAscend(state) &&
-                    plan.op != ChaseOp.confirmAscend &&
-                    plan.op != ChaseOp.enter &&
-                    plan.op != ChaseOp.enterKey) ...[
-                  const SizedBox(height: 6),
-                  GameButton(
-                    label: 'ASCEND',
-                    style: GameButtonStyle.brown,
-                    dense: true,
-                    onPressed: () => confirmAscend(context, director),
-                  ),
-                ],
               ],
             ),
           ),

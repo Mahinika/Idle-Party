@@ -63,23 +63,36 @@ class FightSeam extends StatelessWidget {
               !state.isPartyDefeated &&
               !director.exitHoldActive)
             Padding(
-              padding: const EdgeInsets.only(right: 8, bottom: 4),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: _seamTap(
-                  label: 'HOLD',
-                  onTap: director.startExitHold,
-                  child: ChunkyFace(
-                    tone: ChunkyTone.gold,
-                    minHeight: GameTheme.chunkyFace,
-                    child: Text(
-                      'HOLD',
-                      style: GameTheme.readable(
-                        color: ChunkyFace.textOn(ChunkyTone.gold),
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Floor cleared — HOLD skips the walk to town.',
+                    maxLines: 2,
+                    textAlign: TextAlign.right,
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
+                  ),
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _seamTap(
+                      label: 'HOLD',
+                      onTap: director.startExitHold,
+                      child: ChunkyFace(
+                        tone: ChunkyTone.gold,
+                        minHeight: GameTheme.primaryTouch,
+                        child: Text(
+                          'HOLD',
+                          style: GameTheme.readable(
+                            color: ChunkyFace.textOn(ChunkyTone.gold),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           if (!hideRails) FightSeamRails(director: director, router: router),

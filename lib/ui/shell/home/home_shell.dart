@@ -204,7 +204,19 @@ class _HomeShellState extends State<HomeShell> {
             ),
           ),
           if (_showBack) _backRow(),
-          HomeNavBar(state: state, router: router, alerts: alerts),
+          HomeNavBar(
+            state: state,
+            router: router,
+            alerts: alerts,
+            onTownFight: state.inDungeon
+                ? null
+                : () {
+                    final zoneId = GameLogic.recommendedDungeonId(state);
+                    if (!ChaseDispatcher.zoneUnlocked(state, zoneId)) return;
+                    router.close();
+                    director.enterDungeon(dungeonId: zoneId);
+                  },
+          ),
         ],
       ),
     );

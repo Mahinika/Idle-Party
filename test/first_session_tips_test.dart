@@ -228,7 +228,7 @@ void main() {
         FirstSessionTips.active(afterBoss, inDungeon: true)!,
         afterBoss,
       ),
-      'FORGE under the fight.',
+      'TRAIN under the fight.',
     );
   });
 

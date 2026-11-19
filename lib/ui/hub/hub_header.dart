@@ -161,7 +161,7 @@ abstract final class HubIncomeSheetKeys {
   /// Where the gold comes from and what it is for (polish7 P034).
   static const String howLine =
       'Gold flows while the party fights, even when you are away. '
-      'Spend it at FORGE, CAMP, and MARKET.';
+      'Spend it at TRAIN, CAMP, and MARKET.';
 }
 
 Future<void> showHubIncomeSheet(

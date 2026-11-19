@@ -20,11 +20,15 @@ class HomeNavBar extends StatelessWidget {
     required this.state,
     required this.router,
     this.alerts,
+    this.onTownFight,
   });
 
   final GameState state;
   final MenuRouter router;
   final MenuAlerts? alerts;
+
+  /// When out of the cave and no sheet is open, FIGHT enters the dungeon.
+  final VoidCallback? onTownFight;
 
   @override
   Widget build(BuildContext context) {
@@ -190,6 +194,18 @@ class HomeNavBar extends StatelessWidget {
     return '$left';
   }
 
+  void _onFightTap() {
+    if (router.route != MenuRoute.none) {
+      router.close();
+      return;
+    }
+    if (!state.inDungeon) {
+      onTownFight?.call();
+      return;
+    }
+    router.close();
+  }
+
   Widget _fight() {
     final open = router.route != MenuRoute.none;
     final tone = open ? ChunkyTone.stone : ChunkyTone.gold;
@@ -197,7 +213,7 @@ class HomeNavBar extends StatelessWidget {
     final ink = open ? GameTheme.parchment : ChunkyFace.textOn(tone);
     return WebClickScope(
       label: 'FIGHT',
-      onPressed: router.close,
+      onPressed: _onFightTap,
       child: Semantics(
         button: true,
         selected: !open,
@@ -207,7 +223,7 @@ class HomeNavBar extends StatelessWidget {
           shape: const CircleBorder(),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: router.close,
+            onTap: _onFightTap,
             customBorder: const CircleBorder(),
             child: Ink(
               decoration: BoxDecoration(
