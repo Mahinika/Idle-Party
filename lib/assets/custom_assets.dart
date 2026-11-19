@@ -179,6 +179,7 @@ abstract final class CustomAssets {
   static const String iconFlaskGreen = '$_root/icons/flask_green.png';
   static const String iconFlaskBlue = '$_root/icons/flask_blue.png';
   static const String iconFlaskPurple = '$_root/icons/flask_purple.png';
+  static const String iconEssence = '$_root/icons/essence.png';
   static const String iconFlaskGrey = '$_root/icons/flask_grey.png';
   static const String iconCoinGold = '$_root/icons/coin_gold.png';
   static const String iconBook = '$_root/icons/book.png';
@@ -231,6 +232,8 @@ abstract final class CustomAssets {
   static const String iconCinders48 = '$_icons48/icon_cinders.png';
   static const String iconCoinGold48 = '$_icons48/coin_gold.png';
   static const String iconFlaskPurple48 = '$_icons48/flask_purple.png';
+  static const String iconEssence48 = '$_icons48/essence.png';
+  static const String iconCrown48 = '$_icons48/crown.png';
   static const String iconHelm48 = '$_icons48/helm.png';
   static const String iconSword48 = '$_icons48/sword.png';
   static const String iconUpdate48 = '$_icons48/icon_update.png';
@@ -256,6 +259,8 @@ abstract final class CustomAssets {
     iconCinders: iconCinders48,
     iconCoinGold: iconCoinGold48,
     iconFlaskPurple: iconFlaskPurple48,
+    iconEssence: iconEssence48,
+    iconCrown: iconCrown48,
     iconHelm: iconHelm48,
     iconSword: iconSword48,
     iconUpdate: iconUpdate48,

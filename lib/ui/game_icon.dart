@@ -17,7 +17,7 @@ abstract final class UiIcon {
   static const String more = CustomAssets.iconBook;
   static const String leave = CustomAssets.iconDoor;
   static const String gold = CustomAssets.iconCoinGold;
-  static const String essence = CustomAssets.iconFlaskPurple;
+  static const String essence = CustomAssets.iconEssence;
   static const String ascend = CustomAssets.iconCrown;
   static const String star = CustomAssets.iconStar;
   static const String heart = CustomAssets.iconHeart;
