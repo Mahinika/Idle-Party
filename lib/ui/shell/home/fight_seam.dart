@@ -109,9 +109,16 @@ class FightFieldControls extends StatelessWidget {
   static bool showModeHint(GameState s) =>
       s.metaDepth.lifetimeFloorClears < modeHintUntilClears;
 
-  /// Seam toggle back to the big fight view (audit F021: was "TALL").
-  static const String bigViewLabel = 'BIG VIEW';
-  static const String bigViewShort = 'BIG';
+  /// Seam toggle between the big fight (FULL: only the FORGE/CAMP/MARKET
+  /// row) and SPLIT (the upgrade list under the fight). Arrow only; it
+  /// points where the upgrade panel moves (Robert).
+  static const panelToggleFaceKey = ValueKey('fight-seam-panel-toggle');
+  static const String expandUpgradesLabel = 'Expand upgrades';
+  static const String bigFightLabel = 'Show big fight view';
+  static const double arrowEm = GameTheme.chunkyFace;
+  static String panelToggleGlyph({required bool full}) => full ? '▲' : '▼';
+  static String panelToggleLabel({required bool full}) =>
+      full ? expandUpgradesLabel : bigFightLabel;
 
   /// Camera bottom inset: the button row plus its pad.
   static const double cameraReserve = GameTheme.minTouch + 12;
@@ -253,22 +260,36 @@ class FightFieldControls extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(width: 4),
-                _seamTap(
-                  label: full ? 'Big fight view' : 'FORGE',
-                  onTap: () => director.setHomePanelFull(!full),
-                  child: ChunkyFace(
-                    tone: ChunkyTone.stone,
-                    minHeight: GameTheme.chunkyFace,
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    // At large text "BIG" keeps Repeat/Next whole; the
-                    // full name is in semantics.
-                    child: Text(
-                      full
-                          ? (osScale > 1.2
-                                ? FightFieldControls.bigViewShort
-                                : FightFieldControls.bigViewLabel)
-                          : 'FORGE',
-                      style: GameTheme.readable(color: GameTheme.parchment),
+                // Arrow only: where the upgrade panel goes on tap. FULL is
+                // the big fight with just the FORGE/CAMP/MARKET row, so ▲
+                // grows the panel; SPLIT shows the list, so ▼ shrinks it.
+                Tooltip(
+                  message: FightFieldControls.panelToggleLabel(full: full),
+                  excludeFromSemantics: true,
+                  child: _seamTap(
+                    label: FightFieldControls.panelToggleLabel(full: full),
+                    onTap: () => director.setHomePanelFull(!full),
+                    child: ChunkyFace(
+                      key: FightFieldControls.panelToggleFaceKey,
+                      tone: ChunkyTone.stone,
+                      minHeight: GameTheme.chunkyFace,
+                      padding: EdgeInsets.zero,
+                      child: SizedBox.square(
+                        dimension: GameTheme.chunkyFace,
+                        child: Center(
+                          child: ExcludeSemantics(
+                            child: Text(
+                              FightFieldControls.panelToggleGlyph(full: full),
+                              textScaler: TextScaler.noScaling,
+                              // IdleArrows draws ▲/▼ at about a third of
+                              // the em, so the em fills the face.
+                              style: GameTheme.readable(
+                                color: GameTheme.torchHot,
+                              ).copyWith(fontSize: FightFieldControls.arrowEm, height: 1),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),

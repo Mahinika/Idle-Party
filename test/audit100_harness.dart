@@ -76,6 +76,8 @@ Future<(GameDirector, MenuRouter)> a100Pump(
   int? gold,
   int? essence,
   bool full = false,
+  // Rebuild the shell on director changes, like PlayShell does.
+  bool live = false,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -100,7 +102,13 @@ Future<(GameDirector, MenuRouter)> a100Pump(
         ).copyWith(textScaler: TextScaler.linear(scale)),
         child: child!,
       ),
-      home: HomeShell(director: director, router: router, onLeave: () {}),
+      home: live
+          ? ListenableBuilder(
+              listenable: director,
+              builder: (context, _) =>
+                  HomeShell(director: director, router: router, onLeave: () {}),
+            )
+          : HomeShell(director: director, router: router, onLeave: () {}),
     ),
   );
   await tester.pump();

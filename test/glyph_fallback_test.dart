@@ -103,6 +103,12 @@ void main() {
     }
   });
 
+  test('IdleArrows has both seam arrows ▲ and ▼', () {
+    final arrows = _cmap(GameTheme.glyphFallbackAsset);
+    expect(arrows, contains(0x25B2));
+    expect(arrows, contains(0x25BC));
+  });
+
   test('body, button and title styles fall back to IdleArrows', () {
     for (final s in [
       GameTheme.body(),

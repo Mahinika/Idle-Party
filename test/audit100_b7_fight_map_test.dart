@@ -33,9 +33,10 @@ void main() {
         await a100Settle(t);
         final title = find.byKey(TargetCornerHud.titleKey);
         if (title.evaluate().isEmpty) return;
-        for (final e in find
-            .descendant(of: title, matching: find.byType(RichText))
-            .evaluate()) {
+        for (final e
+            in find
+                .descendant(of: title, matching: find.byType(RichText))
+                .evaluate()) {
           final p = e.renderObject! as RenderParagraph;
           expect(p.didExceedMaxLines, isFalse, reason: p.text.toPlainText());
         }
@@ -54,19 +55,75 @@ void main() {
         expect(t.takeException(), isNull);
       });
 
-      a100TestHome('F021/F022 FULL: BIG VIEW and buy dots $tag', (t) async {
+      a100TestHome('F021/F022 FULL: panel arrow and buy dots $tag', (t) async {
         await a100Pump(t, size, scale, full: true);
         await a100Settle(t);
+        // The seam toggle is an arrow now (Robert), no word labels.
+        final seam = find.byType(FightFieldControls);
+        for (final word in ['BIG VIEW', 'BIG', 'FORGE', 'TALL']) {
+          expect(
+            find.descendant(of: seam, matching: find.text(word)),
+            findsNothing,
+            reason: word,
+          );
+        }
         expect(
-          find.text(
-            scale > 1.2
-                ? FightFieldControls.bigViewShort
-                : FightFieldControls.bigViewLabel,
-          ),
+          find.descendant(of: seam, matching: find.text('▲')),
           findsOneWidget,
         );
-        expect(find.text('TALL'), findsNothing);
         expect(find.byKey(MenuChrome.segmentDotKey(0)), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+
+      a100TestHome('seam arrow: ▲ grows the upgrade panel, ▼ shrinks $tag', (
+        t,
+      ) async {
+        final (director, _) = await a100Pump(
+          t,
+          size,
+          scale,
+          full: true,
+          live: true,
+        );
+        await a100Settle(t);
+        final h = t.ensureSemantics();
+        final face = find.byKey(FightFieldControls.panelToggleFaceKey);
+        // FULL = big fight, only the FORGE/CAMP/MARKET row: ▲ expands.
+        expect(director.state.homePanelFull, isTrue);
+        expect(find.byType(UpgradePanel), findsNothing);
+        expect(
+          find.descendant(of: face, matching: find.text('▲')),
+          findsOneWidget,
+        );
+        expect(find.bySemanticsLabel('Expand upgrades'), findsOneWidget);
+        expect(find.byTooltip('Expand upgrades'), findsOneWidget);
+        final r = t.getRect(face);
+        expect(r.width, closeTo(r.height, 2.01), reason: 'square-ish face');
+        expect(r.width, lessThanOrEqualTo(GameTheme.minTouch));
+        final hit = t.getRect(
+          find.ancestor(of: face, matching: find.byType(InkWell)).first,
+        );
+        expect(hit.width, greaterThanOrEqualTo(GameTheme.minTouch - 0.01));
+        expect(hit.height, greaterThanOrEqualTo(GameTheme.minTouch - 0.01));
+        expect(hit.right, lessThanOrEqualTo(size.width));
+
+        await t.tap(face);
+        await a100Settle(t);
+        // SPLIT = the upgrade list under the fight: ▼ shrinks it back.
+        expect(director.state.homePanelFull, isFalse);
+        expect(find.byType(UpgradePanel), findsOneWidget);
+        expect(
+          find.descendant(of: face, matching: find.text('▼')),
+          findsOneWidget,
+        );
+        expect(find.bySemanticsLabel('Show big fight view'), findsOneWidget);
+        expect(find.byTooltip('Show big fight view'), findsOneWidget);
+
+        await t.tap(face);
+        await a100Settle(t);
+        expect(director.state.homePanelFull, isTrue);
+        expect(find.byType(UpgradePanel), findsNothing);
+        h.dispose();
         expect(t.takeException(), isNull);
       });
 
@@ -127,12 +184,15 @@ void main() {
     );
   });
 
-  test('F094 no BOSS NEXT while the first-climb coach says the floor', () async {
-    final d = await a100Director(fresh: true);
-    addTearDown(d.dispose);
-    expect(firstBossBitForTest(d.state, GameLogic.firstBossFloor - 1), '');
-    expect(firstBossBitForTest(d.state, GameLogic.firstBossFloor), ' · BOSS');
-  });
+  test(
+    'F094 no BOSS NEXT while the first-climb coach says the floor',
+    () async {
+      final d = await a100Director(fresh: true);
+      addTearDown(d.dispose);
+      expect(firstBossBitForTest(d.state, GameLogic.firstBossFloor - 1), '');
+      expect(firstBossBitForTest(d.state, GameLogic.firstBossFloor), ' · BOSS');
+    },
+  );
 
   test('F093 town ENTER pulses while the coach says Tap ENTER', () async {
     final d = await a100Director(fresh: true, inDungeon: false);
