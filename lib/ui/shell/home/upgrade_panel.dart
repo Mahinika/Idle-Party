@@ -88,11 +88,20 @@ class UpgradePanel extends StatefulWidget {
       ),
     );
   }
+
   /// The free-level button under the first CAMP card at large text.
   static const campWatchListKey = ValueKey('upgrade-panel-camp-watch-list');
 
   /// The one lock card while FORGE / CAMP / MARKET are still closed.
   static const lockedCardKey = ValueKey('upgrade-panel-locked');
+  static const lockedProgressKey = ValueKey('upgrade-panel-locked-progress');
+
+  /// The dock opens at the first boss, on floor 2: floors cleared of 2.
+  static double lockProgress(GameState state) =>
+      (state.highestFloorCleared.clamp(0, 2)) / 2;
+
+  static String lockProgressLine(GameState state) =>
+      'Floors cleared: ${state.highestFloorCleared.clamp(0, 2)}/2';
 
   @override
   State<UpgradePanel> createState() => _UpgradePanelState();
@@ -267,7 +276,6 @@ class _UpgradePanelState extends State<UpgradePanel> {
     key: UpgradePanel.campWatchKey,
   );
 
-
   void _pickSlice() {
     ForgeOverlay.pickWalletSlice(
       context,
@@ -390,7 +398,31 @@ class _UpgradePanelState extends State<UpgradePanel> {
                 ],
               ),
               const SizedBox(width: 10),
-              Expanded(child: ShellLayout.hint(lockHint, maxLines: 3)),
+              // Say how close it is, not only that it is shut (polish7 P031).
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ShellLayout.hint(lockHint, maxLines: 3),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: LinearProgressIndicator(
+                        key: UpgradePanel.lockedProgressKey,
+                        value: UpgradePanel.lockProgress(state),
+                        minHeight: 6,
+                        backgroundColor: GameTheme.stoneDeep,
+                        color: GameTheme.torch,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      UpgradePanel.lockProgressLine(state),
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

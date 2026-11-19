@@ -258,8 +258,9 @@ class HomeTopBar extends StatelessWidget {
     showHubIncomeSheet(
       context,
       incomeLine: GoldIncome.perMinuteLabel(perMin),
-      multiplierLine: '',
-      displayTitle: 'Gold',
+      // What makes up the rate, not a bare " · Gold" (polish7 P034).
+      multiplierLine: GoldIncome.multiplierLine(state),
+      displayTitle: '',
       willRank: '',
       collectionScore: 0,
     );

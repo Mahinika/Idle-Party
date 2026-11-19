@@ -288,21 +288,8 @@ class FightFieldControls extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (full && seamFitsExtras) ...[
-                  const SizedBox(width: 4),
-                  _seamTap(
-                    label: 'Open MENU',
-                    onTap: () => router.open(MenuRoute.more),
-                    child: ChunkyFace(
-                      tone: ChunkyTone.stone,
-                      minHeight: GameTheme.chunkyFace,
-                      child: Text(
-                        'MENU',
-                        style: GameTheme.readable(color: GameTheme.torchHot),
-                      ),
-                    ),
-                  ),
-                ],
+                // No second MENU here: the top bar's MENU is one tap away
+                // (polish7 P028).
                 const SizedBox(width: 4),
                 // Arrow only: where the upgrade panel goes on tap. FULL is
                 // the big fight with just the FORGE/CAMP/MARKET row, so ▲

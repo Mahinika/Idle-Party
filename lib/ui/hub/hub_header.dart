@@ -154,6 +154,16 @@ class HubPlayUpdateBanner extends StatelessWidget {
   }
 }
 
+/// Keys and copy for the INCOME sheet.
+abstract final class HubIncomeSheetKeys {
+  static const multiplier = ValueKey('hub-income-multiplier');
+
+  /// Where the gold comes from and what it is for (polish7 P034).
+  static const String howLine =
+      'Gold flows while the party fights, even when you are away. '
+      'Spend it at FORGE, CAMP, and MARKET.';
+}
+
 Future<void> showHubIncomeSheet(
   BuildContext context, {
   required String incomeLine,
@@ -199,13 +209,23 @@ Future<void> showHubIncomeSheet(
                       textAlign: TextAlign.center,
                       style: GameTheme.readable(color: GameTheme.mossLit),
                     ),
-                    const SizedBox(height: 4),
+                    if (multiplierLine.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        multiplierLine,
+                        key: HubIncomeSheetKeys.multiplier,
+                        textAlign: TextAlign.center,
+                        style: GameTheme.hint(color: GameTheme.parchmentDim),
+                      ),
+                    ],
+                    const SizedBox(height: 6),
                     Text(
-                      multiplierLine,
+                      HubIncomeSheetKeys.howLine,
                       textAlign: TextAlign.center,
                       style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
-                    if (displayTitle.isNotEmpty || collectionScore > 0) ...[
+                    if (willRank.isNotEmpty &&
+                        (displayTitle.isNotEmpty || collectionScore > 0)) ...[
                       const SizedBox(height: 6),
                       Text(
                         displayTitle.isEmpty

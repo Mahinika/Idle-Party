@@ -82,6 +82,10 @@ class SanctuaryOverlay extends StatefulWidget {
   static String watchFreeLabel(GameState state) =>
       state.metaDepth.adFree ? 'Free level' : 'Watch · free level';
 
+  /// Caption beside the compact free-level button at large text.
+  static const String watchFreeCaption = 'Free CAMP level';
+  static const watchFreeCaptionKey = ValueKey('camp-watch-caption');
+
   @override
   State<SanctuaryOverlay> createState() => _SanctuaryOverlayState();
 }
@@ -284,13 +288,27 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
           if (watchFree && !UpgradePanel.campWatchInHeader(context))
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: UpgradePanel.campWatchCompact(
-                  label: SanctuaryOverlay.watchFreeLabel(state),
-                  onTap: director.watchCampAd,
-                  key: UpgradePanel.campWatchListKey,
-                ),
+              // A caption beside the compact button, so it is not an
+              // orphan ▶ on its own row (polish7 P030).
+              child: Row(
+                children: [
+                  UpgradePanel.campWatchCompact(
+                    label: SanctuaryOverlay.watchFreeLabel(state),
+                    onTap: director.watchCampAd,
+                    key: UpgradePanel.campWatchListKey,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ExcludeSemantics(
+                      child: Text(
+                        SanctuaryOverlay.watchFreeCaption,
+                        key: SanctuaryOverlay.watchFreeCaptionKey,
+                        maxLines: 2,
+                        style: GameTheme.hint(color: GameTheme.parchmentDim),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ...cards.skip(1),

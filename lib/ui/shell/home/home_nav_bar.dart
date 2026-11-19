@@ -12,6 +12,9 @@ import '../../web_click_bridge.dart';
 
 /// HEROES · ESSENCE · FIGHT · MAP · SHOP. The open tab shows icon_close_tab.
 class HomeNavBar extends StatelessWidget {
+  /// Count badge on a nav icon (MAP: Ashen Crown tickets).
+  static const countKey = ValueKey('home-nav-count');
+
   const HomeNavBar({
     super.key,
     required this.state,
@@ -74,7 +77,7 @@ class HomeNavBar extends StatelessWidget {
                                   MenuRoute.map,
                                   'MAP',
                                   UiIcon.map,
-                                  timer: _mapTimer(),
+                                  count: _mapTimer(),
                                 )
                               : _locked('MAP', _bossHint),
                         ),
@@ -243,12 +246,14 @@ class HomeNavBar extends StatelessWidget {
   static String tabSemantics(String label, {required bool selected}) =>
       selected ? '$label, selected. Tap to close' : label;
 
-  Widget _tab(MenuRoute route, String label, String icon, {String? timer}) {
+  Widget _tab(MenuRoute route, String label, String icon, {String? count}) {
     final selected = router.route == route;
     final alert = !selected && _alert(route);
     return _button(
       label: selected ? 'Close $label' : label,
-      semantics: tabSemantics(label, selected: selected),
+      semantics: count == null
+          ? tabSemantics(label, selected: selected)
+          : '${tabSemantics(label, selected: selected)}, $count waiting',
       selected: selected,
       onTap: () {
         if (selected) {
@@ -264,7 +269,16 @@ class HomeNavBar extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               GameIcon.asset(icon, size: 20),
-              if (alert) const Positioned(right: -3, top: -3, child: _Dot()),
+              // A count rides the icon corner like a badge, not a third
+              // text line under the label (polish7 P013).
+              if (count != null && !selected)
+                Positioned(
+                  right: -10,
+                  top: -6,
+                  child: _CountPip(key: HomeNavBar.countKey, text: count),
+                )
+              else if (alert)
+                const Positioned(right: -3, top: -3, child: _Dot()),
               // Small close mark on the lit tab: tap again closes.
               if (selected)
                 Positioned(
@@ -294,8 +308,6 @@ class HomeNavBar extends StatelessWidget {
               ),
             ),
           ),
-          if (timer != null)
-            Text(timer, style: GameTheme.hint(color: GameTheme.torchHot)),
         ],
       ),
     );
@@ -369,6 +381,35 @@ class HomeNavBar extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CountPip extends StatelessWidget {
+  const _CountPip({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: Container(
+        constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        decoration: BoxDecoration(
+          color: GameTheme.hudHpDamage,
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(color: GameTheme.ink, width: 1),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          text,
+          maxLines: 1,
+          style: GameTheme.hint(
+            color: GameTheme.parchment,
+          ).copyWith(height: 1.0),
         ),
       ),
     );

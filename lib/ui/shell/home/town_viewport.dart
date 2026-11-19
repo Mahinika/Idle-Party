@@ -724,7 +724,9 @@ class _TownBuildingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final semantics = '${building.label}. ${building.description}';
+    final semantics = badge
+        ? '${building.label}, something waiting. ${building.description}'
+        : '${building.label}. ${building.description}';
     return WebClickScope(
       label: building.label,
       onPressed: onTap,
@@ -736,34 +738,132 @@ class _TownBuildingButton extends StatelessWidget {
         child: InkWell(
           key: ValueKey('town-${building.id.name}'),
           onTap: onTap,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.asset(
-                assetPath,
-                fit: BoxFit.contain,
-                alignment: Alignment.bottomCenter,
-                filterQuality: FilterQuality.none,
-              ),
-              if (badge)
-                Positioned(
-                  right: 2,
-                  top: 2,
-                  child: IgnorePointer(
+          child: _TownBuildingArt(
+            assetPath: assetPath,
+            badgeKey: badge ? ValueKey('town-alert-${building.id.name}') : null,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Building sprite plus its alert. The sprite is bottom-aligned "contain"
+/// inside a wider rect, so the alert is pinned to the painted roof corner,
+/// not the empty rect corner where it read as a torch (polish7 P011).
+class _TownBuildingArt extends StatefulWidget {
+  const _TownBuildingArt({required this.assetPath, this.badgeKey});
+
+  final String assetPath;
+  final Key? badgeKey;
+
+  /// Alert face and its dark contrast ring.
+  static const double alert = 22;
+  static const double ring = 28;
+
+  @override
+  State<_TownBuildingArt> createState() => _TownBuildingArtState();
+}
+
+class _TownBuildingArtState extends State<_TownBuildingArt> {
+  ImageStream? _stream;
+  late final ImageStreamListener _listener = ImageStreamListener(_onImage);
+  Size? _art;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _resolve();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TownBuildingArt oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.assetPath != widget.assetPath) {
+      _art = null;
+      _resolve();
+    }
+  }
+
+  void _resolve() {
+    final next = AssetImage(
+      widget.assetPath,
+    ).resolve(createLocalImageConfiguration(context));
+    if (next.key == _stream?.key) return;
+    _stream?.removeListener(_listener);
+    _stream = next..addListener(_listener);
+  }
+
+  void _onImage(ImageInfo info, bool _) {
+    final size = Size(
+      info.image.width.toDouble(),
+      info.image.height.toDouble(),
+    );
+    info.dispose();
+    if (mounted && size != _art) setState(() => _art = size);
+  }
+
+  @override
+  void dispose() {
+    _stream?.removeListener(_listener);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final image = Image.asset(
+      widget.assetPath,
+      fit: BoxFit.contain,
+      alignment: Alignment.bottomCenter,
+      filterQuality: FilterQuality.none,
+    );
+    final badgeKey = widget.badgeKey;
+    if (badgeKey == null) return image;
+    return LayoutBuilder(
+      builder: (context, box) {
+        final outer = Offset.zero & box.biggest;
+        var roof = outer;
+        final art = _art;
+        if (art != null && art.width > 0 && art.height > 0) {
+          final fitted = applyBoxFit(BoxFit.contain, art, box.biggest);
+          roof = Alignment.bottomCenter.inscribe(fitted.destination, outer);
+        }
+        const r = _TownBuildingArt.ring;
+        final left = (roof.right - r * 0.75).clamp(0.0, outer.width - r);
+        final top = (roof.top - r * 0.35).clamp(0.0, outer.height - r);
+        return Stack(
+          fit: StackFit.expand,
+          clipBehavior: Clip.none,
+          children: [
+            image,
+            Positioned(
+              left: left,
+              top: top,
+              width: r,
+              height: r,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: GameTheme.ink.withValues(alpha: 0.78),
+                    border: Border.all(color: GameTheme.torchHot, width: 2),
+                  ),
+                  child: Center(
                     child: Image.asset(
                       CustomAssets.townAlert,
-                      key: ValueKey('town-alert-${building.id.name}'),
-                      width: 22,
-                      height: 22,
+                      key: badgeKey,
+                      width: _TownBuildingArt.alert,
+                      height: _TownBuildingArt.alert,
                       filterQuality: FilterQuality.none,
                       excludeFromSemantics: true,
                     ),
                   ),
                 ),
-            ],
-          ),
-        ),
-      ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

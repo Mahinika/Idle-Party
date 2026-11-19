@@ -18,6 +18,9 @@ import 'package:idle_party/ui/meta/play_games_section.dart';
 import 'package:idle_party/ui/redeem_coupon_dialog.dart';
 import 'package:idle_party/ui/shell/dungeon_target_hud.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
+import 'package:idle_party/ui/shell/home/rail_button.dart';
+import 'package:idle_party/ui/shell/home/upgrade_panel.dart';
+import 'package:idle_party/core/gold_income.dart';
 
 import 'audit100_harness.dart';
 import 'shell_golden_harness.dart';
@@ -28,7 +31,8 @@ import 'shell_golden_harness.dart';
 const _sizes = [Size(360, 780), Size(412, 915)];
 final _scales = [1.0, GameTheme.typeScaleMax];
 
-bool _overlaps(Rect a, Rect b) => a.intersect(b).width > 0.5 && a.intersect(b).height > 0.5;
+bool _overlaps(Rect a, Rect b) =>
+    a.intersect(b).width > 0.5 && a.intersect(b).height > 0.5;
 
 void main() {
   setUpAll(() async => ensureShellGoldenFonts());
@@ -179,7 +183,11 @@ void main() {
               );
               for (final e in line.evaluate()) {
                 final r = t.getRect(find.byWidget(e.widget));
-                expect(_overlaps(card, r), isFalse, reason: 'card $card line $r');
+                expect(
+                  _overlaps(card, r),
+                  isFalse,
+                  reason: 'card $card line $r',
+                );
               }
             },
           );
@@ -367,6 +375,152 @@ void main() {
     final body = HomeCatalog.vaultBody(clears: 0, target: 1);
     expect(body, isNot(contains('then to')));
     expect(body, contains('Then tap VAULT'));
+  });
+
+  // ---------------------------------------------------------------- batch 3
+  Future<void> popAll(WidgetTester t) async {
+    for (var i = 0; i < 4; i++) {
+      final nav = t.state<NavigatorState>(find.byType(Navigator).first);
+      if (!nav.canPop()) break;
+      nav.pop();
+      await a100Settle(t);
+    }
+  }
+
+  group('P011 town alerts sit on the building art', () {
+    for (final scale in _scales) {
+      a100TestHome('town alerts @$scale', (t) async {
+        await a100Pump(
+          t,
+          _sizes.last,
+          scale,
+          maxed: true,
+          inDungeon: false,
+          live: true,
+          adTickets: 3,
+        );
+        await a100Settle(t);
+        await popAll(t);
+        final alerts = find.byWidgetPredicate(
+          (w) =>
+              w.key is ValueKey<String> &&
+              (w.key! as ValueKey<String>).value.startsWith('town-alert-'),
+        );
+        expect(
+          alerts,
+          findsWidgets,
+          reason: 'a maxed town has something waiting',
+        );
+        for (final e in alerts.evaluate()) {
+          final id = (e.widget.key! as ValueKey<String>).value.substring(11);
+          final b = t.getRect(find.byKey(ValueKey('town-$id')));
+          final a = t.getRect(find.byWidget(e.widget));
+          // Inside the building's tap box, in its upper half (the roof).
+          expect(b.inflate(0.5).contains(a.topLeft), isTrue, reason: id);
+          expect(b.inflate(0.5).contains(a.bottomRight), isTrue, reason: id);
+          expect(a.center.dy, lessThan(b.center.dy), reason: id);
+        }
+      });
+    }
+  });
+
+  group('P012 the town coach never fights the big button', () {
+    test('Tap ENTER only when the button says ENTER', () async {
+      for (final maxed in [false, true]) {
+        final d = await a100Director(maxed: maxed, inDungeon: false);
+        final cta = HomeShell.townCtaLabel(d.state).toUpperCase();
+        expect(
+          HomeShell.coachDisagreesWithTownCta('Tap ENTER.', d.state),
+          !cta.startsWith('ENTER'),
+          reason: cta,
+        );
+        expect(
+          HomeShell.coachDisagreesWithTownCta('Claim the chest.', d.state),
+          cta.startsWith('CLAIM'),
+          reason: cta,
+        );
+        expect(HomeShell.coachDisagreesWithTownCta(null, d.state), isFalse);
+        expect(HomeShell.coachDisagreesWithTownCta('', d.state), isFalse);
+        d.dispose();
+      }
+    });
+  });
+
+  group('P029 a short rail count rides the icon at 1.45', () {
+    for (final scale in _scales) {
+      a100TestHome('fight rail @$scale', (t) async {
+        await a100Pump(
+          t,
+          _sizes.first,
+          scale,
+          live: true,
+          clearedFloors: 4,
+          adTickets: 3,
+        );
+        await a100Settle(t);
+        await popAll(t);
+        if (scale > 1.2) {
+          expect(find.text('SCROLLS 3'), findsNothing);
+          expect(find.text('SCROLLS'), findsOneWidget);
+          final pip = find.byKey(RailButton.countKey);
+          expect(pip, findsOneWidget);
+          expect(
+            find.descendant(of: pip, matching: find.text('3')),
+            findsOneWidget,
+          );
+          a100ExpectWhole(t, find.text('SCROLLS'));
+        } else {
+          expect(find.text('SCROLLS 3'), findsOneWidget);
+          expect(find.byKey(RailButton.countKey), findsNothing);
+        }
+      });
+    }
+  });
+
+  group('P031 the closed dock says how close it is', () {
+    test('progress counts floors toward the first boss', () {
+      final s0 = GameLogic.createInitialState(now: shellGoldenNow);
+      expect(UpgradePanel.lockProgress(s0), 0.0);
+      final s1 = s0.copyWith(highestFloorCleared: 1);
+      expect(UpgradePanel.lockProgress(s1), 0.5);
+      expect(UpgradePanel.lockProgressLine(s1), 'Floors cleared: 1/2');
+      expect(
+        UpgradePanel.lockProgress(s0.copyWith(highestFloorCleared: 9)),
+        1.0,
+      );
+    });
+  });
+
+  group('P034 INCOME sheet explains the rate', () {
+    testWidgets('no bare "· Gold" line', (t) async {
+      await bind(t, _sizes.first, GameTheme.typeScaleMax);
+      final d = await a100Director(maxed: true);
+      final line = GoldIncome.multiplierLine(d.state);
+      await t.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => TextButton(
+              onPressed: () => showHubIncomeSheet(
+                ctx,
+                incomeLine: '21g/min',
+                multiplierLine: line,
+                displayTitle: '',
+                willRank: '',
+                collectionScore: 0,
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('open'));
+      await t.pumpAndSettle();
+      expect(find.text(' · Gold'), findsNothing);
+      expect(find.text(line), findsOneWidget);
+      expect(find.text(HubIncomeSheetKeys.howLine), findsOneWidget);
+      await t.pumpWidget(const SizedBox.shrink());
+      d.dispose();
+    });
   });
 }
 

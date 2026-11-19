@@ -10,6 +10,9 @@ import 'home_catalog.dart';
 
 /// One rail or menu icon: picture, label, optional timer, optional red dot.
 class RailButton extends StatelessWidget {
+  /// Count pip on the icon corner (SCROLLS tickets, …).
+  static const countKey = ValueKey('rail-count');
+
   const RailButton({
     super.key,
     required this.entry,
@@ -42,8 +45,19 @@ class RailButton extends StatelessWidget {
     final timer = entry.timer?.call(state);
     final badge = entry.badge(state);
     if (compact) {
+      // A short count rides the icon corner, so the label never cuts it off
+      // at 1.45 ("SCROLLS…", polish7 P029). Longer timers stay inline.
+      final bigText = MediaQuery.textScalerOf(context).scale(1) > 1.2;
+      final pip =
+          bigText &&
+              !listCard &&
+              timer != null &&
+              timer.isNotEmpty &&
+              timer.length <= 3
+          ? timer
+          : null;
       final label = Text(
-        timer != null && timer.isNotEmpty
+        timer != null && timer.isNotEmpty && pip == null
             ? '${entry.label} $timer'
             : entry.label,
         maxLines: 1,
@@ -60,7 +74,35 @@ class RailButton extends StatelessWidget {
                 entry.icon,
                 size: listCard ? GameTheme.iconNav : GameTheme.iconList,
               ),
-              if (badge)
+              if (pip != null)
+                Positioned(
+                  right: -8,
+                  top: -6,
+                  child: ExcludeSemantics(
+                    child: Container(
+                      key: RailButton.countKey,
+                      constraints: const BoxConstraints(
+                        minWidth: 13,
+                        minHeight: 13,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      decoration: BoxDecoration(
+                        color: GameTheme.torch,
+                        borderRadius: BorderRadius.circular(99),
+                        border: Border.all(color: GameTheme.ink),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        pip,
+                        maxLines: 1,
+                        style: GameTheme.hint(
+                          color: GameTheme.ink,
+                        ).copyWith(height: 1.0),
+                      ),
+                    ),
+                  ),
+                )
+              else if (badge)
                 Positioned(
                   right: -3,
                   top: -3,
@@ -75,7 +117,7 @@ class RailButton extends StatelessWidget {
                 ),
             ],
           ),
-          SizedBox(width: listCard ? 6 : 4),
+          SizedBox(width: listCard ? 6 : (pip != null ? 8 : 4)),
           if (listCard) Expanded(child: label) else label,
         ],
       );
@@ -106,7 +148,7 @@ class RailButton extends StatelessWidget {
           onPressed: () => entry.open(context, director, router),
           child: Semantics(
             button: true,
-            label: entry.label,
+            label: pip == null ? entry.label : '${entry.label}, $pip',
             child: Material(
               color: GameTheme.panelInset.withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(GameTheme.radiusSm),
@@ -142,7 +184,7 @@ class RailButton extends StatelessWidget {
         onPressed: () => entry.open(context, director, router),
         child: Semantics(
           button: true,
-          label: entry.label,
+          label: pip == null ? entry.label : '${entry.label}, $pip',
           child: Material(
             color: GameTheme.panelInset.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(GameTheme.radiusSm),

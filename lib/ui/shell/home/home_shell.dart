@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/chase_dispatcher.dart';
 import '../../../core/first_climb_coach.dart';
 import '../../../core/return_week.dart';
 import '../../../core/game_director.dart';
@@ -28,6 +29,22 @@ import 'upgrade_panel.dart';
 class HomeShell extends StatefulWidget {
   /// BACK strip above the nav (tests check it clears the FIGHT button).
   static const backRowKey = ValueKey('home-back-row');
+
+  /// The town card's one big button label (same rule as [TownViewport]).
+  static String townCtaLabel(GameState state) =>
+      ChaseDispatcher.plan(HubChase.forState(state), state: state).label ??
+      'ENTER';
+
+  /// True when a town coach line points somewhere the big button does not,
+  /// or repeats its claim (polish7 P012).
+  static bool coachDisagreesWithTownCta(String? line, GameState state) {
+    if (line == null || line.isEmpty) return false;
+    final cta = townCtaLabel(state).toUpperCase();
+    final text = line.toUpperCase();
+    if (text.startsWith('TAP ENTER') && !cta.startsWith('ENTER')) return true;
+    if (cta.startsWith('CLAIM') && text.startsWith('CLAIM')) return true;
+    return false;
+  }
 
   const HomeShell({
     super.key,
@@ -213,7 +230,13 @@ class _HomeShellState extends State<HomeShell> {
     // The top bar already paints this chase title. A second copy steals
     // rows from the cave. A real first-climb tip stays, even when it matches.
     final duplicateCoach = climb == null && _duplicatesChaseLine(text, state);
-    final shown = duplicateCoach ? null : text;
+    // In town the coach must agree with the one big button (polish7 P012):
+    // no "Tap ENTER." over CLAIM VAULT, no "Claim …" over a CLAIM button.
+    final offCta =
+        climb == null &&
+        !state.inDungeon &&
+        HomeShell.coachDisagreesWithTownCta(text, state);
+    final shown = duplicateCoach || offCta ? null : text;
     final showClaim = state.inDungeon && GameLogic.canClaimDailyVault(state);
     if (shown == null && !showClaim) return const SizedBox.shrink();
     return Padding(

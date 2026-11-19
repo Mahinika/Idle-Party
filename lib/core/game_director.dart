@@ -1826,7 +1826,7 @@ class GameDirector extends ChangeNotifier {
       final notices = LogicNotices.takeMetaPayoffs();
       final gained = _state.essence - before;
       final extra = notices.isEmpty ? '' : ' · ${notices.join(' · ')}';
-      showToast('Daily Vault claimed · +${gained}e$extra', life: 2.8);
+      showToast('Daily Vault claimed · +$gained essence$extra', life: 2.8);
     }
   }
 
