@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
+import '../../../core/hub_chase.dart';
 import '../../../core/keystone.dart';
 import '../../../core/game_state.dart';
 import '../../../core/gold_income.dart';
 import '../../../core/home_layout.dart';
-import '../../../core/hub_chase.dart';
 import '../../../core/menu_router.dart';
 import '../../../core/nav_copy.dart';
+import '../../../core/nav_intent.dart';
+import '../dungeon_target_hud.dart';
+import '../dungeon_top_hud.dart';
 import '../../chunky_face.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
@@ -63,7 +66,12 @@ class HomeTopBar extends StatelessWidget {
     EssencePanel essencePanel,
   ) {
     final textScale = MediaQuery.textScalerOf(context).scale(1);
-    final chase = NavCopy.playerText(_chaseLine(state), HomeLayout.home);
+    final chaseHub = HubChase.forState(state);
+    final questReady = chaseHub.kind == HubChaseKind.claimMissions;
+    final chaseTitle = questReady ? '' : chaseHub.title;
+    final chase = chaseTitle.isEmpty
+        ? ''
+        : NavCopy.playerText(chaseTitle, HomeLayout.home);
     final third = _third(context, state, route, essencePanel);
     final compactTop = state.homeLayout == HomeLayout.home && state.inDungeon;
     final perMin = GoldIncome.hubGoldPerMinute(state);
@@ -71,6 +79,7 @@ class HomeTopBar extends StatelessWidget {
     final goldHasSub = perMin > 0;
     final showMeta = HomeTopBar.showsMetaPills(state);
     final menuCaption = textScale <= 1.1;
+    final tightChrome = compactTop && textScale > 1.9;
     // Town has no quick rail (F100): SCROLLS / POUCH / UPDATE wait in MENU,
     // so their red dot moves onto the MENU button.
     final menuDot = HomeCatalog.townMenuBadge(state, director);
@@ -79,7 +88,12 @@ class HomeTopBar extends StatelessWidget {
     return Material(
       color: GameTheme.stoneDeep,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(8, 2 + topInset, 8, compactTop ? 2 : 4),
+        padding: EdgeInsets.fromLTRB(
+          8,
+          2 + topInset,
+          8,
+          tightChrome ? 0 : (compactTop ? 2 : 4),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -220,38 +234,71 @@ class HomeTopBar extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 2),
-            Row(
-              children: [
-                if (compactTop) ...[
+            if (compactTop) ...[
+              SizedBox(height: textScale > 1.4 ? 0 : 2),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: ListenableBuilder(
+                      listenable: director.combatFrame,
+                      builder: (context, _) => TargetCornerHud(
+                        director: director,
+                        edgeInset: false,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
                   HexBadge(
                     label: 'F${state.currentRoom.floorNumber}',
                     semanticLabel: 'Floor ${state.currentRoom.floorNumber}',
                   ),
-                  const SizedBox(width: 6),
-                ],
-                Expanded(
-                  child: Text(
-                    chase,
-                    maxLines: compactTop && textScale <= 1.2 ? 2 : 1,
-                    softWrap: true,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.hint(color: GameTheme.parchmentDim),
-                  ),
-                ),
-                if (state.inDungeon) ...[
+                  if (questReady) ...[
+                    const SizedBox(width: 4),
+                    MissionClaimChip(
+                      count: state.missions.where((m) => m.canClaim).length,
+                      dense: true,
+                      onTap: director.claimAllReadyMissions,
+                      onLongPress: () => router.apply(NavIntent.quests),
+                    ),
+                  ],
                   const SizedBox(width: 4),
                   HudDpsPill(director: director),
                 ],
+              ),
+              if (chase.isNotEmpty && state.homePanelFull) ...[
+                SizedBox(height: textScale > 1.4 ? 0 : 1),
+                Text(
+                  chase,
+                  maxLines: textScale <= 1.2 ? 2 : 1,
+                  softWrap: true,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
+                ),
               ],
-            ),
+            ] else ...[
+              SizedBox(height: textScale > 1.4 ? 0 : 2),
+              Row(
+                children: [
+                  Expanded(
+                    child: chase.isEmpty
+                        ? const SizedBox.shrink()
+                        : Text(
+                            chase,
+                            maxLines: textScale <= 1.2 ? 2 : 1,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                            style: GameTheme.hint(color: GameTheme.parchmentDim),
+                          ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
     );
   }
-
-  String _chaseLine(GameState state) => HubChase.forState(state).title;
 
   void _openGold(BuildContext context, GameState state) {
     final perMin = GoldIncome.hubGoldPerMinute(state);

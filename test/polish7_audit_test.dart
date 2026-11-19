@@ -192,11 +192,7 @@ void main() {
               if (title.evaluate().isEmpty || line.evaluate().isEmpty) {
                 fail('fight HUD not drawn: title/line missing');
               }
-              final card = t.getRect(
-                find
-                    .ancestor(of: title, matching: find.byType(Container))
-                    .first,
-              );
+              final card = t.getRect(find.byKey(TargetCornerHud.stripKey));
               for (final e in line.evaluate()) {
                 final r = t.getRect(find.byWidget(e.widget));
                 expect(

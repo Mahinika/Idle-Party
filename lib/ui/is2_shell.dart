@@ -27,11 +27,8 @@ import 'shell/scroll_buff_stack.dart';
 
 /// Idle Party dungeon scene: full-bleed stage + corner HUD.
 /// Shared menu sheets + bottom bar are owned by [PlayShell], not this scene.
-/// Home fight: the floor line ("F1 · many foes · 8 next") sits at top 2 of
-/// the viewport, full width. The target card starts under it so the two
-/// never overlap (polish7 P027). Line = hint size × 1.2, plus HOLD padding.
-double homeTargetTop(TextScaler scaler) =>
-    2 + scaler.scale(GameTheme.typeHint) * 1.2 + 6 + 4;
+/// Home fight: floor line overlays the map; the target strip lives in
+/// [HomeTopBar] under the currency row (polish7 P027).
 
 class Is2Shell extends StatefulWidget {
   const Is2Shell({
@@ -202,7 +199,10 @@ class _Is2ShellState extends State<Is2Shell> {
               return MenuChrome.playSafeArea(
                 child: SpatialDungeonView(
                   director: d,
-                  cameraTopInset: widget.homeChrome ? 8 : _topChromePx,
+                  cameraTopInset: widget.homeChrome
+                      ? 8
+                      : _topChromePx +
+                            targetStripHeight(MediaQuery.textScalerOf(context)),
                   cameraBottomInset: widget.homeChrome
                       ? widget.extraBottomInset
                       : partyBottom + partyStrip + 8,
@@ -224,6 +224,12 @@ class _Is2ShellState extends State<Is2Shell> {
                   onMeasured: _readTopChrome,
                 ),
               ),
+              if (!widget.homeChrome)
+                ListenableBuilder(
+                  listenable: d.combatFrame,
+                  builder: (context, _) =>
+                      TargetCornerHud(director: d),
+                ),
               Expanded(
                 child: _Is2CombatCornerChrome(
                   director: d,
@@ -446,21 +452,14 @@ class _Is2CombatCornerChromeState extends State<_Is2CombatCornerChrome> {
                     ),
             ),
           Positioned(
-            right: hudSide,
-            top: widget.homeChrome
-                ? (state.inRift || state.inGreaterRift
-                      ? 38
-                      : homeTargetTop(MediaQuery.textScalerOf(context)))
-                : 22,
-            child: TargetCornerHud(director: d),
-          ),
-          Positioned(
             left: 0,
             right: 0,
-            top:
-                bossIntroBannerTop(
-                  MediaQuery.textScalerOf(context).scale(1),
-                ) +
+            top: (widget.homeChrome
+                    ? 2 +
+                        MediaQuery.textScalerOf(context).scale(GameTheme.typeHint) *
+                            1.2 +
+                        6
+                    : 6) +
                 (state.keystoneRunActive ? 22 : 0),
             child: ListenableBuilder(
               listenable: d.combatFrame,

@@ -38,7 +38,12 @@ void main() {
                 .descendant(of: title, matching: find.byType(RichText))
                 .evaluate()) {
           final p = e.renderObject! as RenderParagraph;
-          expect(p.didExceedMaxLines, isFalse, reason: p.text.toPlainText());
+          // Target strip is one line; at 1.45 long names ellipsize.
+          if (scale >= 1.4) {
+            expect(p.maxLines, 1);
+          } else {
+            expect(p.didExceedMaxLines, isFalse, reason: p.text.toPlainText());
+          }
         }
         expect(t.takeException(), isNull);
       });

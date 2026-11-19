@@ -113,11 +113,9 @@ void main() {
         'party': tester.getRect(find.byType(PartyCornerHud)),
         'top': tester.getRect(find.byType(DungeonTopHud)),
       };
-      final target = find.byType(TargetCornerHud);
-      if (target.evaluate().isNotEmpty) {
-        final rect = tester.getRect(target);
-        if (rect.width > 1 && rect.height > 1) controls['target'] = rect;
-      }
+      final target = find.byKey(TargetCornerHud.stripKey);
+      expect(target, findsOneWidget);
+      controls['target'] = tester.getRect(target);
 
       for (final item in controls.entries) {
         final r = item.value;
@@ -148,7 +146,7 @@ void main() {
         'floor',
         'party',
         'top',
-        if (controls.containsKey('target')) 'target',
+        'target',
         'leave',
       ];
       for (var i = 0; i < mustNotOverlap.length; i++) {

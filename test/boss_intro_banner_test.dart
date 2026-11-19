@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/ui/shell/dungeon_target_hud.dart';
 
 void main() {
-  test('boss callout clears the corner frame at max text scale', () {
-    // Same stack as TargetCornerHud: title, 28px portrait, bomb line.
-    const frameBottom = 2 + (9 * 1.4 * 1.4) + 2 + 28 + (9 * 1.4 * 1.4);
-    expect(bossIntroBannerTop(1.40), greaterThan(frameBottom));
-    expect(bossIntroBannerTop(1.0), lessThan(bossIntroBannerTop(1.40)));
+  test('boss callout clears the target strip at max text scale', () {
+    const scale = 1.45;
+    final stripBottom = targetStripHeight(const TextScaler.linear(scale));
+    expect(bossIntroBannerTop(scale), greaterThan(stripBottom));
+    expect(bossIntroBannerTop(1.0), lessThan(bossIntroBannerTop(scale)));
   });
 
   testWidgets('boss callout stays one line on a phone at large text',
