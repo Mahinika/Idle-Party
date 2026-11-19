@@ -224,21 +224,34 @@ class _TownViewportState extends State<TownViewport> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  townProgressLine(ascensionLevel: al, cave: cave),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.hint(),
+                // Town tier and cave on one line, so the town scene keeps
+                // more height above the card (Robert, "Fixa resten" item 5).
+                Row(
+                  key: townHeaderKey,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        '${townProgressLine(ascensionLevel: al, cave: cave)} · ',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.hint(),
+                      ),
+                    ),
+                    Flexible(
+                      flex: 2,
+                      child: Text(
+                        cave,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.section(),
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  cave,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.section(),
-                ),
-                const SizedBox(height: GameTheme.clusterGap),
+                const SizedBox(height: 4),
                 // Pick FARM strength before the run (Robert, Nov 19): only
                 // when this button enters a normal cave, a floor is cleared
                 // and no KEY is dialled (a KEY run has no FARM strength).
@@ -300,6 +313,9 @@ class _TownViewportState extends State<TownViewport> {
     );
   }
 }
+
+/// Town card header row: town tier · cave name.
+const Key townHeaderKey = ValueKey('town-card-header');
 
 /// Town ENTER shows the FARM strength picker when the button starts a
 /// normal cave run, at least one floor is cleared and KEY is +0.

@@ -214,17 +214,21 @@ abstract final class MenuChrome {
     return Row(
       children: [
         Expanded(child: Text(title, style: GameTheme.section())),
-        GameIconButton(
-          key: sheetCloseKey,
-          label: 'Close',
-          glyph: UiGlyph.close,
-          size: 16,
-          color: GameTheme.parchmentDim,
-          onPressed: () => Navigator.maybePop(context),
-        ),
+        sheetCloseX(context),
       ],
     );
   }
+
+  /// The shared top-right close X on its own, for sheets with a custom
+  /// title row (audit F069).
+  static Widget sheetCloseX(BuildContext context) => GameIconButton(
+    key: sheetCloseKey,
+    label: 'Close',
+    glyph: UiGlyph.close,
+    size: 16,
+    color: GameTheme.parchmentDim,
+    onPressed: () => Navigator.maybePop(context),
+  );
 
   /// Section label for dense menus (GEAR / PROGRESS / …).
   static Widget sectionLabel(String text) {

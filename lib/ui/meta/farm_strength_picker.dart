@@ -33,8 +33,6 @@ class FarmStrengthPicker extends StatelessWidget {
   static Key tierKey(int mult) => ValueKey('farm-strength-$mult');
   static const String title = 'FARM strength';
   static const String compactTitle = 'FARM';
-  static const String compactBlurb =
-      'Stronger packs, more loot · cleared floors, FARM mode.';
 
   /// Before a run (KEY sheet, town ENTER): only once a floor is cleared, so
   /// the first-run flow is unchanged.
@@ -53,6 +51,17 @@ class FarmStrengthPicker extends StatelessWidget {
     final clamped = FarmIntensity.allowed.contains(picked) ? picked : 1;
     return clamped.clamp(1, FarmIntensity.maxUnlocked(s));
   }
+
+  /// [unlockLine] short enough for one line under the town ENTER picker at
+  /// 1.45 on a 360 dp phone. The full rule stays in the toast and semantics.
+  static String compactUnlockLine(GameState s, int mult) {
+    if (mult <= 2) return '$mult×: beat a boss (daily chase)';
+    final clears = s.metaDepth.lifetimeFloorClears.clamp(0, 20);
+    return '$mult×: 20 clears ($clears/20) or Ascend';
+  }
+
+  /// Short blurb for the compact picker when every tier is open.
+  static const String compactOpenLine = 'Stronger packs, more loot.';
 
   /// How a locked tier unlocks (mirrors [FarmIntensity.maxUnlocked]).
   static String unlockLine(GameState s, int mult) {
@@ -85,7 +94,16 @@ class FarmStrengthPicker extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   MenuChrome.sheetHandle(),
-                  FarmStrengthPicker(director: director, inRun: true),
+                  Stack(
+                    children: [
+                      FarmStrengthPicker(director: director, inRun: true),
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: MenuChrome.sheetCloseX(ctx),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -188,10 +206,16 @@ class FarmStrengthPicker extends StatelessWidget {
               const PixelPadlock(size: 10),
               const SizedBox(width: 4),
             ],
+            // One line, so the town scene keeps its height (Robert,
+            // "Fixa resten" item 5).
             Flexible(
               child: Text(
-                locked.isEmpty ? compactBlurb : unlockLine(s, locked.first),
+                locked.isEmpty
+                    ? compactOpenLine
+                    : compactUnlockLine(s, locked.first),
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
             ),

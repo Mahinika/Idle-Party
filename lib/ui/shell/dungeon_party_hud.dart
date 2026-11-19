@@ -52,6 +52,11 @@ List<String> partyCcChipLabels(SpatialActor? actor) {
   return out;
 }
 
+/// Home party chip: the first CC word, "+" when more are active.
+String homeChipCcLabel(List<String> labels) =>
+    labels.length > 1 ? '${labels.first}+' : labels.first;
+const Key homeChipCcKey = ValueKey('home-chip-cc');
+
 Color partyCcChipColor(List<String> labels) {
   if (labels.contains('ROOT')) return GameTheme.mossLit;
   if (labels.contains('HEX')) return GameTheme.bloodLit;
@@ -1103,6 +1108,7 @@ class _HomePartyChip extends StatelessWidget {
         ? GameTheme.blood
         : (frac <= 0.35 ? GameTheme.bloodLit : GameTheme.clear);
     final role = hero.spec.roleTag.plainLabel;
+    final cc = partyCcChipLabels(spatial);
     final named = name.trim().isNotEmpty;
     final who = named ? name.trim() : role;
     final doll = dense ? 18.0 : 20.0;
@@ -1204,7 +1210,19 @@ class _HomePartyChip extends StatelessWidget {
                 const SizedBox(height: 1),
                 Row(
                   children: [
-                    if (named) ...[
+                    // Crowd control takes the role word's slot while it
+                    // lasts, so "Tank SLOW" never runs past a 360 dp chip.
+                    if (cc.isNotEmpty) ...[
+                      Text(
+                        homeChipCcLabel(cc),
+                        key: homeChipCcKey,
+                        maxLines: 1,
+                        softWrap: false,
+                        textScaler: TextScaler.noScaling,
+                        style: GameTheme.combat(color: partyCcChipColor(cc)),
+                      ),
+                      const SizedBox(width: 3),
+                    ] else if (named) ...[
                       Text(
                         role,
                         maxLines: 1,
@@ -1225,7 +1243,6 @@ class _HomePartyChip extends StatelessWidget {
                         ),
                       ),
                     ),
-                    partyCcChipSuffix(spatial, size: 5, dotOnly: dense),
                   ],
                 ),
               ],

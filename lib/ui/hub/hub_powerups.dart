@@ -19,6 +19,7 @@ import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/home/home_shell.dart';
 import '../shell/play_nav.dart';
 import '../shell/shell_common.dart';
 import '../shell/shell_layout.dart';
@@ -166,6 +167,8 @@ abstract final class ScrollsSheet {
   static String needTickets(int short) => 'Need ${_tickets(short)}';
 }
 
+const Key powerupsSheetKey = ValueKey('powerups-sheet');
+
 /// Bottom sheet: earn tickets (WATCH) + spend on buffs.
 Future<void> openPowerupsSheet(
   BuildContext context,
@@ -174,6 +177,9 @@ Future<void> openPowerupsSheet(
   WebClickBridge.pushLayer();
   unawaited(director.syncFriendReferral());
   final router = PlayNav.maybeOf(context)?.router;
+  // From the home rails: open below the HUD, like QUESTS / the menu panels,
+  // so gold, essence and the nav stay visible (audit F048).
+  final hudBottom = HomeShell.topChromeBottom(context);
   try {
     await showModalBottomSheet<void>(
       context: context,
@@ -181,7 +187,7 @@ Future<void> openPowerupsSheet(
       enableDrag: false,
       useSafeArea: false,
       backgroundColor: Colors.transparent,
-      barrierColor: MenuChrome.scrim,
+      barrierColor: hudBottom == null ? MenuChrome.scrim : Colors.transparent,
       constraints: const BoxConstraints(maxWidth: double.infinity),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       builder: (ctx) {
@@ -191,7 +197,11 @@ Future<void> openPowerupsSheet(
         // strip and not over the tabs.
         final bottomGap = GameTheme.bottomNavHeight + viewPad.bottom + keyboard;
         return Padding(
-          padding: EdgeInsets.only(top: viewPad.top, bottom: bottomGap),
+          key: powerupsSheetKey,
+          padding: EdgeInsets.only(
+            top: hudBottom ?? viewPad.top,
+            bottom: bottomGap,
+          ),
           child: _PowerupsSheet(director: director, router: router),
         );
       },
@@ -274,6 +284,7 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  MenuChrome.sheetHandle(),
                   Text('SCROLLS', style: GameTheme.title()),
                   ShellLayout.gap(6),
                   Row(

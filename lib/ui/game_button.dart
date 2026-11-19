@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'game_icon.dart';
 import 'game_theme.dart';
 import 'web_click_bridge.dart';
 
@@ -20,6 +21,7 @@ class GameButton extends StatelessWidget {
     this.primary = false,
     this.dense = false,
     this.tip,
+    this.icon,
   });
 
   final String label;
@@ -36,6 +38,10 @@ class GameButton extends StatelessWidget {
 
   /// Long-press / hover hint (phone + accessibility).
   final String? tip;
+
+  /// Optional asset icon before the label (e.g. the ad icon on a watch
+  /// button, audit F042). Decorative: the label carries the meaning.
+  final String? icon;
 
   ({Color top, Color bottom, Color border, Color text, Color glow, Color edge})
   get _palette => switch (style) {
@@ -97,6 +103,25 @@ class GameButton extends StatelessWidget {
     ),
   };
 
+  Widget _labelWithIcon(Text text, bool enabled) {
+    final asset = icon;
+    if (asset == null) return text;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ExcludeSemantics(
+          child: Opacity(
+            opacity: enabled ? 1 : 0.5,
+            child: GameIcon.asset(asset, size: dense ? 16 : 18),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Flexible(child: text),
+      ],
+    );
+  }
+
   /// Invisible tap margin above and below the painted face.
   static const double _facePad = 3;
 
@@ -110,15 +135,18 @@ class GameButton extends StatelessWidget {
     final fontSize = dense ? GameTheme.typeButtonDense : GameTheme.typeButton;
     final child = Padding(
       padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
-      child: Text(
-        label,
-        textAlign: TextAlign.center,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: GameTheme.button(
-          size: fontSize,
-          color: enabled ? palette.text : GameTheme.buttonDisabledText,
+      child: _labelWithIcon(
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.button(
+            size: fontSize,
+            color: enabled ? palette.text : GameTheme.buttonDisabledText,
+          ),
         ),
+        enabled,
       ),
     );
 

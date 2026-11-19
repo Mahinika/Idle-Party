@@ -185,7 +185,14 @@ Future<void> showHubIncomeSheet(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     MenuChrome.sheetHandle(),
-                    Text('INCOME', style: GameTheme.title()),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text('INCOME', style: GameTheme.title()),
+                        ),
+                        MenuChrome.sheetCloseX(ctx),
+                      ],
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       incomeLine,

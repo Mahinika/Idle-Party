@@ -121,7 +121,11 @@ class _HomeGoldSheetState extends State<HomeGoldSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 8, 4),
+                padding: const EdgeInsets.only(top: 6),
+                child: MenuChrome.sheetHandle(),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 8, 4),
                 child: Row(
                   children: [
                     Expanded(

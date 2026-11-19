@@ -140,9 +140,21 @@ void main() {
         ),
         findsOneWidget,
       );
+      // Short rule on one line under the row; the full rule is in the
+      // tile's semantics and the toast.
       expect(
-        find.text(FarmStrengthPicker.unlockLine(d.state, 4)),
+        find.text(FarmStrengthPicker.compactUnlockLine(d.state, 4)),
         findsOneWidget,
+      );
+      a100ExpectWhole(
+        t,
+        find.text(FarmStrengthPicker.compactUnlockLine(d.state, 4)),
+      );
+      expect(
+        find.bySemanticsLabel(
+          RegExp(RegExp.escape(FarmStrengthPicker.unlockLine(d.state, 4))),
+        ),
+        findsWidgets,
       );
       a100ExpectWhole(t, find.text('ENTER'));
     });

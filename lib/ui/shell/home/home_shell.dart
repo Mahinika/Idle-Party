@@ -42,6 +42,16 @@ class HomeShell extends StatefulWidget {
 
   @override
   State<HomeShell> createState() => _HomeShellState();
+
+  /// Global y of the bottom of the HUD (top bar + climb row), or null outside
+  /// a home shell. Sheets opened from the rails start here so the HUD stays
+  /// on screen, like the menu panels (audit F048).
+  static double? topChromeBottom(BuildContext context) {
+    final st = context.findAncestorStateOfType<_HomeShellState>();
+    final box = st?._topChromeKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    return box.localToGlobal(Offset(0, box.size.height)).dy;
+  }
 }
 
 class _HomeShellState extends State<HomeShell> {
@@ -50,6 +60,7 @@ class _HomeShellState extends State<HomeShell> {
   HomeGoldPanel _goldFocus = HomeGoldPanel.forge;
   int _goldFocusGen = 0;
   bool _farmPushSeamAcked = false;
+  final GlobalKey _topChromeKey = GlobalKey();
 
   @override
   void initState() {
@@ -106,8 +117,14 @@ class _HomeShellState extends State<HomeShell> {
       color: GameTheme.stoneDeep,
       child: Column(
         children: [
-          HomeTopBar(director: director, router: router),
-          _climbRow(state, sheet: sheet),
+          Column(
+            key: _topChromeKey,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              HomeTopBar(director: director, router: router),
+              _climbRow(state, sheet: sheet),
+            ],
+          ),
           Expanded(
             child: Stack(
               fit: StackFit.expand,

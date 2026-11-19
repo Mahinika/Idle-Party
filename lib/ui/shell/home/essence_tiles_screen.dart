@@ -36,6 +36,18 @@ class EssenceTilesScreen extends StatelessWidget {
         '${RelicCatalog.discoverCost(owned)} embers';
   }
 
+  /// PETS tile status: roster and the next hatch price (audit F051).
+  static String petStatus(GameState s) {
+    final cap = s.metaDepth.basePetRosterCap;
+    final owned = s.ownedPets.length;
+    if (owned >= cap) return '$owned/$cap · roster full';
+    return '$owned/$cap · hatch ${formatCount(GameLogic.hatchPetCost(s))}e';
+  }
+
+  static bool petCanBuy(GameState s) =>
+      s.ownedPets.length < s.metaDepth.basePetRosterCap &&
+      s.essence >= GameLogic.hatchPetCost(s);
+
   /// Padlock on a locked ESSENCE tile.
   static const Key lockKey = ValueKey('essence-tile-lock');
 
@@ -118,6 +130,8 @@ class EssenceTilesScreen extends StatelessWidget {
                 },
                 active: router.essenceHubLit == EssencePanel.pets,
                 fullWidth: true,
+                status: EssenceTilesScreen.petStatus(state),
+                canBuy: EssenceTilesScreen.petCanBuy(state),
               ),
             ],
           ),

@@ -15,6 +15,7 @@ import '../../core/hub_chase.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/pet_service.dart';
 import '../chase_bind.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -310,6 +311,7 @@ Future<void> showOfflineProgressDialog(
                             ? 'LOADING AD…'
                             : summary.welcomeBackAdLabel,
                         style: GameButtonStyle.grey,
+                        icon: UiIcon.watchAd,
                         onPressed: watchBusy
                             ? null
                             : () async {
