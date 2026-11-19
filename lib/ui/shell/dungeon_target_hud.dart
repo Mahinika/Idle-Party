@@ -10,14 +10,17 @@ import 'shell_common.dart';
 double targetStripHeight(TextScaler scaler) {
   final raw = scaler.scale(1);
   final scale = raw.clamp(1.0, GameTheme.typeScaleMax);
-  final vPad = scale >= 1.4 ? 0.0 : 2.0;
-  final line = GameTheme.hudPixel * 1.4 * scale;
+  final vPad = scale >= 1.4 ? 1.0 : 2.0;
+  // Measured from combat + hint on two lines (name row + HP row).
+  final titleLine = GameTheme.hudPixelComfort * 1.2 * scale;
+  final hpLine = GameTheme.hudPixel * 1.35 * scale;
+  final between = 2.0;
   // Accessibility > 1.45 (stress tests): grow the reserved slot.
   final slack = raw > GameTheme.typeScaleMax
-      ? (raw - GameTheme.typeScaleMax) * GameTheme.hudPixel * 1.4
+      ? (raw - GameTheme.typeScaleMax) * GameTheme.hudPixel * 1.2
       : 0.0;
-  // One row: title + inline HP bar (no second line).
-  return vPad + line + vPad + slack;
+  const layoutSlack = 10.0;
+  return vPad + titleLine + between + hpLine + vPad + slack + layoutSlack;
 }
 
 /// Top inset for the short boss callout, below the target strip.
@@ -48,8 +51,8 @@ class BossIntroBanner extends StatelessWidget {
             ),
             child: Text(
               'BOSS — $name',
-              maxLines: 1,
-              softWrap: false,
+              maxLines: 2,
+              softWrap: true,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: GameTheme.combat(comfort: true, color: GameTheme.torchHot),
@@ -77,44 +80,45 @@ class TargetCornerHud extends StatelessWidget {
   /// Keeps the enemy title readable when the row also carries quest chips.
   final double minTitleWidth;
 
-  /// Enemy title text (role · name).
+  /// Enemy name on the target strip (line 1).
   static const Key titleKey = ValueKey('target-corner-title');
 
   static const Key stripKey = ValueKey('target-strip-hud');
 
+  static const Key roleTagKey = ValueKey('target-corner-role-tag');
+
   /// Smallest target strip the row should reserve before wrapping quest chips.
   static double minLayoutWidth(BuildContext context) {
     final scaler = MediaQuery.textScalerOf(context);
-    final titleStyle = GameTheme.combat(color: GameTheme.parchment);
     final hintStyle = GameTheme.hint(color: GameTheme.parchmentDim);
-    final title = TextPainter(
-      text: TextSpan(text: 'MELEE · GOBL', style: titleStyle),
-      textDirection: TextDirection.ltr,
-      textScaler: scaler,
-      maxLines: 1,
-    )..layout();
     final hpNum = TextPainter(
-      text: TextSpan(text: '99', style: hintStyle),
+      text: TextSpan(text: '9999', style: hintStyle),
       textDirection: TextDirection.ltr,
       textScaler: scaler,
       maxLines: 1,
     )..layout();
     const wellPadding = 16.0;
     const innerPadding = 8.0 * 2;
-    const gaps = 12.0;
-    const hpBar = _hpBarWidth;
-    return title.width + hpNum.width + hpBar + wellPadding + innerPadding + gaps;
+    const gaps = 8.0;
+    const tagReserve = 44.0;
+    return tagReserve + hpNum.width + wellPadding + innerPadding + gaps + 48;
   }
 
-  static const double _hpBarWidth = 44;
+  static String? _roleTagLabel({
+    required EnemyRole role,
+    required EnemyArchetype archetype,
+  }) {
+    if (role == EnemyRole.boss) return 'BOSS';
+    if (role == EnemyRole.elite) return 'ELITE';
+    if (archetype == EnemyArchetype.swarm) return 'SWARM';
+    return null;
+  }
 
-  static String _archetypeLabel(EnemyArchetype a) => switch (a) {
-    EnemyArchetype.swarm => 'SWARM',
-    EnemyArchetype.brute => 'MELEE',
-    EnemyArchetype.tank => 'TANK',
-    EnemyArchetype.ranged => 'RANGED',
-    EnemyArchetype.glass => 'GLASS',
-    EnemyArchetype.support => 'SUPPORT',
+  static Color _roleTagColor(String tag) => switch (tag) {
+    'BOSS' => GameTheme.bloodLit,
+    'ELITE' => GameTheme.torch,
+    'SWARM' => GameTheme.mossLit,
+    _ => GameTheme.parchmentDim,
   };
 
   SpatialActor? _focusEnemy(SpatialWorld? world, GameDirector director) {
@@ -182,24 +186,20 @@ class TargetCornerHud extends StatelessWidget {
         height: height,
         edge: edge,
         borderColor: GameTheme.clear.withValues(alpha: 0.7),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                'CLEAR',
-                key: titleKey,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.combat(color: GameTheme.clear),
-              ),
-            ),
-            Text(
-              _stairsHint(world),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.hint(color: GameTheme.parchmentDim),
-            ),
-          ],
+        child: _twoLineBody(
+          title: Text(
+            'CLEAR',
+            key: titleKey,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.combat(color: GameTheme.clear),
+          ),
+          secondary: Text(
+            _stairsHint(world),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
+          ),
         ),
       );
     }
@@ -213,13 +213,9 @@ class TargetCornerHud extends StatelessWidget {
               ? 'CLEAR'
               : '—')
         : enemy.name.toUpperCase();
-    final role = enemy == null
-        ? ''
-        : switch (enemy.role) {
-            EnemyRole.boss => 'BOSS',
-            EnemyRole.elite => 'ELITE',
-            EnemyRole.normal => _archetypeLabel(enemy.archetype),
-          };
+    final roleTag = enemy == null
+        ? null
+        : _roleTagLabel(role: enemy.role, archetype: enemy.archetype);
     final hpFrac = enemy == null || enemy.maxHp <= 0
         ? 0.0
         : (enemy.hp / enemy.maxHp).clamp(0.0, 1.0);
@@ -230,22 +226,17 @@ class TargetCornerHud extends StatelessWidget {
     final foeCount = swarmPack
         ? world.enemies.where((e) => e.hp > 0 && !e.dormant && e.isAlive).length
         : 0;
-    final titleColor = role == 'BOSS'
-        ? GameTheme.bloodLit
-        : (role == 'ELITE' ? GameTheme.torch : GameTheme.parchment);
     final borderColor = showEmpty
         ? GameTheme.hudWellBorder.withValues(alpha: 0.35)
-        : role == 'BOSS'
+        : roleTag == 'BOSS'
         ? GameTheme.bloodLit.withValues(alpha: 0.7)
-        : (role == 'ELITE'
+        : (roleTag == 'ELITE'
               ? GameTheme.torch.withValues(alpha: 0.55)
               : GameTheme.hudWellBorder);
     final bombBit = enemy != null && enemy.livingBombTimer > 0
         ? ' · BOMB ${formatCombatSeconds(enemy.livingBombTimer)}'
         : '';
-    final titleText = role.isEmpty
-        ? '$label$bombBit'
-        : '$role · $label$bombBit';
+    final nameLine = '$label$bombBit';
     final hpLabel = enemy == null
         ? ''
         : swarmPack
@@ -255,9 +246,9 @@ class TargetCornerHud extends StatelessWidget {
               : '${enemy.hp}');
 
     final title = Tooltip(
-      message: titleText,
+      message: roleTag == null ? nameLine : '$roleTag · $nameLine',
       child: Text(
-        titleText,
+        nameLine,
         key: titleKey,
         maxLines: 1,
         softWrap: false,
@@ -265,59 +256,81 @@ class TargetCornerHud extends StatelessWidget {
         style: GameTheme.combat(
           color: showEmpty
               ? GameTheme.parchmentDim.withValues(alpha: 0.55)
-              : titleColor,
+              : GameTheme.parchment,
         ),
       ),
     );
+    final titleRow = Row(
+      children: [
+        if (roleTag != null) ...[
+          _TargetRoleTag(label: roleTag, color: _roleTagColor(roleTag)),
+          const SizedBox(width: 4),
+        ],
+        Expanded(
+          child: minTitleWidth > 0
+              ? ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: minTitleWidth),
+                  child: title,
+                )
+              : title,
+        ),
+      ],
+    );
+
+  Widget? hpRow;
+    if (enemy != null && hpLabel.isNotEmpty) {
+      hpRow = Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(1),
+              child: LinearProgressIndicator(
+                value: hpFrac,
+                minHeight: 3,
+                backgroundColor: GameTheme.equipChipBlocked,
+                color: hpFrac > 0.35 ? GameTheme.bloodLit : GameTheme.blood,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            hpLabel,
+            maxLines: 1,
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
+          ),
+        ],
+      );
+    } else if (enemy == null && state.isPartyDefeated) {
+      hpRow = Text(
+        state.inGauntlet || state.inAnyRiftMode ? 'End → hub' : 'Retry / Hub',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: GameTheme.hint(color: GameTheme.parchmentDim),
+      );
+    }
+
     return _stripShell(
       context,
       height: height,
       edge: edge,
       borderColor: borderColor,
       dim: showEmpty,
-      child: Row(
-        children: [
-          Expanded(
-            child: minTitleWidth > 0
-                ? ConstrainedBox(
-                    constraints: BoxConstraints(minWidth: minTitleWidth),
-                    child: title,
-                  )
-                : title,
-          ),
-          if (enemy != null && hpLabel.isNotEmpty) ...[
-            const SizedBox(width: 6),
-            Text(
-              hpLabel,
-              maxLines: 1,
-              style: GameTheme.hint(color: GameTheme.parchmentDim),
-            ),
-          ] else if (enemy == null && state.isPartyDefeated)
-            Text(
-              state.inGauntlet || state.inAnyRiftMode
-                  ? 'End → hub'
-                  : 'Retry / Hub',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.hint(color: GameTheme.parchmentDim),
-            ),
-          const SizedBox(width: 4),
-          SizedBox(
-            width: _hpBarWidth,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(1),
-              child: LinearProgressIndicator(
-                value: enemy == null ? 0 : hpFrac,
-                minHeight: 3,
-                backgroundColor: GameTheme.equipChipBlocked,
-                color: enemy == null
-                    ? GameTheme.equipChipBlocked
-                    : (hpFrac > 0.35 ? GameTheme.bloodLit : GameTheme.blood),
-              ),
-            ),
-          ),
+      child: _twoLineBody(title: titleRow, secondary: hpRow),
+    );
+  }
+
+  Widget _twoLineBody({required Widget title, Widget? secondary}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        title,
+        if (secondary != null) ...[
+          const SizedBox(height: 2),
+          secondary,
         ],
-      ),
+      ],
     );
   }
 
@@ -361,5 +374,30 @@ class TargetCornerHud extends StatelessWidget {
     String vert = dy.abs() < 0.35 ? '' : (dy > 0 ? 'N' : 'S');
     final dir = '$vert$horiz';
     return dir.isEmpty ? 'GO stairs' : 'GO stairs · $dir';
+  }
+}
+
+class _TargetRoleTag extends StatelessWidget {
+  const _TargetRoleTag({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: TargetCornerHud.roleTagKey,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(2),
+        border: Border.all(color: color.withValues(alpha: 0.85)),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        style: GameTheme.combat(color: color),
+      ),
+    );
   }
 }

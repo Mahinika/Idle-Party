@@ -309,7 +309,7 @@ void main() {
     final title = tester.widget<Text>(find.byKey(TargetCornerHud.titleKey));
     final label = title.data ?? '';
     expect(label, isNot(contains('…')));
-    expect(label.length, greaterThan(10));
+    expect(label.trim().length, greaterThan(4));
     expect(tester.takeException(), isNull);
     director.dispose();
     directorLive = false;

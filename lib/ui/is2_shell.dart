@@ -345,11 +345,14 @@ class _Is2FightTopBarState extends State<_Is2FightTopBar> {
             onOpenParty: () => widget.router.toggleGear(GearPanel.gear),
           ),
         if (d.dungeonTilesReady && d.toast != null && !widget.router.isOpen)
-          FeedbackToast(
-            message: d.toast!,
-            kind: d.noticeKind,
-            maxLines: 2,
-            docked: true,
+          SizedBox(
+            width: double.infinity,
+            child: FeedbackToast(
+              message: d.toast!,
+              kind: d.noticeKind,
+              maxLines: 2,
+              docked: true,
+            ),
           ),
       ],
     );

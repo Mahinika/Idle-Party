@@ -317,8 +317,8 @@ abstract final class GearBiSPlanner {
   /// One line for the piece AUTO EQUIP just wore.
   static String wornLine(List<String> names) {
     if (names.isEmpty) return '';
-    if (names.length == 1) return '${names.first} on';
-    return '${names.first} on · +${names.length - 1}';
+    if (names.length == 1) return 'Equipped: ${names.first}';
+    return 'Equipped: ${names.first} (+${names.length - 1})';
   }
 
   static GameState autoEquipPass(GameState state) {

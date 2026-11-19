@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
@@ -927,21 +926,12 @@ class _HomeKitStrip extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
-        child: SizedBox(
-          height: math.max(
-            GameTheme.minTouch,
-            GameTheme.minTouch *
-                MediaQuery.textScalerOf(
-                  context,
-                ).scale(1).clamp(1.0, GameTheme.typeScaleMax),
-          ),
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: visible.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 4),
-            itemBuilder: (context, i) {
-              final ability = visible[i];
-              return _InlineAbilityChip(
+        child: Wrap(
+          spacing: 4,
+          runSpacing: 4,
+          children: [
+            for (final ability in visible)
+              _InlineAbilityChip(
                 ability: ability,
                 cdLeft: spatial.abilityCd[ability.id.name] ?? 0,
                 rage: resource,
@@ -951,9 +941,8 @@ class _HomeKitStrip extends StatelessWidget {
                 bombUp: _kitFocusBombUp(spatial, world),
                 isRunic: isRunic,
                 isHealer: isHealer,
-              );
-            },
-          ),
+              ),
+          ],
         ),
       ),
     );
@@ -1810,38 +1799,23 @@ class _InlineAbilityChip extends StatelessWidget {
             width: justFired || activeBuff || ready ? 1.4 : 1,
           ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (onCd)
-              Padding(
-                padding: const EdgeInsets.only(right: 2),
-                child: Text(
-                  'wait',
-                  style: GameTheme.readable(color: GameTheme.parchmentDim),
-                ),
-              ),
-            Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.readable(
-                  color: gated
-                      ? GameTheme.bloodLit
-                      : softGated
-                      ? GameTheme.parchmentDim
-                      : justFired
-                      ? GameTheme.torchHot
-                      : onCd
-                      ? GameTheme.parchmentDim
-                      : isHealer
-                      ? GameTheme.hudSpiritText
-                      : GameTheme.parchment,
-                ),
-              ),
-            ),
-          ],
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.readable(
+            color: gated
+                ? GameTheme.bloodLit
+                : softGated
+                ? GameTheme.parchmentDim
+                : justFired
+                ? GameTheme.torchHot
+                : onCd
+                ? GameTheme.parchmentDim
+                : isHealer
+                ? GameTheme.hudSpiritText
+                : GameTheme.parchment,
+          ),
         ),
       ),
     );
@@ -1849,10 +1823,8 @@ class _InlineAbilityChip extends StatelessWidget {
         ? '${ability.tooltipMessage} — equip a shield'
         : ability.tooltipMessage;
     final semanticsLabel = onCd
-        ? '${ability.name}, wait $cdText'
-        : ready
-        ? ability.name
-        : '${ability.name}, wait';
+        ? '${ability.name}, $cdText'
+        : ability.name;
     return Semantics(
       label: semanticsLabel,
       onLongPress: () {
