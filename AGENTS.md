@@ -49,6 +49,9 @@ Sideload test APKs stay in `.github/workflows/test-apk-prerelease.yml`
 (`workflow_dispatch` or a `test-*` tag) and Play AABs stay in `build-apk.yml`
 (`v*` or `workflow_dispatch`). Do not start either unless the owner asks in
 that turn. A source push of `cursor/**` runs CI only.
+Cloud agent Builds use `.cursor/environment.json`, which runs
+`tool/ci/install_flutter_pinned.sh` (Flutter pin from `ci.yml`, then
+`flutter pub get`).
 Share-fast: `flutter test test/class_balance_share_fast_test.dart`.
 
 Skills live under `.cursor/skills/`. Slash: `/init` resyncs this file and

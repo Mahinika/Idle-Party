@@ -108,6 +108,7 @@ IdleSword*
 !.cursor/commands/
 !.cursor/commands/**/
 !.cursor/mcp.json
+!.cursor/environment.json
 
 # Local MCP venv
 /tool/mcp_idle_party/.venv/
