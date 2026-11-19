@@ -23,6 +23,9 @@ import 'shell/shell_common.dart';
 /// Character sheet inspired by classic mobile RPG equip screens:
 /// hero preview, labeled slots around it, big DAMAGE / ARMOR under the doll.
 class CharacterEquipPanel extends StatelessWidget {
+  static const String slotLegend = 'Main · Off · Ranged · Charms · Flask';
+  static const slotLegendKey = ValueKey('equip-slot-legend');
+
   /// Key stats under the hero name (audit F012). HP is on the line below.
   static String heroStatsLine({required num atk, required num def}) =>
       'AP ${atk.round()} · Armor ${def.round()}';
@@ -161,7 +164,8 @@ class CharacterEquipPanel extends StatelessWidget {
     if (heroes.isEmpty) return const SizedBox.shrink();
     final index = heroIndex.clamp(0, heroes.length - 1);
     final hero = heroes[index];
-    final slotSize = compact ? 40.0 : 46.0;
+    // Slots at the 44/48 dp touch size, not 40 (polish7 P050).
+    final slotSize = compact ? 44.0 : 48.0;
     final slotGap = compact ? 4.0 : 5.0;
     final dollSize = compact ? 96.0 : 128.0;
     final weaponSize = compact ? 44.0 : 50.0;
@@ -315,10 +319,8 @@ class CharacterEquipPanel extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: GameTheme.title(),
                   ),
-                  if (compact) ...[
-                    const SizedBox(height: 4),
-                    HeroDollSprite(hero: hero, partyIndex: index, size: 28),
-                  ],
+                  // No second, tiny doll here: the big one is right below
+                  // (polish7 P050).
                   // Class as the sub-line; the key stats up top, above the
                   // fold on a 640 phone (F010 / F012).
                   Text(
@@ -477,10 +479,14 @@ class CharacterEquipPanel extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
+                  // Hint size: one line at 1.0, never a ragged 3-line wrap
+                  // at 1.45 (polish7 P051).
                   Text(
-                    'Main · Off · Ranged · Charms · Flask',
+                    CharacterEquipPanel.slotLegend,
+                    key: CharacterEquipPanel.slotLegendKey,
                     textAlign: TextAlign.center,
-                    style: GameTheme.readable(color: GameTheme.parchmentDim),
+                    maxLines: 2,
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 ],
               ),

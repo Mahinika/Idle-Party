@@ -17,6 +17,9 @@ import 'menu_chrome.dart';
 
 /// MORE → CRAFT: pick a hero, pick a slot, then CRAFT / UPGRADE.
 class ApexHubPanel extends StatefulWidget {
+  /// CRAFT slot chips (wrap, polish7 P020).
+  static const slotChipsKey = ValueKey('apex-slot-chips');
+
   /// "i50 · 1H mace · +20 Str" as chips: item level spelled out, one stat a
   /// chip, so the line reads as parts, not a wall of jargon (polish7 P021).
   static Widget statChips(String line, {bool dim = false}) {
@@ -518,13 +521,12 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         style: GameTheme.section(color: GameTheme.parchmentDim),
       );
     }
-    return SizedBox(
-      height: GameTheme.minTouch,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: heroes.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (context, i) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (var i = 0; i < heroes.length; i++)
+          Builder(builder: (context) {
           final h = heroes[i];
           final classId = h.spec.classId;
           final role = h.spec.roleTag;
@@ -545,20 +547,21 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
               _setCraftGoal(classId, role, slot);
             },
           );
-        },
-      ),
+          }),
+      ],
     );
   }
 
   Widget _slotPicker(GameState state) {
     final slots = ApexCraft.craftSlotsFor(_apexClass, _apexRole);
-    return SizedBox(
-      height: GameTheme.minTouch,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: slots.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (context, i) {
+    // Wraps to a second row instead of cutting "LEG" at 360 (polish7 P020).
+    return Wrap(
+      key: ApexHubPanel.slotChipsKey,
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (var i = 0; i < slots.length; i++)
+          Builder(builder: (context) {
           final slot = slots[i];
           final rank =
               _existingPiece(state, _apexClass, _apexRole, slot)?.apexRank ?? 0;
@@ -569,8 +572,8 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
             selected: _apexSlot == slot,
             onTap: () => _setCraftGoal(_apexClass, _apexRole, slot),
           );
-        },
-      ),
+          }),
+      ],
     );
   }
 

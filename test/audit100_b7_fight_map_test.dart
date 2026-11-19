@@ -222,7 +222,8 @@ void main() {
     final def = DungeonCatalog.byId(d.state.dungeonId);
     final line = MapScreen.zoneDetail(d.state, def, open: true, mean: 5);
     expect(line, contains('You are here'));
-    expect(line, contains('Party Lv5'));
+    expect(line, contains('Party level 5'));
+    expect(line, isNot(contains(' / ')));
   });
 
   test('F022 dock dots are off while FORGE is locked', () async {

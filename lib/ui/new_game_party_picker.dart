@@ -18,6 +18,9 @@ import 'menu_chrome.dart';
 /// Each slot keeps its own [HeroRace] and [HeroSex]. The editor under the
 /// cards switches between **CLASS** (starter kits only) and **RACE**.
 class NewGamePartyPicker extends StatefulWidget {
+  /// Class filter tabs (wrap, polish7 P010).
+  static const classTabsKey = ValueKey('party-picker-class-tabs');
+
   const NewGamePartyPicker({
     super.key,
     required this.onConfirm,
@@ -430,16 +433,16 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                              child: SizedBox(
-                                height: 34,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
+                              // Wraps instead of cutting "ARCANI…" at
+                              // 1.45 with no scroll hint (polish7 P010).
+                              child: Wrap(
+                                  key: NewGamePartyPicker.classTabsKey,
+                                  spacing: 6,
+                                  runSpacing: 6,
                                   children: [
                                     for (final classId in classTabs)
                                       Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 6,
-                                        ),
+                                        padding: EdgeInsets.zero,
                                         child: GameButton(
                                           label: HeroSpecs.classLabel(
                                             classId,
@@ -455,7 +458,6 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                                       ),
                                   ],
                                 ),
-                              ),
                             ),
                             Expanded(
                               child: ListView(

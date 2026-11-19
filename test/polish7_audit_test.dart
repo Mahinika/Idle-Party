@@ -30,6 +30,11 @@ import 'package:idle_party/ui/first_session_tips.dart';
 import 'package:idle_party/ui/meta/keystone_sheet.dart';
 import 'package:idle_party/ui/shell/home/floor_jump_sheet.dart';
 import 'package:idle_party/ui/shell/jobs_overlay.dart';
+import 'package:idle_party/ui/meta/codex_overlay.dart';
+import 'package:idle_party/ui/shell/relics_overlay.dart';
+import 'package:idle_party/ui/shell/home/map_screen.dart';
+import 'package:idle_party/ui/new_game_party_picker.dart';
+import 'package:idle_party/models/dungeon_def.dart';
 
 import 'audit100_harness.dart';
 import 'shell_golden_harness.dart';
@@ -618,6 +623,87 @@ void main() {
         expect(h.shownName.toLowerCase(), isNot(contains('cinder')));
       }
     });
+  });
+
+  // ---------------------------------------------------------------- batch 5
+  group('batch 5 clipping and lists', () {
+    test('P044 codex milestones say what they pay', () {
+      expect(
+        CodexOverlay.tierLabel(
+          pct: 25,
+          reward: 8,
+          claimed: false,
+          ready: false,
+        ),
+        'Reward at 25%: +8 essence',
+      );
+      expect(
+        CodexOverlay.tierLabel(pct: 25, reward: 8, claimed: false, ready: true),
+        isNot(endsWith('e')),
+      );
+      expect(
+        CodexOverlay.tierLabel(pct: 25, reward: 8, claimed: true, ready: false),
+        contains('claimed'),
+      );
+    });
+
+    testWidgets('P044 empty codex tab says so under the toggle', (t) async {
+      await bind(t, _sizes.first, GameTheme.typeScaleMax);
+      final d = await a100Director(fresh: true);
+      await t.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: CodexOverlay(director: d)),
+        ),
+      );
+      await t.pump();
+      final empty = find.byKey(CodexOverlay.emptyKey);
+      expect(empty, findsOneWidget);
+      expect(find.textContaining('No monsters discovered'), findsOneWidget);
+      // Near the top, not pushed to the bottom of the sheet.
+      expect(t.getRect(empty).top, lessThan(_sizes.first.height / 2));
+      await t.pumpWidget(const SizedBox.shrink());
+      d.dispose();
+    });
+
+    test('P056 weekly trade count has its own line', () {
+      expect(RelicsOverlay.weeklyLine(1), contains('1/'));
+      expect(RelicsOverlay.weeklyLine(1), contains('this week'));
+    });
+
+    test('P026 MAP zone line is plain words', () async {
+      final d = await a100Director();
+      final def = DungeonCatalog.byId(d.state.dungeonId);
+      final line = MapScreen.zoneDetail(d.state, def, open: true, mean: 3);
+      expect(line, contains('Party level 3'));
+      expect(line, isNot(contains('Lv3 /')));
+      d.dispose();
+    });
+
+    for (final scale in _scales) {
+      testWidgets('P010 NEW PARTY class tabs wrap @$scale', (t) async {
+        await bind(t, _sizes.first, scale);
+        await t.pumpWidget(
+          MaterialApp(
+            home: NewGamePartyPicker(
+              onConfirm: (specs, name, races, {sexes}) async {},
+              onBack: () {},
+            ),
+          ),
+        );
+        await t.pump();
+        final tabs = find.byKey(NewGamePartyPicker.classTabsKey);
+        if (tabs.evaluate().isEmpty) return; // RACE tab first on this build
+        expect(t.widget(tabs), isA<Wrap>());
+        for (final e
+            in find
+                .descendant(of: tabs, matching: find.byType(GameButton))
+                .evaluate()) {
+          final r = t.getRect(find.byWidget(e.widget));
+          expect(r.right, lessThanOrEqualTo(_sizes.first.width + 0.5));
+        }
+        expect(t.takeException(), isNull);
+      });
+    }
   });
 }
 

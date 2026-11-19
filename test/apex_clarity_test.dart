@@ -363,6 +363,9 @@ void main() {
 
       await tester.drag(find.byType(ListView).first, const Offset(0, -320));
       await tester.pump();
+      // The slot chips wrap now (polish7 P020), so the vault sits lower.
+      await tester.ensureVisible(find.text('SHOW').last);
+      await tester.pump();
       await tester.tap(find.text('SHOW').last);
       await tester.pump();
       expect(find.text('No matching hero in party'), findsOneWidget);

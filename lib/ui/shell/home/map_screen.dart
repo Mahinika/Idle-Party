@@ -46,6 +46,7 @@ class MapScreen extends StatefulWidget {
   static const Key endgameLockHeaderKey = ValueKey('map-endgame-lock-line');
   static const Key enterKey = ValueKey('map-enter');
   static const String youAreHere = 'YOU ARE HERE';
+  static const Key hereLineKey = ValueKey('map-here-line');
 
   /// Second line of the zone card under the PATH map.
   static String zoneDetail(
@@ -61,7 +62,8 @@ class MapScreen extends StatefulWidget {
     return [
       if (here) 'You are here · F${state.currentRoom.floorNumber}',
       cleared ? 'Cleared' : 'Not cleared yet',
-      'Party Lv$mean / $need',
+      // Plain words, not "Lv1 / 1" (polish7 P026).
+      'Party level $mean, cave needs $need',
     ].join(' · ');
   }
 
@@ -329,14 +331,26 @@ class _MapScreenState extends State<MapScreen> {
     // Already in this cave: say so instead of an ENTER that restarts it
     // without saying (audit F089).
     final here = !_endgame && state.inDungeon && _zoneId == state.dungeonId;
+    // Already here: a quiet status line, not a big dead button (P026).
+    if (here) {
+      return Padding(
+        padding: ShellLayout.listPadding,
+        child: Text(
+          MapScreen.youAreHere,
+          key: MapScreen.hereLineKey,
+          textAlign: TextAlign.center,
+          style: GameTheme.section(color: GameTheme.torchHot),
+        ),
+      );
+    }
     return Padding(
       padding: ShellLayout.listPadding,
       child: GameButton(
         key: MapScreen.enterKey,
-        label: here ? MapScreen.youAreHere : 'ENTER',
+        label: 'ENTER',
         style: GameButtonStyle.go,
-        primary: !here,
-        onPressed: here ? null : () => _enter(state, mean, endgame),
+        primary: true,
+        onPressed: () => _enter(state, mean, endgame),
       ),
     );
   }

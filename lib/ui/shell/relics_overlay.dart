@@ -17,6 +17,12 @@ class RelicsOverlay extends StatelessWidget {
   const RelicsOverlay({super.key, required this.director});
   final GameDirector director;
 
+  static const weeklyKey = ValueKey('relics-weekly-trades');
+
+  /// "Cinder trades this week: 0/3".
+  static String weeklyLine(int trades) =>
+      'Cinder trades this week: $trades/${GameLogic.cinderExchangeWeeklyCap}';
+
   @override
   Widget build(BuildContext context) {
     final state = director.state;
@@ -131,9 +137,11 @@ class RelicsOverlay extends StatelessWidget {
           ShellLayout.gap(8),
           ShellLayout.secondaryActionRow(
             children: [
+              // The trade alone on the face; the weekly count gets its own
+              // line below, so nothing is cut (polish7 P056).
               GameButton(
-                label:
-                    '4 Cinders → 1 Ember · $trades/${GameLogic.cinderExchangeWeeklyCap} this week',
+                label: '4 Cinders → 1 Ember',
+                tip: RelicsOverlay.weeklyLine(trades),
                 style: GameButtonStyle.grey,
                 dense: true,
                 onPressed:
@@ -151,6 +159,12 @@ class RelicsOverlay extends StatelessWidget {
                     : null,
               ),
             ],
+          ),
+          ShellLayout.gap(4),
+          Text(
+            RelicsOverlay.weeklyLine(trades),
+            key: RelicsOverlay.weeklyKey,
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           ShellLayout.gap(12),
         ],

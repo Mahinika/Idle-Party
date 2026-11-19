@@ -162,21 +162,25 @@ class _MarketOverlayState extends State<MarketOverlay> {
     final upgradeCount = state.marketListings
         .where((l) => _upgradeHeroName(state, l) != null)
         .length;
-    return Wrap(
-      spacing: 6,
-      runSpacing: 4,
+    // The filter is one toggle on its own row; the reroll is a buy button
+    // under it, not a third chip that wraps with the filters (polish7 P022).
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MenuChrome.chip(
-          label: upgradeCount > 0 ? 'UPGRADES · $upgradeCount' : 'UPGRADES',
-          selected: _upgradesOnly,
-          onTap: () => _setUpgradesOnly(true),
+        MenuChrome.segmented(
+          dense: true,
+          labels: [
+            upgradeCount > 0 ? 'UPGRADES · $upgradeCount' : 'UPGRADES',
+            'ALL GEAR',
+          ],
+          selectedIndex: _upgradesOnly ? 0 : 1,
+          onSelect: (i) => _setUpgradesOnly(i == 0),
         ),
-        MenuChrome.chip(
-          label: 'ALL GEAR',
-          selected: !_upgradesOnly,
-          onTap: () => _setUpgradesOnly(false),
+        const SizedBox(height: 6),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: _rerollChip(state, director),
         ),
-        _rerollChip(state, director),
       ],
     );
   }
@@ -188,9 +192,17 @@ class _MarketOverlayState extends State<MarketOverlay> {
     if (freeReady) {
       return _marketFlaskChip(label: 'Fresh stock', tone: GameTheme.mossLit);
     }
-    return _marketFlaskChip(
+    // A real buy button with the gold icon, not a filter-looking chip
+    // (polish7 P022). Gold when affordable, grey when short.
+    final can = state.gold >= refreshCost;
+    return GameButton(
       label: 'Reroll ${formatGold(refreshCost)}',
-      onTap: state.gold >= refreshCost ? director.refreshMarketListings : null,
+      icon: UiIcon.gold,
+      dense: true,
+      expanded: false,
+      style: can ? GameButtonStyle.gold : GameButtonStyle.grey,
+      tip: can ? null : 'Need ${formatGold(refreshCost - state.gold)} more',
+      onPressed: can ? director.refreshMarketListings : null,
     );
   }
 
@@ -449,6 +461,8 @@ class _MarketOverlayState extends State<MarketOverlay> {
             child: EquipmentIcon(item: item, size: 30),
           ),
           title: item.name,
+          // Two lines, so "Guard Clo…" reads whole (polish7 P023).
+          titleLines: 2,
           // Keep the UPGRADE tag when broke; "Need Ng more" sits under it
           // (audit F067). The gold face and the plum rim stay buy-only.
           tag: isUpgrade
@@ -630,7 +644,19 @@ class MarketHeaderControls extends StatelessWidget {
           key: flaskKey,
           label: 'Flasks',
           onTap: () => _openMenu(context),
-          child: const GameIcon.asset(UiIcon.flask, size: 20),
+          // The flask says what it is, not a bare red icon (polish7 P024).
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const GameIcon.asset(UiIcon.flask, size: 18),
+              const SizedBox(width: 2),
+              Text(
+                flaskCaption,
+                maxLines: 1,
+                style: GameTheme.hint(color: GameTheme.parchment),
+              ),
+            ],
+          ),
         ),
         const SizedBox(width: 4),
         _chip(
@@ -664,25 +690,44 @@ class MarketHeaderControls extends StatelessWidget {
             onTap: canReroll ? director.refreshMarketListings : null,
             // Gold = can pay now; grey = short. Same rule as every buy.
             tone: canReroll ? ChunkyTone.gold : ChunkyTone.grey,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const GameIcon.asset(UiIcon.gold, size: 14),
-                const SizedBox(width: 3),
-                Text(
-                  // At big text the word goes (it is in semantics) so the
-                  // filter chip fits beside it (F047).
-                  MediaQuery.textScalerOf(context).scale(1) > 1.2
-                      ? compactGold(refreshCost)
-                      : 'Reroll ${compactGold(refreshCost)}',
-                  maxLines: 1,
-                  style: GameTheme.hint(
-                    color: ChunkyFace.textOn(
-                      canReroll ? ChunkyTone.gold : ChunkyTone.grey,
-                    ),
+            // At big text "Reroll" stacks over the price instead of being
+            // dropped, so the chip still says what it does (polish7 P024).
+            child: Builder(
+              builder: (context) {
+                final ink = GameTheme.hint(
+                  color: ChunkyFace.textOn(
+                    canReroll ? ChunkyTone.gold : ChunkyTone.grey,
                   ),
-                ),
-              ],
+                );
+                final price = Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const GameIcon.asset(UiIcon.gold, size: 14),
+                    const SizedBox(width: 3),
+                    Text(compactGold(refreshCost), maxLines: 1, style: ink),
+                  ],
+                );
+                if (MediaQuery.textScalerOf(context).scale(1) > 1.2) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Reroll',
+                        maxLines: 1,
+                        style: ink.copyWith(height: 1.0),
+                      ),
+                      price,
+                    ],
+                  );
+                }
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Reroll ', maxLines: 1, style: ink),
+                    price,
+                  ],
+                );
+              },
             ),
           ),
       ],
@@ -695,6 +740,9 @@ class MarketHeaderControls extends StatelessWidget {
   static const Key flaskKey = ValueKey('market-flask');
   static const Key filterKey = ValueKey('market-filter');
   static const String filterAllShort = 'ALL';
+
+  /// Caption beside the flask icon (polish7 P024).
+  static const String flaskCaption = 'Flask';
 
   Widget _chip({
     Key? key,
