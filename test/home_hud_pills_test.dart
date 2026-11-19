@@ -4,6 +4,7 @@ import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/gold_income.dart';
 import 'package:idle_party/core/home_layout.dart';
+import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/ui/chunky_face.dart';
 import 'package:idle_party/ui/game_theme.dart';
@@ -14,7 +15,7 @@ import 'package:idle_party/ui/shell/home/hud_pills.dart';
 /// Batch 4: currency capsules, a floor hex, gold per minute in the cave,
 /// an orange 2× and MENU as its own button. Nothing shrinks at 1.45.
 void main() {
-  Future<GameDirector> pumpBar(
+  Future<(GameDirector, MenuRouter)> pumpBar(
     WidgetTester tester, {
     double scale = 1,
     bool dungeon = true,
@@ -62,13 +63,13 @@ void main() {
       ),
     );
     await tester.pump();
-    return director;
+    return (director, router);
   }
 
   testWidgets('cave HUD: pills, hex floor badge, green gold per minute', (
     tester,
   ) async {
-    final director = await pumpBar(tester);
+    final (director, _) = await pumpBar(tester);
     expect(tester.takeException(), isNull);
     expect(find.byType(HudPill), findsNWidgets(3));
     expect(find.text('AL 12'), findsOneWidget);
@@ -140,6 +141,50 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Ascension Level'), findsOneWidget);
     expect(find.textContaining('AL 9 adds'), findsOneWidget);
+  });
+
+  testWidgets('F hex opens floor jump sheet', (tester) async {
+    final (director, _) = await pumpBar(tester);
+    await tester.tap(
+      find.bySemanticsLabel(
+        'Floor ${director.state.currentRoom.floorNumber}, open floor list',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('FLOORS'), findsOneWidget);
+  });
+
+  for (final scale in [1.0, GameTheme.typeScaleMax]) {
+    testWidgets('F hex touch target at scale $scale', (tester) async {
+      await pumpBar(tester, scale: scale);
+      final hit = find.bySemanticsLabel(RegExp(r'^Floor \d+, open floor list'));
+      final size = tester.getSize(hit);
+      expect(size.width, greaterThanOrEqualTo(GameTheme.minTouch));
+      expect(size.height, greaterThanOrEqualTo(GameTheme.minTouch));
+    });
+  }
+
+  testWidgets('essence pill opens ESSENCE when unlocked', (tester) async {
+    final (director, router) = await pumpBar(tester, al: 1, bossVictories: 2);
+    expect(MenuTabs.showCamp(director.state), isTrue);
+    await tester.tap(find.bySemanticsLabel(RegExp(r'^Essence,')));
+    await tester.pumpAndSettle();
+    expect(router.route, MenuRoute.essence);
+  });
+
+  testWidgets('essence pill hit box is at least minTouch', (tester) async {
+    await pumpBar(tester);
+    final hit = find.bySemanticsLabel(RegExp(r'^Essence,'));
+    expect(
+      tester.getSize(hit).height,
+      greaterThanOrEqualTo(GameTheme.minTouch),
+    );
+  });
+
+  testWidgets('AL pill hidden at AL 0 when essence row shows', (tester) async {
+    await pumpBar(tester, al: 0, bossVictories: 2, dungeon: false);
+    expect(find.text('AL 0'), findsNothing);
+    expect(find.byType(HudPill), findsNWidgets(2));
   });
 
   testWidgets('AL pill touch target is at least minTouch', (tester) async {

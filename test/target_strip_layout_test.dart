@@ -4,8 +4,10 @@ import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/hub_chase.dart';
+import 'package:idle_party/core/nav_copy.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/models/mission.dart' show Mission, MissionType;
+import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/dungeon_target_hud.dart';
 import 'package:idle_party/ui/shell/dungeon_top_hud.dart';
 import 'package:idle_party/ui/shell/home/home_top_bar.dart';
@@ -124,6 +126,121 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('claim chip keeps enemy title readable at 360x640 1.45', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final director = await _fightDirector();
+    var directorLive = true;
+    addTearDown(() {
+      if (directorLive) director.dispose();
+    });
+    director.debugHoldSave(
+      director.state.copyWith(
+        missions: [
+          Mission(
+            id: 't1',
+            type: MissionType.defeatEnemies,
+            title: 'Test',
+            target: 1,
+            progress: 1,
+            goldReward: 10,
+            essenceReward: 1,
+          ),
+          Mission(
+            id: 't2',
+            type: MissionType.defeatEnemies,
+            title: 'Test 2',
+            target: 1,
+            progress: 1,
+            goldReward: 10,
+            essenceReward: 1,
+          ),
+        ],
+      ),
+    );
+    expect(HubChase.forState(director.state).kind, HubChaseKind.claimMissions);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            size: const Size(360, 640),
+            textScaler: TextScaler.linear(GameTheme.typeScaleMax),
+          ),
+          child: child!,
+        ),
+        home: Scaffold(
+          body: PlayShell(director: director, router: router),
+        ),
+      ),
+    );
+    for (var i = 0; i < 60; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+      final title = find.byKey(TargetCornerHud.titleKey);
+      if (title.evaluate().isEmpty) continue;
+      final text = tester.widget<Text>(title).data ?? '';
+      if (text.length > 4 && !text.startsWith('ME')) break;
+    }
+
+    final title = tester.widget<Text>(find.byKey(TargetCornerHud.titleKey));
+    expect(title.data, isNot(matches(RegExp(r'^ME\.\.\.'))));
+    expect(title.data!.length, greaterThan(4));
+    expect(find.textContaining('QUESTS ·'), findsOneWidget);
+    final chip = find.ancestor(
+      of: find.textContaining('QUESTS ·'),
+      matching: find.byType(InkWell),
+    );
+    expect(
+      tester.getSize(chip.first).height,
+      greaterThanOrEqualTo(GameTheme.minTouch),
+    );
+    director.dispose();
+    directorLive = false;
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 20));
+  });
+
+  testWidgets('chase line shows in SPLIT when not claim-ready', (tester) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final base = GameLogic.createInitialState().copyWith(
+      homeLayout: HomeLayout.home,
+      bossVictories: 2,
+      highestFloorCleared: 4,
+      homePanelFull: false,
+      inDungeon: true,
+    );
+    final state = GameLogic.enterDungeon(base);
+    expect(HubChase.forState(state).title, isNotEmpty);
+
+    final director = GameDirector.preview(initialState: state);
+    addTearDown(director.dispose);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: HomeTopBar(director: director, router: router),
+        ),
+      ),
+    );
+    await tester.pump();
+    final chaseTitle =
+        NavCopy.playerText(HubChase.forState(state).title, HomeLayout.home);
+    expect(find.text(chaseTitle), findsOneWidget);
+  });
+
   testWidgets('quest chase moves beside floor badge, not under it', (tester) async {
     tester.view.physicalSize = const Size(360, 780);
     tester.view.devicePixelRatio = 1;
@@ -170,6 +287,13 @@ void main() {
 
     expect(find.text('Claim quest reward'), findsNothing);
     expect(find.textContaining('QUESTS ·'), findsOneWidget);
+    final hex = tester.getRect(
+      find.bySemanticsLabel(
+        'Floor ${director.state.currentRoom.floorNumber}, open floor list',
+      ),
+    );
+    final chip = tester.getRect(find.textContaining('QUESTS ·'));
+    expect(chip.top, greaterThan(hex.bottom - 1));
     expect(tester.takeException(), isNull);
   });
 }

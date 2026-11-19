@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/dungeon_party_hud.dart';
 import 'package:idle_party/ui/shell/dungeon_target_hud.dart';
 import 'package:idle_party/ui/shell/dungeon_top_hud.dart';
@@ -133,8 +134,8 @@ void main() {
         final rect = controls[name]!;
         expect(
           rect.shortestSide,
-          greaterThanOrEqualTo(40),
-          reason: '$name is ${rect.size}, under a 40dp tap',
+          greaterThanOrEqualTo(GameTheme.minTouch),
+          reason: '$name is ${rect.size}, under min touch',
         );
       }
 
