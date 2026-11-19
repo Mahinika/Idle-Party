@@ -66,12 +66,16 @@ class TargetCornerHud extends StatelessWidget {
     super.key,
     required this.director,
     this.edgeInset = true,
+    this.minTitleWidth = 0,
   });
 
   final GameDirector director;
 
   /// Home top bar already pads the width — skip a second inset there.
   final bool edgeInset;
+
+  /// Keeps the enemy title readable when the row also carries quest chips.
+  final double minTitleWidth;
 
   /// Enemy title text (role · name).
   static const Key titleKey = ValueKey('target-corner-title');
@@ -224,6 +228,21 @@ class TargetCornerHud extends StatelessWidget {
               ? SpatialCombat.compactCount(enemy.hp)
               : '${enemy.hp}');
 
+    final title = Tooltip(
+      message: titleText,
+      child: Text(
+        titleText,
+        key: titleKey,
+        maxLines: 1,
+        softWrap: false,
+        overflow: TextOverflow.ellipsis,
+        style: GameTheme.combat(
+          color: showEmpty
+              ? GameTheme.parchmentDim.withValues(alpha: 0.55)
+              : titleColor,
+        ),
+      ),
+    );
     return _stripShell(
       context,
       height: height,
@@ -233,21 +252,12 @@ class TargetCornerHud extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Tooltip(
-              message: titleText,
-              child: Text(
-                titleText,
-                key: titleKey,
-                maxLines: 1,
-                softWrap: false,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.combat(
-                  color: showEmpty
-                      ? GameTheme.parchmentDim.withValues(alpha: 0.55)
-                      : titleColor,
-                ),
-              ),
-            ),
+            child: minTitleWidth > 0
+                ? ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: minTitleWidth),
+                    child: title,
+                  )
+                : title,
           ),
           if (enemy != null && hpLabel.isNotEmpty) ...[
             const SizedBox(width: 6),

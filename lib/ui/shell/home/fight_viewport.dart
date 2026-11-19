@@ -5,7 +5,6 @@ import '../../../core/menu_router.dart';
 import '../../is2_shell.dart';
 import '../dungeon_top_hud.dart';
 import 'fight_seam.dart';
-import 'floor_jump_sheet.dart';
 import 'home_fight_tools.dart';
 
 /// The cave picture. The seam sits under it, outside this flex.
@@ -51,7 +50,6 @@ class FightViewport extends StatelessWidget {
               placeLineDps: false,
               onOpenSettings: () {},
               onOpenContracts: () {},
-              onFloorLineTap: (ctx) => showFloorJumpSheet(ctx, director),
             ),
           ),
         ),

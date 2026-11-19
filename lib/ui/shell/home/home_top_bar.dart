@@ -6,6 +6,7 @@ import '../../../core/keystone.dart';
 import '../../../core/game_state.dart';
 import '../../../core/gold_income.dart';
 import '../../../core/home_layout.dart';
+import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
 import '../../../core/nav_copy.dart';
 import '../../../core/nav_intent.dart';
@@ -21,6 +22,7 @@ import '../shell_common.dart';
 import 'director_select.dart';
 import 'home_catalog.dart';
 import 'al_ascension_sheet.dart';
+import 'floor_jump_sheet.dart';
 import 'hud_pills.dart';
 
 /// AL, essence, gold, a context currency, speed, and MENU.
@@ -34,6 +36,9 @@ class HomeTopBar extends StatelessWidget {
   /// first essence, or first boss. A new save does not open on two zeros.
   static bool showsMetaPills(GameState s) =>
       s.ascensionLevel > 0 || s.essence > 0 || s.bossVictories > 0;
+
+  /// AL 0 stays hidden; essence visibility follows [showsMetaPills].
+  static bool showsAlPill(GameState s) => s.ascensionLevel >= 1;
 
   @override
   Widget build(BuildContext context) {
@@ -102,37 +107,34 @@ class HomeTopBar extends StatelessWidget {
             Row(
               children: [
                 if (showMeta) ...[
-                  Flexible(
-                    flex: 0,
-                    fit: FlexFit.loose,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 72),
-                      child: _tap(
-                      label: 'Ascension Level ${state.ascensionLevel}',
-                      onTap: () => showAlAscensionSheet(
-                        context,
-                        director: director,
-                        router: router,
-                      ),
-                      child: ExcludeSemantics(
-                        child: HudPill(
-                          icon: UiIcon.ascend,
-                          text: 'AL ${state.ascensionLevel}',
-                          sub: alSub,
-                          edge: GameTheme.levelAccent,
-                          reserveSub: goldHasSub && alSub == null,
+                  if (HomeTopBar.showsAlPill(state)) ...[
+                    Flexible(
+                      flex: 0,
+                      fit: FlexFit.loose,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 72),
+                        child: _tap(
+                          label: 'Ascension Level ${state.ascensionLevel}',
+                          onTap: () => showAlAscensionSheet(
+                            context,
+                            director: director,
+                            router: router,
+                          ),
+                          child: ExcludeSemantics(
+                            child: HudPill(
+                              icon: UiIcon.ascend,
+                              text: 'AL ${state.ascensionLevel}',
+                              sub: alSub,
+                              edge: GameTheme.levelAccent,
+                              reserveSub: goldHasSub && alSub == null,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  HudPill(
-                    icon: UiIcon.essence,
-                    text: formatCount(state.essence),
-                    edge: GameTheme.levelAccent,
-                    reserveSub: goldHasSub,
-                  ),
+                    const SizedBox(width: 4),
+                  ],
+                  _essencePill(context, state, goldHasSub),
                 ],
                 if (compactTop && state.keystoneRunActive) ...[
                   const SizedBox(width: 4),
@@ -265,16 +267,32 @@ class HomeTopBar extends StatelessWidget {
                       builder: (context, _) => TargetCornerHud(
                         director: director,
                         edgeInset: false,
+                        minTitleWidth: 108,
                       ),
                     ),
                   ),
                   const SizedBox(width: 4),
-                  HexBadge(
-                    label: 'F${state.currentRoom.floorNumber}',
-                    semanticLabel: 'Floor ${state.currentRoom.floorNumber}',
+                  _tap(
+                    label:
+                        'Floor ${state.currentRoom.floorNumber}, open floor list',
+                    onTap: () => showFloorJumpSheet(context, director),
+                    child: ExcludeSemantics(
+                      child: HexBadge(
+                        label: 'F${state.currentRoom.floorNumber}',
+                        semanticLabel:
+                            'Floor ${state.currentRoom.floorNumber}',
+                      ),
+                    ),
                   ),
-                  if (questReady) ...[
-                    const SizedBox(width: 4),
+                  const SizedBox(width: 4),
+                  HudDpsPill(director: director),
+                ],
+              ),
+              if (questReady) ...[
+                SizedBox(height: textScale > 1.4 ? 0 : 2),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
                     MissionClaimChip(
                       count: state.missions.where((m) => m.canClaim).length,
                       dense: true,
@@ -282,11 +300,9 @@ class HomeTopBar extends StatelessWidget {
                       onLongPress: () => router.apply(NavIntent.quests),
                     ),
                   ],
-                  const SizedBox(width: 4),
-                  HudDpsPill(director: director),
-                ],
-              ),
-              if (chase.isNotEmpty && state.homePanelFull) ...[
+                ),
+              ],
+              if (chase.isNotEmpty) ...[
                 SizedBox(height: textScale > 1.4 ? 0 : 1),
                 Text(
                   chase,
@@ -396,6 +412,38 @@ class HomeTopBar extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _essencePill(BuildContext context, GameState state, bool goldHasSub) {
+    final unlocked = MenuTabs.showCamp(state);
+    final count = formatCount(state.essence);
+    final pill = HudPill(
+      icon: UiIcon.essence,
+      text: count,
+      edge: GameTheme.levelAccent,
+      reserveSub: goldHasSub,
+    );
+    final label = 'Essence, $count';
+    if (unlocked) {
+      return _tap(
+        label: label,
+        onTap: () => router.open(MenuRoute.essence),
+        child: ExcludeSemantics(child: pill),
+      );
+    }
+    return Tooltip(
+      message: 'ESSENCE opens at 1st essence',
+      child: Semantics(
+        label: '$label · locked',
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            minWidth: GameTheme.minTouch,
+            minHeight: GameTheme.minTouch,
+          ),
+          child: Center(child: pill),
+        ),
+      ),
     );
   }
 

@@ -525,14 +525,17 @@ class DungeonTopHud extends StatelessWidget {
           children: [
             Expanded(
               child: Semantics(
-                button: onFloorLineTap != null,
                 label: 'Floor line · $placeLine',
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: onFloorLineTap != null
-                        ? () => onFloorLineTap!(context)
-                        : null,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: GameTheme.stoneDeep.withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     child: Text(
                       holdLine ? '$placeLine · HOLD' : placeLine,
                       maxLines: 1,
@@ -1078,13 +1081,13 @@ class MissionClaimChip extends StatelessWidget {
               ),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: GameTheme.hudFarmGreen,
+                color: GameTheme.toggleOnBottom,
                 borderRadius: BorderRadius.circular(3),
-                border: Border.all(color: GameTheme.clear),
+                border: Border.all(color: GameTheme.toggleOnAccent),
               ),
               child: Text(
                 dense ? 'QUESTS · $count' : 'QUESTS · $count',
-                style: GameTheme.combat(color: GameTheme.clear),
+                style: GameTheme.combat(color: GameTheme.toggleOnText),
               ),
             ),
           ),

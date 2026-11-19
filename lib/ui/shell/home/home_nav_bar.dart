@@ -121,7 +121,9 @@ class HomeNavBar extends StatelessWidget {
     final scale = MediaQuery.textScalerOf(context).scale(1);
     final inset = MenuChrome.systemBottomInset(context);
     final grown = GameTheme.navBarExtent(scale);
-    return grown - inset > 40 ? grown - inset : 40.0;
+    return grown - inset > GameTheme.minTouch
+        ? grown - inset
+        : GameTheme.minTouch;
   }
 
   /// How far the round FIGHT reaches above the bar. Lists that end at the
