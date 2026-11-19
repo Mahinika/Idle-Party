@@ -54,7 +54,7 @@ Cloud agent Builds use `.cursor/environment.json`, which runs
 `flutter pub get`).
 Share-fast: `flutter test test/class_balance_share_fast_test.dart`.
 
-Skills live under `.cursor/skills/`. Slash: `/init` resyncs this file and
+Skills live under `.cursor/skills/`. Agent batches: skill `small-runs` (one batch per run, Composer 2.5 with `fast: false` by default). Slash: `/init` resyncs this file and
 the rules; `/repo auditandcleaning` is analysis only. `/playtest` continues
 the emulator save for about 10 minutes and writes what it finds.
 
