@@ -177,3 +177,23 @@ jobs:
             --notes "$notes" \
             idle-party-test-arm64.apk \
             idle-party-test-x86_64.apk
+
+      # No-op until FIREBASE_APP_DISTRIBUTION_CREDENTIALS is set.
+      # App Distribution is free on Spark. Do not use the Play service account.
+      # Robert must: create a service account with role "Firebase App Distribution
+      # Admin", put its JSON key in that secret, and in Firebase Console >
+      # App Distribution for "Idle Party Test" create testers group "robert"
+      # with only his email.
+      - name: Skip Firebase App Distribution when unconfigured
+        if: ${{ secrets.FIREBASE_APP_DISTRIBUTION_CREDENTIALS == '' }}
+        run: echo "No FIREBASE_APP_DISTRIBUTION_CREDENTIALS; skipping App Distribution."
+
+      - name: Upload arm64 test APK to Firebase App Distribution
+        if: ${{ secrets.FIREBASE_APP_DISTRIBUTION_CREDENTIALS != '' }}
+        uses: wzieba/Firebase-Distribution-Github-Action@v1.7.1
+        with:
+          appId: 1:900067828121:android:a612149094a9324290b308
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_APP_DISTRIBUTION_CREDENTIALS }}
+          groups: robert
+          file: idle-party-test-arm64.apk
+          releaseNotes: "Idle Party Test arm64, not for Play. ${{ github.sha }}"
