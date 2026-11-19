@@ -27,6 +27,7 @@ Future<GameDirector> a100Director({
   bool full = false,
   List<EquipmentItem>? stash,
   int? clearedFloors,
+  int? adTickets,
 }) => withShellGoldenWeek(() async {
   final base = GameLogic.createInitialState(now: shellGoldenNow);
   var s = fresh
@@ -64,6 +65,9 @@ Future<GameDirector> a100Director({
   if (inDungeon) s = GameLogic.enterDungeon(s);
   // FARM strength needs a cleared floor under the party.
   if (clearedFloors != null) s = s.copyWith(highestFloorCleared: clearedFloors);
+  if (adTickets != null) {
+    s = s.copyWith(metaDepth: s.metaDepth.copyWith(adTickets: adTickets));
+  }
   final d = GameDirector.preview(initialState: s);
   await d.boot(deferCombatLoop: true);
   d.dismissOfflineSummary();
@@ -85,6 +89,7 @@ Future<(GameDirector, MenuRouter)> a100Pump(
   bool live = false,
   List<EquipmentItem>? stash,
   int? clearedFloors,
+  int? adTickets,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -100,6 +105,7 @@ Future<(GameDirector, MenuRouter)> a100Pump(
     full: full,
     stash: stash,
     clearedFloors: clearedFloors,
+    adTickets: adTickets,
   );
   final router = MenuRouter();
   a100Live = (director, router);

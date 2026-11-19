@@ -31,7 +31,6 @@ import '../../meta/farm_strength_picker.dart';
 import '../../web_click_bridge.dart';
 import '../menu_surface.dart';
 import 'director_select.dart';
-import 'fight_seam_rails.dart';
 import 'nav_clearance.dart';
 
 /// Out-of-dungeon town on [HomeShell]: party on the square, distinct
@@ -208,7 +207,8 @@ class _TownViewportState extends State<TownViewport> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FightSeamRails(director: director, router: router),
+        // No quick rail in town (Robert, audit F100): the buildings are the
+        // entry points; SCROLLS / DAILY / POUCH / UPDATE moved to MENU.
         DecoratedBox(
           decoration: MenuChrome.panel(opaque: true),
           child: Padding(

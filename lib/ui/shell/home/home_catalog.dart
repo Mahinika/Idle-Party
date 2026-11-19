@@ -235,6 +235,8 @@ abstract final class HomeCatalog {
       label: 'SCROLLS',
       visible: (s, _) => MenuTabs.showScrolls(s),
       badge: (s) => s.metaDepth.adTickets > 0,
+      timer: (s) =>
+          s.metaDepth.adTickets > 0 ? '${s.metaDepth.adTickets}' : null,
       open: (context, director, _) => openPowerupsSheet(context, director),
     ),
     HomeEntry(
@@ -378,14 +380,31 @@ abstract final class HomeCatalog {
         'Tap VAULT then to take the chest.';
   }
 
-  static List<HomeEntry> of(HomePlace place) {
+  /// [town]: out of the dungeon the rails are empty (the buildings are the
+  /// entry points, audit F100) and MENU also holds the rail entries that
+  /// have no building ([TownNavPolicy.townMenuFromRail]).
+  static List<HomeEntry> of(HomePlace place, {bool town = false}) {
     final list = entries.where((e) => e.place == place).toList();
     list.sort((a, b) => a.order.compareTo(b.order));
     if (place == HomePlace.menuGrid) {
-      return TownNavPolicy.filterMenuGrid(list, (e) => e.id);
+      return town
+          ? TownNavPolicy.filterTownMenuGrid(list, (e) => e.id)
+          : TownNavPolicy.filterMenuGrid(list, (e) => e.id);
     }
+    if (town) return const [];
     return TownNavPolicy.filterEntries(list, (e) => e.id);
   }
+
+  /// Red dot on the town MENU button: a cell moved there from the rail has
+  /// something waiting (tickets, the reinstall pouch, an update).
+  static bool townMenuBadge(GameState state, GameDirector director) =>
+      !state.inDungeon &&
+      of(HomePlace.menuGrid, town: true).any(
+        (e) =>
+            TownNavPolicy.townMenuFromRail.contains(e.id) &&
+            e.visible(state, director) &&
+            e.badge(state),
+      );
 }
 
 /// Friend invite sits on the MENU grid. It is a block, not a rail icon.

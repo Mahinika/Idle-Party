@@ -24,9 +24,11 @@ class FightSeamRails extends StatefulWidget {
     GameState state,
     GameDirector director,
   ) {
+    // Town: no rail; the buildings and MENU are the entry points (F100).
+    final town = !state.inDungeon;
     final out = <HomeEntry>[
-      ...HomeCatalog.of(HomePlace.leftRail),
-      ...HomeCatalog.of(HomePlace.rightRail),
+      ...HomeCatalog.of(HomePlace.leftRail, town: town),
+      ...HomeCatalog.of(HomePlace.rightRail, town: town),
     ];
     out.retainWhere((e) => e.visible(state, director));
     return out;

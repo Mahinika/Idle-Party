@@ -35,7 +35,10 @@ class HomeMenuGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
-    final entries = HomeCatalog.of(HomePlace.menuGrid)
+    final entries = HomeCatalog.of(
+      HomePlace.menuGrid,
+      town: !state.inDungeon,
+    )
         .where((e) => e.visible(state, director))
         .toList();
     Widget cell(int i) => ShellLayout.card(

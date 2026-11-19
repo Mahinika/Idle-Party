@@ -16,6 +16,7 @@ import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import '../shell_common.dart';
 import 'director_select.dart';
+import 'home_catalog.dart';
 import 'hud_pills.dart';
 
 /// AL, essence, gold, a context currency, speed, and MENU.
@@ -45,7 +46,8 @@ class HomeTopBar extends StatelessWidget {
                 '${s.metaDepth.embers}|${s.hardmodeLevel}|$chase|'
                 '${s.keystoneRunActive}|${s.keystoneTimerMs}|'
                 '${s.inDungeon}|${s.currentRoom.floorNumber}|'
-                '${GoldIncome.hubGoldPerMinute(s)}';
+                '${GoldIncome.hubGoldPerMinute(s)}|'
+                '${HomeCatalog.townMenuBadge(s, director)}';
           },
           builder: (context, state) =>
               _bar(context, state, router.route, router.essencePanel),
@@ -69,6 +71,9 @@ class HomeTopBar extends StatelessWidget {
     final goldHasSub = perMin > 0;
     final showMeta = HomeTopBar.showsMetaPills(state);
     final menuCaption = textScale <= 1.1;
+    // Town has no quick rail (F100): SCROLLS / POUCH / UPDATE wait in MENU,
+    // so their red dot moves onto the MENU button.
+    final menuDot = HomeCatalog.townMenuBadge(state, director);
     // Stone fills the cutout. The words start below it.
     final topInset = MenuChrome.systemTopInset(context);
     return Material(
@@ -176,9 +181,11 @@ class HomeTopBar extends StatelessWidget {
                 ],
                 const SizedBox(width: 4),
                 _tap(
-                  label: 'MENU',
+                  label: menuDot ? 'MENU, ready' : 'MENU',
                   onTap: () => router.toggle(MenuRoute.more),
-                  child: ChunkyFace(
+                  child: _withDot(
+                    menuDot,
+                    ChunkyFace(
                     tone: ChunkyTone.stone,
                     minWidth: 36,
                     minHeight: GameTheme.chunkyFaceDense,
@@ -208,6 +215,7 @@ class HomeTopBar extends StatelessWidget {
                             ],
                           )
                         : GameIcon.asset(UiIcon.menu, size: 20),
+                    ),
                   ),
                 ),
               ],
@@ -295,6 +303,32 @@ class HomeTopBar extends StatelessWidget {
       );
     }
     return null;
+  }
+
+  /// Red dot on the MENU button while a moved rail cell has something ready.
+  static const Key menuDotKey = ValueKey('home-top-menu-dot');
+
+  Widget _withDot(bool on, Widget child) {
+    if (!on) return child;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        child,
+        Positioned(
+          right: -2,
+          top: -2,
+          child: Container(
+            key: menuDotKey,
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: GameTheme.hudHpDamage,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _tap({

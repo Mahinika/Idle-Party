@@ -312,13 +312,25 @@ void main() {
     expect(find.text('WATCH'), findsNothing);
     expect(find.text('WISP'), findsNothing);
     expect(find.text('POUCH'), findsNothing);
-    expect(find.text('SCROLLS'), findsWidgets);
+    // Town has no quick rail (F100); SCROLLS waits in MENU.
     final railIds = FightSeamRails.visibleEntries(director.state, director)
         .map((e) => e.id)
         .toSet();
-    expect(railIds.contains('watch'), isFalse);
-    expect(railIds.contains('wisp'), isFalse);
-    expect(railIds, contains('scrolls'));
+    expect(railIds, isEmpty);
+    expect(find.text('SCROLLS'), findsNothing);
+    final menuIds = HomeCatalog.of(HomePlace.menuGrid, town: true)
+        .where((e) => e.visible(director.state, director))
+        .map((e) => e.id)
+        .toSet();
+    expect(menuIds, contains('menu_scrolls'));
+    expect(menuIds.contains('menu_watch'), isFalse);
+    expect(menuIds.contains('menu_wisp'), isFalse);
+    await tester.tap(find.bySemanticsLabel(RegExp(r'^MENU')).first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('WATCH'), findsNothing);
+    expect(find.text('WISP'), findsNothing);
+    expect(find.text('SCROLLS'), findsOneWidget);
     await tester.tap(find.text('SCROLLS').first);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));

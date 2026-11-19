@@ -11,10 +11,13 @@ import 'package:idle_party/ui/shell/home/home_shell.dart';
 
 void main() {
   test('fight seam rails still open on SCROLLS', () {
+    // The rail lives in the dungeon; town has none (F100).
     final director = GameDirector.preview(
-      initialState: GameLogic.createInitialState(
-        now: DateTime(2026, 11, 9),
-      ).copyWith(homeLayout: HomeLayout.home, bossVictories: 1),
+      initialState: GameLogic.enterDungeon(
+        GameLogic.createInitialState(
+          now: DateTime(2026, 11, 9),
+        ).copyWith(homeLayout: HomeLayout.home, bossVictories: 1),
+      ),
     );
     addTearDown(director.dispose);
     final entries = FightSeamRails.visibleEntries(director.state, director);

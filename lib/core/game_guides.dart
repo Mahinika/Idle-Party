@@ -429,7 +429,7 @@ abstract final class GameGuides {
       id: 'powerups',
       title: 'SCROLLS',
       body:
-          'Tap SCROLLS on the hub, under the cave button. It shows after '
+          'Tap SCROLLS under the party in a run, or in MENU in town. It shows after '
           'the first boss. Optional. Watch a short ad '
           'for 1 Ad Ticket, then spend tickets on timed scrolls.\n\n'
           '• TIP A FRIEND: 10 Ad Tickets per friend who installs with your code (or enters it on SCROLLS), up to 30 friends.\n\n'
