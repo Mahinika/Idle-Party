@@ -88,17 +88,19 @@ abstract final class ChangelogCatalog {
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
       version: currentVersion,
-      date: 'Nov 11, 2026',
+      date: 'Nov 19, 2026',
       summary:
-          'Your party fights on its own. Tap ENTER DUNGEON. The fight is the home screen.',
+          'Your party fights on its own. Tap ENTER DUNGEON from town. Town is home.',
       fixed: <String>[
         'Fixed a display crash in dungeons when many combat numbers appear at once.',
         'ELITE DOWN, LEVEL UP, and ABSORB banners no longer overlap.',
+        'With one save, the game skips the intro when the phone closed it in the background.',
+        'Menus fit large text without cut words, and each sheet has one clear main button.',
       ],
       changed: <String>[
-        'Bottom bar is HEROES, ESSENCE, FIGHT, MAP, and SHOP. MENU is at the top.',
-        'MENU is the list only. SHOP says SCROLLS sit on the fight rail, and gold sits under the fight.',
+        'In town, QUESTS open at the GUILD and the daily chest at the VAULT. Scrolls, Daily, and the pouch sit in MENU. In a fight they stay on the fight rail.',
         'FORGE, CAMP, and MARKET sit under the fight. A new game starts in Sandy Caverns.',
+        'Clearer words: FARM repeats a floor for loot, and PUSH goes deeper.',
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MENU → CRAFT still runs a monthly Craft Trial.',
         'Race still locks after New Game START.',
