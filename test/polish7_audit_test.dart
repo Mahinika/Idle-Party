@@ -3,7 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/changelog.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/core/game_storage.dart';
 import 'package:idle_party/ui/game_button.dart';
+import 'package:idle_party/ui/game_icon.dart';
+import 'package:idle_party/ui/hub/hub_header.dart';
+import 'package:idle_party/ui/shell/beast_overlay.dart';
+import 'package:idle_party/ui/shell/home/home_catalog.dart';
+import 'package:idle_party/ui/shell/wipe_overlay.dart';
+import 'package:idle_party/ui/start_menu_screen.dart';
 import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/menu_chrome.dart';
 import 'package:idle_party/ui/meta/farm_strength_picker.dart';
@@ -198,6 +205,168 @@ void main() {
     expect(text, isNot(contains('Scrolls now sit on the fight rail')));
     expect(text, contains('GUILD'));
     expect(text, contains('VAULT'));
+  });
+
+  // ---------------------------------------------------------------- batch 2
+  Future<void> bind(WidgetTester t, Size size, double scale) async {
+    t.view.physicalSize = size;
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.reset);
+    t.platformDispatcher.textScaleFactorTestValue = scale;
+    addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+  }
+
+  Iterable<GameButton> buttons(WidgetTester t) =>
+      t.widgetList<GameButton>(find.byType(GameButton));
+
+  group('P001/P035 PARTY WIPED: one go face, every offer kept', () {
+    for (final scale in _scales) {
+      testWidgets('wipe panel @$scale', (t) async {
+        await bind(t, _sizes.first, scale);
+        final d = await a100Director();
+        await t.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              backgroundColor: GameTheme.stoneDeep,
+              body: Center(
+                child: DungeonWipePanel(
+                  director: d,
+                  farm: false,
+                  dailyEcho: false,
+                ),
+              ),
+            ),
+          ),
+        );
+        await t.pump(const Duration(milliseconds: 300));
+        final all = buttons(t).toList();
+        final go = all.where((b) => b.style == GameButtonStyle.go).toList();
+        expect(go, hasLength(1));
+        expect(go.single.label, startsWith('RETRY'));
+        final revive = all.where((b) => b.label == 'REVIVE — WATCH AD');
+        expect(revive, hasLength(1), reason: 'the revive offer stays');
+        expect(revive.single.primary, isFalse);
+        expect(revive.single.icon, UiIcon.watchAd);
+        final ticket = all.where((b) => b.label == 'WATCH AD · +1 ticket');
+        expect(ticket, hasLength(1), reason: 'the ticket offer stays');
+        expect(find.textContaining('second wipe farms'), findsNothing);
+        await t.pumpWidget(const SizedBox.shrink());
+        d.dispose();
+      });
+    }
+  });
+
+  group('P009 CHOOSE SAVE says what a tap does', () {
+    for (final scale in _scales) {
+      testWidgets('save picker @$scale', (t) async {
+        await bind(t, _sizes.first, scale);
+        final opened = <int>[];
+        await t.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SaveSlotPicker(
+                slots: const [
+                  SaveSlotSummary(
+                    index: 0,
+                    partyName: 'Aegis Vale Ember',
+                    zoneName: 'Sandy Caverns',
+                    ascensionLevel: 2,
+                    partyLevel: 14,
+                  ),
+                  SaveSlotSummary(index: 1),
+                  SaveSlotSummary(index: 2, corrupt: true),
+                ],
+                activeSlot: 0,
+                onOpenSlot: opened.add,
+                onEraseSlot: (_) {},
+                onBack: () {},
+              ),
+            ),
+          ),
+        );
+        expect(find.byKey(const ValueKey('save-slot-go-0')), findsOneWidget);
+        expect(find.text('PLAY'), findsOneWidget);
+        expect(find.text('NEW GAME'), findsOneWidget);
+        expect(find.byKey(const ValueKey('save-slot-go-2')), findsNothing);
+        final erase = buttons(t).where((b) => b.label == 'ERASE').toList();
+        expect(erase, hasLength(2), reason: 'occupied + corrupt can erase');
+        for (final b in erase) {
+          expect(b.style, isNot(GameButtonStyle.red));
+          expect(b.tip, startsWith('Erase save'));
+        }
+        await t.tap(find.text('PLAY'));
+        await t.tap(find.text('NEW GAME'));
+        expect(opened, [0, 1]);
+        a100ExpectWhole(t, find.text('Sandy Caverns · Lv 14 · AL 2'));
+      });
+    }
+  });
+
+  group('P002/P034 INCOME sheet has one exit', () {
+    testWidgets('income sheet', (t) async {
+      await bind(t, _sizes.first, 1.0);
+      await t.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => TextButton(
+              onPressed: () => showHubIncomeSheet(
+                ctx,
+                incomeLine: '21g/min',
+                multiplierLine: 'Gold',
+                displayTitle: '',
+                willRank: '',
+                collectionScore: 0,
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('open'));
+      await t.pumpAndSettle();
+      expect(find.byKey(MenuChrome.sheetCloseKey), findsOneWidget);
+      expect(find.text('CLOSE'), findsNothing);
+      await t.tap(find.byKey(MenuChrome.sheetCloseKey));
+      await t.pumpAndSettle();
+      expect(find.text('INCOME'), findsNothing);
+    });
+  });
+
+  group('P057 PETS: one template for both hatch buttons', () {
+    for (final scale in _scales) {
+      testWidgets('pets @$scale', (t) async {
+        await bind(t, _sizes.first, scale);
+        final d = await a100Director(maxed: true);
+        await t.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(child: BeastOverlay(director: d)),
+            ),
+          ),
+        );
+        await t.pump();
+        final hatch = buttons(t).where((b) => b.label.startsWith('HATCH'));
+        final egg = buttons(t).where((b) => b.label.startsWith('EGG'));
+        expect(hatch, hasLength(1));
+        expect(egg, hasLength(1));
+        expect(hatch.single.label, isNot(endsWith('e')));
+        expect(hatch.single.icon, UiIcon.essence);
+        expect(egg.single.icon, UiIcon.cinders);
+        expect(hatch.single.dense, egg.single.dense);
+        expect(
+          hatch.single.style,
+          anyOf(GameButtonStyle.essence, GameButtonStyle.grey),
+        );
+        await t.pumpWidget(const SizedBox.shrink());
+        d.dispose();
+      });
+    }
+  });
+
+  test('P036 DAILY VAULT body reads in order', () {
+    final body = HomeCatalog.vaultBody(clears: 0, target: 1);
+    expect(body, isNot(contains('then to')));
+    expect(body, contains('Then tap VAULT'));
   });
 }
 

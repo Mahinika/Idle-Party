@@ -215,12 +215,8 @@ Future<void> showHubIncomeSheet(
                         style: GameTheme.hint(color: GameTheme.parchmentDim),
                       ),
                     ],
-                    const SizedBox(height: 12),
-                    GameButton(
-                      label: 'CLOSE',
-                      style: GameButtonStyle.grey,
-                      onPressed: () => Navigator.of(ctx).pop(),
-                    ),
+                    // One exit per sheet: the title-row X (polish7 P002).
+                    const SizedBox(height: 4),
                   ],
                 ),
               ),

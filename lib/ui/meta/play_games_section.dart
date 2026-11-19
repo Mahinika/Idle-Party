@@ -566,7 +566,8 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
         const SizedBox(height: 8),
         GameButton(
           label: signedIn ? 'SIGNED IN' : 'SIGN IN WITH PLAY GAMES',
-          style: GameButtonStyle.brown,
+          // The one go action on ACCOUNT (polish7 P001/P042).
+          style: signedIn ? GameButtonStyle.grey : GameButtonStyle.go,
           onPressed: playGamesBusy || signedIn ? null : signInPlayGamesFlow,
         ),
         const SizedBox(height: 6),

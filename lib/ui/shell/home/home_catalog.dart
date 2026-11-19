@@ -10,6 +10,7 @@ import '../../../core/reinstall_pouch.dart';
 import '../../../core/town_nav.dart';
 import '../../confirm_dialogs.dart';
 import '../../game_icon.dart';
+import '../../game_button.dart';
 import '../../game_theme.dart';
 import '../../menu_chrome.dart';
 import '../../hub/friend_tip_block.dart';
@@ -349,7 +350,7 @@ abstract final class HomeCatalog {
               borderRadius: BorderRadius.circular(2),
               child: LinearProgressIndicator(
                 value: target <= 0 ? 1 : (clears / target).clamp(0.0, 1.0),
-                minHeight: 6,
+                minHeight: 8,
                 backgroundColor: GameTheme.stoneDeep,
                 color: GameTheme.toggleOnTop,
               ),
@@ -362,8 +363,11 @@ abstract final class HomeCatalog {
           ],
         ),
         actions: [
-          MenuChrome.dialogCancel(
+          // The only action: amber go face (polish7 P036).
+          GameButton(
             label: 'OK',
+            style: GameButtonStyle.go,
+            expanded: false,
             onPressed: () => Navigator.pop(ctx),
           ),
         ],
@@ -376,8 +380,8 @@ abstract final class HomeCatalog {
   static String vaultBody({required int clears, required int target}) {
     final left = (target - clears).clamp(0, target);
     final floors = left == 1 ? 'floor' : 'floors';
-    return 'Clear $left more $floors today and the vault opens. '
-        'Tap VAULT then to take the chest.';
+    return 'Clear $left more $floors today. '
+        'Then tap VAULT to take the chest.';
   }
 
   /// [town]: out of the dungeon the rails are empty (the buildings are the

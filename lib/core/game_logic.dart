@@ -3525,8 +3525,8 @@ class OfflineProgressResult {
             : '$bossDelta bosses fell while you were away.';
       }
       return bossDelta == 1
-          ? 'A boss fell while you were away — Ascend moved.'
-          : '$bossDelta bosses fell while you were away — Ascend moved.';
+          ? 'A boss fell while you were away. Ascend is a step closer.'
+          : '$bossDelta bosses fell while you were away. Ascend is closer.';
     }
     if (levelsGained > 0) {
       return levelsGained == 1

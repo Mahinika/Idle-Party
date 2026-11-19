@@ -22,7 +22,6 @@ import '../../chase_bind.dart';
 import '../../coach_pulse.dart';
 import '../../confirm_dialogs.dart';
 import '../../first_session_tips.dart';
-import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../hero_doll_sprite.dart';
 import '../../kenney_button.dart';
@@ -802,24 +801,13 @@ class _TownLockedNote extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                title,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GameTheme.section(),
-                              ),
-                            ),
-                            GameIconButton(
-                              key: const ValueKey('town-locked-close'),
-                              label: 'CLOSE',
-                              glyph: UiGlyph.close,
-                              onPressed: onClose,
-                            ),
-                          ],
+                        // One exit: the CLOSE button below (polish7 P002).
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.section(),
                         ),
                         const SizedBox(height: 8),
                         Text(

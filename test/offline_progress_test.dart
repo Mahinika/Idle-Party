@@ -85,6 +85,8 @@ void main() {
   test('after the first Ascend a boss while away says Ascend moved', () {
     final r = result(bosses: 1, ascension: 1, wasInDungeon: true);
     expect(r.welcomeLead.toLowerCase(), contains('ascend'));
+    // Plain words, not "Ascend moved" (polish7 P017).
+    expect(r.welcomeLead, contains('closer'));
   });
 
   test('welcomeLead prefers party levels over rooms when no boss', () {

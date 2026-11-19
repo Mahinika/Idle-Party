@@ -10,6 +10,7 @@ import '../core/meta_systems.dart';
 import '../core/story_lore.dart';
 import 'cave_atmosphere.dart';
 import '../assets/custom_assets.dart';
+import 'game_icon.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
@@ -475,7 +476,10 @@ class _SaveSlotRow extends StatelessWidget {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
-                      child: Column(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -494,10 +498,31 @@ class _SaveSlotRow extends StatelessWidget {
                           if (slot.detail != null)
                             Text(
                               slot.detail!,
-                              maxLines: 1,
+                              // Wraps at 1.45 beside PLAY (polish7 P009).
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: GameTheme.hint(color: GameTheme.parchmentDim),
                             ),
+                        ],
+                            ),
+                          ),
+                          // The row is the button: say what a tap does
+                          // (polish7 P009).
+                          if (open != null) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              slot.occupied ? 'PLAY' : 'NEW GAME',
+                              key: ValueKey('save-slot-go-${slot.index}'),
+                              style: GameTheme.hint(
+                                color: slot.occupied
+                                    ? GameTheme.torchHot
+                                    : GameTheme.parchmentDim,
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            GameIcon.glyph(UiGlyph.next, size: 12),
+                            const SizedBox(width: 6),
+                          ],
                         ],
                       ),
                     ),
@@ -509,9 +534,12 @@ class _SaveSlotRow extends StatelessWidget {
           if (onErase != null)
             Padding(
               padding: const EdgeInsets.only(right: 6),
+              // Erase is the rare, dangerous action: a quiet face, not a
+              // red block as big as the save (polish7 P009). Still asks first.
               child: GameButton(
-                label: 'ERASE ${slot.index + 1}',
-                style: GameButtonStyle.red,
+                label: 'ERASE',
+                tip: 'Erase save ${slot.index + 1}',
+                style: GameButtonStyle.ghost,
                 dense: true,
                 expanded: false,
                 onPressed: enabled ? onErase : null,

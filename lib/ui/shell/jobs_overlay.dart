@@ -133,7 +133,8 @@ class JobsOverlay extends StatelessWidget {
                   ? 'CLAIM QUESTS'
                   : 'CLAIM QUESTS ($claimable)',
               onPressed: () => director.claimAllReadyMissions(),
-              style: GameButtonStyle.brown,
+              // Claim is the go action: amber face (polish7 P001).
+              style: GameButtonStyle.go,
               primary: true,
             ),
           ],
@@ -281,7 +282,7 @@ class JobsOverlay extends StatelessWidget {
                     ? chainClaimLabel()
                     : 'CLAIM',
                 onPressed: () => director.claimMission(mission.id),
-                style: GameButtonStyle.brown,
+                style: GameButtonStyle.go,
                 primary: true,
                 dense: true,
                 expanded: false,

@@ -437,24 +437,6 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           'Save, Play Games, privacy, community, updates, and device data.',
           style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 8),
-        MenuChrome.sectionLabelScoped(
-          'PLAY NOTES (local)',
-          scope: MenuScope.account,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          SettingsOverlay.sessionLogHint(
-            plain: GameLogic.plainPlayerChrome(state),
-          ),
-          style: GameTheme.hint(color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 8),
-        _SettingsToggle(
-          label: 'Session log',
-          value: state.sessionTelemetryOptIn,
-          onChanged: director.setSessionTelemetryOptIn,
-        ),
         if (LocalReminders.showSettingsToggle(state)) ...[
           const SizedBox(height: 16),
           MenuChrome.sectionLabelScoped('REMINDERS', scope: MenuScope.account),
@@ -469,25 +451,6 @@ class _SettingsOverlayState extends State<SettingsOverlay>
             label: 'Away reminders',
             value: state.metaDepth.notifyOptIn,
             onChanged: (v) => director.setNotifyOptIn(v),
-          ),
-        ],
-        if (state.sessionTelemetryOptIn) ...[
-          const SizedBox(height: 8),
-          GameButton(
-            label: 'COPY LOG',
-            style: GameButtonStyle.grey,
-            onPressed: () async {
-              await Clipboard.setData(
-                ClipboardData(text: director.sessionTelemetryExport()),
-              );
-              director.showToast('Session log copied', life: 1.8);
-            },
-          ),
-          const SizedBox(height: 6),
-          GameButton(
-            label: 'CLEAR LOG',
-            style: GameButtonStyle.grey,
-            onPressed: director.clearSessionTelemetry,
           ),
         ],
         const SizedBox(height: 16),
@@ -547,6 +510,45 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           style: GameButtonStyle.grey,
           onPressed: () => WhatsNewOverlay.show(context, director),
         ),
+        // Opt-in local log: kept, but last on ACCOUNT so the page leads
+        // with save, Play Games and community (polish7 P042).
+        const SizedBox(height: 16),
+        MenuChrome.sectionLabelScoped(
+          'PLAY NOTES (local)',
+          scope: MenuScope.account,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          SettingsOverlay.sessionLogHint(
+            plain: GameLogic.plainPlayerChrome(state),
+          ),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
+        _SettingsToggle(
+          label: 'Session log',
+          value: state.sessionTelemetryOptIn,
+          onChanged: director.setSessionTelemetryOptIn,
+        ),
+        if (state.sessionTelemetryOptIn) ...[
+          const SizedBox(height: 8),
+          GameButton(
+            label: 'COPY LOG',
+            style: GameButtonStyle.grey,
+            onPressed: () async {
+              await Clipboard.setData(
+                ClipboardData(text: director.sessionTelemetryExport()),
+              );
+              director.showToast('Session log copied', life: 1.8);
+            },
+          ),
+          const SizedBox(height: 6),
+          GameButton(
+            label: 'CLEAR LOG',
+            style: GameButtonStyle.grey,
+            onPressed: director.clearSessionTelemetry,
+          ),
+        ],
         if (BuildStamp.shortSha.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
