@@ -7,6 +7,7 @@ import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/ui/chunky_face.dart';
 import 'package:idle_party/ui/game_theme.dart';
+import 'package:idle_party/ui/shell/home/al_ascension_sheet.dart';
 import 'package:idle_party/ui/shell/home/home_top_bar.dart';
 import 'package:idle_party/ui/shell/home/hud_pills.dart';
 
@@ -18,6 +19,8 @@ void main() {
     double scale = 1,
     bool dungeon = true,
     int pace = 1,
+    int al = 12,
+    int bossVictories = 2,
   }) async {
     tester.view.physicalSize = const Size(360, 780);
     tester.view.devicePixelRatio = 1;
@@ -27,14 +30,18 @@ void main() {
       now: DateTime(2026, 11, 16),
     ).copyWith(
       homeLayout: HomeLayout.home,
-      bossVictories: 2,
+      bossVictories: bossVictories,
       highestFloorCleared: 4,
       gold: 1234567,
       essence: 99999,
-      ascensionLevel: 12,
+      ascensionLevel: al,
       combatPace: pace,
+      inDungeon: false,
     );
-    if (dungeon) seeded = GameLogic.enterDungeon(seeded);
+    if (dungeon) {
+      seeded = seeded.copyWith(inDungeon: true);
+      seeded = GameLogic.enterDungeon(seeded);
+    }
     final director = GameDirector.preview(initialState: seeded);
     addTearDown(director.dispose);
     final router = MenuRouter();
@@ -121,4 +128,200 @@ void main() {
       expect(find.byType(HexBadge), dungeon ? findsOneWidget : findsNothing);
     });
   }
+
+  testWidgets('AL pill semantics label', (tester) async {
+    await pumpBar(tester, dungeon: false, al: 9);
+    expect(find.bySemanticsLabel('Ascension Level 9'), findsOneWidget);
+  });
+
+  testWidgets('AL pill opens Ascension Level sheet', (tester) async {
+    await pumpBar(tester, dungeon: false, al: 9, bossVictories: 0);
+    await tester.tap(find.bySemanticsLabel('Ascension Level 9'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ascension Level'), findsOneWidget);
+    expect(find.textContaining('AL 9 adds'), findsOneWidget);
+  });
+
+  testWidgets('AL pill touch target is at least minTouch', (tester) async {
+    await pumpBar(tester);
+    final hit = find.ancestor(
+      of: find.text('AL 12'),
+      matching: find.byType(InkWell),
+    );
+    expect(
+      tester.getSize(hit.first).height,
+      greaterThanOrEqualTo(GameTheme.minTouch),
+    );
+  });
+
+  testWidgets('AL sub line: boss progress', (tester) async {
+    await pumpBar(tester, al: 2, bossVictories: 1);
+    expect(find.text('1/3'), findsOneWidget);
+    final state = GameLogic.createInitialState(
+      now: DateTime(2026),
+    ).copyWith(ascensionLevel: 2, bossVictories: 1);
+    expect(alPillSubLine(state), '1/3');
+  });
+
+  testWidgets('AL sub line: Ascend ready', (tester) async {
+    await pumpBar(tester, al: 1, bossVictories: 2);
+    expect(find.text('Ascend ready'), findsOneWidget);
+  });
+
+  testWidgets('AL sub line: MAX at AL cap', (tester) async {
+    await pumpBar(
+      tester,
+      al: GameLogic.maxAscensionLevel,
+      bossVictories: 99,
+    );
+    expect(find.text('MAX'), findsOneWidget);
+  });
+
+  Future<void> pumpTopBarGolden(
+    WidgetTester tester,
+    GlobalKey key, {
+    required bool dungeon,
+    required double scale,
+    required int al,
+    required int bosses,
+  }) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final seeded = GameLogic.createInitialState(now: DateTime(2026, 11, 16))
+        .copyWith(
+          homeLayout: HomeLayout.home,
+          bossVictories: bosses,
+          highestFloorCleared: 8,
+          gold: 99_000,
+          essence: 120,
+          ascensionLevel: al,
+          inDungeon: dungeon,
+          homePanelFull: !dungeon,
+          combatPace: 1,
+        );
+    final director = GameDirector.preview(initialState: seeded);
+    addTearDown(director.dispose);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(scale),
+          ),
+          child: child!,
+        ),
+        home: Scaffold(
+          backgroundColor: GameTheme.stoneDeep,
+          body: RepaintBoundary(
+            key: key,
+            child: HomeTopBar(director: director, router: router),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+  }
+
+  testWidgets('AL pill golden town scale 1.0 after', (tester) async {
+    final key = GlobalKey();
+    await pumpTopBarGolden(
+      tester,
+      key,
+      dungeon: false,
+      scale: 1,
+      al: 9,
+      bosses: 1,
+    );
+    await expectLater(
+      find.byKey(key),
+      matchesGoldenFile('goldens/widgets/al_pill_topbar_town_scale1_after.png'),
+    );
+  });
+
+  testWidgets('AL pill golden fight scale 1.0 after', (tester) async {
+    final key = GlobalKey();
+    await pumpTopBarGolden(tester, key, dungeon: true, scale: 1, al: 9, bosses: 1);
+    await expectLater(
+      find.byKey(key),
+      matchesGoldenFile('goldens/widgets/al_pill_topbar_fight_scale1_after.png'),
+    );
+  });
+
+  testWidgets('AL pill golden town scale 1.45 after', (tester) async {
+    final key = GlobalKey();
+    await pumpTopBarGolden(
+      tester,
+      key,
+      dungeon: false,
+      scale: GameTheme.typeScaleMax,
+      al: 9,
+      bosses: 1,
+    );
+    await expectLater(
+      find.byKey(key),
+      matchesGoldenFile('goldens/widgets/al_pill_topbar_town_scale145_after.png'),
+    );
+  });
+
+  for (final (bosses, label, al) in [
+    (2, 'ready', 2),
+    (0, 'progress', 2),
+    (99, 'max', GameLogic.maxAscensionLevel),
+  ]) {
+    testWidgets('AL pill golden subline $label', (tester) async {
+      final key = GlobalKey();
+      await pumpTopBarGolden(
+        tester,
+        key,
+        dungeon: false,
+        scale: 1,
+        al: al,
+        bosses: bosses,
+      );
+      await expectLater(
+        find.byKey(key),
+        matchesGoldenFile('goldens/widgets/al_pill_subline_${label}_after.png'),
+      );
+    });
+  }
+
+  testWidgets('AL pill golden sheet after', (tester) async {
+    final key = GlobalKey();
+    await pumpTopBarGolden(
+      tester,
+      key,
+      dungeon: false,
+      scale: 1,
+      al: 9,
+      bosses: 0,
+    );
+    await tester.tap(find.bySemanticsLabel('Ascension Level 9'));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byKey(AlAscensionSheetKeys.capture),
+      matchesGoldenFile('goldens/widgets/al_pill_sheet_after.png'),
+    );
+  });
+
+  testWidgets('AL HUD fits 360×640 at scale 1.45 AL20', (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await pumpBar(
+      tester,
+      scale: GameTheme.typeScaleMax,
+      dungeon: false,
+      al: GameLogic.maxAscensionLevel,
+      bossVictories: 99,
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.byType(FittedBox), findsNothing);
+    expect(
+      tester.getRect(find.bySemanticsLabel('MENU')).right,
+      lessThanOrEqualTo(360),
+    );
+  });
 }

@@ -20,6 +20,7 @@ import '../../web_click_bridge.dart';
 import '../shell_common.dart';
 import 'director_select.dart';
 import 'home_catalog.dart';
+import 'al_ascension_sheet.dart';
 import 'hud_pills.dart';
 
 /// AL, essence, gold, a context currency, speed, and MENU.
@@ -77,6 +78,7 @@ class HomeTopBar extends StatelessWidget {
     final perMin = GoldIncome.hubGoldPerMinute(state);
     final fast = state.combatPace >= 2;
     final goldHasSub = perMin > 0;
+    final alSub = alPillSubLine(state);
     final showMeta = HomeTopBar.showsMetaPills(state);
     final menuCaption = textScale <= 1.1;
     final tightChrome = compactTop && textScale > 1.9;
@@ -100,11 +102,29 @@ class HomeTopBar extends StatelessWidget {
             Row(
               children: [
                 if (showMeta) ...[
-                  HudPill(
-                    icon: UiIcon.ascend,
-                    text: 'AL ${state.ascensionLevel}',
-                    edge: GameTheme.levelAccent,
-                    reserveSub: goldHasSub,
+                  Flexible(
+                    flex: 0,
+                    fit: FlexFit.loose,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 72),
+                      child: _tap(
+                      label: 'Ascension Level ${state.ascensionLevel}',
+                      onTap: () => showAlAscensionSheet(
+                        context,
+                        director: director,
+                        router: router,
+                      ),
+                      child: ExcludeSemantics(
+                        child: HudPill(
+                          icon: UiIcon.ascend,
+                          text: 'AL ${state.ascensionLevel}',
+                          sub: alSub,
+                          edge: GameTheme.levelAccent,
+                          reserveSub: goldHasSub && alSub == null,
+                        ),
+                      ),
+                    ),
+                    ),
                   ),
                   const SizedBox(width: 4),
                   HudPill(
