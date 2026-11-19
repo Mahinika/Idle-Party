@@ -53,6 +53,7 @@ Cloud agent Builds use `.cursor/environment.json`, which runs
 `tool/ci/install_flutter_pinned.sh` (Flutter pin from `ci.yml`, then
 `flutter pub get`).
 Share-fast: `flutter test test/class_balance_share_fast_test.dart`.
+New UI goldens: skill `goldens`, helper `test/widget_golden.dart`. Regenerate a whole file on Linux with the CI Flutter pin.
 
 Skills live under `.cursor/skills/`. Agent batches: skill `small-runs` (one batch per run, Composer 2.5 with `fast: false` by default). Slash: `/init` resyncs this file and
 the rules; `/repo auditandcleaning` is analysis only. `/playtest` continues
