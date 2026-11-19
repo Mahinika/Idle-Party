@@ -27,6 +27,7 @@ import '../../game_theme.dart';
 import '../../hero_doll_sprite.dart';
 import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
+import '../../meta/farm_strength_picker.dart';
 import '../../web_click_bridge.dart';
 import '../menu_surface.dart';
 import 'director_select.dart';
@@ -238,6 +239,13 @@ class _TownViewportState extends State<TownViewport> {
                   style: GameTheme.section(),
                 ),
                 const SizedBox(height: GameTheme.clusterGap),
+                // Pick FARM strength before the run (Robert, Nov 19): only
+                // when this button enters a normal cave, a floor is cleared
+                // and no KEY is dialled (a KEY run has no FARM strength).
+                if (showTownFarmPicker(state, plan)) ...[
+                  FarmStrengthPicker(director: director, compact: true),
+                  const SizedBox(height: 6),
+                ],
                 // The coach says "Tap ENTER." — pulse the button it means
                 // (audit F093).
                 CoachPulse(
@@ -292,6 +300,13 @@ class _TownViewportState extends State<TownViewport> {
     );
   }
 }
+
+/// Town ENTER shows the FARM strength picker when the button starts a
+/// normal cave run, at least one floor is cleared and KEY is +0.
+bool showTownFarmPicker(GameState state, ChasePlan plan) =>
+    plan.op == ChaseOp.enter &&
+    state.hardmodeLevel <= 0 &&
+    FarmStrengthPicker.showBeforeEnter(state);
 
 class _TownSquare extends StatelessWidget {
   const _TownSquare({

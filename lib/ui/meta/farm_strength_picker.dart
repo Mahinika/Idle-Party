@@ -17,6 +17,7 @@ class FarmStrengthPicker extends StatelessWidget {
     super.key,
     required this.director,
     this.inRun = false,
+    this.compact = false,
   });
 
   final GameDirector director;
@@ -24,9 +25,20 @@ class FarmStrengthPicker extends StatelessWidget {
   /// Mid-run (seam sheet): a locked tier offers its TRY when one is left.
   final bool inRun;
 
+  /// Town ENTER card: label and tiers on one row, one line under them
+  /// (the next unlock rule, or the short blurb).
+  final bool compact;
+
   static const Key pickerKey = ValueKey('farm-strength-picker');
   static Key tierKey(int mult) => ValueKey('farm-strength-$mult');
   static const String title = 'FARM strength';
+  static const String compactTitle = 'FARM';
+  static const String compactBlurb =
+      'Stronger packs, more loot · cleared floors, FARM mode.';
+
+  /// Before a run (KEY sheet, town ENTER): only once a floor is cleared, so
+  /// the first-run flow is unchanged.
+  static bool showBeforeEnter(GameState s) => s.highestFloorCleared > 0;
   static const String blurb =
       'Stronger packs, more loot. Only on floors you\'ve cleared, in FARM mode.';
 
@@ -91,6 +103,7 @@ class FarmStrengthPicker extends StatelessWidget {
       for (final m in FarmIntensity.allowed)
         if (!FarmIntensity.canPick(s, m)) m,
     ];
+    if (compact) return _compact(s, current, locked);
     return Column(
       key: pickerKey,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -145,15 +158,58 @@ class FarmStrengthPicker extends StatelessWidget {
     );
   }
 
+  Widget _compact(GameState s, int current, List<int> locked) {
+    return Column(
+      key: pickerKey,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Semantics(
+              header: true,
+              label: title,
+              excludeSemantics: true,
+              child: Text(
+                compactTitle,
+                style: GameTheme.hint(color: GameTheme.torchHot),
+              ),
+            ),
+            const SizedBox(width: 6),
+            for (var i = 0; i < FarmIntensity.allowed.length; i++) ...[
+              if (i > 0) const SizedBox(width: 4),
+              Expanded(child: _tier(s, FarmIntensity.allowed[i], current)),
+            ],
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (locked.isNotEmpty) ...[
+              const PixelPadlock(size: 10),
+              const SizedBox(width: 4),
+            ],
+            Flexible(
+              child: Text(
+                locked.isEmpty ? compactBlurb : unlockLine(s, locked.first),
+                textAlign: TextAlign.center,
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _tier(GameState s, int mult, int current) {
     final canPick = FarmIntensity.canPick(s, mult);
     final canTry = inRun && FarmIntensity.canTry(s, mult);
     final selected = current == mult;
-    final VoidCallback? onTap = canPick
+    final VoidCallback onTap = canPick
         ? () => director.setFarmIntensity(mult)
         : canTry
         ? () => director.tryFarmIntensity(mult)
-        : null;
+        : () => director.showToast(unlockLine(s, mult), life: 2.4);
     final label = canPick
         ? 'FARM $mult×'
         : 'FARM $mult×, locked. ${unlockLine(s, mult)}';
@@ -165,7 +221,7 @@ class FarmStrengthPicker extends StatelessWidget {
           ? ChunkyTone.stone
           : ChunkyTone.grey,
       highlight: selected,
-      raised: onTap != null,
+      raised: canPick || canTry,
       minHeight: GameTheme.minTouch - 6,
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -192,7 +248,7 @@ class FarmStrengthPicker extends StatelessWidget {
       onPressed: onTap,
       child: Semantics(
         button: true,
-        enabled: onTap != null,
+        enabled: canPick || canTry,
         selected: selected,
         label: label,
         onTap: onTap,

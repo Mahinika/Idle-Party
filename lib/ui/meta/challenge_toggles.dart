@@ -160,7 +160,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           ),
           if (widget.onEnter != null) ...[
             // FARM strength is picked with the key, before ENTER.
-            if (state.highestFloorCleared > 0) ...[
+            if (FarmStrengthPicker.showBeforeEnter(state)) ...[
               const SizedBox(height: 6),
               FarmStrengthPicker(director: director),
             ],
