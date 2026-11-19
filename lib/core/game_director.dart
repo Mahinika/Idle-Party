@@ -468,6 +468,10 @@ class GameDirector extends ChangeNotifier {
   /// Any of the five files has a party (title story skips when this is set).
   bool get hasAnySave => _saveSlots.any((slot) => slot.occupied);
 
+  /// Occupied slots that parsed. Corrupt files are not a playable save.
+  int get validSaveCount =>
+      _saveSlots.where((slot) => slot.occupied && !slot.corrupt).length;
+
   /// Empty slot the next clipboard import should fill, else the active file.
   int get preferredImportSlot {
     final empty = _saveSlots.indexWhere((slot) => !slot.occupied);
@@ -580,6 +584,10 @@ class GameDirector extends ChangeNotifier {
   bool get awaitingWipeChoice => _awaitingWipeChoice;
   bool get uiPaused => _uiPaused;
   bool get appPaused => _appPaused;
+
+  /// True while the 60 Hz dungeon clock is scheduled.
+  @visibleForTesting
+  bool get debugSpatialLoopRunning => _spatialTimer != null;
 
   /// Combat gold/min from the last ~2 minutes of credited dungeon gold.
   int get runGoldPerMinute => _runGoldPerMinute;
@@ -2405,6 +2413,13 @@ class GameDirector extends ChangeNotifier {
   int get newGameEpoch => _newGameEpoch;
 
   bool get pendingStartMenu => _pendingStartMenu;
+
+  /// Open the title screen from MENU without wiping the current file.
+  void requestStartMenu() {
+    if (_isLoading) return;
+    _pendingStartMenu = true;
+    _directorNotify();
+  }
 
   /// Play is up and an empty recovery slot is waiting for party setup.
   bool get pendingRecoveryNewGame => _pendingRecoveryNewGame;

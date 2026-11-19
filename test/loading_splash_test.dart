@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/story_lore.dart';
 import 'package:idle_party/ui/cognifox_mark.dart';
+import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/loading_splash.dart';
 
 void main() {
@@ -14,7 +15,9 @@ void main() {
     expect(find.text(StoryLore.studioName.toUpperCase()), findsNothing);
   });
 
-  testWidgets('loading splash shows Cognifox Studio and Loading…', (tester) async {
+  testWidgets('loading splash shows Cognifox Studio and Loading…', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(360, 780));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const MaterialApp(home: LoadingSplash()));
@@ -28,5 +31,20 @@ void main() {
     final mark = tester.getRect(find.byType(CognifoxStudioMark));
     expect(mark.center.dx, closeTo(180, 24));
     expect(mark.top, greaterThan(80));
+  });
+
+  testWidgets('unbranded splash is ink only, with no studio card', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 780));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      const MaterialApp(home: LoadingSplash(branded: false)),
+    );
+    expect(find.byType(CognifoxStudioMark), findsNothing);
+    expect(find.text('Loading…'), findsNothing);
+    expect(find.bySemanticsLabel('Loading Idle Party'), findsOneWidget);
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(scaffold.backgroundColor, GameTheme.systemSplashInk);
   });
 }

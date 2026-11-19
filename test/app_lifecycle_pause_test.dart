@@ -257,4 +257,27 @@ void main() {
     expect(seen.every((shown) => shown == level), isTrue);
     expect(seen, isNot(contains(savedLevel)));
   });
+
+  test('pause stops the spatial timer and resume starts it again', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final state = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 7, 4)),
+    );
+    final director = GameDirector(
+      InMemoryGameStorage(state),
+      initialState: state,
+      enableSpatialLoop: true,
+    );
+    addTearDown(director.dispose);
+    await director.boot(deferCombatLoop: true);
+    director.ensureCombatLoop();
+    expect(director.debugSpatialLoopRunning, isTrue);
+
+    director.setAppPaused(true);
+    expect(director.debugSpatialLoopRunning, isFalse);
+    expect(director.spatial, isNotNull);
+
+    director.setAppPaused(false);
+    expect(director.debugSpatialLoopRunning, isTrue);
+  });
 }

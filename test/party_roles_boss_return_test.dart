@@ -958,7 +958,13 @@ void main() {
     expect(find.byType(HomeShell), findsOneWidget);
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 100));
-      for (final label in ['GOT IT', 'MAYBE LATER', 'NOT NOW', 'LATER', 'CLOSE']) {
+      for (final label in [
+        'GOT IT',
+        'MAYBE LATER',
+        'NOT NOW',
+        'LATER',
+        'CLOSE',
+      ]) {
         final hit = find.text(label);
         if (hit.evaluate().isNotEmpty) {
           await tester.tap(hit.last);
@@ -975,8 +981,11 @@ void main() {
     expect(director.state.gold, idleGold);
     expect(director.state.essence, idleEssence);
 
-    Future<void> resume() async {
+    Future<void> resume(Duration gap) async {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      // Stamp after pause so leftover hub-idle is already flushed, then the
+      // gap is only time spent backgrounded.
+      director.debugStampAway(lastUpdatedAgo: gap);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -989,8 +998,7 @@ void main() {
     ]) {
       final gold = director.state.gold;
       final essence = director.state.essence;
-      director.debugStampAway(lastUpdatedAgo: gap);
-      await resume();
+      await resume(gap);
       expect(find.text('WELCOME BACK'), findsNothing);
       expect(director.state.gold, gold);
       expect(director.state.essence, essence);
@@ -998,15 +1006,14 @@ void main() {
     }
 
     final awayAt = DateTime.now().subtract(const Duration(seconds: 90));
-    final rich = GameLogic.createInitialState(now: awayAt).copyWith(
-      gold: 50000,
-      bossVictories: 1,
-      homeLayout: HomeLayout.home,
-    );
+    final rich = GameLogic.createInitialState(
+      now: awayAt,
+    ).copyWith(gold: 50000, bossVictories: 1, homeLayout: HomeLayout.home);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     director.debugHoldSave(rich);
+    director.debugStampAway(lastUpdatedAgo: const Duration(seconds: 90));
     final beforeGold = director.state.gold;
     final beforeEssence = director.state.essence;
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     var saw = false;
     for (var i = 0; i < 20; i++) {
