@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/farm_intensity.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
@@ -466,35 +465,9 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
                 ),
             ],
           );
-    final inline = _scrollAllTracks;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (!inline) _farmIntensityRow(state),
-        Expanded(child: body),
-      ],
-    );
-  }
-
-  Widget _farmIntensityRow(GameState state) {
-    if (!FarmIntensity.applies(state)) return const SizedBox.shrink();
-    final current = FarmIntensity.effectiveMult(state);
-    final index = FarmIntensity.allowed.indexOf(current);
-    return Padding(
-      padding: ShellLayout.seamPadding.copyWith(bottom: 2),
-      child: MenuChrome.segmented(
-        dense: true,
-        labels: [for (final mult in FarmIntensity.allowed) '$mult×'],
-        selectedIndex: index < 0 ? 0 : index,
-        onSelect: (i) {
-          final mult = FarmIntensity.allowed[i];
-          if (FarmIntensity.canPick(state, mult)) {
-            director.setFarmIntensity(mult);
-          } else if (FarmIntensity.canTry(state, mult)) {
-            director.tryFarmIntensity(mult);
-          }
-        },
-      ),
+      children: [Expanded(child: body)],
     );
   }
 
@@ -504,27 +477,16 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     // The home fight gives this panel whatever height is left. A short
     // phone at text scale 1.45 can be shorter than the spend row, so the
     // row scrolls with the tracks instead of painting a stripe.
-    final farmInline = FarmIntensity.applies(state)
-        ? _farmIntensityRow(state)
-        : null;
+    // FARM strength moved to the KEY / ENTER flow and the seam chip.
     return ListView(
       primary: false,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
       children: [
-        if (farmInline != null || (canBuyAny && !_headerOwnsQty))
+        if (canBuyAny && !_headerOwnsQty)
           Padding(
             padding: ShellLayout.seamPadding.copyWith(bottom: 2),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (farmInline != null) Expanded(child: farmInline),
-                if (farmInline != null && canBuyAny && !_headerOwnsQty)
-                  const SizedBox(width: 6),
-                if (canBuyAny && !_headerOwnsQty)
-                  Expanded(child: _spendModeSegmented(dense: true)),
-              ],
-            ),
+            child: _spendModeSegmented(dense: true),
           )
         else if (!canBuyAny)
           Padding(

@@ -11,7 +11,6 @@ import 'package:idle_party/models/vfx_quality.dart';
 import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
 
-
 import 'shell_golden_harness.dart';
 
 /// Shared home-shell harness for the audit-100 regression tests: A56
@@ -27,6 +26,7 @@ Future<GameDirector> a100Director({
   int? essence,
   bool full = false,
   List<EquipmentItem>? stash,
+  int? clearedFloors,
 }) => withShellGoldenWeek(() async {
   final base = GameLogic.createInitialState(now: shellGoldenNow);
   var s = fresh
@@ -62,6 +62,8 @@ Future<GameDirector> a100Director({
   if (full) s = s.copyWith(homePanelFull: true);
   if (stash != null) s = s.copyWith(gearStash: stash);
   if (inDungeon) s = GameLogic.enterDungeon(s);
+  // FARM strength needs a cleared floor under the party.
+  if (clearedFloors != null) s = s.copyWith(highestFloorCleared: clearedFloors);
   final d = GameDirector.preview(initialState: s);
   await d.boot(deferCombatLoop: true);
   d.dismissOfflineSummary();
@@ -82,6 +84,7 @@ Future<(GameDirector, MenuRouter)> a100Pump(
   // Rebuild the shell on director changes, like PlayShell does.
   bool live = false,
   List<EquipmentItem>? stash,
+  int? clearedFloors,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -96,6 +99,7 @@ Future<(GameDirector, MenuRouter)> a100Pump(
     essence: essence,
     full: full,
     stash: stash,
+    clearedFloors: clearedFloors,
   );
   final router = MenuRouter();
   a100Live = (director, router);
@@ -193,4 +197,3 @@ void a100ExpectWhole(WidgetTester tester, Finder text) {
     }
   }
 }
-

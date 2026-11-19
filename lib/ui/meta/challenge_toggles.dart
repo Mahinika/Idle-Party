@@ -10,6 +10,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
+import 'farm_strength_picker.dart';
 
 /// Keystone run prefs — set before entering a dungeon (Mythic+-style).
 class ChallengeToggles extends StatefulWidget {
@@ -158,6 +159,11 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
             style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           if (widget.onEnter != null) ...[
+            // FARM strength is picked with the key, before ENTER.
+            if (state.highestFloorCleared > 0) ...[
+              const SizedBox(height: 6),
+              FarmStrengthPicker(director: director),
+            ],
             const SizedBox(height: 6),
             if (state.inDungeon)
               Text(

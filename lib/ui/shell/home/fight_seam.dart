@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/farm_intensity.dart';
 import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
@@ -9,6 +10,7 @@ import '../../chunky_face.dart';
 import '../../game_theme.dart';
 import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
+import '../../meta/farm_strength_picker.dart';
 import '../../spatial_dungeon_view.dart';
 import '../../web_click_bridge.dart';
 import '../dungeon_party_hud.dart';
@@ -120,6 +122,9 @@ class FightFieldControls extends StatelessWidget {
   static String panelToggleLabel({required bool full}) =>
       full ? expandUpgradesLabel : bigFightLabel;
 
+  /// "FARM n×" chip above the seam while FARM strength applies.
+  static const farmChipKey = ValueKey('fight-seam-farm-chip');
+
   /// Camera bottom inset: the button row plus its pad.
   static const double cameraReserve = GameTheme.minTouch + 12;
 
@@ -136,6 +141,7 @@ class FightFieldControls extends StatelessWidget {
     final osScale = WidgetsBinding.instance.platformDispatcher.textScaleFactor;
     final seamFitsExtras = osScale <= GameTheme.typeScaleMax;
     final full = state.homePanelFull;
+    final showFarmChip = FarmIntensity.applies(state);
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -153,34 +159,72 @@ class FightFieldControls extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (seamFitsExtras && FightFieldControls.showModeHint(state))
-              // Dark capsule: the line sits on lit sand, where the bare
-              // text was ~1.1–1.7:1. On the capsule it is above 7:1.
+            if ((seamFitsExtras && FightFieldControls.showModeHint(state)) ||
+                showFarmChip)
               Padding(
                 padding: const EdgeInsets.only(bottom: 2),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: DecoratedBox(
-                    key: modeHintKey,
-                    decoration: BoxDecoration(
-                      color: GameTheme.stoneDeep.withValues(
-                        alpha: modeHintCapsuleAlpha,
+                child: Row(
+                  children: [
+                    if (seamFitsExtras &&
+                        FightFieldControls.showModeHint(state))
+                      // Dark capsule: the line sits on lit sand, where the
+                      // bare text was ~1.1–1.7:1. On the capsule it is
+                      // above 7:1.
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: DecoratedBox(
+                            key: modeHintKey,
+                            decoration: BoxDecoration(
+                              color: GameTheme.stoneDeep.withValues(
+                                alpha: modeHintCapsuleAlpha,
+                              ),
+                              borderRadius: BorderRadius.circular(
+                                GameTheme.radiusSm,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1,
+                              ),
+                              child: Text(
+                                modeHint,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GameTheme.hint(
+                                  color: GameTheme.parchmentDim,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      const Spacer(),
+                    // FARM strength in effect; tap to change it mid-run.
+                    if (showFarmChip)
+                      _seamTap(
+                        label:
+                            '${FarmStrengthPicker.seamLabel(state)} — change FARM strength',
+                        onTap: () =>
+                            FarmStrengthPicker.openSheet(context, director),
+                        child: ChunkyFace(
+                          key: farmChipKey,
+                          tone: FarmIntensity.effectiveMult(state) > 1
+                              ? ChunkyTone.orange
+                              : ChunkyTone.stone,
+                          minHeight: GameTheme.chunkyFaceDense - 4,
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: ExcludeSemantics(
+                            child: Text(
+                              FarmStrengthPicker.seamLabel(state),
+                              style: GameTheme.hint(color: GameTheme.torchHot),
+                            ),
+                          ),
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 1,
-                      ),
-                      child: Text(
-                        modeHint,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GameTheme.hint(color: GameTheme.parchmentDim),
-                      ),
-                    ),
-                  ),
+                  ],
                 ),
               ),
             Row(
@@ -283,9 +327,13 @@ class FightFieldControls extends StatelessWidget {
                               textScaler: TextScaler.noScaling,
                               // IdleArrows draws ▲/▼ at about a third of
                               // the em, so the em fills the face.
-                              style: GameTheme.readable(
-                                color: GameTheme.torchHot,
-                              ).copyWith(fontSize: FightFieldControls.arrowEm, height: 1),
+                              style:
+                                  GameTheme.readable(
+                                    color: GameTheme.torchHot,
+                                  ).copyWith(
+                                    fontSize: FightFieldControls.arrowEm,
+                                    height: 1,
+                                  ),
                             ),
                           ),
                         ),
