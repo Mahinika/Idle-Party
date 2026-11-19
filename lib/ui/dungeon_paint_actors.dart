@@ -14,7 +14,7 @@ abstract final class FightReadPace {
     _HitPose._until.clear();
     _HitPose._was.clear();
     _EnemyDeath._start.clear();
-    _FloaterHold.live.clear();
+    resetFloaterPaintState();
   }
 }
 
