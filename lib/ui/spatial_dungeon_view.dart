@@ -1175,10 +1175,10 @@ class GodHandRing extends StatelessWidget {
                                     color: color,
                                   )
                                 : Text(
-                                    cooldown < 10
-                                        ? cooldown.toStringAsFixed(1)
-                                        : '${cooldown.round()}',
-                                    style: GameTheme.combat(color: color),
+                                    formatCombatSeconds(cooldown),
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    style: GameTheme.hint(color: color),
                                   ),
                           ),
                         ),
