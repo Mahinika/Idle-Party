@@ -389,6 +389,9 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     final textScale = MediaQuery.textScalerOf(
       context,
     ).scale(1).clamp(1.0, GameTheme.typeScaleMax);
+    final shortViewport = MediaQuery.sizeOf(context).height < 680;
+    final tuckPartyPad = shortViewport &&
+        textScale > GameTheme.typeScaleMax - 0.01;
     final lineHeight = _homePartyRowHeight * textScale;
     final denseParty = heroCount >= 5;
     return Column(
@@ -404,7 +407,12 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(2, 2, 2, 3),
+            padding: EdgeInsets.fromLTRB(
+              2,
+              tuckPartyPad ? 1 : 2,
+              2,
+              tuckPartyPad ? 1 : 3,
+            ),
             child: SizedBox(
               height: lineHeight,
               child: Row(
