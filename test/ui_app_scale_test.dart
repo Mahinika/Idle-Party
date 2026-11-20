@@ -239,9 +239,6 @@ void main() {
       final router = MenuRouter();
       addTearDown(director.dispose);
       addTearDown(router.dispose);
-      if (dungeon) {
-        await director.boot(deferCombatLoop: true);
-      }
       await tester.pumpWidget(
         MaterialApp(
           home: MediaQuery(
@@ -259,7 +256,10 @@ void main() {
       );
       await tester.pump();
       expect(tester.takeException(), isNull);
-      expect(scaleOf(tester, find.text('FIGHT')), closeTo(2, 0.001));
+      expect(
+        scaleOf(tester, find.text('FIGHT')),
+        closeTo(GameTheme.typeScaleMax, 0.001),
+      );
       if (dungeon) {
         expect(find.text('CAMP'), findsWidgets);
         expect(find.text('FARM'), findsOneWidget);

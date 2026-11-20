@@ -158,6 +158,18 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final composed = GameTheme.composeTextScaler(
+      platform: mq.textScaler,
+      gameScale: director.state.uiTextScale,
+    );
+    return MediaQuery(
+      data: mq.copyWith(textScaler: composed),
+      child: Builder(builder: (context) => _buildShell(context)),
+    );
+  }
+
+  Widget _buildShell(BuildContext context) {
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final state = director.state;
     final route = router.route;

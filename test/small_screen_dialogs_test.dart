@@ -139,7 +139,6 @@ void main() {
     final router = MenuRouter();
     addTearDown(director.dispose);
     addTearDown(router.dispose);
-    await director.boot(deferCombatLoop: true);
     await tester.pumpWidget(
       MaterialApp(
         home: HomeShell(
@@ -172,7 +171,6 @@ void main() {
     final router = MenuRouter();
     addTearDown(director.dispose);
     addTearDown(router.dispose);
-    await director.boot(deferCombatLoop: true);
     await tester.pumpWidget(
       MaterialApp(
         home: HomeShell(
