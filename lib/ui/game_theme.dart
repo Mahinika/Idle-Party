@@ -271,6 +271,10 @@ abstract final class GameTheme {
   static const double hudPixel = 9;
   static const double hudPixelComfort = 11;
 
+  /// Five-wide home party strip — smaller base so names still scale with
+  /// the OS and fit ~6 chars at 360 dp / [typeScaleMax].
+  static const double hudPixelPartyDense = 8;
+
   /// Modern menu radii.
   static const double radiusSm = 8;
   static const double radiusMd = 12;
@@ -455,4 +459,15 @@ abstract final class GameTheme {
     color: color,
     height: height,
   );
+
+  /// Home fight strip when five heroes share one row (still uses [MediaQuery] scale).
+  static TextStyle combatPartyStripDense({Color color = parchment}) =>
+      GoogleFonts.pressStart2p(
+        fontSize: hudPixelPartyDense,
+        color: color,
+        height: 1.15,
+        shadows: const [
+          Shadow(color: shadow, offset: Offset(1, 1), blurRadius: 0),
+        ],
+      ).copyWith(fontFamilyFallback: glyphFallback);
 }

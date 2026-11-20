@@ -181,6 +181,8 @@ void main() {
       for (final name in ['Aegis', 'Vale', 'Blaze', 'Fang', 'Storm']) {
         expect(find.text(name), findsOneWidget);
       }
+      expect(find.textContaining('L1 Blaze'), findsNothing);
+      expect(find.textContaining('L20 Storm'), findsNothing);
       expect(
         find.byKey(PartyRoleIcon.keyFor(PartyRoleBucket.tank)),
         findsOneWidget,

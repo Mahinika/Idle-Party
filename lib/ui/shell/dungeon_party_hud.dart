@@ -1115,10 +1115,10 @@ class _HomePartyChip extends StatelessWidget {
     final cc = partyCcChipLabels(spatial);
     final named = name.trim().isNotEmpty;
     final who = named ? name.trim() : roleWord;
-    // Five-wide strip: the name row uses the full card width (doll sits
-    // under it, or drops when [dense]).
-    final roomy = MediaQuery.textScalerOf(context).scale(1) <= 1.2;
     final doll = dense ? 0.0 : 14.0;
+    final nameStyle = dense
+        ? GameTheme.combatPartyStripDense(color: GameTheme.parchment)
+        : GameTheme.combat(color: GameTheme.parchment);
     return Container(
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 1),
@@ -1133,69 +1133,12 @@ class _HomePartyChip extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          LayoutBuilder(
-            builder: (context, box) {
-              final scaler = MediaQuery.textScalerOf(context);
-              final base = DefaultTextStyle.of(context).style;
-              double w(String t, TextStyle st) {
-                final tp = TextPainter(
-                  text: TextSpan(text: t, style: base.merge(st)),
-                  textDirection: TextDirection.ltr,
-                  textScaler: scaler,
-                  maxLines: 1,
-                )..layout();
-                final width = tp.width;
-                tp.dispose();
-                return width;
-              }
-
-              final nameW = w(
-                who,
-                GameTheme.combat(color: GameTheme.parchment),
-              );
-              final levelW =
-                  w(
-                    ' L$level',
-                    GameTheme.readable(color: GameTheme.parchment),
-                  ) +
-                  (selected ? 10 : 0);
-              final showLevel = roomy && nameW + levelW <= box.maxWidth;
-              final scaled = scaler.scale(1);
-              // Five-wide strip: keep party names legible without shrinking
-              // (no FittedBox). Row height still follows text scale.
-              final nameScaler =
-                  dense && scaled > 1.2 ? TextScaler.noScaling : scaler;
-              final nameText = Text(
-                who,
-                maxLines: 1,
-                softWrap: false,
-                overflow: TextOverflow.ellipsis,
-                textScaler: nameScaler,
-                style: GameTheme.combat(color: GameTheme.parchment),
-              );
-              return Row(
-                children: [
-                  Expanded(child: nameText),
-                  if (selected && showLevel)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 2),
-                      child: GameIcon.glyph(
-                        UiGlyph.next,
-                        size: 8,
-                        color: GameTheme.torchHot,
-                      ),
-                    ),
-                  if (showLevel)
-                    Text(
-                      ' L$level',
-                      key: PartyCornerHud.chipLevelKey,
-                      maxLines: 1,
-                      softWrap: false,
-                      style: GameTheme.readable(color: GameTheme.parchment),
-                    ),
-                ],
-              );
-            },
+          Text(
+            who,
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
+            style: nameStyle,
           ),
           const SizedBox(height: 1),
           Row(
@@ -1215,6 +1158,22 @@ class _HomePartyChip extends StatelessWidget {
               ],
               PartyRoleIcon(bucket: bucket),
               const SizedBox(width: 2),
+              Text(
+                'L$level',
+                key: PartyCornerHud.chipLevelKey,
+                maxLines: 1,
+                softWrap: false,
+                textScaler: TextScaler.noScaling,
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              ),
+              if (selected) ...[
+                const SizedBox(width: 1),
+                GameIcon.glyph(
+                  UiGlyph.next,
+                  size: 8,
+                  color: GameTheme.torchHot,
+                ),
+              ],
               if (cc.isNotEmpty)
                 Flexible(
                   child: Text(
