@@ -23,6 +23,7 @@ import 'town_scene.dart';
 import '../../chase_bind.dart';
 import '../../coach_pulse.dart';
 import '../../confirm_dialogs.dart';
+import '../../hub/hub_powerups.dart';
 import '../../first_session_tips.dart';
 import '../../game_theme.dart';
 import '../../hero_doll_sprite.dart';
@@ -427,6 +428,13 @@ class _TownViewportState extends State<TownViewport> {
                           style: GameButtonStyle.brown,
                           primary: true,
                           onPressed: () => confirmAscend(context, director),
+                        ),
+                      ],
+                      if (MenuTabs.showScrolls(state)) ...[
+                        const SizedBox(height: 6),
+                        HubPowerupsFab(
+                          state: state,
+                          onOpen: () => openPowerupsSheet(context, director),
                         ),
                       ],
                     ],

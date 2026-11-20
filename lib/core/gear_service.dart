@@ -214,6 +214,12 @@ abstract final class GearService {
 
   static String wornLine(List<String> names) => GearBiSPlanner.wornLine(names);
 
+  static String plannedAutoEquipLift(GameState state) =>
+      GearBiSPlanner.plannedUpgradeSummary(state);
+
+  static String wornLineWithLift(List<String> names, String lift) =>
+      GearBiSPlanner.wornLineWithLift(names, lift);
+
   static bool autoEquipWouldWear(
     GameState state,
     String itemId, {

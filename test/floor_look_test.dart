@@ -6,6 +6,7 @@ import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/spatial/floor_blueprint.dart';
 import 'package:idle_party/spatial/floor_theme.dart';
+import 'package:idle_party/spatial/room_beat_callout.dart';
 import 'package:idle_party/spatial/tile_map.dart';
 
 DungeonRoom _normal(int floor, {int enemies = 8}) => DungeonRoom(
@@ -267,6 +268,21 @@ void main() {
     expect(roomPlaceWordAt(chambers, 1, 1), 'CHOKE');
     expect(roomPlaceWordAt(chambers, 5, 1), 'CHEST');
     expect(roomPlaceWordAt(chambers, 1, 5), 'SHRINE');
+    expect(RoomBeatCallout.labelFor('sandy', chambers[2]), 'SHRINE');
+    expect(
+      RoomBeatCallout.labelFor(
+        'goblin',
+        const Chamber(
+          index: 9,
+          x: 0,
+          y: 0,
+          w: 4,
+          h: 4,
+          beatKind: FloorBeatKind.setpiece,
+        ),
+      ),
+      'RAIDER STASH',
+    );
     expect(roomPlaceWordAt(chambers, 5, 5), isNull);
   });
 

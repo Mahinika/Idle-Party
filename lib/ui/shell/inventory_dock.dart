@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/gear/gear_scorer.dart';
+import '../../core/gear/gear_upgrade_copy.dart';
 import '../../core/gear_service.dart';
 import '../../core/run_stash_shop.dart';
 import '../../core/game_state.dart';
@@ -895,6 +896,15 @@ class _InventoryDockState extends State<InventoryDock>
                     overflow: TextOverflow.ellipsis,
                     style: GameTheme.hint(color: GameTheme.torchHot),
                   ),
+                  if (isUpgradeForAny(state, selected))
+                    Text(
+                      GearUpgradeCopy.bagTileDeltaLine(state, selected).isEmpty
+                          ? 'Upgrade in bag'
+                          : '${GearUpgradeCopy.bagTileDeltaLine(state, selected)} · wear it',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.hint(color: GameTheme.clear),
+                    ),
                 ],
               ),
             ),

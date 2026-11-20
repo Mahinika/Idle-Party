@@ -15,8 +15,17 @@ abstract final class DungeonEnvironment {
     final a = base.a;
     if (a <= 0) return base;
     // Nudge alpha on phone so neighboring caves read apart at a glance.
-    final boost = dungeonId == 'sandy' ? 1.12 : 1.26;
-    return base.withValues(alpha: (a * boost).clamp(0.0, dungeonId == 'sandy' ? 0.38 : 0.62));
+    final boost = dungeonId == 'sandy'
+        ? 1.14
+        : dungeonId == 'goblin'
+        ? 1.32
+        : 1.26;
+    final cap = switch (dungeonId) {
+      'sandy' => 0.42,
+      'goblin' => 0.68,
+      _ => 0.62,
+    };
+    return base.withValues(alpha: (a * boost).clamp(0.0, cap));
   }
 
   /// Fight HUD stripe — same hue family as the in-cave wash.

@@ -37,9 +37,10 @@ double bossIntroBannerTop(double textScale) {
 
 /// Timed "BOSS — name" callout. Sits in open map, not on the corner frame.
 class BossIntroBanner extends StatelessWidget {
-  const BossIntroBanner({super.key, required this.name});
+  const BossIntroBanner({super.key, required this.name, this.prefix = 'BOSS — '});
 
   final String name;
+  final String prefix;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +57,7 @@ class BossIntroBanner extends StatelessWidget {
               border: Border.all(color: GameTheme.torchHot),
             ),
             child: Text(
-              'BOSS — $name',
+              '$prefix$name',
               maxLines: 2,
               softWrap: true,
               overflow: TextOverflow.ellipsis,

@@ -70,7 +70,7 @@ void main() {
       expect(tester.takeException(), isNull);
       final entries = FightSeamRails.visibleEntries(director.state, director);
       final labels = [for (final e in entries) e.label];
-      expect(labels, containsAll(['SCROLLS', 'QUESTS', 'VAULT', 'DAILY']));
+      expect(labels, containsAll(['SCROLLS', 'QUESTS', 'VAULT', 'RUN']));
       final seam = find.byType(FightSeamRails);
       final seamRect = tester.getRect(seam);
       for (final label in labels) {

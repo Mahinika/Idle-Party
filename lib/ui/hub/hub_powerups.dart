@@ -111,11 +111,23 @@ class HubPowerupsFab extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        hint(state),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GameTheme.section(color: GameTheme.parchmentDim),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'SCROLLS',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GameTheme.section(color: GameTheme.parchment),
+                          ),
+                          Text(
+                            hint(state),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GameTheme.hint(color: GameTheme.parchmentDim),
+                          ),
+                        ],
                       ),
                     ),
                     Text(
