@@ -98,6 +98,7 @@ abstract final class ChangelogCatalog {
         'Menus fit large text without cut words, and each sheet has one clear main button.',
       ],
       changed: <String>[
+        'INN roster uses fixed role slots: TANK, HEALER, and DPS. Tap a slot to swap within that role; class and spec names are clearer on pickers.',
         'Bag upgrades read Better +score on the tile. Daily Run uses one name everywhere (Daily Vault stays separate). Town headers use a clear dash between tier and cave.',
         'In town, QUESTS open at the GUILD and the daily chest at the VAULT. Scrolls, Daily Run, and the pouch sit in MENU. In a fight they stay on the fight rail.',
         'TRAIN, CAMP, and MARKET sit under the fight. Town always offers ENTER DUNGEON beside claims.',

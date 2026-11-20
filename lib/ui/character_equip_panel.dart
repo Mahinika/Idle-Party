@@ -7,6 +7,7 @@ import '../core/market_service.dart';
 import '../models/combat_ratings.dart';
 import '../models/gear_set.dart';
 import '../models/hero.dart';
+import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
 import '../models/spec_mastery.dart';
@@ -327,7 +328,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   // Class as the sub-line; the key stats up top, above the
                   // fold on a 640 phone (F010 / F012).
                   Text(
-                    'L${hero.level} · ${hero.spec.name}',
+                    'L${hero.level} · ${hero.spec.displayClassName} · ${hero.spec.displaySpecName}',
                     textAlign: TextAlign.center,
                     style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),

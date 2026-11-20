@@ -20,6 +20,7 @@ import 'blessing_constellation.dart';
 import 'gauntlet_pact.dart';
 import 'keystone.dart';
 import 'party_name_filter.dart';
+import 'party_role_slots.dart';
 import 'relics.dart';
 import 'run_bag.dart';
 
@@ -208,11 +209,12 @@ class GameState {
 
   /// Active party from [activeHeroIds] (full PARTY list — never Tiny-trimmed).
   List<PartyHero> get heroes {
-    if (activeHeroIds.isEmpty) return heroRoster;
+    final filled = activeHeroIds.where((id) => id.isNotEmpty);
+    if (filled.isEmpty) return heroRoster;
     final byId = <String, PartyHero>{for (final h in heroRoster) h.id: h};
     return [
       for (final id in activeHeroIds)
-        if (byId[id] != null) byId[id]!,
+        if (id.isNotEmpty && byId[id] != null) byId[id]!,
     ];
   }
 
@@ -1278,7 +1280,6 @@ class GameState {
         'active. Use withActiveParty() to change who is in the party.',
       );
       nextRoster = _mergeHeroesIntoRoster(nextRoster, heroes);
-      nextActive = [for (final h in heroes) h.id];
     }
     return GameState(
       heroRoster: nextRoster,
@@ -1435,13 +1436,20 @@ class GameState {
   /// passed a different list.
   GameState withActiveParty(List<PartyHero> party) => copyWith(
     heroRoster: _mergeHeroesIntoRoster(heroRoster, party),
-    activeHeroIds: [for (final h in party) h.id],
+    activeHeroIds: PartyRoleSlots.idsFromHeroesInRoleOrder(
+      party,
+      maxActivePartySize,
+    ),
   );
 
   static bool _sameParty(List<String> activeIds, List<PartyHero> heroes) {
-    if (activeIds.length != heroes.length) return false;
+    final filled = [
+      for (final id in activeIds)
+        if (id.isNotEmpty) id,
+    ];
+    if (filled.length != heroes.length) return false;
     for (var i = 0; i < heroes.length; i++) {
-      if (activeIds[i] != heroes[i].id) return false;
+      if (filled[i] != heroes[i].id) return false;
     }
     return true;
   }
@@ -1728,6 +1736,13 @@ class GameState {
       };
       metaDepth = metaDepth.copyWith(unlockedSpecs: specs.toList());
     }
+
+    final maxPartySlots = metaDepth.partySlot5Unlocked ? 5 : 4;
+    activeHeroIds = PartyRoleSlots.migrateActiveHeroIds(
+      raw: activeHeroIds,
+      roster: heroRoster,
+      maxSlots: maxPartySlots,
+    );
 
     return GameState(
       heroRoster: heroRoster,
