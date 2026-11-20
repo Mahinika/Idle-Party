@@ -16,8 +16,10 @@ abstract final class RemoteTune {
   static const String keyFirstClimbPlayNow = 'first_climb_play_now';
   static const String keyWelcomeBackFirstReturnShort =
       'welcome_back_first_return_short';
+  static const String keyTownEnabled = 'town_enabled';
 
   static const int defaultDailyCap = 6;
+  static const bool defaultTownEnabled = true;
   static const int defaultFirstDelaySec = 90;
   static const int defaultIntervalSec = 10 * 60;
   static const int defaultVisibleSec = 10;
@@ -31,6 +33,7 @@ abstract final class RemoteTune {
   static bool _firstClimbAutoContinue = true;
   static bool _firstClimbPlayNow = true;
   static bool _welcomeBackFirstReturnShort = true;
+  static bool _townEnabled = defaultTownEnabled;
 
   static int get wispDailyCap => _dailyCap;
   static int get wispFirstDelayMs => _firstDelaySec * 1000;
@@ -40,6 +43,10 @@ abstract final class RemoteTune {
   static bool get firstClimbAutoContinue => _firstClimbAutoContinue;
   static bool get firstClimbPlayNow => _firstClimbPlayNow;
   static bool get welcomeBackFirstReturnShort => _welcomeBackFirstReturnShort;
+  static bool get townEnabled => _townEnabled;
+
+  /// Out-of-cave town square (buildings). Off → fight-first rails instead.
+  static bool townSquareActive(bool inDungeon) => _townEnabled && !inDungeon;
 
   /// A published WISP number differed from the shipped default.
   /// Debug builds keep the fast lantern until this is true.
@@ -54,6 +61,7 @@ abstract final class RemoteTune {
     keyFirstClimbAutoContinue: true,
     keyFirstClimbPlayNow: true,
     keyWelcomeBackFirstReturnShort: true,
+    keyTownEnabled: defaultTownEnabled,
   };
 
   /// [fromRemote] is true only after a fetch this process accepted.
@@ -67,6 +75,7 @@ abstract final class RemoteTune {
     bool? firstClimbAutoContinue,
     bool? firstClimbPlayNow,
     bool? welcomeBackFirstReturnShort,
+    bool? townEnabled,
     bool fromRemote = false,
   }) {
     final cap = _inRange(dailyCap, 1, 12, defaultDailyCap);
@@ -84,6 +93,7 @@ abstract final class RemoteTune {
     _firstClimbPlayNow = firstClimbPlayNow ?? _firstClimbPlayNow;
     _welcomeBackFirstReturnShort =
         welcomeBackFirstReturnShort ?? _welcomeBackFirstReturnShort;
+    _townEnabled = townEnabled ?? _townEnabled;
     _wispFromRemote =
         fromRemote &&
         (cap != defaultDailyCap ||
@@ -96,7 +106,13 @@ abstract final class RemoteTune {
         firstClimbAutoContinue: true,
         firstClimbPlayNow: true,
         welcomeBackFirstReturnShort: true,
+        townEnabled: defaultTownEnabled,
       );
+
+  /// Bool feature flag from Remote Config. Web, tests, and a missing value
+  /// keep [shippedDefault].
+  static bool featureFlag(Object? raw, {required bool shippedDefault}) =>
+      readBool(raw, shippedDefault);
 
   static bool readBool(Object? raw, bool fallback) {
     if (raw is bool) return raw;

@@ -7,13 +7,18 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/core/nav_copy.dart';
+import 'package:idle_party/core/remote_tune.dart';
 import 'package:idle_party/models/vfx_quality.dart';
 import 'package:idle_party/ui/coach_pulse.dart';
 import 'package:idle_party/ui/shell/overlay_scaffold.dart';
 import 'package:idle_party/ui/web_click_bridge.dart';
 import 'package:idle_party/ui/shell/home/home_catalog.dart';
 import 'package:idle_party/ui/shell/home/home_prompts.dart';
+import 'package:idle_party/ui/shell/home/fight_seam.dart';
+import 'package:idle_party/ui/shell/home/fight_seam_rails.dart';
+import 'package:idle_party/ui/shell/home/fight_viewport.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
+import 'package:idle_party/ui/shell/home/town_viewport.dart';
 import 'package:idle_party/ui/shell/shop_dock.dart';
 
 void main() {
@@ -225,6 +230,90 @@ void main() {
     );
     await tester.pump();
     expect(tester.binding.transientCallbackCount, 0);
+  });
+
+  testWidgets('town_enabled on shows town square out of the cave', (tester) async {
+    RemoteTune.apply(townEnabled: true);
+    addTearDown(RemoteTune.reset);
+    var state = GameLogic.createInitialState(now: DateTime(2026, 11, 3)).copyWith(
+      homeLayout: HomeLayout.home,
+      inDungeon: false,
+      bossVictories: 1,
+      highestFloorCleared: 2,
+    );
+    final director = GameDirector.preview(initialState: state);
+    final router = MenuRouter();
+    addTearDown(director.dispose);
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeShell(
+          director: director,
+          router: router,
+          onLeave: () {},
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.byType(TownViewport), findsOneWidget);
+    expect(find.byType(FightSeamRails), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('town_enabled off keeps fight-first rails without town buildings',
+      (tester) async {
+    RemoteTune.apply(townEnabled: false);
+    addTearDown(RemoteTune.reset);
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final left = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 11, 3)),
+    );
+    final state = left.copyWith(
+      homeLayout: HomeLayout.home,
+      homePanelFull: false,
+      inDungeon: false,
+      bossVictories: 1,
+      highestFloorCleared: 2,
+    );
+    final director = GameDirector.preview(initialState: state);
+    final router = MenuRouter();
+    addTearDown(director.dispose);
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeShell(
+          director: director,
+          router: router,
+          onLeave: () {},
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(TownViewport), findsNothing);
+    expect(find.byType(FightViewport), findsOneWidget);
+    expect(find.byType(FightSeam), findsOneWidget);
+    expect(find.byType(FightSeamRails), findsOneWidget);
+    final entries = FightSeamRails.visibleEntries(director.state, director);
+    expect(entries.map((e) => e.label), contains('VAULT'));
+    expect(tester.takeException(), isNull);
+
+    RemoteTune.apply(townEnabled: true);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeShell(
+          director: director,
+          router: router,
+          onLeave: () {},
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.byType(TownViewport), findsOneWidget);
+    expect(find.byType(FightSeamRails), findsNothing);
   });
 
   testWidgets('fight marks farm_push seen after first frame in cave', (tester) async {

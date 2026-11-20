@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
 import '../../../core/menu_router.dart';
+import '../../../core/remote_tune.dart';
 import '../../game_theme.dart';
 import '../shell_layout.dart';
 import 'rail_button.dart';
@@ -37,7 +38,7 @@ class HomeMenuGrid extends StatelessWidget {
     final state = director.state;
     final entries = HomeCatalog.of(
       HomePlace.menuGrid,
-      town: !state.inDungeon,
+      town: RemoteTune.townSquareActive(state.inDungeon),
     )
         .where((e) => e.visible(state, director))
         .toList();

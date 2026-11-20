@@ -11,6 +11,7 @@ import '../../../core/game_state.dart';
 import '../../../core/hub_chase.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
+import '../../../core/remote_tune.dart';
 import '../../first_session_tips.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
@@ -175,7 +176,8 @@ class _HomeShellState extends State<HomeShell> {
     final route = router.route;
     final interceptGold = state.inDungeon && route == MenuRoute.gold;
     final sheet = route != MenuRoute.none && !interceptGold;
-    final showPanel = !sheet && state.inDungeon;
+    final townSquare = RemoteTune.townSquareActive(state.inDungeon);
+    final showPanel = !sheet && (state.inDungeon || !RemoteTune.townEnabled);
     final full = state.homePanelFull;
     // OS text above the app cap on a short phone: drop the split town
     // strip so the cave and nav stay inside the viewport (audit P010).
@@ -222,19 +224,19 @@ class _HomeShellState extends State<HomeShell> {
                                   }())
                           : 5,
                       child: RepaintBoundary(
-                        child: state.inDungeon
-                            ? FightViewport(
-                                director: director,
-                                router: router,
-                                onLeave: widget.onLeave,
-                                controls: showPanel,
-                              )
-                            : NavClearance(
+                        child: townSquare
+                            ? NavClearance(
                                 bottom: HomeNavBar.fightOverhang(context),
                                 child: TownViewport(
                                   director: director,
                                   router: router,
                                 ),
+                              )
+                            : FightViewport(
+                                director: director,
+                                router: router,
+                                onLeave: widget.onLeave,
+                                controls: showPanel,
                               ),
                       ),
                     ),
@@ -245,7 +247,9 @@ class _HomeShellState extends State<HomeShell> {
                           director: director,
                           router: router,
                           onLeave: widget.onLeave,
-                          hideRails: panelFull,
+                          // Town off out of the cave: rails replace buildings.
+                          hideRails: panelFull &&
+                              (state.inDungeon || RemoteTune.townEnabled),
                         ),
                       ),
                     if (showPanel && !panelFull)
@@ -323,7 +327,7 @@ class _HomeShellState extends State<HomeShell> {
     // no "Tap ENTER." over CLAIM VAULT, no "Claim …" over a CLAIM button.
     final offCta =
         climb == null &&
-        !state.inDungeon &&
+        RemoteTune.townSquareActive(state.inDungeon) &&
         HomeShell.coachDisagreesWithTownCta(text, state);
     final shown = duplicateCoach || offCta ? null : text;
     final showClaim = state.inDungeon && GameLogic.canClaimDailyVault(state);

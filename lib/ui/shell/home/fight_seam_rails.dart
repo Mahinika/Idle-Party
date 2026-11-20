@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../core/game_director.dart';
 import '../../../core/game_state.dart';
 import '../../../core/menu_router.dart';
+import '../../../core/remote_tune.dart';
 import '../../game_theme.dart';
 import 'home_catalog.dart';
 import 'rail_button.dart';
@@ -25,7 +26,7 @@ class FightSeamRails extends StatefulWidget {
     GameDirector director,
   ) {
     // Town: no rail; the buildings and MENU are the entry points (F100).
-    final town = !state.inDungeon;
+    final town = RemoteTune.townSquareActive(state.inDungeon);
     final out = <HomeEntry>[
       ...HomeCatalog.of(HomePlace.leftRail, town: town),
       ...HomeCatalog.of(HomePlace.rightRail, town: town),
