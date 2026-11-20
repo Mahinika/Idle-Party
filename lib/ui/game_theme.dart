@@ -64,6 +64,14 @@ abstract final class GameTheme {
   static const Color hudManaText = Color(0xFF80C0FF);
   static const Color hudFarmGreen = Color(0xFF3A5018);
 
+  /// Fight strip role marks (shield / cross / bow).
+  static const Color roleIconShieldSteel = Color(0xFF5A7A9A);
+  static const Color roleIconShieldRim = Color(0xFF8CB4D8);
+  static const Color roleIconCrossGold = Color(0xFFD4A83A);
+  static const Color roleIconCrossGreen = Color(0xFF5A9A5A);
+  static const Color roleIconBowWood = Color(0xFF8B5A2B);
+  static const Color roleIconBowString = Color(0xFFC9A66B);
+
   /// RUN / TODAY / ACCOUNT scope tones (hub + POWER section headers).
   /// Run scope is dusk lavender: green stays reserved for "this goes up".
   static const Color scopeRun = levelAccent;

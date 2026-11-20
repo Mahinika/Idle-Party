@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
+import 'game_theme.dart';
 
 /// Pixel role mark for tight fight rows: shield / cross / bow.
 class PartyRoleIcon extends StatelessWidget {
@@ -26,13 +27,6 @@ class PartyRoleIcon extends StatelessWidget {
   static Key keyFor(PartyRoleBucket bucket) =>
       ValueKey('party-role-icon-${bucket.name}');
 
-  static const Color _shieldSteel = Color(0xFF5A7A9A);
-  static const Color _shieldRim = Color(0xFF8CB4D8);
-  static const Color _crossGold = Color(0xFFD4A83A);
-  static const Color _crossGreen = Color(0xFF5A9A5A);
-  static const Color _bowWood = Color(0xFF8B5A2B);
-  static const Color _bowString = Color(0xFFC9A66B);
-
   static List<String> _rowsFor(PartyRoleBucket bucket) => switch (bucket) {
         PartyRoleBucket.tank => _kShield,
         PartyRoleBucket.healer => _kCross,
@@ -41,18 +35,18 @@ class PartyRoleIcon extends StatelessWidget {
 
   static Color? _colorFor(PartyRoleBucket bucket, String ch) => switch (bucket) {
         PartyRoleBucket.tank => switch (ch) {
-            'b' => _shieldSteel,
-            'B' => _shieldRim,
+            'b' => GameTheme.roleIconShieldSteel,
+            'B' => GameTheme.roleIconShieldRim,
             _ => null,
           },
         PartyRoleBucket.healer => switch (ch) {
-            'g' => _crossGold,
-            'G' => _crossGreen,
+            'g' => GameTheme.roleIconCrossGold,
+            'G' => GameTheme.roleIconCrossGreen,
             _ => null,
           },
         PartyRoleBucket.dps => switch (ch) {
-            'w' => _bowWood,
-            's' => _bowString,
+            'w' => GameTheme.roleIconBowWood,
+            's' => GameTheme.roleIconBowString,
             _ => null,
           },
       };
