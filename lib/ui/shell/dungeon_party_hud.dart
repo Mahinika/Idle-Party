@@ -409,9 +409,9 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
           child: Padding(
             padding: EdgeInsets.fromLTRB(
               2,
-              tuckPartyPad ? 1 : 2,
+              tuckPartyPad ? 0 : 2,
               2,
-              tuckPartyPad ? 1 : 3,
+              tuckPartyPad ? 0 : 3,
             ),
             child: SizedBox(
               height: lineHeight,
