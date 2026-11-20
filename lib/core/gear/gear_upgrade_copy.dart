@@ -60,7 +60,21 @@ abstract final class GearUpgradeCopy {
         'Score ${_formatDelta(powerDelta)}';
   }
 
-  /// Short line under a bag UP/BEST badge.
+  static int? stashPowerDelta(GameState state, EquipmentItem item) {
+    final best = bestStashCompare(state, item);
+    if (best == null || best.powerDelta <= 0) return null;
+    return best.powerDelta;
+  }
+
+  static const String bestBadgeLabel = 'Best';
+
+  /// Visible chip on a bag tile (no [FittedBox]).
+  static String upgradeBadgeLabel(int powerDelta, {required bool compact}) =>
+      compact ? '+$powerDelta' : 'Better +$powerDelta';
+
+  static String upgradeBadgeSemantics(int powerDelta) => 'Better by $powerDelta';
+
+  /// Short line under a bag upgrade badge (detail row, not the chip).
   static String bagTileDeltaLine(GameState state, EquipmentItem item) {
     final best = bestStashCompare(state, item);
     if (best == null || best.powerDelta <= 0) return '';

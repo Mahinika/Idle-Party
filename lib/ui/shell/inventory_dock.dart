@@ -23,6 +23,7 @@ import '../meta/roster_panel.dart';
 import '../item_tooltip.dart';
 import '../web_click_bridge.dart';
 import 'bag_cleanup_filters.dart';
+import 'gear_bag_badge.dart';
 import 'home/nav_clearance.dart';
 import 'shell_common.dart';
 import 'shell_layout.dart';
@@ -897,13 +898,28 @@ class _InventoryDockState extends State<InventoryDock>
                     style: GameTheme.hint(color: GameTheme.torchHot),
                   ),
                   if (isUpgradeForAny(state, selected))
-                    Text(
-                      GearUpgradeCopy.bagTileDeltaLine(state, selected).isEmpty
-                          ? 'Upgrade in bag'
-                          : '${GearUpgradeCopy.bagTileDeltaLine(state, selected)} · wear it',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.hint(color: GameTheme.clear),
+                    Builder(
+                      builder: (context) {
+                        final delta =
+                            GearUpgradeCopy.stashPowerDelta(state, selected);
+                        if (delta == null) {
+                          return Text(
+                            'Upgrade in bag',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GameTheme.hint(color: GameTheme.clear),
+                          );
+                        }
+                        return Text(
+                          GearUpgradeCopy.upgradeBadgeLabel(
+                            delta,
+                            compact: GearBagBadge.needsCompact(context, delta),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.hint(color: GameTheme.clear),
+                        );
+                      },
                     ),
                 ],
               ),

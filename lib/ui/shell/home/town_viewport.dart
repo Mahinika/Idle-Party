@@ -320,10 +320,17 @@ class _TownViewportState extends State<TownViewport> {
                   children: [
                     Flexible(
                       child: Text(
-                        '${townProgressLine(ascensionLevel: al, cave: cave)} · ',
+                        townProgressLine(ascensionLevel: al, cave: cave),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GameTheme.hint(),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Text(
+                        '—',
+                        style: GameTheme.hint(color: GameTheme.parchmentDim),
                       ),
                     ),
                     Flexible(
@@ -449,7 +456,7 @@ class _TownViewportState extends State<TownViewport> {
   }
 }
 
-/// Town card header row: town tier · cave name.
+/// Town card header row: town tier — cave name.
 const Key townHeaderKey = ValueKey('town-card-header');
 
 /// Town ENTER shows the FARM strength picker when the button starts a

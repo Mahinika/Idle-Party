@@ -77,7 +77,7 @@ class _EquipHeroChip extends StatelessWidget {
                   if (isBest) ...[
                     const SizedBox(width: 3),
                     Text(
-                      'BEST',
+                      GearUpgradeCopy.bestBadgeLabel,
                       style: GameTheme.hint(color: GameTheme.torchHot),
                     ),
                   ],
@@ -102,11 +102,12 @@ class _EquipHeroChip extends StatelessWidget {
                   'Score ${GameLogic.formatDelta(cmp.powerDelta)}',
                   style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
-                if (plannedUpgrade)
+                if (plannedUpgrade && cmp.powerDelta > 0)
                   Text(
-                    cmp.powerDelta > 0
-                        ? 'Better · Score ${GameLogic.formatDelta(cmp.powerDelta)}'
-                        : 'UPGRADE',
+                    GearUpgradeCopy.upgradeBadgeLabel(
+                      cmp.powerDelta,
+                      compact: GearBagBadge.needsCompact(context, cmp.powerDelta),
+                    ),
                     style: GameTheme.hint(color: GameTheme.clear),
                   ),
               ],

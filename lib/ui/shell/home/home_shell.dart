@@ -329,8 +329,13 @@ class _HomeShellState extends State<HomeShell> {
         climb == null &&
         RemoteTune.townSquareActive(state.inDungeon) &&
         HomeShell.coachDisagreesWithTownCta(text, state);
-    final shown = duplicateCoach || offCta ? null : text;
+    var shown = duplicateCoach || offCta ? null : text;
     final showClaim = state.inDungeon && GameLogic.canClaimDailyVault(state);
+    if (showClaim &&
+        shown != null &&
+        shown.toUpperCase().contains('CLAIM')) {
+      shown = null;
+    }
     if (shown == null && !showClaim) return const SizedBox.shrink();
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     return Padding(
@@ -340,29 +345,34 @@ class _HomeShellState extends State<HomeShell> {
         8,
         textScale > GameTheme.typeScaleMax ? 0 : 2,
       ),
-      child: Row(
-        children: [
-          if (shown != null)
-            Expanded(
-              child: Text(
-                shown,
-                maxLines: textScale >= 2 ? 1 : 2,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.hint(color: GameTheme.torchHot),
-              ),
+      child: showClaim
+          ? Row(
+              children: [
+                if (shown != null)
+                  Expanded(
+                    child: Text(
+                      shown,
+                      maxLines: textScale >= 2 ? 1 : 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.hint(color: GameTheme.torchHot),
+                    ),
+                  ),
+                if (shown != null) const SizedBox(width: 6),
+                _claimChip(),
+              ],
+            )
+          : Text(
+              shown!,
+              maxLines: textScale >= 2 ? 1 : 2,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.hint(color: GameTheme.torchHot),
             ),
-          if (showClaim) ...[
-            if (shown != null) const SizedBox(width: 6),
-            _claimChip(),
-          ],
-        ],
-      ),
     );
   }
 
   Widget _claimChip() {
     return WebClickScope(
-      label: 'CLAIM',
+      label: 'CLAIM VAULT',
       onPressed: director.claimDailyVault,
       child: Semantics(
         button: true,
@@ -384,7 +394,9 @@ class _HomeShellState extends State<HomeShell> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Center(
                   child: Text(
-                    'CLAIM',
+                    'CLAIM VAULT',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GameTheme.hint(color: GameTheme.clear),
                   ),
                 ),

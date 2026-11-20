@@ -85,7 +85,7 @@ abstract final class ChaseDispatcher {
       case HubChaseKind.ascend:
         return const ChasePlan(label: 'ASCEND', op: ChaseOp.confirmAscend);
       case HubChaseKind.dailyRun:
-        return const ChasePlan(label: 'DAILY', op: ChaseOp.confirmDaily);
+        return const ChasePlan(label: 'DAILY RUN', op: ChaseOp.confirmDaily);
       case HubChaseKind.keystone:
         return _enterKeyPlan(
           state,

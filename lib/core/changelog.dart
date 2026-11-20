@@ -98,7 +98,8 @@ abstract final class ChangelogCatalog {
         'Menus fit large text without cut words, and each sheet has one clear main button.',
       ],
       changed: <String>[
-        'In town, QUESTS open at the GUILD and the daily chest at the VAULT. Scrolls, Daily, and the pouch sit in MENU. In a fight they stay on the fight rail.',
+        'Bag upgrades read Better +score on the tile. Daily Run uses one name everywhere (Daily Vault stays separate). Town headers use a clear dash between tier and cave.',
+        'In town, QUESTS open at the GUILD and the daily chest at the VAULT. Scrolls, Daily Run, and the pouch sit in MENU. In a fight they stay on the fight rail.',
         'TRAIN, CAMP, and MARKET sit under the fight. Town always offers ENTER DUNGEON beside claims.',
         'A new game starts in Sandy Caverns.',
         'Clearer words: FARM repeats a floor for loot, and PUSH goes deeper.',
