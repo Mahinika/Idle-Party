@@ -20,7 +20,10 @@ void main() {
     expect(state.metaDepth.adTickets, 0);
     expect(state.metaDepth.adAtkUntilMs, now + AdBoost.rewardMs);
     expect(state.metaDepth.adGoldUntilMs, now + AdBoost.rewardMs);
-    expect(AdBoost.formatRemaining(state.metaDepth.adAtkUntilMs, nowMs: now), '4h');
+    expect(
+      AdBoost.formatRemaining(state.metaDepth.adAtkUntilMs, nowMs: now),
+      '4h',
+    );
   });
 
   test('Sharp Edge stacks duration and caps at 24h', () {
@@ -33,7 +36,10 @@ void main() {
       AdBoost.remainingMs(state.metaDepth.adAtkUntilMs, nowMs: now),
       AdBoost.maxStackMs,
     );
-    expect(AdBoost.atStackCap(state.metaDepth.adAtkUntilMs, nowMs: now), isTrue);
+    expect(
+      AdBoost.atStackCap(state.metaDepth.adAtkUntilMs, nowMs: now),
+      isTrue,
+    );
   });
 
   test('legacy adBoostUntilMs migrates into both timers', () {
@@ -142,62 +148,75 @@ void main() {
     expect(AdBoost.addHour(until, nowMs: now), until);
   });
 
-  test('SCROLLS fab spend-check is quiet only when ad-free with nothing to do', () {
-    final state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
-    expect(AdBoost.showHubFab(state.metaDepth), isTrue);
-    final adFreeQuiet = state.metaDepth.copyWith(
-      adFree: true,
-      adFreeDailyClaimUtc: AdBoost.utcDayKey(DateTime.utc(2026, 8, 21)),
-    );
-    expect(
-      AdBoost.showHubFab(adFreeQuiet, now: DateTime.utc(2026, 8, 21)),
-      isFalse,
-    );
-  });
+  test(
+    'SCROLLS fab spend-check is quiet only when ad-free with nothing to do',
+    () {
+      final state = GameLogic.createInitialState(
+        now: DateTime.utc(2026, 8, 21),
+      );
+      expect(AdBoost.showHubFab(state.metaDepth), isTrue);
+      final adFreeQuiet = state.metaDepth.copyWith(
+        adFree: true,
+        adFreeDailyClaimUtc: AdBoost.utcDayKey(DateTime.utc(2026, 8, 21)),
+      );
+      expect(
+        AdBoost.showHubFab(adFreeQuiet, now: DateTime.utc(2026, 8, 21)),
+        isFalse,
+      );
+    },
+  );
 
-  test('Study Rush, Fleet Foot, Lucky Bag, and Time Warp persist and apply', () {
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    var state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
-    state = GameLogic.grantAdTicket(state, count: 4);
-    state = GameLogic.spendAdBuff(state, AdBuffId.xp, nowMs: nowMs);
-    state = GameLogic.spendAdBuff(state, AdBuffId.move, nowMs: nowMs);
-    state = GameLogic.spendAdBuff(state, AdBuffId.loot, nowMs: nowMs);
-    state = GameLogic.spendAdBuff(state, AdBuffId.speed, nowMs: nowMs);
-    expect(state.metaDepth.adTickets, 0);
-    expect(AdBoost.xpActive(state.metaDepth, nowMs: nowMs), isTrue);
-    expect(AdBoost.moveActive(state.metaDepth, nowMs: nowMs), isTrue);
-    expect(AdBoost.lootActive(state.metaDepth, nowMs: nowMs), isTrue);
-    expect(AdBoost.speedActive(state.metaDepth, nowMs: nowMs), isTrue);
-    expect(AdBoost.rowTimer(AdBuffId.xp, state.metaDepth, nowMs: nowMs), isNotNull);
-    expect(AdBoost.combatDtMul(state.metaDepth, nowMs: nowMs), 1.25);
+  test(
+    'Study Rush, Fleet Foot, Lucky Bag, and Time Warp persist and apply',
+    () {
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+      var state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
+      state = GameLogic.grantAdTicket(state, count: 4);
+      state = GameLogic.spendAdBuff(state, AdBuffId.xp, nowMs: nowMs);
+      state = GameLogic.spendAdBuff(state, AdBuffId.move, nowMs: nowMs);
+      state = GameLogic.spendAdBuff(state, AdBuffId.loot, nowMs: nowMs);
+      state = GameLogic.spendAdBuff(state, AdBuffId.speed, nowMs: nowMs);
+      expect(state.metaDepth.adTickets, 0);
+      expect(AdBoost.xpActive(state.metaDepth, nowMs: nowMs), isTrue);
+      expect(AdBoost.moveActive(state.metaDepth, nowMs: nowMs), isTrue);
+      expect(AdBoost.lootActive(state.metaDepth, nowMs: nowMs), isTrue);
+      expect(AdBoost.speedActive(state.metaDepth, nowMs: nowMs), isTrue);
+      expect(
+        AdBoost.rowTimer(AdBuffId.xp, state.metaDepth, nowMs: nowMs),
+        isNotNull,
+      );
+      expect(AdBoost.combatDtMul(state.metaDepth, nowMs: nowMs), 1.25);
 
-    final loaded = MetaDepthState.fromJson(state.metaDepth.toJson());
-    expect(loaded.adXpUntilMs, state.metaDepth.adXpUntilMs);
-    expect(loaded.adMoveUntilMs, state.metaDepth.adMoveUntilMs);
-    expect(loaded.adLootUntilMs, state.metaDepth.adLootUntilMs);
-    expect(loaded.adSpeedUntilMs, state.metaDepth.adSpeedUntilMs);
+      final loaded = MetaDepthState.fromJson(state.metaDepth.toJson());
+      expect(loaded.adXpUntilMs, state.metaDepth.adXpUntilMs);
+      expect(loaded.adMoveUntilMs, state.metaDepth.adMoveUntilMs);
+      expect(loaded.adLootUntilMs, state.metaDepth.adLootUntilMs);
+      expect(loaded.adSpeedUntilMs, state.metaDepth.adSpeedUntilMs);
 
-    final missing = MetaDepthState.fromJson({'adTickets': 1});
-    expect(missing.adXpUntilMs, 0);
-    expect(missing.adSpeedUntilMs, 0);
+      final missing = MetaDepthState.fromJson({'adTickets': 1});
+      expect(missing.adXpUntilMs, 0);
+      expect(missing.adSpeedUntilMs, 0);
 
-    final hero = state.heroes.first;
-    final baseMove = GameLogic.createInitialState(
-      now: DateTime.utc(2026, 8, 21),
-    ).effectiveHeroMoveSpeed(hero);
-    expect(
-      state.effectiveHeroMoveSpeed(hero),
-      closeTo(baseMove * (1 + AdBoost.movePercent / 100), 0.0001),
-    );
-    expect(state.combatLootFindPercent, AdBoost.lootFindPercent);
+      final hero = state.heroes.first;
+      final baseMove = GameLogic.createInitialState(
+        now: DateTime.utc(2026, 8, 21),
+      ).effectiveHeroMoveSpeed(hero);
+      expect(
+        state.effectiveHeroMoveSpeed(hero),
+        closeTo(baseMove * (1 + AdBoost.movePercent / 100), 0.0001),
+      );
+      expect(state.combatLootFindPercent, AdBoost.lootFindPercent);
 
-    final plain = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
-    final afterPlain = EncounterFactory.awardPartyXp(plain, 100);
-    final afterBoost = EncounterFactory.awardPartyXp(state, 100);
-    final plainGain = afterPlain.heroes.first.xp - plain.heroes.first.xp;
-    final boostGain = afterBoost.heroes.first.xp - state.heroes.first.xp;
-    expect(boostGain, greaterThan(plainGain));
-  });
+      final plain = GameLogic.createInitialState(
+        now: DateTime.utc(2026, 8, 21),
+      );
+      final afterPlain = EncounterFactory.awardPartyXp(plain, 100);
+      final afterBoost = EncounterFactory.awardPartyXp(state, 100);
+      final plainGain = afterPlain.heroes.first.xp - plain.heroes.first.xp;
+      final boostGain = afterBoost.heroes.first.xp - state.heroes.first.xp;
+      expect(boostGain, greaterThan(plainGain));
+    },
+  );
 
   test('hudChips lists all scrolls; only live ones are active', () {
     var md = const MetaDepthState();
@@ -228,41 +247,49 @@ void main() {
     expect(chips[3].timeLabel, '40m');
   });
 
-  test('welcome back watch doubles gold and essence and keeps the old save', () {
-    final fresh = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
-    expect(GameLogic.grantWelcomeBackWatchGold(fresh, 40).gold, fresh.gold);
+  test(
+    'welcome back watch doubles gold and essence and keeps the old save',
+    () {
+      final fresh = GameLogic.createInitialState(
+        now: DateTime.utc(2026, 8, 21),
+      );
+      expect(GameLogic.grantWelcomeBackWatchGold(fresh, 40).gold, fresh.gold);
 
-    final state = fresh.copyWith(
-      bossVictories: 1,
-      gold: 100,
-      essence: 5,
-      lifetimeGoldEarned: 100,
-    );
-    final next = GameLogic.grantWelcomeBackWatchGold(
-      state,
-      40,
-      baseEssence: 2,
-    );
-    expect(next.gold, 140);
-    expect(next.essence, 7);
-    expect(next.lifetimeGoldEarned, 140);
-    expect(next.metaDepth.adTickets, 0);
-    expect(next.metaDepth.adOfflineMulPending, isFalse);
-    expect(next.metaDepth.toJson().containsKey('welcomeBackAd'), isFalse);
-    final loaded = GameLogic.stateFromJson(next.toJson());
-    expect(loaded.gold, 140);
-    expect(loaded.lifetimeGoldEarned, 140);
+      final state = fresh.copyWith(
+        bossVictories: 1,
+        gold: 100,
+        essence: 5,
+        lifetimeGoldEarned: 100,
+      );
+      final next = GameLogic.grantWelcomeBackWatchGold(
+        state,
+        40,
+        baseEssence: 2,
+      );
+      expect(next.gold, 140);
+      expect(next.essence, 7);
+      expect(next.lifetimeGoldEarned, 140);
+      expect(next.metaDepth.adTickets, 0);
+      expect(next.metaDepth.adOfflineMulPending, isFalse);
+      expect(next.metaDepth.toJson().containsKey('welcomeBackAd'), isFalse);
+      final loaded = GameLogic.stateFromJson(next.toJson());
+      expect(loaded.gold, 140);
+      expect(loaded.lifetimeGoldEarned, 140);
 
-    final free = state.copyWith(
-      metaDepth: state.metaDepth.copyWith(adFree: true),
-    );
-    expect(GameLogic.grantWelcomeBackWatchGold(free, 40).gold, free.gold);
-    final forever = state.copyWith(
-      metaDepth: state.metaDepth.copyWith(shopPermScrolls: AdBoost.permRest),
-    );
-    expect(GameLogic.grantWelcomeBackWatchGold(forever, 40).gold, forever.gold);
-    expect(GameLogic.grantWelcomeBackWatchGold(state, 0).gold, state.gold);
-  });
+      final free = state.copyWith(
+        metaDepth: state.metaDepth.copyWith(adFree: true),
+      );
+      expect(GameLogic.grantWelcomeBackWatchGold(free, 40).gold, free.gold);
+      final forever = state.copyWith(
+        metaDepth: state.metaDepth.copyWith(shopPermScrolls: AdBoost.permRest),
+      );
+      expect(
+        GameLogic.grantWelcomeBackWatchGold(forever, 40).gold,
+        forever.gold,
+      );
+      expect(GameLogic.grantWelcomeBackWatchGold(state, 0).gold, state.gold);
+    },
+  );
 
   test('welcome back offers a watch only after a boss and unpaid gold', () {
     final now = DateTime.utc(2026, 8, 21, 12);
@@ -307,6 +334,7 @@ void main() {
         metaDepth: played.metaDepth.copyWith(adFree: true),
       ),
       secondsApplied: 3600,
+      secondsAway: 3600,
       goldGained: 40,
       essenceGained: 0,
       roomsCleared: 0,

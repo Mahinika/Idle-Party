@@ -7,15 +7,18 @@ void main() {
     expect(topics.length, greaterThanOrEqualTo(12));
     final ids = topics.map((t) => t.id).toSet();
     expect(ids.length, topics.length);
-    expect(ids, containsAll([
-      'basics',
-      'dailies',
-      'god_hand',
-      'ascend',
-      'hardmode',
-      'gates',
-      'power_shelves',
-    ]));
+    expect(
+      ids,
+      containsAll([
+        'basics',
+        'dailies',
+        'god_hand',
+        'ascend',
+        'hardmode',
+        'gates',
+        'power_shelves',
+      ]),
+    );
     final dailies = topics.firstWhere((t) => t.id == 'dailies');
     expect(dailies.title, 'THREE DAILIES');
     expect(dailies.body, contains('Daily Vault'));
@@ -41,12 +44,18 @@ void main() {
     expect(gates.body.toLowerCase(), contains('+ 1 cinder'));
     final sanctuary = topics.firstWhere((t) => t.id == 'sanctuary');
     expect(sanctuary.body, contains('boss damage'));
-    expect(sanctuary.body.toUpperCase(), isNot(contains('ATK / DEF / STA / LOOT')));
+    expect(
+      sanctuary.body.toUpperCase(),
+      isNot(contains('ATK / DEF / STA / LOOT')),
+    );
     expect(sanctuary.body.toLowerCase(), contains('embers'));
     expect(sanctuary.body.toLowerCase(), contains('cinders'));
     expect(sanctuary.body.toLowerCase(), contains('not essence buys'));
     final bag = topics.firstWhere((t) => t.id == 'bag_equip');
-    expect(bag.body, contains('Dual-wield is Cutpurse / Twinrage / Totemstrike / Rimeblade'));
+    expect(
+      bag.body,
+      contains('Dual-wield is Cutpurse / Twinrage / Totemstrike / Rimeblade'),
+    );
     expect(bag.body, isNot(contains('Survival')));
     expect(bag.body, contains('FILTERS matches'));
     expect(bag.body.toLowerCase(), contains('bis'));
@@ -55,12 +64,16 @@ void main() {
     final godHand = topics.firstWhere((t) => t.id == 'god_hand');
     expect(godHand.body.toLowerCase(), contains('long-press'));
     expect(godHand.body.toLowerCase(), contains('fist'));
-    expect(godHand.body.toLowerCase(), isNot(contains('tap the dungeon floor')));
+    expect(
+      godHand.body.toLowerCase(),
+      isNot(contains('tap the dungeon floor')),
+    );
     expect(godHand.body.toLowerCase(), contains('mastery'));
     expect(godHand.body, contains('Hand of Embers'));
     final combat = topics.firstWhere((t) => t.id == 'combat');
     expect(combat.body.toUpperCase(), contains('CLEAR'));
-    expect(combat.body.toUpperCase(), contains('HOLD'));
+    expect(combat.body.toUpperCase(), contains('STAIRS'));
+    expect(combat.body.toUpperCase(), isNot(contains('HOLD')));
     expect(combat.body.toUpperCase(), isNot(contains('GO MARKS')));
     expect(combat.body.toLowerCase(), isNot(contains('go marks the exit')));
     final hardmode = topics.firstWhere((t) => t.id == 'hardmode');

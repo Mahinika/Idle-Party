@@ -129,6 +129,7 @@ void main() {
       OfflineProgressResult(
         state: director.state,
         secondsApplied: 60,
+        secondsAway: 3600,
         goldGained: 10,
         essenceGained: 1,
         roomsCleared: 0,
@@ -154,6 +155,7 @@ void main() {
     final summary = OfflineProgressResult(
       state: state,
       secondsApplied: 3600,
+      secondsAway: 3600,
       goldGained: 40,
       essenceGained: 2,
       roomsCleared: 0,
@@ -177,10 +179,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('Watch ad: 2× offline loot'), findsOneWidget);
-    expect(
-      find.textContaining('gold and essence are doubled'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('gold and essence are doubled'), findsOneWidget);
     expect(AdRewarded.prepareOfferCalls, greaterThan(0));
     director.dispose();
   });
