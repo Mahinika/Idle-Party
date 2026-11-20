@@ -352,11 +352,11 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       gainNext: next,
       gainNote: soft ? 'SOFT' : null,
       progress: ForgeOverlay.forgeSoftProgress(state, type),
-      detail: onPressed == null
-          ? null
-          : shortGold > 0
+      detail: shortGold > 0
           ? 'Need ${formatGold(shortGold)} more'
-          : GearUpgradeCopy.forgeNextFloorLine(state, type),
+          : onPressed != null
+          ? GearUpgradeCopy.forgeNextFloorLine(state, type)
+          : null,
       selected: recommended,
       dense: true,
       trailing: PowerUpgradePriceChip(

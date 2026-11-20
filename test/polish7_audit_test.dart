@@ -18,6 +18,8 @@ import 'package:idle_party/ui/meta/play_games_section.dart';
 import 'package:idle_party/ui/redeem_coupon_dialog.dart';
 import 'package:idle_party/ui/shell/dungeon_target_hud.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
+import 'package:idle_party/ui/shell/home/home_menu_grid.dart';
+import 'package:idle_party/ui/shell/home/town_viewport.dart';
 import 'package:idle_party/ui/shell/home/rail_button.dart';
 import 'package:idle_party/ui/shell/home/upgrade_panel.dart';
 import 'package:idle_party/core/gold_income.dart';
@@ -459,13 +461,14 @@ void main() {
   });
 
   group('P029 a short rail count rides the icon at 1.45', () {
-    void expectScrollsCount(WidgetTester t) {
+    void expectScrollsCount(WidgetTester t, {Finder? scrollsText}) {
       // Short ticket counts always ride the icon pip so the label never
       // becomes "SCROLLS 3" and clip at 1.45.
       expect(find.text('SCROLLS 3'), findsNothing);
-      expect(find.text('SCROLLS'), findsOneWidget);
+      final label = scrollsText ?? find.text('SCROLLS');
+      expect(label, findsOneWidget);
       final scrolls = find.ancestor(
-        of: find.text('SCROLLS'),
+        of: label,
         matching: find.byType(RailButton),
       );
       expect(scrolls, findsOneWidget);
@@ -478,7 +481,7 @@ void main() {
         find.descendant(of: pip, matching: find.text('3')),
         findsOneWidget,
       );
-      a100ExpectWhole(t, find.text('SCROLLS'));
+      a100ExpectWhole(t, label);
     }
 
     for (final scale in _scales) {
@@ -510,11 +513,23 @@ void main() {
         );
         await a100Settle(t);
         await popAll(t);
-        // Town hides the fight rail; SCROLLS lives on the MENU grid.
-        expect(find.text('SCROLLS'), findsNothing);
+        // Town hides the fight rail; SCROLLS is on the viewport and MENU.
+        expect(
+          find.descendant(
+            of: find.byType(TownViewport),
+            matching: find.text('SCROLLS'),
+          ),
+          findsOneWidget,
+        );
         await t.tap(find.bySemanticsLabel(RegExp(r'^MENU')).first);
         await a100Settle(t);
-        expectScrollsCount(t);
+        expectScrollsCount(
+          t,
+          scrollsText: find.descendant(
+            of: find.byType(HomeMenuGrid),
+            matching: find.text('SCROLLS'),
+          ),
+        );
       });
     }
   });

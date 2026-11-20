@@ -16,7 +16,7 @@ abstract final class DungeonEnvironment {
     if (a <= 0) return base;
     // Nudge alpha on phone so neighboring caves read apart at a glance.
     final boost = dungeonId == 'sandy'
-        ? 1.14
+        ? 1.10
         : dungeonId == 'goblin'
         ? 1.32
         : 1.26;
