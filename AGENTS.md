@@ -42,7 +42,9 @@ clips are owned PNGs. Enemies are a separate art pass.
 A batch runs `flutter analyze lib test --no-fatal-infos` and the matching
 tests in `.cursor/rules/30-done.mdc`. CI runs `flutter test --exclude-tags sim`
 plus the Android compile on main. Do not treat that list as a command to
-build an APK.
+build an APK. Agents may merge green PRs into `test/fight-ui-stack` only;
+`CHANGELOG.md` at repo root is required on PRs to `main` (separate from in-game
+`ChangelogCatalog`).
 
 Tag `sim` is nightly (`.github/workflows/sim-nightly.yml`), not missing CI.
 Sideload test APKs stay in `.github/workflows/test-apk-prerelease.yml`

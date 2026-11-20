@@ -58,6 +58,35 @@ void main() {
     expect(play, contains('Do not `adb uninstall`'));
   });
 
+  test('emulator smoke only touches the test package id', () {
+    final wf = File('.github/workflows/emulator-smoke.yml').readAsStringSync();
+    final script = File('tool/ci/emulator_smoke.sh').readAsStringSync();
+    expect(wf, contains('com.idleparty.app.test'));
+    expect(wf, contains('Never install or uninstall com.idleparty.app'));
+    expect(script, contains('com.idleparty.app.test'));
+    expect(script, contains('com.idleparty.app must not be on the emulator'));
+    expect(script, isNot(contains('adb uninstall com.idleparty.app')));
+  });
+
+  test('cleanup workflow never deletes v releases', () {
+    final wf = File(
+      '.github/workflows/cleanup-test-builds.yml',
+    ).readAsStringSync();
+    final script = File(
+      'tool/ci/cleanup_old_test_prereleases.sh',
+    ).readAsStringSync();
+    expect(wf, contains('test-*'));
+    expect(script, contains('test-*'));
+    expect(script, contains('v*)'));
+  });
+
+  test('CI requires CHANGELOG.md on pull requests to main', () {
+    final ci = File('.github/workflows/ci.yml').readAsStringSync();
+    expect(ci, contains('changelog-main'));
+    expect(ci, contains("base.ref == 'main'"));
+    expect(ci, contains('CHANGELOG.md'));
+  });
+
   test('the four workflow skills exist and point at live files', () {
     for (final name in [
       'env-check',
