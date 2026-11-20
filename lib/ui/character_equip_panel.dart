@@ -165,10 +165,12 @@ class CharacterEquipPanel extends StatelessWidget {
     if (heroes.isEmpty) return const SizedBox.shrink();
     final index = heroIndex.clamp(0, heroes.length - 1);
     final hero = heroes[index];
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final roomyText = textScale <= GameTheme.typeScaleMax - 0.01;
     // Slots at the 44/48 dp touch size, not 40 (polish7 P050).
     final slotSize = compact ? 44.0 : 48.0;
-    final slotGap = compact ? 4.0 : 5.0;
-    final dollSize = compact ? 96.0 : 128.0;
+    final slotGap = compact ? (roomyText ? 4.0 : 3.0) : 5.0;
+    final dollSize = compact ? (roomyText ? 96.0 : 88.0) : 128.0;
     final weaponSize = compact ? 44.0 : 50.0;
 
     final atk = state.effectiveHeroAttack(hero);

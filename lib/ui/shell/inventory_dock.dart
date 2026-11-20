@@ -64,6 +64,7 @@ class InventoryDock extends StatefulWidget {
   static const int bagColumns = 4;
   static const double bagGridGap = 6;
   static const Key bagScrollKey = ValueKey('bag-scroll');
+  static const Key equipScrollKey = ValueKey('equip-tab-scroll');
   static const Key bagFiltersKey = ValueKey('bag-filters');
   static const Key bagAutoEquipKey = ValueKey('bag-auto-equip');
 
@@ -356,29 +357,40 @@ class _InventoryDockState extends State<InventoryDock>
       );
     }
 
-    // Phone product only: doll + actions; bag lives on its own GEAR → BAG tab.
-    // (A side-by-side / stacked bag pane used to appear in wide browsers and
-    // looked nothing like the APK the player installs.)
+    // Phone: scroll the doll; EQUIP stays pinned under the scroll (audit gear).
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
           child: SingleChildScrollView(
+            key: InventoryDock.equipScrollKey,
             padding: const EdgeInsets.fromLTRB(
               ShellLayout.sheetHorizontal,
               0,
               ShellLayout.sheetHorizontal,
-              68,
+              4,
             ),
             child: sheet(),
           ),
         ),
-        const SizedBox(height: 4),
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: ShellLayout.sheetHorizontal,
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: GameTheme.panel.withValues(alpha: 0.98),
+            border: Border(
+              top: BorderSide(
+                color: GameTheme.borderLit.withValues(alpha: 0.35),
+              ),
+            ),
           ),
-          child: actions(),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              ShellLayout.sheetHorizontal,
+              4,
+              ShellLayout.sheetHorizontal,
+              6,
+            ),
+            child: actions(),
+          ),
         ),
       ],
     );

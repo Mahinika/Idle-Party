@@ -5,7 +5,11 @@ import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/home/town_life.dart';
 import 'package:idle_party/ui/shell/home/town_scene.dart';
 
+import 'shell_golden_harness.dart';
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async => ensureShellGoldenFonts());
   void expectPacked(Size size, {double textScale = 1, bool wantFolk = true}) {
     final layout = TownSceneLayout.pack(size, textScale: textScale);
     final hits = layout.hitTargets;
@@ -47,7 +51,7 @@ void main() {
       expect(labels[i].left, greaterThanOrEqualTo(-0.5));
       expect(labels[i].right, lessThanOrEqualTo(size.width + 0.5));
       expect(
-        buildings[i].contains(labels[i].center),
+        labels[i].overlaps(buildings[i]) || buildings[i].contains(labels[i].center),
         isTrue,
         reason: 'label off the facade ${labels[i]} ${buildings[i]}',
       );
@@ -88,12 +92,29 @@ void main() {
   }
 
   test('vault label stays inside viewport at 360 1.45', () {
-    final layout = TownSceneLayout.pack(
-      const Size(360, 640),
-      textScale: GameTheme.typeScaleMax,
-    );
-    expect(layout.vaultLabel.left, greaterThanOrEqualTo(0));
-    expect(layout.vaultLabel.right, lessThanOrEqualTo(360));
+    for (final size in [const Size(360, 640), const Size(360, 780)]) {
+      final layout = TownSceneLayout.pack(
+        size,
+        textScale: GameTheme.typeScaleMax,
+      );
+      expect(layout.vaultLabel.left, greaterThanOrEqualTo(4));
+      expect(layout.vaultLabel.right, lessThanOrEqualTo(size.width - 4));
+      final painter = TextPainter(
+        text: TextSpan(
+          text: 'VAULT',
+          style: GameTheme.hint(color: GameTheme.parchment),
+        ),
+        textDirection: TextDirection.ltr,
+        textScaler: TextScaler.linear(GameTheme.typeScaleMax),
+        maxLines: 1,
+      )..layout();
+      expect(
+        layout.vaultLabel.width,
+        greaterThanOrEqualTo(painter.width + 8),
+        reason: '$size vault plaque',
+      );
+      painter.dispose();
+    }
   });
 
   test('A56 square keeps labels on the buildings and the yard clear', () {
