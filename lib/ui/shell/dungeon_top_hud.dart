@@ -1054,15 +1054,27 @@ class MissionClaimChip extends StatelessWidget {
     required this.onTap,
     this.onLongPress,
     this.dense = false,
+    this.compact = false,
   });
   final int count;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final bool dense;
 
+  /// Tight fight row: `Q · n` with full quest semantics.
+  final bool compact;
+
+  static String _label(int count, {required bool compact}) =>
+      compact ? 'Q · $count' : 'QUESTS · $count';
+
   /// Layout width for inline fight-row placement (no [FittedBox]).
-  static double layoutWidth(BuildContext context, int count, {bool dense = false}) {
-    final label = 'QUESTS · $count';
+  static double layoutWidth(
+    BuildContext context,
+    int count, {
+    bool dense = false,
+    bool compact = false,
+  }) {
+    final label = _label(count, compact: compact);
     final scaler = MediaQuery.textScalerOf(context);
     final painter = TextPainter(
       text: TextSpan(
@@ -1079,9 +1091,12 @@ class MissionClaimChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final label = _label(count, compact: compact);
+  final semantics =
+        count == 1 ? 'Quests, 1 ready' : 'Quests, $count ready';
     return Semantics(
       button: true,
-      label: count == 1 ? 'Claim 1 quest' : 'Claim $count quests',
+      label: semantics,
       excludeSemantics: true,
       child: Material(
         color: Colors.transparent,
@@ -1090,7 +1105,10 @@ class MissionClaimChip extends StatelessWidget {
           onLongPress: onLongPress,
           borderRadius: BorderRadius.circular(3),
           child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: GameTheme.minTouch),
+            constraints: BoxConstraints(
+              minHeight: GameTheme.minTouch,
+              minWidth: GameTheme.minTouch,
+            ),
             child: Container(
               padding: EdgeInsets.symmetric(
                 horizontal: dense ? 6 : 8,
@@ -1103,7 +1121,7 @@ class MissionClaimChip extends StatelessWidget {
                 border: Border.all(color: GameTheme.toggleOnAccent),
               ),
               child: Text(
-                dense ? 'QUESTS · $count' : 'QUESTS · $count',
+                label,
                 style: GameTheme.combat(color: GameTheme.toggleOnText),
               ),
             ),

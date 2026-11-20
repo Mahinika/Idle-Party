@@ -10,6 +10,7 @@ import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/ui/character_equip_panel.dart';
 import 'package:idle_party/ui/game_theme.dart';
+import 'package:idle_party/ui/feedback_toast.dart';
 import 'package:idle_party/ui/hub/hub_powerups.dart';
 import 'package:idle_party/ui/menu_chrome.dart';
 import 'package:idle_party/ui/shell/dungeon_party_hud.dart';
@@ -17,6 +18,7 @@ import 'package:idle_party/ui/shell/discord_thanks_overlay.dart';
 import 'package:idle_party/ui/shell/home/home_catalog.dart';
 import 'package:idle_party/ui/shell/home/rail_button.dart';
 import 'package:idle_party/ui/shell/inventory_dock.dart';
+import 'package:idle_party/ui/shell/play_shell.dart';
 
 import 'audit100_harness.dart';
 import 'shell_screen_golden_test.dart' show pumpGearGoldenUntilDoll;
@@ -54,7 +56,8 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byKey(ScrollsSheet.pouchTitleKey), findsOneWidget);
-    expect(find.text('POUCH'), findsOneWidget);
+    expect(find.text('POUCH'), findsWidgets);
+    expect(find.text('SCROLLS'), findsNothing);
   });
 
   test('Discord not offered during first 30s of fight', () {
@@ -143,23 +146,40 @@ void main() {
     expect(find.text('SCROLLS'), findsOneWidget);
   });
 
-  test('PopScope double-back sets exit toast on home hub root', () {
+  testWidgets('exit toast shows on home hub after first back', (tester) async {
     final director = GameDirector.preview(
       initialState: GameLogic.createInitialState().copyWith(
         homeLayout: HomeLayout.home,
       ),
     );
-    addTearDown(director.dispose);
+    var directorLive = true;
+    addTearDown(() {
+      if (directorLive) director.dispose();
+    });
     final router = MenuRouter();
     addTearDown(router.dispose);
-    final atRoot = !router.isOpen && router.homeDepth == 0;
-    final homeDoubleBackExit = director.state.homeLayout == HomeLayout.home &&
-        !director.state.inDungeon &&
-        atRoot;
-    expect(homeDoubleBackExit, isTrue);
-    expect(atRoot && !homeDoubleBackExit, isFalse);
-    director.showToast('Press back again to exit', life: 2);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PlayShell(director: director, router: router),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    final pop = find.descendant(
+      of: find.byType(PlayShell),
+      matching: find.byWidgetPredicate((w) => w is PopScope),
+    );
+    expect(pop, findsOneWidget);
+    final scope = tester.widget<PopScope>(pop);
+    scope.onPopInvokedWithResult?.call(false, null);
+    await tester.pump();
+    expect(find.byType(FeedbackToast), findsOneWidget);
+    expect(find.text('Press back again to exit'), findsOneWidget);
     expect(director.toast, 'Press back again to exit');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    director.dispose();
+    directorLive = false;
+    await tester.pump(const Duration(milliseconds: 400));
   });
 
   a100TestHome('gear doll 360 scale 1.45 slot legend above EQUIP row', (

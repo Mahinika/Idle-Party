@@ -175,7 +175,11 @@ class TownSceneLayout {
       final lh = math.min(labelH, math.max(10.0, b.height - 4));
       final top = math.max(b.top, b.bottom - lh - 2);
       final height = math.min(lh, b.bottom - top);
-      return Rect.fromLTWH(b.center.dx - lw / 2, top, lw, height);
+      const edge = 4.0;
+      var left = b.center.dx - lw / 2;
+      if (left < edge) left = edge;
+      if (left + lw > w - edge) left = math.max(edge, w - edge - lw);
+      return Rect.fromLTWH(left, top, lw, height);
     }
 
     final lane = Rect.fromLTRB(

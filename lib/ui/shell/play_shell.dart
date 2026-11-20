@@ -312,10 +312,19 @@ class _PlayShellState extends State<PlayShell> {
                   router.close();
                   director.enterDungeon(dungeonId: id);
                 },
-                child: HomeShell(
-                  director: director,
-                  router: router,
-                  onLeave: () {
+                child: ListenableBuilder(
+                  listenable: director,
+                  builder: (context, _) {
+                    final showToast =
+                        director.toast != null &&
+                        !(inDungeon && !router.isOpen);
+                    return Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        HomeShell(
+                          director: director,
+                          router: router,
+                          onLeave: () {
                     if (director.state.isPartyDefeated) {
                       director.hubAfterWipe();
                       return;
@@ -335,6 +344,21 @@ class _PlayShellState extends State<PlayShell> {
                       keyTimer: director.state.keystoneRunActive
                           ? Keystone.formatTimer(director.state.keystoneTimerMs)
                           : null,
+                    );
+                          },
+                        ),
+                        if (showToast)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: FeedbackToast(
+                                message: director.toast!,
+                                kind: director.noticeKind,
+                                maxLines: inDungeon ? 2 : 3,
+                                alignment: noticeAlign,
+                              ),
+                            ),
+                          ),
+                      ],
                     );
                   },
                 ),

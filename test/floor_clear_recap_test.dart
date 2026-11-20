@@ -23,7 +23,7 @@ void main() {
         essence: 2,
         gauntlet: true,
       ),
-      'Spire F9 · +10g · +2e',
+      'Spire F9 · +10g · +2 essence',
     );
     expect(floorClearRecap(floor: 1, gold: 0, xp: 0), 'F1 CLEAR');
   });

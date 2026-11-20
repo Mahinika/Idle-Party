@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/chase_dispatcher.dart';
@@ -78,18 +80,55 @@ class _HomeShellState extends State<HomeShell> {
   int _goldFocusGen = 0;
   bool _farmPushSeamAcked = false;
   final GlobalKey _topChromeKey = GlobalKey();
+  bool _wasInDungeon = false;
+  DateTime? _fightTapMuteUntil;
+  Timer? _fightTapMuteTimer;
+
+  static const Duration _postEntryTapMute = Duration(milliseconds: 350);
 
   @override
   void initState() {
     super.initState();
+    _wasInDungeon = director.state.inDungeon;
     router.addListener(_onRouter);
+    director.addListener(_onDirector);
   }
 
   @override
   void dispose() {
+    _fightTapMuteTimer?.cancel();
+    director.removeListener(_onDirector);
     router.removeListener(_onRouter);
     super.dispose();
   }
+
+  void _onDirector() {
+    final inDungeon = director.state.inDungeon;
+    if (!_wasInDungeon && inDungeon) {
+      _armFightTapMute();
+    }
+    _wasInDungeon = inDungeon;
+  }
+
+  void _armFightTapMute() {
+    final until = DateTime.now().add(_postEntryTapMute);
+    _fightTapMuteTimer?.cancel();
+    if (mounted) {
+      setState(() => _fightTapMuteUntil = until);
+    } else {
+      _fightTapMuteUntil = until;
+    }
+    _fightTapMuteTimer = Timer(_postEntryTapMute, () {
+      if (!mounted) return;
+      if (_fightTapMuteUntil == until) {
+        setState(() => _fightTapMuteUntil = null);
+      }
+    });
+  }
+
+  bool get _fightTapsMuted =>
+      _fightTapMuteUntil != null &&
+      DateTime.now().isBefore(_fightTapMuteUntil!);
 
   void _onRouter() {
     // In the cave GOLD is the dock under the fight, not a destination.
@@ -119,6 +158,7 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
     final state = director.state;
     final route = router.route;
     final interceptGold = state.inDungeon && route == MenuRoute.gold;
@@ -149,7 +189,19 @@ class _HomeShellState extends State<HomeShell> {
                 Column(
                   children: [
                     Expanded(
-                      flex: showPanel ? (full ? 1 : 3) : 5,
+                      flex: showPanel
+                          ? (full
+                                ? 1
+                                : () {
+                                    final h = MediaQuery.sizeOf(context).height;
+                                    final large = textScale >
+                                        GameTheme.typeScaleMax - 0.01;
+                                    if (!large) return 3;
+                                    if (h < 680) return 1;
+                                    if (h < 800) return 2;
+                                    return 3;
+                                  }())
+                          : 5,
                       child: RepaintBoundary(
                         child: state.inDungeon
                             ? FightViewport(
@@ -168,11 +220,14 @@ class _HomeShellState extends State<HomeShell> {
                       ),
                     ),
                     if (showPanel)
-                      FightSeam(
-                        director: director,
-                        router: router,
-                        onLeave: widget.onLeave,
-                        hideRails: full,
+                      IgnorePointer(
+                        ignoring: _fightTapsMuted,
+                        child: FightSeam(
+                          director: director,
+                          router: router,
+                          onLeave: widget.onLeave,
+                          hideRails: full,
+                        ),
                       ),
                     if (showPanel && !full)
                       Expanded(
@@ -181,13 +236,16 @@ class _HomeShellState extends State<HomeShell> {
                           child: DirectorSelect<int>(
                             director: director,
                             select: (s) => s.gold + s.essence,
-                            builder: (context, _) => NavClearance(
-                              bottom: HomeNavBar.fightOverhang(context),
-                              child: UpgradePanel(
-                                director: director,
-                                router: router,
-                                focusPanel: _goldFocus,
-                                focusGeneration: _goldFocusGen,
+                            builder: (context, _) => IgnorePointer(
+                              ignoring: _fightTapsMuted,
+                              child: NavClearance(
+                                bottom: HomeNavBar.fightOverhang(context),
+                                child: UpgradePanel(
+                                  director: director,
+                                  router: router,
+                                  focusPanel: _goldFocus,
+                                  focusGeneration: _goldFocusGen,
+                                ),
                               ),
                             ),
                           ),

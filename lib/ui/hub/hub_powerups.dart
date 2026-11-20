@@ -323,7 +323,10 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   MenuChrome.sheetHandle(),
-                  Text('SCROLLS', style: GameTheme.title()),
+                  Text(
+                    widget.focus == PowerupsFocus.pouch ? 'POUCH' : 'SCROLLS',
+                    style: GameTheme.title(),
+                  ),
                   ShellLayout.gap(6),
                   Row(
                     children: [

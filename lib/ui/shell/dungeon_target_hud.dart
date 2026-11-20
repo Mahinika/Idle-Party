@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../models/enemy.dart';
@@ -12,15 +14,17 @@ double targetStripHeight(TextScaler scaler) {
   final scale = raw.clamp(1.0, GameTheme.typeScaleMax);
   final vPad = scale >= 1.4 ? 1.0 : 2.0;
   // Measured from combat + hint on two lines (name row + HP row).
+  // Name row may wrap to two lines on wide targets; reserve two at 1.45.
   final titleLine = GameTheme.hudPixelComfort * 1.2 * scale;
   final hpLine = GameTheme.hudPixel * 1.35 * scale;
+  final hpRow = math.max(hpLine, GameTheme.minTouch);
   final between = 2.0;
   // Accessibility > 1.45 (stress tests): grow the reserved slot.
   final slack = raw > GameTheme.typeScaleMax
       ? (raw - GameTheme.typeScaleMax) * GameTheme.hudPixel * 1.2
       : 0.0;
-  const layoutSlack = 10.0;
-  return vPad + titleLine + between + hpLine + vPad + slack + layoutSlack;
+  const layoutSlack = 6.0;
+  return vPad + titleLine + between + hpRow + vPad + slack + layoutSlack;
 }
 
 /// Top inset for the short boss callout, below the target strip.
@@ -70,6 +74,7 @@ class TargetCornerHud extends StatelessWidget {
     required this.director,
     this.edgeInset = true,
     this.minTitleWidth = 0,
+    this.hpRowTrailing,
   });
 
   final GameDirector director;
@@ -79,6 +84,9 @@ class TargetCornerHud extends StatelessWidget {
 
   /// Keeps the enemy title readable when the row also carries quest chips.
   final double minTitleWidth;
+
+  /// Floor badge, DPS pill, and quest chip on the HP row (line 2).
+  final List<Widget>? hpRowTrailing;
 
   /// Enemy name on the target strip (line 1).
   static const Key titleKey = ValueKey('target-corner-title');
@@ -250,9 +258,9 @@ class TargetCornerHud extends StatelessWidget {
       child: Text(
         nameLine,
         key: titleKey,
-        maxLines: 1,
-        softWrap: false,
-        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+        softWrap: true,
+        overflow: TextOverflow.clip,
         style: GameTheme.combat(
           color: showEmpty
               ? GameTheme.parchmentDim.withValues(alpha: 0.55)
@@ -277,27 +285,39 @@ class TargetCornerHud extends StatelessWidget {
       ],
     );
 
-  Widget? hpRow;
+    final trailing = hpRowTrailing;
+    Widget? hpRow;
     if (enemy != null && hpLabel.isNotEmpty) {
       hpRow = Row(
         children: [
           Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(1),
-              child: LinearProgressIndicator(
-                value: hpFrac,
-                minHeight: 3,
-                backgroundColor: GameTheme.equipChipBlocked,
-                color: hpFrac > 0.35 ? GameTheme.bloodLit : GameTheme.blood,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 32),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(1),
+                      child: LinearProgressIndicator(
+                        value: hpFrac,
+                        minHeight: 3,
+                        backgroundColor: GameTheme.equipChipBlocked,
+                        color:
+                            hpFrac > 0.35 ? GameTheme.bloodLit : GameTheme.blood,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    hpLabel,
+                    maxLines: 1,
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(width: 6),
-          Text(
-            hpLabel,
-            maxLines: 1,
-            style: GameTheme.hint(color: GameTheme.parchmentDim),
-          ),
+          ...?trailing,
         ],
       );
     } else if (enemy == null && state.isPartyDefeated) {

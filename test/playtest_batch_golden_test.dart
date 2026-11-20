@@ -51,24 +51,25 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
   });
 
-  testWidgets('target strip golden boss at 360x640 scale 1.45', (tester) async {
+  testWidgets('target strip golden elite at 360x640 scale 1.45', (tester) async {
     final key = GlobalKey();
     final director = await _pumpTargetStripGolden(
       tester,
       key,
       size: const Size(360, 640),
       scale: GameTheme.typeScaleMax,
-      name: 'Earth Kraken',
-      role: EnemyRole.boss,
+      name: 'SOUL SPITTER',
+      role: EnemyRole.elite,
       archetype: EnemyArchetype.brute,
     );
     final title = tester.widget<Text>(find.byKey(TargetCornerHud.titleKey));
-    expect(title.data, 'EARTH KRAKEN');
-    expect(find.text('BOSS'), findsOneWidget);
+    expect(title.data, 'SOUL SPITTER');
+    expect(title.data, isNot(contains('…')));
+    expect(find.text('ELITE'), findsOneWidget);
     await expectLater(
       find.byKey(key),
       matchesGoldenFile(
-        'goldens/widgets/playtest_target_boss_360_scale145.png',
+        'goldens/widgets/playtest_target_elite_360_scale145.png',
       ),
     );
     director.dispose();
@@ -160,11 +161,12 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('fight top bar golden with swarm target at 411', (tester) async {
+  testWidgets('fight top bar golden with elite target at 411', (tester) async {
     await ensureShellGoldenFonts();
     final director = await _fightDirectorPinnedEnemy(
-      name: 'Cave Slime',
-      archetype: EnemyArchetype.swarm,
+      name: 'ELITE RAID SLIME',
+      role: EnemyRole.elite,
+      archetype: EnemyArchetype.brute,
     );
     var directorLive = true;
     addTearDown(() {
@@ -202,11 +204,11 @@ void main() {
     }
   await pumpGoldenFrames(tester, ms: 200);
     final title = tester.widget<Text>(find.byKey(TargetCornerHud.titleKey));
-    expect(title.data, contains('CAVE SLIME'));
+    expect(title.data, 'ELITE RAID SLIME');
     expect(title.data, isNot(contains('…')));
     await expectLater(
       find.byKey(key),
-      matchesGoldenFile('goldens/widgets/playtest_home_topbar_swarm_411.png'),
+      matchesGoldenFile('goldens/widgets/playtest_home_topbar_elite_411.png'),
     );
     director.dispose();
     directorLive = false;

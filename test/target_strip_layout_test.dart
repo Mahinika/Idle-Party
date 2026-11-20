@@ -6,11 +6,15 @@ import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/nav_copy.dart';
 import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/mission.dart' show Mission, MissionType;
+import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/dungeon_target_hud.dart';
 import 'package:idle_party/ui/shell/dungeon_top_hud.dart';
+import 'package:idle_party/ui/shell/forge_overlay.dart';
 import 'package:idle_party/ui/shell/home/home_top_bar.dart';
+import 'package:idle_party/ui/shell/market_overlay.dart';
 import 'package:idle_party/ui/feedback_toast.dart';
 import 'package:idle_party/ui/shell/play_shell.dart';
 
@@ -193,9 +197,12 @@ void main() {
     final title = tester.widget<Text>(find.byKey(TargetCornerHud.titleKey));
     expect(title.data, isNot(matches(RegExp(r'^ME\.\.\.'))));
     expect(title.data!.length, greaterThan(4));
-    expect(find.textContaining('QUESTS ·'), findsOneWidget);
+    expect(
+      find.textContaining(RegExp(r'(QUESTS ·|Q ·)')),
+      findsOneWidget,
+    );
     final chip = find.ancestor(
-      of: find.textContaining('QUESTS ·'),
+      of: find.textContaining(RegExp(r'(QUESTS ·|Q ·)')),
       matching: find.byType(InkWell),
     );
     expect(
@@ -291,7 +298,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
       if (director.dungeonTilesReady &&
           find.byKey(TargetCornerHud.stripKey).evaluate().isNotEmpty &&
-          find.textContaining('QUESTS ·').evaluate().isNotEmpty) {
+          find.textContaining(RegExp(r'(QUESTS ·|Q ·)')).evaluate().isNotEmpty) {
         break;
       }
     }
@@ -303,8 +310,7 @@ void main() {
       ),
     );
     final chip = tester.getRect(find.textContaining('QUESTS ·'));
-    expect(chip.top, lessThan(95), reason: 'chip should sit on the target row');
-    expect(chip.top, greaterThan(hex.top - 6));
+    expect((chip.top - hex.top).abs(), lessThan(20));
 
     final title = tester.widget<Text>(find.byKey(TargetCornerHud.titleKey));
     final label = title.data ?? '';
@@ -349,7 +355,11 @@ void main() {
     expect(HubChase.forState(state).kind, HubChaseKind.claimMissions);
 
     final director = GameDirector.preview(initialState: state);
-    addTearDown(director.dispose);
+    var directorLive = true;
+    addTearDown(() {
+      if (directorLive) director.dispose();
+    });
+    await director.boot(deferCombatLoop: true);
     final router = MenuRouter();
     addTearDown(router.dispose);
 
@@ -360,19 +370,135 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Claim quest reward'), findsNothing);
-    expect(find.textContaining('QUESTS ·'), findsOneWidget);
+    expect(
+      find.textContaining(RegExp(r'(QUESTS ·|Q ·)')),
+      findsOneWidget,
+    );
     final hex = tester.getRect(
       find.bySemanticsLabel(
         'Floor ${director.state.currentRoom.floorNumber}, open floor list',
       ),
     );
-    final chip = tester.getRect(find.textContaining('QUESTS ·'));
-    expect(chip.top, lessThan(95), reason: 'chip should sit on the target row');
-    expect(chip.top, greaterThan(hex.top - 6));
+    final chip = tester.getRect(
+      find.textContaining(RegExp(r'(QUESTS ·|Q ·)')),
+    );
+    expect(
+      (chip.top - hex.top).abs(),
+      lessThan(20),
+      reason: 'chip should sit on the HP row beside the floor badge',
+    );
     expect(tester.takeException(), isNull);
+    director.dispose();
+    directorLive = false;
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  for (final spec in [
+    (size: const Size(411, 891), scale: 1.0, name: 'ELITE RAID SLIME'),
+    (size: const Size(411, 891), scale: 1.0, name: 'THRONE WARDEN'),
+    (size: const Size(360, 640), scale: GameTheme.typeScaleMax, name: 'SOUL SPITTER'),
+    (size: const Size(360, 640), scale: GameTheme.typeScaleMax, name: 'EYE PRIEST'),
+  ]) {
+    testWidgets(
+      'target name ${spec.name} whole at ${spec.size} @ ${spec.scale}',
+      (tester) async {
+        tester.view.physicalSize = spec.size;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final director = await _fightDirectorPinned(
+          name: spec.name,
+          role: spec.name.startsWith('ELITE') || spec.name == 'THRONE WARDEN'
+              ? EnemyRole.elite
+              : EnemyRole.normal,
+        );
+        var directorLive = true;
+        addTearDown(() {
+          if (directorLive) director.dispose();
+        });
+        final router = MenuRouter();
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                size: spec.size,
+                textScaler: TextScaler.linear(spec.scale),
+              ),
+              child: child!,
+            ),
+            home: Scaffold(
+              body: HomeTopBar(director: director, router: router),
+            ),
+          ),
+        );
+        for (var i = 0; i < 40; i++) {
+          await tester.pump(const Duration(milliseconds: 50));
+          if (find.byKey(TargetCornerHud.titleKey).evaluate().isNotEmpty) break;
+        }
+        final title = tester.widget<Text>(find.byKey(TargetCornerHud.titleKey));
+        expect(title.data, spec.name);
+        expect(title.data, isNot(contains('…')));
+        director.dispose();
+        directorLive = false;
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
+
+  testWidgets('map enter does not pass tap through to split MARKET', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final director = GameDirector.preview(
+      initialState: GameLogic.createInitialState().copyWith(
+        homeLayout: HomeLayout.home,
+        bossVictories: 2,
+        highestFloorCleared: 4,
+        homePanelFull: false,
+      ),
+    );
+    var directorLive = true;
+    addTearDown(() {
+      if (directorLive) director.dispose();
+    });
+    await director.boot(deferCombatLoop: true);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PlayShell(director: director, router: router),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    router.open(MenuRoute.map);
+    await tester.pump();
+    router.close();
+    director.enterDungeon();
+    await tester.pump();
+    final marketTab = find
+        .descendant(of: find.byType(PlayShell), matching: find.text('MARKET'))
+        .first;
+    await tester.tapAt(tester.getCenter(marketTab));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.byType(ForgeOverlay), findsOneWidget);
+    expect(find.byType(MarketOverlay), findsNothing);
+    await tester.pump(const Duration(milliseconds: 400));
+    director.dispose();
+    directorLive = false;
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
   });
 
   testWidgets('achievement toast wraps without clip at 360 and 411', (tester) async {
@@ -407,6 +533,36 @@ void main() {
       expect(tester.getSize(find.byType(FeedbackToast)).width, lessThanOrEqualTo(width + 1));
     }
   });
+}
+
+Future<GameDirector> _fightDirectorPinned({
+  required String name,
+  EnemyRole role = EnemyRole.normal,
+}) async {
+  final director = await _fightDirector();
+  final world = director.spatial;
+  if (world == null || world.enemies.isEmpty) return director;
+  final template = world.enemies.firstWhere((e) => e.hp > 0 && !e.dormant);
+  final replacement = SpatialActor(
+    id: template.id,
+    name: name,
+    team: template.team,
+    x: template.x,
+    y: template.y,
+    hp: template.hp,
+    maxHp: template.maxHp,
+    attack: template.attack,
+    defense: template.defense,
+    moveSpeed: template.moveSpeed,
+    attackRange: template.attackRange,
+    attackCooldown: template.attackCooldown,
+    role: role,
+    archetype: template.archetype,
+  );
+  final idx = world.enemies.indexWhere((e) => e.id == template.id);
+  if (idx >= 0) world.enemies[idx] = replacement;
+  director.hudFocusEnemyId = replacement.id;
+  return director;
 }
 
 Future<GameDirector> _fightDirector() async {

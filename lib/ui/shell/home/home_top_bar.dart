@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
-import '../../../core/party_meter.dart';
 import '../../../core/hub_chase.dart';
 import '../../../core/keystone.dart';
 import '../../../core/game_state.dart';
@@ -413,37 +412,6 @@ class HomeTopBar extends StatelessWidget {
     );
   }
 
-  static double _hexBadgeLayoutWidth(
-    BuildContext context,
-    String floorLabel,
-  ) {
-    final scaler = MediaQuery.textScalerOf(context);
-    final painter = TextPainter(
-      text: TextSpan(
-        text: floorLabel,
-        style: GameTheme.hint(color: GameTheme.parchment),
-      ),
-      textDirection: TextDirection.ltr,
-      textScaler: scaler,
-      maxLines: 1,
-    )..layout();
-    return painter.width + 18;
-  }
-
-  static double _dpsPillLayoutWidth(BuildContext context) {
-    final scaler = MediaQuery.textScalerOf(context);
-    final painter = TextPainter(
-      text: TextSpan(
-        text: '999 dps',
-        style: GameTheme.combat(color: GameTheme.parchment, height: 1.2),
-      ),
-      textDirection: TextDirection.ltr,
-      textScaler: scaler,
-      maxLines: 1,
-    )..layout();
-    return painter.width + 12;
-  }
-
   Widget _tap({
     required String label,
     required VoidCallback onTap,
@@ -492,78 +460,39 @@ class _DungeonTargetRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final floorLabel = 'F${state.currentRoom.floorNumber}';
-    final chip = MissionClaimChip(
-      count: questCount,
-      dense: true,
-      onTap: director.claimAllReadyMissions,
-      onLongPress: () => router.apply(NavIntent.quests),
-    );
+    const gap = 4.0;
     return ListenableBuilder(
       listenable: director.combatFrame,
       builder: (context, _) => LayoutBuilder(
         builder: (context, constraints) {
-        const gap = 4.0;
-        final hexW = HomeTopBar._hexBadgeLayoutWidth(context, floorLabel);
-        final chipW = questReady
-            ? MissionClaimChip.layoutWidth(context, questCount, dense: true)
-            : 0.0;
-        final world = director.spatial;
-        final dpsLive =
-            world != null &&
-            world.combatElapsed > 0.05 &&
-            PartyMeter.fromHeroes(
-              world.heroes,
-              elapsed: world.combatElapsed,
-            ).chipLabel !=
-                '0 DPS';
-        final dpsW = dpsLive ? HomeTopBar._dpsPillLayoutWidth(context) : 0.0;
-        final trailingWithChip = hexW +
-            gap +
-            dpsW +
-            (dpsW > 0 ? gap : 0) +
-            (questReady ? gap + chipW : 0);
-        final minStrip = TargetCornerHud.minLayoutWidth(context);
-        const stripSlack = 4.0;
-        final inlineQuest = questReady &&
-            constraints.maxWidth - trailingWithChip >= minStrip - stripSlack;
-
-        final targetRow = Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: ListenableBuilder(
-                listenable: director.combatFrame,
-                builder: (context, _) => TargetCornerHud(
-                  director: director,
-                  edgeInset: false,
-                ),
-              ),
-            ),
+          final compactQuest = textScale >= GameTheme.typeScaleMax - 0.01 &&
+              questReady &&
+              constraints.maxWidth < 380;
+          final chip = MissionClaimChip(
+            count: questCount,
+            dense: true,
+            compact: compactQuest,
+            onTap: director.claimAllReadyMissions,
+            onLongPress: () => router.apply(NavIntent.quests),
+          );
+          final trailing = <Widget>[
             const SizedBox(width: gap),
             _floorBadge(context, floorLabel),
             const SizedBox(width: gap),
             HudDpsPill(director: director),
-            if (inlineQuest) ...[
+            if (questReady) ...[
               const SizedBox(width: gap),
               chip,
             ],
-          ],
-        );
-
-        if (questReady && !inlineQuest) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              targetRow,
-              SizedBox(height: textScale > 1.4 ? 0 : 2),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [chip],
-              ),
-            ],
+          ];
+          return ListenableBuilder(
+            listenable: director.combatFrame,
+            builder: (context, _) => TargetCornerHud(
+              director: director,
+              edgeInset: false,
+              hpRowTrailing: trailing,
+            ),
           );
-        }
-        return targetRow;
         },
       ),
     );

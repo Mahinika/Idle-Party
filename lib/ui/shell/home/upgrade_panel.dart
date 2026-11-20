@@ -161,25 +161,19 @@ class _UpgradePanelState extends State<UpgradePanel> {
       color: embedded ? Colors.transparent : GameTheme.panel,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final headerCap = constraints.maxHeight.isFinite
-              ? constraints.maxHeight * 0.5
-              : null;
+          final textScale = MediaQuery.textScalerOf(context).scale(1);
+          final tight = textScale > GameTheme.typeScaleMax - 0.01;
           return Column(
             children: [
               if (!embedded)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 2),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: headerCap == null
-                          ? double.infinity
-                          : headerCap.clamp(
-                              GameTheme.minTouch,
-                              double.infinity,
-                            ),
-                    ),
-                    child: _header(open),
+                  padding: EdgeInsets.fromLTRB(
+                    8,
+                    tight ? 2 : 4,
+                    8,
+                    tight ? 0 : 2,
                   ),
+                  child: _header(open, constraints.maxWidth),
                 ),
               Expanded(child: _body(state, open, active, embedded)),
             ],
@@ -224,11 +218,14 @@ class _UpgradePanelState extends State<UpgradePanel> {
 
   /// One row: FORGE · CAMP · MARKET as icon tabs, then ×1 / ×10 / MAX,
   /// or in SPLIT MARKET the flask dropdown and the reroll chip.
-  Widget _header(bool open) {
+  Widget _header(bool open, double barWidth) {
     final showQty = open && _mode != _Panel.market;
     final marketControls =
         open && _mode == _Panel.market && !widget.director.state.homePanelFull;
-    return Row(
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    final stackMarket =
+        marketControls && scale > GameTheme.typeScaleMax - 0.01;
+    final tabs = Row(
       children: [
         for (final p in _Panel.values) ...[
           if (p.index > 0) const SizedBox(width: 4),
@@ -255,8 +252,8 @@ class _UpgradePanelState extends State<UpgradePanel> {
           const SizedBox(width: 4),
           _campWatchButton(widget.director.state),
         ],
-        if (marketControls) ...[
-          const SizedBox(width: 8),
+        if (marketControls && !stackMarket) ...[
+          const SizedBox(width: 4),
           MarketHeaderControls(
             director: widget.director,
             upgradesOnly: _marketUpgradesOnly,
@@ -264,6 +261,20 @@ class _UpgradePanelState extends State<UpgradePanel> {
                 setState(() => _marketUpgradesOnly = v),
           ),
         ],
+      ],
+    );
+    if (!stackMarket) return tabs;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        tabs,
+        MarketHeaderControls(
+          director: widget.director,
+          upgradesOnly: _marketUpgradesOnly,
+          onUpgradesOnlyChanged: (v) =>
+              setState(() => _marketUpgradesOnly = v),
+        ),
       ],
     );
   }
@@ -314,8 +325,11 @@ class _UpgradePanelState extends State<UpgradePanel> {
             // 48 dp tap area around a 40 dp face. At large text the face
             // grows into the margin instead of overflowing.
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                minHeight: GameTheme.primaryTouch,
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.textScalerOf(context).scale(1) >
+                        GameTheme.typeScaleMax - 0.01
+                    ? GameTheme.minTouch
+                    : GameTheme.primaryTouch,
               ),
               child: Center(
                 heightFactor: 1,
@@ -323,7 +337,10 @@ class _UpgradePanelState extends State<UpgradePanel> {
                   tone: ChunkyTone.stone,
                   raised: !selected,
                   highlight: selected,
-                  minHeight: GameTheme.chunkyFace + 4,
+                  minHeight: MediaQuery.textScalerOf(context).scale(1) >
+                          GameTheme.typeScaleMax - 0.01
+                      ? GameTheme.chunkyFaceDense
+                      : GameTheme.chunkyFace + 4,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 2,
                     vertical: 1,

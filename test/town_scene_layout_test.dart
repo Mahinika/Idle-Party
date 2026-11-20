@@ -44,6 +44,8 @@ void main() {
     final labels = layout.labels;
     expect(labels, hasLength(5));
     for (var i = 0; i < labels.length; i++) {
+      expect(labels[i].left, greaterThanOrEqualTo(-0.5));
+      expect(labels[i].right, lessThanOrEqualTo(size.width + 0.5));
       expect(
         buildings[i].contains(labels[i].center),
         isTrue,
@@ -84,6 +86,15 @@ void main() {
       );
     }
   }
+
+  test('vault label stays inside viewport at 360 1.45', () {
+    final layout = TownSceneLayout.pack(
+      const Size(360, 640),
+      textScale: GameTheme.typeScaleMax,
+    );
+    expect(layout.vaultLabel.left, greaterThanOrEqualTo(0));
+    expect(layout.vaultLabel.right, lessThanOrEqualTo(360));
+  });
 
   test('A56 square keeps labels on the buildings and the yard clear', () {
     expectPacked(const Size(360, 480));

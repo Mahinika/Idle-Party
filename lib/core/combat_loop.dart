@@ -598,7 +598,7 @@ String floorClearRecap({
   final bits = <String>[gauntlet ? 'Spire F$floor' : 'F$floor CLEAR'];
   if (gold > 0) bits.add('+${gold}g');
   if (xp > 0) bits.add('+$xp XP');
-  if (essence > 0) bits.add('+${essence}e');
+  if (essence > 0) bits.add('+$essence essence');
   final drop = bestDrop?.trim() ?? '';
   if (drop.isNotEmpty) {
     bits.add(drop.length > 22 ? '${drop.substring(0, 21)}…' : drop);
