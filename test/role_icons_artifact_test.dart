@@ -71,9 +71,10 @@ Future<void> _writeZoomedIcon(
   WidgetTester tester,
   GlobalKey shotKey,
   ui.Image full,
+  PartyRoleBucket bucket,
   String path,
 ) async {
-  final icon = find.byKey(PartyRoleIcon.keyFor(PartyRoleBucket.tank)).first;
+  final icon = find.byKey(PartyRoleIcon.keyFor(bucket)).first;
   final iconRect = tester.getRect(icon);
   final shotRect = tester.getRect(find.byKey(shotKey));
   final rel = Rect.fromLTWH(
@@ -83,8 +84,8 @@ Future<void> _writeZoomedIcon(
     iconRect.height,
   );
 
-  final dpr = 2.0;
-  final pad = 6.0;
+  const dpr = 2.0;
+  const pad = 6.0;
   final crop = Rect.fromLTRB(
     (rel.left - pad) * dpr,
     (rel.top - pad) * dpr,
@@ -94,47 +95,51 @@ Future<void> _writeZoomedIcon(
 
   late Uint8List pngBytes;
   await tester.runAsync(() async {
-  final raw = await full.toByteData(format: ui.ImageByteFormat.rawRgba);
-  final w = crop.width.round();
-  final h = crop.height.round();
-  final scale = 3;
-  final outW = w * scale;
-  final outH = h * scale;
-  final bytes = raw!;
-  final fullW = full.width;
+    final raw = await full.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final w = crop.width.round();
+    final h = crop.height.round();
+    const scale = 3;
+    final outW = w * scale;
+    final outH = h * scale;
+    final bytes = raw!;
+    final fullW = full.width;
 
-  final out = Uint8List(outW * outH * 4);
-  for (var oy = 0; oy < outH; oy++) {
-    for (var ox = 0; ox < outW; ox++) {
-      final sx = crop.left.round() + ox ~/ scale;
-      final sy = crop.top.round() + oy ~/ scale;
-      final si = (sy * fullW + sx) * 4;
-      final di = (oy * outW + ox) * 4;
-      out[di] = bytes.getUint8(si);
-      out[di + 1] = bytes.getUint8(si + 1);
-      out[di + 2] = bytes.getUint8(si + 2);
-      out[di + 3] = bytes.getUint8(si + 3);
+    final out = Uint8List(outW * outH * 4);
+    for (var oy = 0; oy < outH; oy++) {
+      for (var ox = 0; ox < outW; ox++) {
+        final sx = crop.left.round() + ox ~/ scale;
+        final sy = crop.top.round() + oy ~/ scale;
+        final si = (sy * fullW + sx) * 4;
+        final di = (oy * outW + ox) * 4;
+        out[di] = bytes.getUint8(si);
+        out[di + 1] = bytes.getUint8(si + 1);
+        out[di + 2] = bytes.getUint8(si + 2);
+        out[di + 3] = bytes.getUint8(si + 3);
+      }
     }
-  }
 
-  final recorder = ui.PictureRecorder();
-  final canvas = Canvas(recorder);
-  final src = await ui.ImmutableBuffer.fromUint8List(out);
-  final descriptor = ui.ImageDescriptor.raw(
-    src,
-    width: outW,
-    height: outH,
-    pixelFormat: ui.PixelFormat.rgba8888,
-  );
-  final codec = await descriptor.instantiateCodec();
-  final frame = await codec.getNextFrame();
-  canvas.drawImage(frame.image, Offset.zero, Paint()..filterQuality = FilterQuality.none);
-  frame.image.dispose();
-  final picture = recorder.endRecording();
-  final zoomImg = await picture.toImage(outW, outH);
-  final png = await zoomImg.toByteData(format: ui.ImageByteFormat.png);
-  pngBytes = png!.buffer.asUint8List();
-  zoomImg.dispose();
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final src = await ui.ImmutableBuffer.fromUint8List(out);
+    final descriptor = ui.ImageDescriptor.raw(
+      src,
+      width: outW,
+      height: outH,
+      pixelFormat: ui.PixelFormat.rgba8888,
+    );
+    final codec = await descriptor.instantiateCodec();
+    final frame = await codec.getNextFrame();
+    canvas.drawImage(
+      frame.image,
+      Offset.zero,
+      Paint()..filterQuality = FilterQuality.none,
+    );
+    frame.image.dispose();
+    final picture = recorder.endRecording();
+    final zoomImg = await picture.toImage(outW, outH);
+    final png = await zoomImg.toByteData(format: ui.ImageByteFormat.png);
+    pngBytes = png!.buffer.asUint8List();
+    zoomImg.dispose();
   });
   File(path).parent.createSync(recursive: true);
   File(path).writeAsBytesSync(pngBytes);
@@ -143,8 +148,11 @@ Future<void> _writeZoomedIcon(
 void main() {
   testWidgets('fight party strip role icons at 1.0 and 1.45', (tester) async {
     await ensureShellGoldenFonts();
-    final shotKey = GlobalKey();
+    final shotKey = GlobalKey(debugLabel: 'role-icons-strip-shot');
     for (final scale in [1.0, 1.45]) {
+      tester.binding.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.binding.platformDispatcher.clearTextScaleFactorTestValue);
+
       final director = await roleIconsArtifactDirector();
       addTearDown(director.dispose);
       final router = MenuRouter();
@@ -156,17 +164,13 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        MediaQuery(
-          data: shellGoldenMedia.copyWith(
-            textScaler: TextScaler.linear(scale),
-          ),
-          child: shellGoldenScaffold(
-            RepaintBoundary(
-              key: shotKey,
-              child: RoleIconsFightStripHarness(
-                director: director,
-                router: router,
-              ),
+        roleIconsScaledScaffold(
+          scale: scale,
+          body: RepaintBoundary(
+            key: shotKey,
+            child: RoleIconsFightStripHarness(
+              director: director,
+              router: router,
             ),
           ),
         ),
@@ -174,6 +178,9 @@ void main() {
       await pumpGoldenFrames(tester, ms: 500);
       while (tester.takeException() != null) {}
       expect(find.text('Tank'), findsNothing);
+      for (final name in ['Aegis', 'Vale', 'Blaze', 'Fang', 'Storm']) {
+        expect(find.text(name), findsOneWidget);
+      }
       expect(
         find.byKey(PartyRoleIcon.keyFor(PartyRoleBucket.tank)),
         findsOneWidget,
@@ -191,12 +198,19 @@ void main() {
       final img = await _captureBoundary(tester, shotKey);
       await _writePng(tester, img, '$_artifactDir/fight_party_strip_$suffix.png');
       if (scale == 1.0) {
-        await _writeZoomedIcon(
-          tester,
-          shotKey,
-          img,
-          '$_artifactDir/icon_card_zoom_3x.png',
-        );
+        for (final e in [
+          (PartyRoleBucket.tank, 'icon_tank_zoom_3x'),
+          (PartyRoleBucket.healer, 'icon_healer_zoom_3x'),
+          (PartyRoleBucket.dps, 'icon_dps_zoom_3x'),
+        ]) {
+          await _writeZoomedIcon(
+            tester,
+            shotKey,
+            img,
+            e.$1,
+            '$_artifactDir/${e.$2}.png',
+          );
+        }
       }
       img.dispose();
       await tester.pumpWidget(const SizedBox.shrink());

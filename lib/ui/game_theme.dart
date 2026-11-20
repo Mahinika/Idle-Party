@@ -71,6 +71,7 @@ abstract final class GameTheme {
   static const Color roleIconCrossGreen = Color(0xFF5A9A5A);
   static const Color roleIconBowWood = Color(0xFF8B5A2B);
   static const Color roleIconBowString = Color(0xFFC9A66B);
+  static const Color roleIconBowArrow = Color(0xFF9A8060);
 
   /// RUN / TODAY / ACCOUNT scope tones (hub + POWER section headers).
   /// Run scope is dusk lavender: green stays reserved for "this goes up".

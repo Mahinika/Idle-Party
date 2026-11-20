@@ -404,17 +404,17 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(4, 2, 4, 3),
+            padding: const EdgeInsets.fromLTRB(2, 2, 2, 3),
             child: SizedBox(
               height: lineHeight,
               child: Row(
                 children: [
                   for (var i = 0; i < heroCount; i++) ...[
-                    if (i > 0)
+                    if (i > 0 && !denseParty)
                       Container(
                         width: 1,
                         height: lineHeight - 4,
-                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                        margin: EdgeInsets.zero,
                         color: GameTheme.border.withValues(alpha: 0.35),
                       ),
                     Expanded(
@@ -504,7 +504,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     final kitActor = (selected >= 0) ? _spatialFor(world, selected) : null;
     final showSideKit =
         _kitOpen && kitHero != null && kitActor != null && kitActor.isAlive;
-    final showFlask = GameLogic.canUseConsumable(state);
+    final showFlask =
+        GameLogic.canUseConsumable(state) && heroCount < 5;
     final coachKit = FirstSessionTips.lineFor(
       state,
       CoachTarget.kit,
@@ -1106,10 +1107,10 @@ class _HomePartyChip extends StatelessWidget {
     final cc = partyCcChipLabels(spatial);
     final named = name.trim().isNotEmpty;
     final who = named ? name.trim() : roleWord;
-    final doll = dense ? 18.0 : 20.0;
-    // Large text: the name gets the whole first line. The level is in the
-    // chip's semantics and the hero sheet; the border shows the pick.
+    // Five-wide strip: the name row uses the full card width (doll sits
+    // under it, or drops when [dense]).
     final roomy = MediaQuery.textScalerOf(context).scale(1) <= 1.2;
+    final doll = dense ? 0.0 : 14.0;
     return Container(
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 1),
@@ -1120,123 +1121,118 @@ class _HomePartyChip extends StatelessWidget {
           color: selected ? GameTheme.toggleOnAccent : Colors.transparent,
         ),
       ),
-      child: Row(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            width: doll,
-            height: doll,
-            child: HeroDollSprite(
-              hero: hero,
-              partyIndex: partyIndex,
-              size: doll,
-              demonForm: demonForm,
-            ),
-          ),
-          const SizedBox(width: 2),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                LayoutBuilder(
-                  builder: (context, box) {
-                    // Narrow phone: the name wins. "› L1" only shows when
-                    // the whole name still fits beside it (audit F020).
-                    final scaler = MediaQuery.textScalerOf(context);
-                    final base = DefaultTextStyle.of(context).style;
-                    double w(String t, TextStyle st) {
-                      final tp = TextPainter(
-                        // Same merge as Text: inherit the default style.
-                        text: TextSpan(text: t, style: base.merge(st)),
-                        textDirection: TextDirection.ltr,
-                        textScaler: scaler,
-                        maxLines: 1,
-                      )..layout();
-                      final width = tp.width;
-                      tp.dispose();
-                      return width;
-                    }
+          LayoutBuilder(
+            builder: (context, box) {
+              final scaler = MediaQuery.textScalerOf(context);
+              final base = DefaultTextStyle.of(context).style;
+              double w(String t, TextStyle st) {
+                final tp = TextPainter(
+                  text: TextSpan(text: t, style: base.merge(st)),
+                  textDirection: TextDirection.ltr,
+                  textScaler: scaler,
+                  maxLines: 1,
+                )..layout();
+                final width = tp.width;
+                tp.dispose();
+                return width;
+              }
 
-                    final nameW = w(
-                      who,
-                      GameTheme.combat(color: GameTheme.parchment),
-                    );
-                    final levelW =
-                        w(
-                          ' L$level',
-                          GameTheme.readable(color: GameTheme.parchment),
-                        ) +
-                        (selected ? 10 : 0);
-                    final showLevel = roomy && nameW + levelW <= box.maxWidth;
-                    return Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            who,
-                            maxLines: 1,
-                            softWrap: false,
-                            overflow: TextOverflow.ellipsis,
-                            style: GameTheme.combat(color: GameTheme.parchment),
-                          ),
-                        ),
-                        if (selected && showLevel)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 2),
-                            child: GameIcon.glyph(
-                              UiGlyph.next,
-                              size: 8,
-                              color: GameTheme.torchHot,
-                            ),
-                          ),
-                        if (showLevel)
-                          Text(
-                            ' L$level',
-                            key: PartyCornerHud.chipLevelKey,
-                            maxLines: 1,
-                            softWrap: false,
-                            style: GameTheme.readable(
-                              color: GameTheme.parchment,
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 1),
-                Row(
-                  children: [
-                    PartyRoleIcon(bucket: bucket),
-                    const SizedBox(width: 2),
-                    if (cc.isNotEmpty)
-                      Flexible(
-                        child: Text(
-                          homeChipCcLabel(cc),
-                          key: homeChipCcKey,
-                          maxLines: 1,
-                          softWrap: false,
-                          textScaler: TextScaler.noScaling,
-                          style: GameTheme.hint(
-                            color: partyCcChipColor(cc),
-                          ),
-                        ),
-                      ),
-                    const SizedBox(width: 1),
-                    SizedBox(
-                      width: 16,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(1),
-                        child: LinearProgressIndicator(
-                          value: frac,
-                          minHeight: 3,
-                          backgroundColor: GameTheme.hudHpFill,
-                          color: hpColor,
-                        ),
+              final nameW = w(
+                who,
+                GameTheme.combat(color: GameTheme.parchment),
+              );
+              final levelW =
+                  w(
+                    ' L$level',
+                    GameTheme.readable(color: GameTheme.parchment),
+                  ) +
+                  (selected ? 10 : 0);
+              final showLevel = roomy && nameW + levelW <= box.maxWidth;
+              final scaled = scaler.scale(1);
+              // Five-wide strip: keep party names legible without shrinking
+              // (no FittedBox). Row height still follows text scale.
+              final nameScaler =
+                  dense && scaled > 1.2 ? TextScaler.noScaling : scaler;
+              final nameText = Text(
+                who,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+                textScaler: nameScaler,
+                style: GameTheme.combat(color: GameTheme.parchment),
+              );
+              return Row(
+                children: [
+                  Expanded(child: nameText),
+                  if (selected && showLevel)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 2),
+                      child: GameIcon.glyph(
+                        UiGlyph.next,
+                        size: 8,
+                        color: GameTheme.torchHot,
                       ),
                     ),
-                  ],
+                  if (showLevel)
+                    Text(
+                      ' L$level',
+                      key: PartyCornerHud.chipLevelKey,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: GameTheme.readable(color: GameTheme.parchment),
+                    ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 1),
+          Row(
+            children: [
+              if (doll > 0) ...[
+                SizedBox(
+                  width: doll,
+                  height: doll,
+                  child: HeroDollSprite(
+                    hero: hero,
+                    partyIndex: partyIndex,
+                    size: doll,
+                    demonForm: demonForm,
+                  ),
                 ),
+                const SizedBox(width: 2),
               ],
-            ),
+              PartyRoleIcon(bucket: bucket),
+              const SizedBox(width: 2),
+              if (cc.isNotEmpty)
+                Flexible(
+                  child: Text(
+                    homeChipCcLabel(cc),
+                    key: homeChipCcKey,
+                    maxLines: 1,
+                    softWrap: false,
+                    textScaler: TextScaler.noScaling,
+                    style: GameTheme.hint(
+                      color: partyCcChipColor(cc),
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 2),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(1),
+                  child: LinearProgressIndicator(
+                    value: frac,
+                    minHeight: 3,
+                    backgroundColor: GameTheme.hudHpFill,
+                    color: hpColor,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -120,6 +120,28 @@ class RoleIconsFightStripHarness extends StatelessWidget {
   }
 }
 
+/// Applies [scale] inside [MaterialApp] — do not nest [shellGoldenScaffold]
+/// on top (it resets textScaler to 1.0).
+Widget roleIconsScaledScaffold({
+  required double scale,
+  required Widget body,
+}) {
+  return MaterialApp(
+    debugShowCheckedModeBanner: false,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        size: const Size(360, 780),
+        textScaler: TextScaler.linear(scale),
+      ),
+      child: child!,
+    ),
+    home: Scaffold(
+      backgroundColor: GameTheme.ink,
+      body: body,
+    ),
+  );
+}
+
 Future<GameDirector> roleIconsArtifactDirector() async {
   final state = await roleIconsArtifactFightState();
   final director = GameDirector.preview(initialState: state);

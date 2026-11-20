@@ -58,18 +58,17 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
+      tester.binding.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.binding.platformDispatcher.clearTextScaleFactorTestValue);
+
       await tester.pumpWidget(
-        MediaQuery(
-          data: shellGoldenMedia.copyWith(
-            textScaler: TextScaler.linear(scale),
-          ),
-          child: shellGoldenScaffold(
-            RepaintBoundary(
-              key: shotKey,
-              child: RoleIconsFightStripHarness(
-                director: director,
-                router: router,
-              ),
+        roleIconsScaledScaffold(
+          scale: scale,
+          body: RepaintBoundary(
+            key: shotKey,
+            child: RoleIconsFightStripHarness(
+              director: director,
+              router: router,
             ),
           ),
         ),
