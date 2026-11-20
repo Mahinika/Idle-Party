@@ -73,7 +73,12 @@ void main() {
     final combat = topics.firstWhere((t) => t.id == 'combat');
     expect(combat.body.toUpperCase(), contains('CLEAR'));
     expect(combat.body.toUpperCase(), contains('STAIRS'));
-    expect(combat.body.toUpperCase(), isNot(contains('HOLD')));
+    expect(
+      combat.body.toUpperCase(),
+      isNot(contains('HOLD — SKIP WALK')),
+      reason: 'combat guide must not teach the removed HOLD skip-walk chip',
+    );
+    expect(combat.body.toLowerCase(), isNot(contains('hold skips')));
     expect(combat.body.toUpperCase(), isNot(contains('GO MARKS')));
     expect(combat.body.toLowerCase(), isNot(contains('go marks the exit')));
     final hardmode = topics.firstWhere((t) => t.id == 'hardmode');
