@@ -84,6 +84,21 @@ void main() {
     expect(migrated.contains('d4'), isFalse);
   });
 
+  test('tank and dps are different role buckets', () {
+    expect(
+      HeroSpecs.partyRole(HeroSpecId.protection),
+      PartyRoleBucket.tank,
+    );
+    expect(HeroSpecs.partyRole(HeroSpecId.fire), PartyRoleBucket.dps);
+    expect(
+      PartyRoleSlots.heroFitsSlot(
+        _hero('d', HeroSpecId.fire),
+        PartyRoleSlots.tankIndex,
+      ),
+      isFalse,
+    );
+  });
+
   test('new game save uses tank healer dps order', () {
     final state = GameLogic.createInitialState(
       partySpecs: [HeroSpecId.fire, HeroSpecId.protection, HeroSpecId.discipline],
