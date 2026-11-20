@@ -170,7 +170,7 @@ class _HomeShellState extends State<HomeShell> {
     final crampedFight = showPanel &&
         !full &&
         textScale > GameTheme.typeScaleMax &&
-        MediaQuery.sizeOf(context).height < 700;
+        MediaQuery.sizeOf(context).height < 820;
     final panelFull = full || crampedFight;
     final alerts = MenuAlerts.forHub(
       state,

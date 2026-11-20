@@ -85,7 +85,10 @@ class HomeTopBar extends StatelessWidget {
     final goldHasSub = perMin > 0;
     final alSub = alPillSubLine(state);
     final showMeta = HomeTopBar.showsMetaPills(state);
-    final menuCaption = textScale <= 1.1;
+    final showMetaPills = showMeta &&
+        !(compactTop && textScale > GameTheme.typeScaleMax);
+    final menuCaption =
+        textScale <= 1.1 && textScale <= GameTheme.typeScaleMax;
     final tightChrome = compactTop && textScale > 1.9;
     final chromeInset = textScale > GameTheme.typeScaleMax ? 6.0 : 8.0;
     // Town has no quick rail (F100): SCROLLS / POUCH / UPDATE wait in MENU,
@@ -107,7 +110,7 @@ class HomeTopBar extends StatelessWidget {
           children: [
             Row(
               children: [
-                if (showMeta) ...[
+                if (showMetaPills) ...[
                   if (HomeTopBar.showsAlPill(state)) ...[
                     Flexible(
                       flex: 0,
@@ -281,7 +284,7 @@ class HomeTopBar extends StatelessWidget {
                 textScale: textScale,
                 onFloorTap: () => showFloorJumpSheet(context, director),
               ),
-              if (chase.isNotEmpty) ...[
+              if (chase.isNotEmpty && textScale <= GameTheme.typeScaleMax) ...[
                 SizedBox(height: textScale > 1.4 ? 0 : 1),
                 Text(
                   chase,
@@ -493,7 +496,8 @@ class _DungeonTargetRow extends StatelessWidget {
             const SizedBox(width: gap),
             _floorBadge(context, floorLabel),
             const SizedBox(width: gap),
-            HudDpsPill(director: director),
+            if (textScale <= GameTheme.typeScaleMax)
+              HudDpsPill(director: director),
             if (questReady) ...[
               const SizedBox(width: gap),
               chip,
