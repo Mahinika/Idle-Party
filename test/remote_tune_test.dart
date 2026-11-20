@@ -49,6 +49,18 @@ void main() {
     expect(WispGift.dailyCap, RemoteTune.defaultDailyCap);
   });
 
+  test('feature flags default on and can turn off', () {
+    expect(RemoteTune.firstClimbAutoContinue, isTrue);
+    expect(RemoteTune.firstClimbPlayNow, isTrue);
+    expect(RemoteTune.welcomeBackFirstReturnShort, isTrue);
+    RemoteTune.apply(firstClimbAutoContinue: false);
+    expect(RemoteTune.firstClimbAutoContinue, isFalse);
+    RemoteTune.reset();
+    expect(RemoteTune.firstClimbAutoContinue, isTrue);
+    expect(RemoteTune.readBool('off', true), isFalse);
+    expect(RemoteTune.readBool(1, false), isTrue);
+  });
+
   test('a shop id lights that row and pins it first', () {
     RemoteTune.apply(shopFeaturedId: 'supporter_qol', fromRemote: true);
 

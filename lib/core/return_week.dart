@@ -78,9 +78,11 @@ abstract final class ReturnWeek {
 
   static String tomorrowDetail(GameState state) {
     final pay = GameLogic.checkInPayout(state);
+    final cave = caveName(state);
     return _withReady(
       state,
-      'Tomorrow. ${pay.name}. ${shelf(pay)}. $keepsFighting',
+      'Tomorrow: $cave — ${pay.name}, ${pay.hookPrize}. '
+          '${spendSentence(pay)} Leave them in the cave tonight. $keepsFighting',
     );
   }
 

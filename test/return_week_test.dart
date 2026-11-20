@@ -72,7 +72,8 @@ void main() {
     final chase = HubChase.forState(state, now: now);
     expect(chase.title, 'Tomorrow: Sandy Caverns');
     expect(chase.detail, contains('Check-in 2/7'));
-    expect(chase.detail, contains('FORGE'));
+    expect(chase.detail, contains('2,000 gold'));
+    expect(chase.detail.toLowerCase(), contains('leave them in the cave'));
     expect(chase.detail, contains(ReturnWeek.keepsFighting));
     expect(chase.kind, isNot(HubChaseKind.clearFloors));
     expect(

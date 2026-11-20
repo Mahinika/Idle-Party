@@ -233,7 +233,8 @@ void main() {
     ).copyWith(
       homeLayout: HomeLayout.home,
       homePanelFull: false,
-      highestFloorCleared: 1,
+      highestFloorCleared: 2,
+      bossVictories: 1,
       seenTips: const ['first_run', 'godhand'],
     );
     final director = GameDirector.preview(initialState: state);

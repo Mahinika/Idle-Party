@@ -642,6 +642,21 @@ extension GameDirectorFight on GameDirector {
     if (_isLoading) return;
     _awaitingWipeChoice = false;
     final clearedExit = _spatial?.awaitingExit == true;
+    if (clearedExit &&
+        RemoteTune.firstClimbAutoContinue &&
+        GameLogic.firstBossPending(_state) &&
+        _state.highestFloorCleared >= 1 &&
+        _state.currentRoom.floorNumber < GameLogic.firstBossFloor) {
+      releaseExitPrompt();
+      travelToFloor(GameLogic.firstBossFloor);
+      showToast(
+        'Floor ${GameLogic.firstBossFloor} — the boss is next.',
+        life: 2.6,
+      );
+      _directorNotify();
+      unawaited(_persistFlush());
+      return;
+    }
     final hadSpeedBoost = AdBoost.speedActive(_state.metaDepth);
     final leaveDungeonId = _state.dungeonId;
     final leaveFloor = _state.currentRoom.floorNumber;

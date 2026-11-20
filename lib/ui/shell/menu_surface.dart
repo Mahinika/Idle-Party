@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/chase_contract.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
@@ -217,17 +218,23 @@ class _MenuSurfaceState extends State<MenuSurface> {
     final essenceHub = widget.home &&
         router.route == MenuRoute.essence &&
         !router.homeAtSub;
+    final goal = widget.home
+        ? ChaseContract.goalLine(state, inDungeon: state.inDungeon)
+        : null;
+    String sheetSubtitle() {
+      if (homeMenuGrid) return HomeMenuGrid.hint;
+      if (essenceHub) return MenuSurface.essenceHubHint;
+      if (goal != null && goal.isNotEmpty) return goal;
+      return router.jobHintFor(state);
+    }
+
     return OverlayScrim(
       title: homeMenuGrid
           ? 'MENU'
           : essenceHub
           ? 'ESSENCE'
           : router.title,
-      subtitle: homeMenuGrid
-          ? HomeMenuGrid.hint
-          : essenceHub
-          ? MenuSurface.essenceHubHint
-          : router.jobHintFor(state),
+      subtitle: sheetSubtitle(),
       heightFactor: 1,
       // Home keeps the top bar (essence, gold, gold/min) above every sheet,
       // so the sheet header does not repeat the wallet.
