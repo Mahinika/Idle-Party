@@ -56,6 +56,7 @@ import 'play_games_bridge.dart';
 import 'play_games_scores.dart';
 import 'wipe_advice.dart';
 import 'party_name_filter.dart';
+import 'party_role_slots.dart';
 import 'ashen_crown.dart';
 import 'party_power.dart';
 
@@ -139,7 +140,7 @@ class GameLogic {
     ];
     var state = GameState(
       heroRoster: roster,
-      activeHeroIds: [for (final h in roster) h.id],
+      activeHeroIds: PartyRoleSlots.idsFromHeroesInRoleOrder(roster, 4),
       partyName:
           PartyNameFilter.sanitize(partyName ?? '') ??
           PartyNameFilter.defaultName,
@@ -197,21 +198,32 @@ class GameLogic {
 
   static List<HeroSpecId> _normalizeStarterSpecs(List<HeroSpecId>? partySpecs) {
     final defaults = List<HeroSpecId>.from(HeroSpecs.starterUnlocked);
-    if (partySpecs == null || partySpecs.isEmpty) {
-      return defaults;
-    }
     final seen = <HeroSpecId>{};
-    final out = <HeroSpecId>[];
-    for (final id in partySpecs) {
-      if (!seen.add(id)) continue;
-      out.add(id);
-      if (out.length >= starterPartySize) break;
+    final picked = <HeroSpecId>[];
+    if (partySpecs != null) {
+      for (final id in partySpecs) {
+        if (!seen.add(id)) continue;
+        picked.add(id);
+        if (picked.length >= starterPartySize) break;
+      }
     }
     for (final id in defaults) {
-      if (out.length >= starterPartySize) break;
-      if (seen.add(id)) out.add(id);
+      if (picked.length >= starterPartySize) break;
+      if (seen.add(id)) picked.add(id);
     }
-    return out;
+    final byRole = <PartyRoleBucket, HeroSpecId>{};
+    for (final id in picked) {
+      byRole.putIfAbsent(HeroSpecs.partyRole(id), () => id);
+    }
+    for (final id in defaults) {
+      final role = HeroSpecs.partyRole(id);
+      byRole.putIfAbsent(role, () => id);
+    }
+    return [
+      byRole[PartyRoleBucket.tank] ?? defaults[0],
+      byRole[PartyRoleBucket.healer] ?? defaults[1],
+      byRole[PartyRoleBucket.dps] ?? defaults[2],
+    ];
   }
 
   /// Parallel LOOK races for New Game. Pads / truncates to [count].
@@ -1168,6 +1180,13 @@ class GameLogic {
   /// Sets the active party lineup by roster hero ids (hub / out of dungeon).
   static GameState setActiveParty(GameState state, List<String> heroIds) =>
       _gameLogicSetActiveParty(state, heroIds);
+
+  /// Sets one fixed role slot (out of dungeon). Pass null/empty to bench.
+  static GameState setPartySlot(
+    GameState state,
+    int slotIndex, {
+    String? heroId,
+  }) => _gameLogicSetPartySlot(state, slotIndex, heroId: heroId);
 
   /// Whether the player has met the meta gate for [specId].
   static bool canUnlockSpec(GameState state, HeroSpecId specId) =>
@@ -2540,7 +2559,7 @@ class GameLogic {
 
     return GameState(
       heroRoster: heroes,
-      activeHeroIds: [for (final h in heroes) h.id],
+      activeHeroIds: PartyRoleSlots.idsFromHeroesInRoleOrder(heroes, 4),
       enemies: createEnemyGroup(room),
       gold: json['gold'] as int,
       essence: (json['essence'] as int?) ?? 0,

@@ -1096,6 +1096,20 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
+  void setPartySlot(int slotIndex, {String? heroId}) {
+    if (_state.inDungeon) {
+      showToast('Leave dungeon to change team', life: 2);
+      return;
+    }
+    final before = _state.activeHeroIds.join(',');
+    _applyUpgrade(
+      GameLogic.setPartySlot(_state, slotIndex, heroId: heroId),
+    );
+    if (_state.activeHeroIds.join(',') != before) {
+      showToast('Team updated', life: 1.6);
+    }
+  }
+
   void unlockPartySlot5() {
     final before = _state.metaDepth.partySlot5Unlocked;
     _applyUpgrade(GameLogic.unlockPartySlot5(_state));

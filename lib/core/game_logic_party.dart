@@ -1,5 +1,27 @@
 part of 'game_logic.dart';
 
+GameState _gameLogicTryAutoJoinActiveSlot(GameState state, PartyHero hero) {
+  if (state.inDungeon) return state;
+  final slot = PartyRoleSlots.firstOpenSlotForSpec(state, hero.specId);
+  if (slot == null) return state;
+  final nextIds = PartyRoleSlots.withHeroInSlot(
+    current: state.activeHeroIds,
+    slotIndex: slot,
+    maxSlots: state.maxActivePartySize,
+    heroId: hero.id,
+  );
+  if (_sameActivePartyIds(state.activeHeroIds, nextIds)) return state;
+  return state.copyWith(activeHeroIds: nextIds, lastUpdated: DateTime.now());
+}
+
+bool _sameActivePartyIds(List<String> a, List<String> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
 GameState _gameLogicEnsureRogueHero(GameState state) {
   if (!state.rogueUnlocked) {
     return GameLogic.fillMissingStarterGear(state);
@@ -27,20 +49,13 @@ GameState _gameLogicEnsureRogueHero(GameState state) {
       race: GameLogic._rosterRace(next),
     );
     final roster = [...next.heroRoster, rogue];
-    var active = List<String>.from(next.activeHeroIds);
-    if (active.length < next.maxActivePartySize &&
-        !active.contains(rogue.id)) {
-      active = [...active, rogue.id];
-    }
-    next = next.copyWith(heroRoster: roster, activeHeroIds: active);
+    next = next.copyWith(heroRoster: roster);
+    next = _gameLogicTryAutoJoinActiveSlot(next, rogue);
   } else {
     final combat = next.heroRoster.firstWhere(
       (h) => h.specId == HeroSpecs.ascendUnlockSpec,
     );
-    if (!next.activeHeroIds.contains(combat.id) &&
-        next.activeHeroIds.length < next.maxActivePartySize) {
-      next = next.copyWith(activeHeroIds: [...next.activeHeroIds, combat.id]);
-    }
+    next = _gameLogicTryAutoJoinActiveSlot(next, combat);
   }
   if (wasMissing && !pending.contains(combatName)) {
     pending = [...pending, combatName];
@@ -59,26 +74,57 @@ GameState _gameLogicUnlockPartySlot5(GameState state) {
   if (state.metaDepth.partySlot5Unlocked) return state;
   if (state.ascensionLevel < GameLogic.partySlot5MinAscension) return state;
   if (state.essence < GameLogic.partySlot5EssenceCost) return state;
-  return state.copyWith(
+  var next = state.copyWith(
     essence: state.essence - GameLogic.partySlot5EssenceCost,
     metaDepth: state.metaDepth.copyWith(partySlot5Unlocked: true),
     lastUpdated: DateTime.now(),
   );
+  final ids = PartyRoleSlots.paddedActiveIds(next.activeHeroIds, 5);
+  if (!_sameActivePartyIds(next.activeHeroIds, ids)) {
+    next = next.copyWith(activeHeroIds: ids);
+  }
+  return next;
 }
 
 
 GameState _gameLogicSetActiveParty(GameState state, List<String> heroIds) {
   if (state.inDungeon) return state;
   final maxSize = state.maxActivePartySize;
-  final seen = <String>{};
-  final next = <String>[];
-  for (final id in heroIds) {
-    if (!seen.add(id)) continue;
-    if (state.rosterHero(id) == null) continue;
-    next.add(id);
-    if (next.length >= maxSize) break;
+  final raw = PartyRoleSlots.paddedActiveIds(heroIds, maxSize);
+  final next = PartyRoleSlots.migrateActiveHeroIds(
+    raw: raw,
+    roster: state.heroRoster,
+    maxSlots: maxSize,
+  );
+  final anyFilled = next.any((id) => id.isNotEmpty);
+  if (!anyFilled) return state;
+  if (_sameActivePartyIds(state.activeHeroIds, next)) return state;
+  return state.copyWith(activeHeroIds: next, lastUpdated: DateTime.now());
+}
+
+GameState _gameLogicSetPartySlot(
+  GameState state,
+  int slotIndex, {
+  String? heroId,
+}) {
+  if (state.inDungeon) return state;
+  final maxSize = state.maxActivePartySize;
+  if (slotIndex < 0 || slotIndex >= maxSize) return state;
+  final trimmed = heroId?.trim();
+  if (trimmed != null && trimmed.isNotEmpty) {
+    final hero = state.rosterHero(trimmed);
+    if (hero == null) return state;
+    if (!PartyRoleSlots.heroFitsSlot(hero, slotIndex)) return state;
   }
-  if (next.isEmpty) return state;
+  final next = PartyRoleSlots.withHeroInSlot(
+    current: state.activeHeroIds,
+    slotIndex: slotIndex,
+    maxSlots: maxSize,
+    heroId: trimmed,
+  );
+  final anyFilled = next.any((id) => id.isNotEmpty);
+  if (!anyFilled) return state;
+  if (_sameActivePartyIds(state.activeHeroIds, next)) return state;
   return state.copyWith(activeHeroIds: next, lastUpdated: DateTime.now());
 }
 
@@ -172,10 +218,11 @@ GameState _gameLogicUnlockSpec(GameState state, HeroSpecId specId) {
     level: GameLogic.rosterSeedLevel(next),
     race: GameLogic._rosterRace(next),
   );
-  return next.copyWith(
+  next = next.copyWith(
     heroRoster: [...next.heroRoster, hero],
     lastUpdated: DateTime.now(),
   );
+  return _gameLogicTryAutoJoinActiveSlot(next, hero);
 }
 
 

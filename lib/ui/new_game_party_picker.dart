@@ -15,10 +15,9 @@ import 'hero_look_row.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
 
-/// Pick exactly [GameLogic.starterPartySize] unique specs for a new run.
-///
-/// Each slot keeps its own [HeroRace] and [HeroSex]. The editor under the
-/// cards switches between **CLASS** (starter kits only) and **RACE**.
+/// Pick exactly [GameLogic.starterPartySize] heroes: slot 1 tank, slot 2 healer,
+/// slot 3 DPS (starter kits only). Each slot keeps its own [HeroRace] and
+/// [HeroSex]. The editor switches between **CLASS** and **RACE**.
 class NewGamePartyPicker extends StatefulWidget {
   /// Class filter tabs (wrap, polish7 P010).
   static const classTabsKey = ValueKey('party-picker-class-tabs');
@@ -79,11 +78,29 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     super.dispose();
   }
 
+  static const List<PartyRoleBucket> _slotRoles = [
+    PartyRoleBucket.tank,
+    PartyRoleBucket.healer,
+    PartyRoleBucket.dps,
+  ];
+
+  PartyRoleBucket _roleForSlot(int index) =>
+      _slotRoles[index.clamp(0, _slotRoles.length - 1)];
+
   HeroClassId _classForSlot(int index) {
     final spec = _slots[index];
     if (spec != null) return HeroSpecs.def(spec).classId;
+    final role = _roleForSlot(index);
+    for (final id in HeroSpecs.starterUnlocked) {
+      if (HeroSpecs.partyRole(id) == role) return HeroSpecs.def(id).classId;
+    }
     return HeroSpecs.def(HeroSpecs.starterUnlocked.first).classId;
   }
+
+  List<HeroSpecId> _startersForRole(PartyRoleBucket role) => [
+        for (final id in HeroSpecs.starterUnlocked)
+          if (HeroSpecs.partyRole(id) == role) id,
+      ];
 
   void _selectSlot(int index) {
     setState(() {
@@ -96,7 +113,8 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   Future<void> _playNow() async {
     if (_starting) return;
     for (var i = 0; i < _slots.length; i++) {
-      _slots[i] = HeroSpecs.starterUnlocked[i];
+      final role = _roleForSlot(i);
+      _slots[i] = _startersForRole(role).first;
       _looks[i] = HeroRace.human;
       _sexes[i] = HeroSex.defaultFor(HeroSpecs.def(_slots[i]!).gearAffinity);
     }
@@ -165,9 +183,6 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
           ? 'Pick a specialization for the last slot — each hero needs a different one'
           : 'Pick a specialization for $empty slots — each hero needs a different one';
     }
-    if (_slots.map((s) => s!).toSet().length != _slots.length) {
-      return 'Each hero must be a different specialization';
-    }
     return null;
   }
 
@@ -203,31 +218,12 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     return HeroSpecs.def(spec).shortLabel;
   }
 
-  String _duplicateSpecHint(HeroSpecId taken) {
-    final def = HeroSpecs.def(taken);
-    final others = <String>[];
-    for (final id in HeroSpecs.starterUnlocked) {
-      if (id == taken) continue;
-      final idx = _slots.indexOf(id);
-      if (idx >= 0 && idx != _activeSlot) continue;
-      others.add(HeroSpecs.def(id).shortLabel);
-      if (others.length >= 2) break;
-    }
-    if (others.isEmpty) {
-      return '${def.shortLabel} is already picked — choose another starter spec';
-    }
-    return '${def.shortLabel} is already picked — choose ${others.join(' or ')} for the other slots';
-  }
-
   void _pick(HeroSpecId id) {
     if (!HeroSpecs.starterUnlocked.contains(id)) return;
-    final takenIndex = _slots.indexWhere((s) => s == id);
-    if (takenIndex >= 0 && takenIndex != _activeSlot) {
+    if (HeroSpecs.partyRole(id) != _roleForSlot(_activeSlot)) {
       setState(() {
-        _pickHint = _duplicateSpecHint(id);
-        _activeSlot = takenIndex;
-        _filter = HeroSpecs.def(id).classId;
-        _tab = _PartyEditTab.classTab;
+        _pickHint =
+            'That hero is ${_roleForSlot(_activeSlot).name.toUpperCase()} — pick another role in its slot';
       });
       return;
     }
@@ -263,7 +259,9 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   Widget build(BuildContext context) {
     final starterSpecs = [
       for (final id in HeroSpecs.forClass(_filter))
-        if (HeroSpecs.starterUnlocked.contains(id)) id,
+        if (HeroSpecs.starterUnlocked.contains(id) &&
+            HeroSpecs.partyRole(id) == _roleForSlot(_activeSlot))
+          id,
     ];
     final warn = _softWarn;
     final blockReason = _startBlockReason;
@@ -377,7 +375,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
               const SizedBox(height: 6),
               Text(
                 _tab == _PartyEditTab.classTab
-                    ? 'Specialization for $_activeKitLabel — Tank / Healer / DPS'
+                    ? '${_roleForSlot(_activeSlot).name.toUpperCase()} slot — pick a starter spec'
                     : 'Race for $_activeKitLabel · ${_looks[_activeSlot].label}',
                 textAlign: TextAlign.center,
                 style: GameTheme.hint(color: GameTheme.parchmentDim),
@@ -581,6 +579,11 @@ class _SlotCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final def = specId == null ? null : HeroSpecs.def(specId!);
+    final role = switch (index) {
+      0 => 'TANK',
+      1 => 'HEALER',
+      _ => 'DPS',
+    };
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -609,14 +612,23 @@ class _SlotCard extends StatelessWidget {
                 // Name on top, class under it: the same order as the rest
                 // of the game (polish7 P004).
                 Text(
-                  def == null ? 'Pick spec' : PartyHero.shownNameFor(hero?.name ?? def.defaultName),
+                  def?.displayClassName ?? role,
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.hint(color: GameTheme.parchment),
+                  style: GameTheme.readable(color: GameTheme.parchment),
                 ),
                 Text(
-                  def?.roleTag.plainLabel ?? 'Tank / Healer / DPS',
+                  def?.displaySpecName ?? 'Pick spec',
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
+                ),
+                Text(
+                  def == null
+                      ? 'Open'
+                      : PartyHero.shownNameFor(hero?.name ?? def.defaultName),
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -678,12 +690,20 @@ class _SpecPickRow extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          def.versusLine(versus),
-                          style: GameTheme.readable(color: GameTheme.torchHot),
+                          def.displayClassName,
+                          style: GameTheme.readable(color: GameTheme.parchment),
                         ),
                         Text(
-                          '${def.shortLabel} · ${def.name}',
+                          def.displaySpecName,
                           style: GameTheme.hint(color: GameTheme.parchmentDim),
+                        ),
+                        Text(
+                          def.kitDetailLine,
+                          style: GameTheme.hint(color: GameTheme.parchmentDim),
+                        ),
+                        Text(
+                          def.versusLine(versus),
+                          style: GameTheme.hint(color: GameTheme.torchHot),
                         ),
                       ],
                     ),

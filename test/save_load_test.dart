@@ -61,13 +61,12 @@ void main() {
     // Load re-evaluates achievements and grants essence for unmet unlocks.
     final grant =
         (AchievementCatalog.byId('first_floor')?.essenceReward ?? 0) +
-        (AchievementCatalog.byId('first_ascend')?.essenceReward ?? 0) +
-        (AchievementCatalog.byId('full_party')?.essenceReward ?? 0);
+        (AchievementCatalog.byId('first_ascend')?.essenceReward ?? 0);
     expect(decoded.gold, 777);
     expect(decoded.essence, 12 + grant);
     expect(
       decoded.achievements,
-      containsAll(['first_floor', 'first_ascend', 'full_party']),
+      containsAll(['first_floor', 'first_ascend']),
     );
     expect(decoded.attackBonus, 4);
     expect(decoded.defenseBonus, 3);

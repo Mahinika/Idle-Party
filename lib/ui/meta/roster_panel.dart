@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import '../../assets/custom_assets.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
-import '../../core/gear/gear_upgrade_copy.dart';
+import '../../core/party_role_slots.dart';
 import '../../models/hero.dart';
 import '../../models/hero_spec.dart';
 import '../game_theme.dart';
+import '../game_icon.dart';
+import '../hero_doll_sprite.dart';
 import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
@@ -14,15 +16,10 @@ import '../shell/shell_common.dart';
 import '../shell/shell_layout.dart';
 
 class TeamCompositionOverlay extends StatefulWidget {
-  /// Takes a hero out of the active party (polish7 P025).
   static const benchKey = ValueKey('roster-bench');
-
-  /// In a cave the party is read-only; this chip says why (audit F015).
   static const String leaveToSwap = 'Leave the cave to swap';
   static const Key leaveToSwapKey = ValueKey('roster_leave_to_swap');
-
-  /// Open party slot copy (audit F016).
-  static const String emptyOpen = 'Empty — pick a hero below';
+  static const String emptyOpen = 'Empty — tap to pick';
   static const String emptyLocked = 'Empty';
 
   const TeamCompositionOverlay({super.key, required this.director});
@@ -33,31 +30,105 @@ class TeamCompositionOverlay extends StatefulWidget {
 }
 
 class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
-  String? _pendingSlotReplace;
-
   GameDirector get director => widget.director;
 
-  void _toast(String msg) => director.showToast(msg, life: 2.4);
+  @override
+  void initState() {
+    super.initState();
+    director.addListener(_onDirectorChanged);
+  }
 
-  HeroSpecDef? _pendingReplaceSpec(List<PartyHero> active) {
-    final id = _pendingSlotReplace;
-    if (id == null) return null;
-    if (id.startsWith('empty_')) return null;
-    for (final h in active) {
-      if (h.id == id) return HeroSpecs.def(h.specId);
+  @override
+  void dispose() {
+    director.removeListener(_onDirectorChanged);
+    super.dispose();
+  }
+
+  void _onDirectorChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _openSlot(int slotIndex) async {
+    final state = director.state;
+    if (state.inDungeon) return;
+    final slots = PartyRoleSlots.slotHeroes(state);
+    final current = slotIndex < slots.length ? slots[slotIndex] : null;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => RosterSlotPickerSheet(
+        director: director,
+        slotIndex: slotIndex,
+        currentHero: current,
+        onPick: (hero) async {
+          Navigator.pop(ctx);
+          if (!PartyRoleSlots.heroFitsSlot(hero, slotIndex)) return;
+          if (current != null && current.id != hero.id) {
+            final swap = await _confirmSwap(
+              slotIndex: slotIndex,
+              current: current,
+              incoming: hero,
+            );
+            if (!mounted) return;
+            if (swap == true) {
+              director.setPartySlot(slotIndex, heroId: hero.id);
+            }
+          } else {
+            director.setPartySlot(slotIndex, heroId: hero.id);
+          }
+        },
+        onUnlock: (specId) {
+          Navigator.pop(ctx);
+          director.unlockSpec(specId);
+        },
+        onBench: current == null
+            ? null
+            : () {
+                Navigator.pop(ctx);
+                director.setPartySlot(slotIndex, heroId: null);
+              },
+      ),
+    );
+  }
+
+  Future<bool?> _confirmSwap({
+    required int slotIndex,
+    required PartyHero current,
+    required PartyHero incoming,
+  }) {
+    if (!PartyRoleSlots.heroFitsSlot(incoming, slotIndex) ||
+        HeroSpecs.partyRole(incoming.specId) !=
+            HeroSpecs.partyRole(current.specId)) {
+      return Future.value(false);
     }
-    return null;
+    return showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => RosterSwapCompareSheet(
+        current: current,
+        incoming: incoming,
+        onSwap: () => Navigator.pop(ctx, true),
+        onKeep: () => Navigator.pop(ctx, false),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
     final state = director.state;
     final maxSlots = state.maxActivePartySize;
-    final active = state.heroes;
-    final hasTank = active.any((h) => h.spec.isTank);
-    final hasHeal = active.any((h) => h.spec.isHealer);
+    final slotHeroes = PartyRoleSlots.slotHeroes(state);
+    final hasTank = slotHeroes.any(
+      (h) => h != null && HeroSpecs.partyRole(h.specId) == PartyRoleBucket.tank,
+    );
+    final hasHeal = slotHeroes.any(
+      (h) => h != null && HeroSpecs.partyRole(h.specId) == PartyRoleBucket.healer,
+    );
 
-    return Padding(
+    final body = Padding(
       padding: ShellLayout.listPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -73,13 +144,13 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           ShellLayout.hint(
             state.inDungeon
                 ? 'Leave the dungeon to change your lineup.'
-                : 'Pick up to $maxSlots active heroes from your roster.',
-            maxLines: 2,
+                : 'Fixed roles: TANK · HEALER · DPS. Tap a slot to swap.',
+            maxLines: 3,
           ),
           if (!hasTank || !hasHeal) ...[
             ShellLayout.gap(6),
             Text(
-              [if (!hasTank) 'No Tank', if (!hasHeal) 'No Healer'].join(' · '),
+              [if (!hasTank) 'No Tank in party', if (!hasHeal) 'No Healer in party'].join(' · '),
               textAlign: TextAlign.center,
               style: GameTheme.hint(color: GameTheme.torchHot),
             ),
@@ -87,7 +158,6 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           ShellLayout.gap(10),
           MenuChrome.sectionLabelScoped('ACTIVE', scope: MenuScope.account),
           ShellLayout.gap(6),
-          // In a cave the rows stay normal; only the swap waits (audit F015).
           if (state.inDungeon) ...[
             Align(
               alignment: Alignment.centerLeft,
@@ -101,43 +171,14 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
             ShellLayout.gap(6),
           ],
           for (var i = 0; i < maxSlots; i++) ...[
-            _ActiveSlotChip(
-              index: i,
-              hero: i < active.length ? active[i] : null,
-              selected:
-                  _pendingSlotReplace ==
-                  (i < active.length ? active[i].id : 'empty_$i'),
+            _RoleSlotCard(
+              slotIndex: i,
+              hero: i < slotHeroes.length ? slotHeroes[i] : null,
               locked: state.inDungeon,
-              onTap: state.inDungeon
-                  ? null
-                  : () {
-                      if (i < active.length) {
-                        setState(() {
-                          _pendingSlotReplace = active[i].id;
-                        });
-                      } else {
-                        setState(() => _pendingSlotReplace = 'empty_$i');
-                      }
-                    },
-              onClear: state.inDungeon || i >= active.length
-                  ? null
-                  : () {
-                      final ids = [
-                        for (final h in active)
-                          if (h.id != active[i].id) h.id,
-                      ];
-                      if (ids.isEmpty) {
-                        _toast('Need at least one hero');
-                        return;
-                      }
-                      director.setActiveParty(ids);
-                      setState(() => _pendingSlotReplace = null);
-                    },
+              onAction: state.inDungeon ? null : () => _openSlot(i),
             ),
             const SizedBox(height: 6),
           ],
-          // Slot 5 is one buy button, not an "EMPTY · 80e" row plus a button
-          // with the same price (audit F016).
           if (!state.metaDepth.partySlot5Unlocked && maxSlots < 5) ...[
             GameButton(
               label:
@@ -155,211 +196,507 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
             ),
             const SizedBox(height: 6),
           ],
-          const SizedBox(height: 12),
-          MenuChrome.sectionLabelScoped('ROSTER', scope: MenuScope.account),
-          const SizedBox(height: 6),
-          for (final classId in HeroClassId.values) ...[
-            Text(
-              HeroSpecs.classLabel(classId),
-              style: GameTheme.hint(color: GameTheme.torchHot),
-            ),
-            const SizedBox(height: 4),
-            for (final specId in HeroSpecs.forClass(classId))
-              _RosterSpecRow(
-                def: HeroSpecs.def(specId),
-                versus: _pendingReplaceSpec(active),
-                unlocked: state.isSpecUnlocked(specId),
-                onRoster: state.heroRoster.any((h) => h.specId == specId),
-                inActive: active.any((h) => h.specId == specId),
-                disabled: state.inDungeon,
-                onUnlock: () {
-                  director.unlockSpec(specId);
-                },
-                onAdd: () {
-                  PartyHero? hero;
-                  for (final h in state.heroRoster) {
-                    if (h.specId == specId) {
-                      hero = h;
-                      break;
-                    }
-                  }
-                  if (hero == null) return;
-                  if (active.any((h) => h.id == hero!.id)) {
-                    _toast('Already active');
-                    return;
-                  }
-                  if (active.length >= maxSlots) {
-                    if (_pendingSlotReplace != null &&
-                        !_pendingSlotReplace!.startsWith('empty_')) {
-                      final ids = [
-                        for (final h in active)
-                          if (h.id == _pendingSlotReplace) hero.id else h.id,
-                      ];
-                      director.setActiveParty(ids);
-                      setState(() => _pendingSlotReplace = null);
-                      return;
-                    }
-                    _toast('Party full — tap an active slot to replace');
-                    return;
-                  }
-                  director.setActiveParty([...state.activeHeroIds, hero.id]);
-                  setState(() => _pendingSlotReplace = null);
-                },
-              ),
-            const SizedBox(height: 8),
-          ],
         ],
+      ),
+    );
+    return MediaQuery(
+      data: mq.copyWith(
+        textScaler: GameTheme.composeTextScaler(
+          platform: mq.textScaler,
+          gameScale: state.uiTextScale,
+        ),
+      ),
+      child: body,
+    );
+  }
+}
+
+class _RoleSlotCard extends StatelessWidget {
+  const _RoleSlotCard({
+    required this.slotIndex,
+    required this.hero,
+    required this.locked,
+    this.onAction,
+  });
+
+  final int slotIndex;
+  final PartyHero? hero;
+  final bool locked;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final roleLabel = PartyRoleSlots.slotLabel(slotIndex);
+    final spec = hero?.spec;
+    final actionLabel = hero == null ? 'PICK' : 'SWAP';
+    final semanticsLabel = spec == null
+        ? TeamCompositionOverlay.emptyOpen
+        : '${hero!.shownName} · ${spec.displayClassName} · ${spec.displaySpecName}';
+
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: hero != null
+                ? HeroDollSprite(hero: hero!, partyIndex: slotIndex, size: 48)
+                : DecoratedBox(
+                    decoration: MenuChrome.cardBox(),
+                    child: Center(
+                      child: Text(
+                        '+',
+                        style: GameTheme.section(color: GameTheme.parchmentDim),
+                      ),
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                MenuChrome.chip(label: roleLabel),
+                const SizedBox(height: 4),
+                Text(
+                  spec?.displayClassName ?? 'Open slot',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.title(color: GameTheme.parchment),
+                ),
+                Text(
+                  spec?.displaySpecName ?? roleLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
+                ),
+                if (spec != null) ...[
+                  Text(
+                    spec.kitDetailLine,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
+                  ),
+                  Text(
+                    hero!.shownName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.hint(color: GameTheme.torchHot),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          GameButton(
+            label: actionLabel,
+            style: GameButtonStyle.brown,
+            expanded: false,
+            onPressed: locked ? null : onAction,
+          ),
+        ],
+      ),
+    );
+
+    if (locked) {
+      return Semantics(
+        label: semanticsLabel,
+        child: DecoratedBox(
+          decoration: MenuChrome.cardBox(),
+          child: content,
+        ),
+      );
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onAction,
+        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+        child: DecoratedBox(
+          decoration: MenuChrome.cardBox(),
+          child: content,
+        ),
       ),
     );
   }
 }
 
-class _ActiveSlotChip extends StatelessWidget {
-  const _ActiveSlotChip({
-    required this.index,
-    required this.hero,
-    required this.selected,
-    required this.locked,
-    this.onTap,
-    this.onClear,
+class RosterSlotPickerSheet extends StatelessWidget {
+  const RosterSlotPickerSheet({
+    super.key,
+    required this.director,
+    required this.slotIndex,
+    required this.currentHero,
+    required this.onPick,
+    required this.onUnlock,
+    this.onBench,
   });
 
-  final int index;
-  final PartyHero? hero;
-  final bool selected;
-  final bool locked;
-  final VoidCallback? onTap;
-  final VoidCallback? onClear;
+  final GameDirector director;
+  final int slotIndex;
+  final PartyHero? currentHero;
+  final ValueChanged<PartyHero> onPick;
+  final ValueChanged<HeroSpecId> onUnlock;
+  final VoidCallback? onBench;
 
   @override
   Widget build(BuildContext context) {
-    final label = hero == null
-        ? (locked
-              ? TeamCompositionOverlay.emptyLocked
-              : TeamCompositionOverlay.emptyOpen)
-        : '${hero!.shownName} · ${hero!.spec.name}';
-    if (locked) {
-      // Read-only row in a cave: normal ink, not a greyed-out button.
-      return Semantics(
-        label: label,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          alignment: Alignment.centerLeft,
-          decoration: MenuChrome.cardBox(),
-          child: Text(
-            label,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GameTheme.readable(
-              color: hero == null
-                  ? GameTheme.parchmentDim
-                  : GameTheme.parchment,
-            ),
+    final state = director.state;
+    final role = PartyRoleSlots.bucketForSlot(slotIndex);
+    final activeIds = {
+      for (final id in state.activeHeroIds)
+        if (id.isNotEmpty) id,
+    };
+
+    final rosterHeroes = <PartyHero>[
+      for (final h in state.heroRoster)
+        if (HeroSpecs.partyRole(h.specId) == role) h,
+    ];
+
+    final missingSpecs = <HeroSpecId>[
+      for (final id in HeroSpecs.specsForPartyRole(role))
+        if (!state.heroRoster.any((h) => h.specId == id)) id,
+    ];
+
+    return FractionallySizedBox(
+      heightFactor: 0.88,
+      child: DecoratedBox(
+        decoration: MenuChrome.panel(opaque: true),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+                child: Row(
+                  children: [
+                    MenuChrome.chip(label: PartyRoleSlots.slotLabel(slotIndex)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Pick ${role.name.toUpperCase()}',
+                        style: GameTheme.title(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (onBench != null) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: GameButton(
+                    key: TeamCompositionOverlay.benchKey,
+                    label: 'BENCH CURRENT',
+                    style: GameButtonStyle.grey,
+                    dense: true,
+                    onPressed: onBench,
+                  ),
+                ),
+                const SizedBox(height: 6),
+              ],
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                  children: [
+                    for (final hero in rosterHeroes)
+                      _HeroPickCard(
+                        hero: hero,
+                        activeInSlot: activeIds.contains(hero.id),
+                        onPick: () => onPick(hero),
+                      ),
+                    for (final specId in missingSpecs)
+                      _LockedSpecPickCard(
+                        def: HeroSpecs.def(specId),
+                        canUnlock: GameLogic.canUnlockSpec(state, specId),
+                        unlocked: state.isSpecUnlocked(specId),
+                        onUnlock: () => onUnlock(specId),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-      );
-    }
-    return Row(
-      children: [
-        Expanded(
-          child: GameButton(
-            label: label,
-            style: selected ? GameButtonStyle.brown : GameButtonStyle.grey,
-            onPressed: onTap,
-          ),
-        ),
-        if (onClear != null && !locked) ...[
-          const SizedBox(width: 6),
-          // BENCH, not an "X" that reads as close (polish7 P025).
-          GameButton(
-            key: TeamCompositionOverlay.benchKey,
-            label: 'BENCH',
-            style: GameButtonStyle.ghost,
-            expanded: false,
-            dense: true,
-            tip: 'Move this hero to the bench',
-            onPressed: onClear,
-          ),
-        ],
-      ],
+      ),
     );
   }
 }
 
-class _RosterSpecRow extends StatelessWidget {
-  const _RosterSpecRow({
+class _HeroPickCard extends StatelessWidget {
+  const _HeroPickCard({
+    required this.hero,
+    required this.activeInSlot,
+    required this.onPick,
+  });
+
+  final PartyHero hero;
+  final bool activeInSlot;
+  final VoidCallback onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final spec = hero.spec;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: DecoratedBox(
+        decoration: MenuChrome.listCard(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              HeroDollSprite(hero: hero, partyIndex: 0, size: 48),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    MenuChrome.chip(label: spec.roleTag.plainLabel.toUpperCase()),
+                    const SizedBox(height: 4),
+                    Text(
+                      spec.displayClassName,
+                      style: GameTheme.title(color: GameTheme.parchment),
+                    ),
+                    Text(
+                      spec.displaySpecName,
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    ),
+                    Text(
+                      spec.kitDetailLine,
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    ),
+                    Text(
+                      hero.shownName,
+                      style: GameTheme.hint(color: GameTheme.torchHot),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              GameButton(
+                label: activeInSlot ? 'ACTIVE' : 'PICK',
+                expanded: false,
+                style: activeInSlot ? GameButtonStyle.grey : GameButtonStyle.brown,
+                onPressed: activeInSlot ? null : onPick,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LockedSpecPickCard extends StatelessWidget {
+  const _LockedSpecPickCard({
     required this.def,
-    this.versus,
+    required this.canUnlock,
     required this.unlocked,
-    required this.onRoster,
-    required this.inActive,
-    required this.disabled,
     required this.onUnlock,
-    required this.onAdd,
   });
 
   final HeroSpecDef def;
-  final HeroSpecDef? versus;
+  final bool canUnlock;
   final bool unlocked;
-  final bool onRoster;
-  final bool inActive;
-  final bool disabled;
   final VoidCallback onUnlock;
-  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: DecoratedBox(
+        decoration: MenuChrome.listCard(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  def.name,
-                  style: GameTheme.hint(
-                    color: unlocked
-                        ? GameTheme.parchment
-                        : GameTheme.parchmentDim,
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: DecoratedBox(
+                  decoration: MenuChrome.cardBox(),
+                  child: Center(
+                    child: GameIcon.glyph(
+                      UiGlyph.lock,
+                      size: 20,
+                      color: GameTheme.parchmentDim,
+                    ),
                   ),
                 ),
               ),
-              if (!unlocked)
-                GameButton(
-                  label: 'UNLOCK',
-                  expanded: false,
-                  style: GameButtonStyle.grey,
-                  onPressed: disabled ? null : onUnlock,
-                )
-              else if (!inActive && onRoster)
-                GameButton(
-                  label: 'ADD',
-                  expanded: false,
-                  style: GameButtonStyle.brown,
-                  onPressed: disabled ? null : onAdd,
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    MenuChrome.chip(label: def.roleTag.plainLabel.toUpperCase()),
+                    const SizedBox(height: 4),
+                    Text(
+                      def.displayClassName,
+                      style: GameTheme.title(color: GameTheme.parchmentDim),
+                    ),
+                    Text(
+                      def.displaySpecName,
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    ),
+                    Text(
+                      def.kitDetailLine,
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    ),
+                    Text(
+                      unlocked
+                          ? 'On roster after unlock'
+                          : (def.unlockHint.isEmpty ? 'LOCKED' : def.unlockHint),
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    ),
+                  ],
                 ),
+              ),
+              GameButton(
+                label: 'UNLOCK',
+                expanded: false,
+                dense: true,
+                style: GameButtonStyle.grey,
+                onPressed: canUnlock ? onUnlock : null,
+              ),
             ],
           ),
-          Text(
-            !unlocked
-                ? (def.unlockHint.isEmpty ? 'LOCKED' : def.unlockHint)
-                : inActive
-                ? 'ACTIVE'
-                : onRoster
-                ? def.versusLine(versus)
-                : 'READY',
-            style: GameTheme.hint(
-              color: inActive
-                  ? GameTheme.mossLit
-                  : (unlocked
-                        ? GameTheme.parchmentDim
-                        : GameTheme.parchmentDim),
-            ),
+        ),
+      ),
+    );
+  }
+}
+
+class RosterSwapCompareSheet extends StatelessWidget {
+  const RosterSwapCompareSheet({
+    super.key,
+    required this.current,
+    required this.incoming,
+    required this.onSwap,
+    required this.onKeep,
+  });
+
+  final PartyHero current;
+  final PartyHero incoming;
+  final VoidCallback onSwap;
+  final VoidCallback onKeep;
+
+  @override
+  Widget build(BuildContext context) {
+    assert(
+      HeroSpecs.partyRole(current.specId) == HeroSpecs.partyRole(incoming.specId),
+    );
+    final pickSpec = incoming.spec;
+    final keepSpec = current.spec;
+  return FractionallySizedBox(
+      heightFactor: 0.82,
+      child: DecoratedBox(
+        decoration: MenuChrome.panel(opaque: true),
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(12),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight - 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'SWAP HERO',
+                        textAlign: TextAlign.center,
+                        style: GameTheme.title(),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _CompareHeroCard(hero: current, tag: 'CURRENT'),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 40),
+                            child: GameIcon.glyph(
+                              UiGlyph.next,
+                              size: 22,
+                              color: GameTheme.torchHot,
+                            ),
+                          ),
+                          Expanded(
+                            child: _CompareHeroCard(hero: incoming, tag: 'PICK'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        pickSpec.kitDetailLine,
+                        textAlign: TextAlign.center,
+                        style: GameTheme.hint(color: GameTheme.torchHot),
+                      ),
+                      const SizedBox(height: 16),
+                      GameButton(
+                        label: 'SWAP IN ${pickSpec.displaySpecName.toUpperCase()}',
+                        style: GameButtonStyle.go,
+                        onPressed: onSwap,
+                      ),
+                      const SizedBox(height: 8),
+                      GameButton(
+                        label: 'KEEP ${keepSpec.displaySpecName.toUpperCase()}',
+                        style: GameButtonStyle.grey,
+                        onPressed: onKeep,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CompareHeroCard extends StatelessWidget {
+  const _CompareHeroCard({required this.hero, required this.tag});
+
+  final PartyHero hero;
+  final String tag;
+
+  @override
+  Widget build(BuildContext context) {
+    final spec = hero.spec;
+    return DecoratedBox(
+      decoration: MenuChrome.cardBox(),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          children: [
+            Text(tag, style: GameTheme.section(color: GameTheme.parchmentDim)),
+            const SizedBox(height: 4),
+            HeroDollSprite(hero: hero, partyIndex: 0, size: 52),
+            const SizedBox(height: 6),
+            Text(
+              spec.displayClassName,
+              textAlign: TextAlign.center,
+              style: GameTheme.title(color: GameTheme.parchment),
+            ),
+            Text(
+              spec.displaySpecName,
+              textAlign: TextAlign.center,
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
+            ),
+            Text(
+              hero.shownName,
+              textAlign: TextAlign.center,
+              style: GameTheme.hint(color: GameTheme.torchHot),
+            ),
+          ],
+        ),
       ),
     );
   }

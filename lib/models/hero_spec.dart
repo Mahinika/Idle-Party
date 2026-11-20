@@ -736,15 +736,95 @@ abstract final class HeroSpecs {
   ];
 
   static String classLabel(HeroClassId id) => switch (id) {
-    HeroClassId.warrior => 'Bladeward',
-    HeroClassId.paladin => 'Oathguard',
-    HeroClassId.hunter => 'Trailbow',
-    HeroClassId.rogue => 'Cutpurse',
-    HeroClassId.priest => 'Lightkeeper',
-    HeroClassId.deathKnight => 'Graveknight',
-    HeroClassId.shaman => 'Stormcaller',
-    HeroClassId.mage => 'Arcanist',
-    HeroClassId.warlock => 'Hexbinder',
-    HeroClassId.druid => 'Wildheart',
+    HeroClassId.warrior => 'Warrior',
+    HeroClassId.paladin => 'Paladin',
+    HeroClassId.hunter => 'Hunter',
+    HeroClassId.rogue => 'Rogue',
+    HeroClassId.priest => 'Priest',
+    HeroClassId.deathKnight => 'Death Lord',
+    HeroClassId.shaman => 'Shaman',
+    HeroClassId.mage => 'Mage',
+    HeroClassId.warlock => 'Warlock',
+    HeroClassId.druid => 'Druid',
   };
+
+  static const Set<HeroSpecId> _partyTankSpecs = {
+    HeroSpecId.protection,
+    HeroSpecId.protPaladin,
+    HeroSpecId.blood,
+    HeroSpecId.guardian,
+  };
+
+  static const Set<HeroSpecId> _partyHealerSpecs = {
+    HeroSpecId.holyPaladin,
+    HeroSpecId.discipline,
+    HeroSpecId.holyPriest,
+    HeroSpecId.restorationShaman,
+    HeroSpecId.restorationDruid,
+  };
+
+  static PartyRoleBucket partyRole(HeroSpecId id) {
+    if (_partyTankSpecs.contains(id)) return PartyRoleBucket.tank;
+    if (_partyHealerSpecs.contains(id)) return PartyRoleBucket.healer;
+    return PartyRoleBucket.dps;
+  }
+
+  static String displaySpecName(HeroSpecId id) => switch (id) {
+        HeroSpecId.arms => 'Weapon',
+        HeroSpecId.fury => 'Fury',
+        HeroSpecId.protection => 'Guardian',
+        HeroSpecId.holyPaladin => 'Holy',
+        HeroSpecId.protPaladin => 'Bulwark',
+        HeroSpecId.retribution => 'Vengeance',
+        HeroSpecId.beastMastery => 'Beastmaster',
+        HeroSpecId.marksmanship => 'Sharpshooter',
+        HeroSpecId.survival => 'Trapper',
+        HeroSpecId.assassination => 'Assassin',
+        HeroSpecId.combat => 'Duelist',
+        HeroSpecId.subtlety => 'Shadow',
+        HeroSpecId.discipline => 'Oracle',
+        HeroSpecId.holyPriest => 'Holy',
+        HeroSpecId.shadow => 'Void',
+        HeroSpecId.blood => 'Blood',
+        HeroSpecId.frostDk => 'Frostbound',
+        HeroSpecId.unholy => 'Plague',
+        HeroSpecId.elemental => 'Storm',
+        HeroSpecId.enhancement => 'Stormblade',
+        HeroSpecId.restorationShaman => 'Tidecaller',
+        HeroSpecId.arcane => 'Arcane',
+        HeroSpecId.fire => 'Fire',
+        HeroSpecId.frostMage => 'Frost',
+        HeroSpecId.affliction => 'Curse',
+        HeroSpecId.demonology => 'Summoner',
+        HeroSpecId.destruction => 'Chaos',
+        HeroSpecId.balance => 'Moon',
+        HeroSpecId.feral => 'Wild',
+        HeroSpecId.guardian => 'Bear',
+        HeroSpecId.restorationDruid => 'Grove',
+      };
+
+  static List<HeroSpecId> specsForPartyRole(PartyRoleBucket role) => [
+        for (final d in all)
+          if (partyRole(d.id) == role) d.id,
+      ];
+}
+
+enum PartyRoleBucket { tank, healer, dps }
+
+extension HeroSpecPresentation on HeroSpecDef {
+  String get displayClassName => HeroSpecs.classLabel(classId);
+
+  String get displaySpecName => HeroSpecs.displaySpecName(id);
+
+  String get kitDetailLine {
+    final range = ranged ? 'Range' : 'Melee';
+    final armor = armorTypes.map((a) => a.name).join('/');
+    final res = switch (resource) {
+      SpecResource.rage => 'Rage',
+      SpecResource.mana => 'Mana',
+      SpecResource.energy => 'Energy',
+      SpecResource.runic => 'Runic',
+    };
+    return '$range · $armor · $res';
+  }
 }

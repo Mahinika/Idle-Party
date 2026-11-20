@@ -202,7 +202,7 @@ void main() {
     await tapBuilding(tester, TownBuildingId.inn);
     expect(router.route, MenuRoute.gear);
     expect(router.gearPanel, GearPanel.roster);
-    expect(find.textContaining('Pick up to'), findsOneWidget);
+    expect(find.textContaining('Fixed roles: TANK'), findsOneWidget);
     await tester.tap(find.bySemanticsLabel(HomeNavBar.tabSemantics('HEROES', selected: true)));
     await tester.pump();
     expect(router.isOpen, isFalse);

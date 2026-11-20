@@ -166,14 +166,12 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
   ];
   if (preservedActive.isEmpty) {
     preservedActive = [for (final h in preservedRoster.take(maxActive)) h.id];
-  } else {
-    for (final h in preservedRoster) {
-      if (preservedActive.length >= maxActive) break;
-      if (!preservedActive.contains(h.id)) {
-        preservedActive = [...preservedActive, h.id];
-      }
-    }
   }
+  preservedActive = PartyRoleSlots.migrateActiveHeroIds(
+    raw: preservedActive,
+    roster: preservedRoster,
+    maxSlots: maxActive,
+  );
 
   final hmCap = Keystone.maxForState(
     base.copyWith(ascensionLevel: nextLevel, heroRoster: preservedRoster),

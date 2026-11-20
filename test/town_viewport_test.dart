@@ -316,7 +316,7 @@ void main() {
       expect(router.route, MenuRoute.gear);
       expect(router.gearPanel, GearPanel.roster);
       expect(find.text('ROSTER'), findsWidgets);
-      expect(find.textContaining('Pick up to'), findsOneWidget);
+      expect(find.textContaining('Fixed roles: TANK'), findsOneWidget);
       expect(find.text('ACTIVE'), findsWidgets);
       await tester.tap(find.text('CLOSE').first);
       await tester.pump();

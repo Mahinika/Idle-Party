@@ -14,8 +14,8 @@ void main() {
     expect(HeroSpecs.all, hasLength(31));
     expect(HeroClassId.deathKnight.name, 'deathKnight');
     expect(HeroSpecs.def(HeroSpecId.blood).name, 'Graveward');
-    expect(HeroSpecs.classLabel(HeroClassId.deathKnight), 'Graveknight');
-    expect(HeroSpecs.def(HeroSpecId.retribution).name, 'Sunstrike');
+    expect(HeroSpecs.classLabel(HeroClassId.deathKnight), 'Death Lord');
+    expect(HeroSpecs.displaySpecName(HeroSpecId.retribution), 'Vengeance');
     final hero = GameLogic.createInitialState().heroes.first.copyWith(
       specId: HeroSpecId.blood,
     );
