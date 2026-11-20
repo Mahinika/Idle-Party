@@ -137,7 +137,7 @@ class PartyHudSpecLine extends StatelessWidget {
     return Row(
       children: [
         if (partyRole != null) ...[
-          PartyRoleIcon(bucket: partyRole!, size: 10, color: GameTheme.torchHot),
+          PartyRoleIcon(bucket: partyRole!),
           const SizedBox(width: 2),
         ],
         Flexible(
@@ -1205,7 +1205,7 @@ class _HomePartyChip extends StatelessWidget {
                 const SizedBox(height: 1),
                 Row(
                   children: [
-                    PartyRoleIcon(bucket: bucket, size: 10),
+                    PartyRoleIcon(bucket: bucket),
                     const SizedBox(width: 2),
                     if (cc.isNotEmpty)
                       Flexible(
