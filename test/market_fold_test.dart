@@ -176,7 +176,7 @@ void main() {
   // Same fold rule for the other two split tabs (polish 6 #14): at 640
   // and 1.45 the CAMP free-level chip and the SCROLLS rail used to push
   // the first card under FIGHT.
-  for (final tab in const ['FORGE', 'CAMP']) {
+  for (final tab in const ['TRAIN', 'CAMP']) {
     for (final size in const [Size(360, 780), Size(360, 640)]) {
       for (final scale in [1.0, GameTheme.typeScaleMax]) {
         testWidgets('first $tab card is whole above the fold '
@@ -218,7 +218,7 @@ void main() {
           expect(tester.takeException(), isNull);
 
           final body = find.byType(
-            tab == 'FORGE' ? ForgeOverlay : SanctuaryOverlay,
+            tab == 'TRAIN' ? ForgeOverlay : SanctuaryOverlay,
           );
           expect(body, findsOneWidget);
           final viewport = tester.getRect(

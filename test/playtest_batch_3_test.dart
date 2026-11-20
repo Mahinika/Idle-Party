@@ -18,10 +18,7 @@ import 'package:idle_party/ui/shell/home/home_catalog.dart';
 import 'package:idle_party/ui/shell/home/rail_button.dart';
 import 'package:idle_party/ui/shell/inventory_dock.dart';
 
-import 'package:idle_party/ui/hero_doll_sprite.dart';
-
 import 'audit100_harness.dart';
-import 'shell_golden_harness.dart';
 import 'shell_screen_golden_test.dart' show pumpGearGoldenUntilDoll;
 
 void main() {
