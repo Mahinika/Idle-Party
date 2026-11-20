@@ -61,7 +61,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.takeException(), isNull);
     expect(find.text('Healer'), findsWidgets);
-    expect(find.text('SCROLLS'), findsOneWidget);
+    expect(find.byType(FightSeamRails), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp(r'^SCROLLS')), findsOneWidget);
     final railButton = tester.getSize(find.byType(RailButton).first);
     expect(railButton.height, greaterThanOrEqualTo(GameTheme.minTouch));
     expect(railButton.width, greaterThanOrEqualTo(GameTheme.minTouch));

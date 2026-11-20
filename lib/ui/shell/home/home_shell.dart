@@ -169,7 +169,7 @@ class _HomeShellState extends State<HomeShell> {
     // strip so the cave and nav stay inside the viewport (audit P010).
     final crampedFight = showPanel &&
         !full &&
-        textScale > GameTheme.typeScaleMax - 0.01 &&
+        textScale > GameTheme.typeScaleMax &&
         MediaQuery.sizeOf(context).height < 700;
     final panelFull = full || crampedFight;
     final alerts = MenuAlerts.forHub(
@@ -322,7 +322,7 @@ class _HomeShellState extends State<HomeShell> {
         8,
         0,
         8,
-        textScale > GameTheme.typeScaleMax - 0.01 ? 0 : 2,
+        textScale > GameTheme.typeScaleMax ? 0 : 2,
       ),
       child: Row(
         children: [
