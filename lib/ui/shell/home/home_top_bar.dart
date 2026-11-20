@@ -85,8 +85,12 @@ class HomeTopBar extends StatelessWidget {
     final goldHasSub = perMin > 0;
     final alSub = alPillSubLine(state);
     final showMeta = HomeTopBar.showsMetaPills(state);
-    final menuCaption = textScale <= 1.1;
+    final showMetaPills = showMeta &&
+        !(compactTop && textScale > GameTheme.typeScaleMax);
+    final menuCaption =
+        textScale <= 1.1 && textScale <= GameTheme.typeScaleMax;
     final tightChrome = compactTop && textScale > 1.9;
+    final chromeInset = textScale > GameTheme.typeScaleMax ? 6.0 : 8.0;
     // Town has no quick rail (F100): SCROLLS / POUCH / UPDATE wait in MENU,
     // so their red dot moves onto the MENU button.
     final menuDot = HomeCatalog.townMenuBadge(state, director);
@@ -96,9 +100,9 @@ class HomeTopBar extends StatelessWidget {
       color: GameTheme.stoneDeep,
       child: Padding(
         padding: EdgeInsets.fromLTRB(
-          8,
+          chromeInset,
           2 + topInset,
-          8,
+          chromeInset,
           tightChrome ? 0 : (compactTop ? 2 : 4),
         ),
         child: Column(
@@ -106,7 +110,7 @@ class HomeTopBar extends StatelessWidget {
           children: [
             Row(
               children: [
-                if (showMeta) ...[
+                if (showMetaPills) ...[
                   if (HomeTopBar.showsAlPill(state)) ...[
                     Flexible(
                       flex: 0,
@@ -184,34 +188,47 @@ class HomeTopBar extends StatelessWidget {
                       tone: fast ? ChunkyTone.orange : ChunkyTone.stone,
                       minWidth: 40,
                       minHeight: GameTheme.chunkyFaceDense,
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ExcludeSemantics(
-                            child: Text(
-                              '▸',
+                      padding: EdgeInsets.symmetric(
+                        horizontal: textScale > GameTheme.typeScaleMax ? 4 : 6,
+                      ),
+                      child: textScale > GameTheme.typeScaleMax
+                          ? Text(
+                              fast ? '2×' : '1×',
                               maxLines: 1,
                               style: GameTheme.button(
                                 size: GameTheme.typeButtonDense,
                                 color: fast
                                     ? ChunkyFace.textOn(ChunkyTone.orange)
-                                    : GameTheme.parchmentDim,
+                                    : GameTheme.parchment,
                               ),
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ExcludeSemantics(
+                                  child: Text(
+                                    '▸',
+                                    maxLines: 1,
+                                    style: GameTheme.button(
+                                      size: GameTheme.typeButtonDense,
+                                      color: fast
+                                          ? ChunkyFace.textOn(ChunkyTone.orange)
+                                          : GameTheme.parchmentDim,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  fast ? '2×' : '1×',
+                                  maxLines: 1,
+                                  style: GameTheme.button(
+                                    size: GameTheme.typeButtonDense,
+                                    color: fast
+                                        ? ChunkyFace.textOn(ChunkyTone.orange)
+                                        : GameTheme.parchment,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          Text(
-                            fast ? '2×' : '1×',
-                            maxLines: 1,
-                            style: GameTheme.button(
-                              size: GameTheme.typeButtonDense,
-                              color: fast
-                                  ? ChunkyFace.textOn(ChunkyTone.orange)
-                                  : GameTheme.parchment,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ],
@@ -267,7 +284,7 @@ class HomeTopBar extends StatelessWidget {
                 textScale: textScale,
                 onFloorTap: () => showFloorJumpSheet(context, director),
               ),
-              if (chase.isNotEmpty) ...[
+              if (chase.isNotEmpty && textScale <= GameTheme.typeScaleMax) ...[
                 SizedBox(height: textScale > 1.4 ? 0 : 1),
                 Text(
                   chase,
@@ -479,7 +496,8 @@ class _DungeonTargetRow extends StatelessWidget {
             const SizedBox(width: gap),
             _floorBadge(context, floorLabel),
             const SizedBox(width: gap),
-            HudDpsPill(director: director),
+            if (textScale <= GameTheme.typeScaleMax)
+              HudDpsPill(director: director),
             if (questReady) ...[
               const SizedBox(width: gap),
               chip,

@@ -208,7 +208,7 @@ void main() {
     // The dock row opens the locked sheet; its own tab row then switches.
     await tester.tap(find.text('MARKET').first);
     await _settle(tester);
-    for (final tab in ['MARKET', 'CAMP', 'FORGE']) {
+    for (final tab in ['MARKET', 'CAMP', 'TRAIN']) {
       if (tab != 'MARKET') {
         await tester.tap(find.text(tab).last);
         await _settle(tester);

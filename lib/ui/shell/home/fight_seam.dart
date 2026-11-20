@@ -17,7 +17,7 @@ import '../../web_click_bridge.dart';
 import '../dungeon_party_hud.dart';
 import 'fight_seam_rails.dart';
 
-/// The party row, HOLD, and the SCROLLS / QUESTS / VAULT rail under the
+/// The party row and the SCROLLS / QUESTS / VAULT rail under the
 /// fight. FARM / PUSH, the fist, and LEAVE sit on the field itself
 /// ([FightFieldControls]) so the buy list keeps its rows.
 class FightSeam extends StatelessWidget {
@@ -40,8 +40,6 @@ class FightSeam extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = director.state;
-    final world = director.spatial;
     return Material(
       color: GameTheme.panel,
       child: Column(
@@ -58,43 +56,6 @@ class FightSeam extends StatelessWidget {
             },
             onOpenEquip: () => router.toggleGear(GearPanel.gear),
           ),
-          if (world != null &&
-              world.awaitingExit &&
-              !state.isPartyDefeated &&
-              !director.exitHoldActive)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Floor cleared — HOLD skips the walk to town.',
-                    maxLines: 2,
-                    textAlign: TextAlign.right,
-                    style: GameTheme.hint(color: GameTheme.parchmentDim),
-                  ),
-                  const SizedBox(height: 4),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: _seamTap(
-                      label: 'HOLD',
-                      onTap: director.startExitHold,
-                      child: ChunkyFace(
-                        tone: ChunkyTone.gold,
-                        minHeight: GameTheme.primaryTouch,
-                        child: Text(
-                          'HOLD',
-                          style: GameTheme.readable(
-                            color: ChunkyFace.textOn(ChunkyTone.gold),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           if (!hideRails) FightSeamRails(director: director, router: router),
         ],
       ),
@@ -369,9 +330,7 @@ void _setFightMode(
     context: context,
     barrierColor: MenuChrome.scrim,
     builder: (ctx) => MenuChrome.dialog(
-      title: mode == DungeonMode.farm
-          ? 'Switch to FARM?'
-          : 'Switch to PUSH?',
+      title: mode == DungeonMode.farm ? 'Switch to FARM?' : 'Switch to PUSH?',
       content: Text(
         'You are mid-fight. Switch anyway?',
         style: GameTheme.readable(color: GameTheme.parchment),

@@ -86,7 +86,7 @@ class SpatialDungeonView extends StatefulWidget {
 }
 
 class _SpatialDungeonViewState extends State<SpatialDungeonView>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final Map<int, Offset> _pinchPointers = {};
   double? _pinchBaseDist;
   double? _pinchBaseCols;
@@ -155,6 +155,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
   /// Zone floor/enemy decode finished (partial OK — never block forever).
   bool _zoneArtReady = false;
   int _loadGen = 0;
+  int _artEpoch = 0;
+  bool _artReloadQueued = false;
 
   bool get _tilesReady =>
       _floorReady.isNotEmpty &&
@@ -168,18 +170,30 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
       _zoneArtReady && _tilesReady && _sword != null && _vial != null;
 
   void _syncTilesReady() {
+    if (_canPaintFloor) {
+      _artEpoch = DecodedImageCache.epoch;
+    }
     widget.director.setDungeonTilesReady(_canPaintFloor);
   }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _artEpoch = DecodedImageCache.epoch;
     _floorFade = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
     )..value = 1;
     widget.director.setDungeonTilesReady(false);
     _loadImages(widget.director.state.dungeonId);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _reloadDisposedArt();
+    }
   }
 
   @override
@@ -194,12 +208,98 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _floorFade.dispose();
     _pinchCols.dispose();
     // The tree is already locked while this view unmounts. A notify here
     // throws setState-during-build on every leave.
     widget.director.setDungeonTilesReady(false, notify: false);
     super.dispose();
+  }
+
+  Iterable<ui.Image?> get _heldArtImages sync* {
+    yield* _floorReady;
+    yield* _wallReady;
+    yield _stairs;
+    yield _stairsBoss;
+    yield _doorClosed;
+    yield _doorOpen;
+    yield _zoneStairs;
+    yield _zoneStairsBoss;
+    yield _zoneDoorClosed;
+    yield _zoneDoorOpen;
+    yield _hero0;
+    yield _hero1;
+    yield _hero2;
+    yield _hero3;
+    yield* _heroesByClass.values;
+    yield* _heroesBySpec.values;
+    yield* _bodyByPath.values;
+    yield _chest;
+    yield _coin;
+    yield _sword;
+    yield _vial;
+    yield* _lootByPath.values;
+    yield* _petsByPath.values;
+    yield* _propImages.values;
+    yield* _enemySprites;
+  }
+
+  bool get _heldArtDisposed =>
+      _artEpoch != DecodedImageCache.epoch ||
+      DecodedImageCache.anyDisposed(_heldArtImages);
+
+  void _dropHeldArt() {
+    _floorReady = const [];
+    _wallReady = const [];
+    _stairs = null;
+    _stairsBoss = null;
+    _doorClosed = null;
+    _doorOpen = null;
+    _zoneStairs = null;
+    _zoneStairsBoss = null;
+    _zoneDoorClosed = null;
+    _zoneDoorOpen = null;
+    _hero0 = null;
+    _hero1 = null;
+    _hero2 = null;
+    _hero3 = null;
+    _heroesByClass.clear();
+    _heroesBySpec.clear();
+    _bodyByPath.clear();
+    _chest = null;
+    _coin = null;
+    _sword = null;
+    _vial = null;
+    _lootByPath.clear();
+    _petsByPath.clear();
+    _propImages = const {};
+    _enemySprites = const [];
+    _sharedLoaded = false;
+    _zoneArtReady = false;
+    _loadedDungeonId = null;
+  }
+
+  void _reloadDisposedArt({bool fromBuild = false}) {
+    if (!_heldArtDisposed || _artReloadQueued) return;
+    _artReloadQueued = true;
+    void go() {
+      _artReloadQueued = false;
+      if (!mounted || !_heldArtDisposed) return;
+      setState(_dropHeldArt);
+      widget.director.setDungeonTilesReady(false);
+      HeroRigPainter.evictDisposedImages();
+      unawaited(HeroRigPainter.warmParty(widget.director.state.heroes));
+      _loadImages(widget.director.state.dungeonId);
+    }
+
+    if (fromBuild) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) go();
+      });
+    } else {
+      go();
+    }
   }
 
   bool get _pinching => _pinchPointers.length >= 2;
@@ -721,7 +821,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                 _fightReadReset = true;
                                 FightReadPace.reset();
                               }
-                              FightReadPace.pace = widget.director.state.combatPace
+                              FightReadPace.pace = widget
+                                  .director
+                                  .state
+                                  .combatPace
                                   .clamp(1, 2)
                                   .toInt();
                               final target = _TileCamera.forWorld(
@@ -861,15 +964,21 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                 constraints.maxWidth,
                                 constraints.maxHeight,
                               );
+                              if (_heldArtDisposed) {
+                                _reloadDisposedArt(fromBuild: true);
+                              }
                               final ready = world;
+                              final canPaint =
+                                  !_heldArtDisposed && _canPaintFloor;
                               return Stack(
                                 fit: StackFit.expand,
                                 children: [
-                                  ready == null || !_canPaintFloor
+                                  ready == null || !canPaint
                                       ? ColoredBox(
                                           color: Color(
-                                            ZoneFloorStyle.byId(state.dungeonId)
-                                                .accentArgb,
+                                            ZoneFloorStyle.byId(
+                                              state.dungeonId,
+                                            ).accentArgb,
                                           ),
                                           child: Center(
                                             child: Column(
@@ -881,11 +990,12 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                                 ),
                                                 const SizedBox(height: 8),
                                                 Text(
-                                                  GameLogic.dungeonNames[
-                                                          state.dungeonId] ??
+                                                  GameLogic.dungeonNames[state
+                                                          .dungeonId] ??
                                                       state.dungeonId,
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                   textAlign: TextAlign.center,
                                                   style: GameTheme.combat(
                                                     color: GameTheme.parchment,
@@ -1025,7 +1135,10 @@ class DungeonModeChip extends StatelessWidget {
       maxLines: 1,
       softWrap: false,
       overflow: TextOverflow.ellipsis,
-      style: GameTheme.combat(comfort: true, color: selected ? GameTheme.torchHot : GameTheme.parchmentDim),
+      style: GameTheme.combat(
+        comfort: true,
+        color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
+      ),
     );
     final child = Container(
       width: expand ? double.infinity : null,
@@ -1188,7 +1301,9 @@ class GodHandRing extends StatelessWidget {
                             top: -4,
                             child: Text(
                               '!',
-                              style: GameTheme.combat(color: GameTheme.accentWarn),
+                              style: GameTheme.combat(
+                                color: GameTheme.accentWarn,
+                              ),
                             ),
                           ),
                       ],

@@ -18,6 +18,7 @@ void main() {
     int gold = 0,
     int essence = 0,
     int seconds = 120,
+    int secondsAway = 0,
     int levels = 0,
     int gear = 0,
     bool wasInDungeon = false,
@@ -29,6 +30,7 @@ void main() {
     return OfflineProgressResult(
       state: state,
       secondsApplied: seconds,
+      secondsAway: secondsAway,
       goldGained: gold,
       essenceGained: essence,
       roomsCleared: rooms,
@@ -174,11 +176,46 @@ void main() {
     expect(contract.upNextLine, startsWith('Up next'));
   });
 
-  testWidgets('Welcome Back is wow, highlights, one spend line — not a syllabus', (
+  testWidgets(
+    'Welcome Back is wow, highlights, one spend line — not a syllabus',
+    (tester) async {
+      final director = GameDirector.preview();
+      director.uiFeedback.presentOffline(
+        result(gold: 40, essence: 2, secondsAway: 3600),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showOfflineProgressDialog(context, director),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(find.text('WELCOME BACK'), findsOneWidget);
+      expect(find.textContaining('Away for'), findsOneWidget);
+      expect(find.textContaining('Up next:'), findsNothing);
+      expect(find.textContaining('Why:'), findsNothing);
+      expect(find.textContaining('AFK'), findsNothing);
+      expect(find.textContaining('Sanctuary'), findsNothing);
+      expect(find.text('ENTER DUNGEON'), findsOneWidget);
+      expect(find.text('CLAIM'), findsNothing);
+      expect(find.text(AdOffer.welcomeLabel), findsNothing);
+      expect(find.textContaining('40 gold'), findsWidgets);
+    },
+  );
+
+  testWidgets('Welcome Back is skipped when away under 5 minutes', (
     tester,
   ) async {
     final director = GameDirector.preview();
-    director.uiFeedback.presentOffline(result(gold: 40, essence: 2));
+    addTearDown(director.dispose);
+    director.uiFeedback.presentOffline(
+      result(gold: 40, essence: 2, seconds: 60, secondsAway: 5 * 60 - 1),
+    );
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
@@ -191,19 +228,13 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.text('WELCOME BACK'), findsOneWidget);
-    expect(find.textContaining('Away for'), findsOneWidget);
-    expect(find.textContaining('Up next:'), findsNothing);
-    expect(find.textContaining('Why:'), findsNothing);
-    expect(find.textContaining('AFK'), findsNothing);
-    expect(find.textContaining('Sanctuary'), findsNothing);
-    expect(find.text('ENTER DUNGEON'), findsOneWidget);
-    expect(find.text('CLAIM'), findsNothing);
-    expect(find.text(AdOffer.welcomeLabel), findsNothing);
-    expect(find.textContaining('40 gold'), findsWidgets);
+    expect(find.text('WELCOME BACK'), findsNothing);
+    expect(find.text('OPEN GOLD'), findsNothing);
   });
 
-  testWidgets('day-2–7 Welcome Back skips redundant coach rows', (tester) async {
+  testWidgets('day-2–7 Welcome Back skips redundant coach rows', (
+    tester,
+  ) async {
     final now = DateTime.utc(2026, 8, 8);
     final state = GameLogic.createInitialState(
       now: now,
@@ -211,6 +242,7 @@ void main() {
     final summary = OfflineProgressResult(
       state: state,
       secondsApplied: 3600,
+      secondsAway: 3600,
       goldGained: 40,
       essenceGained: 2,
       roomsCleared: 0,
@@ -259,6 +291,7 @@ void main() {
     final summary = OfflineProgressResult(
       state: state,
       secondsApplied: 3600,
+      secondsAway: 3600,
       goldGained: 0,
       essenceGained: 0,
       roomsCleared: 0,
@@ -312,6 +345,8 @@ void main() {
         highestFloorDelta: 0,
         bossDelta: 0,
         wasInDungeon: true,
+
+        secondsAway: 3600,
       ),
     );
     await tester.pumpWidget(
@@ -335,7 +370,9 @@ void main() {
   testWidgets('Welcome Back on the hub enters the cave', (tester) async {
     final director = GameDirector.preview();
     await director.boot();
-    director.uiFeedback.presentOffline(result(gold: 40, essence: 2));
+    director.uiFeedback.presentOffline(
+      result(gold: 40, essence: 2, secondsAway: 3600),
+    );
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
@@ -370,6 +407,8 @@ void main() {
         highestFloorDelta: 0,
         bossDelta: 0,
         wasInDungeon: true,
+
+        secondsAway: 3600,
       ),
     );
     await tester.pumpWidget(
@@ -647,7 +686,7 @@ void main() {
     );
     final director = GameDirector.preview(initialState: state);
     await director.boot();
-    director.uiFeedback.presentOffline(result(gold: 40));
+    director.uiFeedback.presentOffline(result(gold: 40, secondsAway: 3600));
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
@@ -690,6 +729,7 @@ void main() {
     final withBoss = OfflineProgressResult(
       state: state,
       secondsApplied: summary.secondsApplied,
+      secondsAway: 3600,
       goldGained: summary.goldGained,
       essenceGained: summary.essenceGained,
       roomsCleared: summary.roomsCleared,
@@ -755,6 +795,7 @@ void main() {
     final summary = OfflineProgressResult(
       state: state,
       secondsApplied: 3600,
+      secondsAway: 3600,
       goldGained: 40,
       essenceGained: 2,
       roomsCleared: 4,

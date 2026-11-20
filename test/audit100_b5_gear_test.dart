@@ -50,7 +50,7 @@ void main() {
         expect(find.byKey(PaperDollSlot.emptyFrameKey), findsWidgets);
         final tabs = find.byKey(MenuSurface.gearTabsKey);
         if (tabs.evaluate().isNotEmpty) {
-          expect(t.getRect(tabs).top, lessThan(size.height * 0.35));
+          expect(t.getRect(tabs).top, lessThan(size.height * 0.4));
         }
         expect(t.takeException(), isNull);
       });

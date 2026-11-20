@@ -97,10 +97,7 @@ void main() {
       closeTo(kUiTextScaleMax, 0.001),
     );
     expect(scaleOf(tester, find.text('FARM')), closeTo(kUiTextScaleMax, 0.001));
-    expect(
-      scaleOf(tester, find.text('FORGE')),
-      closeTo(kUiTextScaleMax, 0.001),
-    );
+    expect(scaleOf(tester, find.text('PUSH')), closeTo(kUiTextScaleMax, 0.001));
     expect(find.text('145%'), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -162,8 +159,6 @@ void main() {
         phone(tester, logical: logical);
         await pumpApp(tester, game: kUiTextScaleMax, dungeon: dungeon);
         expect(tester.takeException(), isNull);
-        expect(find.text('FORGE'), findsWidgets);
-        expect(find.text('MARKET'), findsWidgets);
         expect(find.text('HEROES'), findsOneWidget);
         expect(find.text('FIGHT'), findsOneWidget);
         if (dungeon) {
@@ -171,14 +166,19 @@ void main() {
           expect(find.text('FARM'), findsOneWidget);
           expect(find.text('PUSH'), findsOneWidget);
         } else {
+          expect(find.text('FORGE'), findsWidgets);
+          expect(find.text('MARKET'), findsWidgets);
           expect(find.text('INN'), findsWidgets);
           expect(find.text('GUILD'), findsWidgets);
+          expect(
+            tester.getSize(find.text('FORGE').first).height,
+            greaterThan(10),
+          );
+          expect(
+            tester.getSize(find.text('FORGE').first).width,
+            greaterThan(28),
+          );
         }
-        expect(
-          tester.getSize(find.text('FORGE').first).height,
-          greaterThan(10),
-        );
-        expect(tester.getSize(find.text('FORGE').first).width, greaterThan(28));
       });
 
       testWidgets(
@@ -191,8 +191,10 @@ void main() {
             scaleOf(tester, find.text('FIGHT')),
             closeTo(GameTheme.typeScaleMax, 0.001),
           );
-          expect(find.text('FORGE'), findsWidgets);
           expect(find.text('FIGHT'), findsOneWidget);
+          if (!dungeon) {
+            expect(find.text('FORGE'), findsWidgets);
+          }
         },
       );
     }
@@ -254,12 +256,16 @@ void main() {
       );
       await tester.pump();
       expect(tester.takeException(), isNull);
-      expect(scaleOf(tester, find.text('FIGHT')), closeTo(2, 0.001));
-      expect(find.text('FORGE'), findsWidgets);
-      expect(find.text('MARKET'), findsWidgets);
+      expect(
+        scaleOf(tester, find.text('FIGHT')),
+        closeTo(GameTheme.typeScaleMax, 0.001),
+      );
       if (dungeon) {
         expect(find.text('CAMP'), findsWidgets);
+        expect(find.text('FARM'), findsOneWidget);
       } else {
+        expect(find.text('FORGE'), findsWidgets);
+        expect(find.text('MARKET'), findsWidgets);
         expect(find.text('INN'), findsWidgets);
       }
     }
@@ -273,7 +279,7 @@ void main() {
     phone(tester, logical: const Size(360, 780), top: 44);
     await pumpApp(tester, game: 1, dungeon: true);
     expect(tester.takeException(), isNull);
-    final header = tester.getRect(find.text('AL 0'));
+    final header = tester.getRect(find.bySemanticsLabel('MENU'));
     expect(header.top, greaterThanOrEqualTo(44));
     final menu = tester.getRect(find.bySemanticsLabel('MENU'));
     expect(menu.top, greaterThanOrEqualTo(44));

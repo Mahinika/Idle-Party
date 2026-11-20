@@ -141,9 +141,18 @@ void main() {
       expect(find.bySemanticsLabel('MENU, ready'), findsOneWidget);
       r.open(MenuRoute.more);
       await a100Settle(t);
-      final scrolls = find.text('SCROLLS 3');
-      expect(scrolls, findsOneWidget);
+      expect(find.text('SCROLLS'), findsOneWidget);
+      expect(find.text('SCROLLS 3'), findsNothing);
+      final scrolls = find.text('SCROLLS');
       a100ExpectWhole(t, scrolls);
+      expect(find.byKey(RailButton.countKey), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(RailButton.countKey),
+          matching: find.text('3'),
+        ),
+        findsOneWidget,
+      );
       final cell = find.ancestor(of: scrolls, matching: find.byType(InkWell));
       expect(
         t.getSize(cell.first).height,
@@ -187,7 +196,10 @@ void main() {
     await a100Settle(t);
     await closePrompts(t);
     expect(find.byType(FightSeamRails), findsOneWidget);
-    for (final label in ['SCROLLS 3', 'QUESTS', 'VAULT', 'DAILY']) {
+    expect(find.text('SCROLLS'), findsOneWidget);
+    expect(find.text('SCROLLS 3'), findsNothing);
+    expect(find.byKey(RailButton.countKey), findsOneWidget);
+    for (final label in ['QUESTS', 'VAULT', 'DAILY']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
     expect(find.byKey(HomeTopBar.menuDotKey), findsNothing);

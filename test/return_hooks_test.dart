@@ -143,6 +143,7 @@ void main() {
       OfflineProgressResult(
         state: state,
         secondsApplied: 3600,
+        secondsAway: 3600,
         goldGained: 40,
         essenceGained: 0,
         roomsCleared: 0,
