@@ -8,6 +8,7 @@ import '../../../core/game_state.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
 import '../../../core/reinstall_pouch.dart';
+import '../../../core/remote_tune.dart';
 import '../../../core/town_nav.dart';
 import '../../confirm_dialogs.dart';
 import '../../game_icon.dart';
@@ -415,7 +416,7 @@ abstract final class HomeCatalog {
   /// Red dot on the town MENU button: a cell moved there from the rail has
   /// something waiting (tickets, the reinstall pouch, an update).
   static bool townMenuBadge(GameState state, GameDirector director) =>
-      !state.inDungeon &&
+      RemoteTune.townSquareActive(state.inDungeon) &&
       of(HomePlace.menuGrid, town: true).any(
         (e) =>
             TownNavPolicy.townMenuFromRail.contains(e.id) &&

@@ -54,6 +54,7 @@ Future<void> _refresh() async {
       firstClimbPlayNow: rc.getBool(RemoteTune.keyFirstClimbPlayNow),
       welcomeBackFirstReturnShort:
           rc.getBool(RemoteTune.keyWelcomeBackFirstReturnShort),
+      townEnabled: rc.getBool(RemoteTune.keyTownEnabled),
       fromRemote: true,
     );
     final shop = RemoteTune.shopFeaturedId;
