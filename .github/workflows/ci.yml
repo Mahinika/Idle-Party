@@ -6,6 +6,25 @@ on:
   pull_request:
 
 jobs:
+  changelog-main:
+    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require CHANGELOG.md on PRs to main
+        run: |
+          set -euo pipefail
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          if git diff --name-only "$base" "$head" | grep -qx CHANGELOG.md; then
+            echo "CHANGELOG.md updated."
+          else
+            echo "Pull requests targeting main must update CHANGELOG.md with a short entry." >&2
+            exit 1
+          fi
+
   analyze-test:
     runs-on: ubuntu-latest
     steps:

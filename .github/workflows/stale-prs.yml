@@ -1,0 +1,31 @@
+# Close inactive pull requests after 14 days. Issues are untouched.
+
+name: Stale pull requests
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+permissions:
+  pull-requests: write
+  issues: read
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
+          days-before-pr-stale: 14
+          days-before-pr-close: 0
+          stale-pr-message: >
+            This pull request has had no activity for 14 days and is being marked stale.
+            It will be closed if there is no new activity.
+          close-pr-message: >
+            Closing this pull request due to 14 days without updates.
+            Reopen or open a fresh PR when you are ready to continue.
+          operations-per-run: 60

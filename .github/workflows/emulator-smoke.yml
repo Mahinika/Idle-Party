@@ -1,0 +1,132 @@
+# Boot API 34 x86_64, smoke-test com.idleparty.app.test APK from a test-* prerelease.
+# Never install or uninstall com.idleparty.app (Play).
+
+name: Emulator smoke
+
+on:
+  workflow_run:
+    workflows: ['Test APK prerelease']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'test-* prerelease tag (must already exist on GitHub)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  # Public repos: android-emulator-runner uses free KVM on ubuntu-latest.
+  smoke:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve prerelease tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            sha="${{ github.event.workflow_run.head_sha }}"
+            tag=$(gh release list --prerelease --limit 40 \
+              --json tagName,targetCommitish,createdAt \
+              | jq -r --arg sha "$sha" '
+                  [.[] | select(.targetCommitish == $sha) | .tagName]
+                  | map(select(startswith("test-"))) | .[0] // empty')
+            if [ -z "$tag" ]; then
+              echo "No test-* prerelease for workflow SHA $sha." >&2
+              exit 1
+            fi
+          fi
+          case "$tag" in
+            test-*) ;;
+            *) echo "Tag must start with test- (got $tag)." >&2; exit 1 ;;
+          esac
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Download x86_64 test APK (or build from tag)
+        id: apk
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${{ steps.tag.outputs.tag }}"
+          mkdir -p apk
+          apk_path="apk/idle-party-test-x86_64.apk"
+          if gh release download "$tag" -p idle-party-test-x86_64.apk -D apk 2>/dev/null \
+            && test -f "$apk_path"; then
+            echo "Downloaded idle-party-test-x86_64.apk from $tag"
+            echo "path=$apk_path" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "No x86_64 asset on $tag; building release x86_64 from tag ref."
+          git fetch origin "refs/tags/$tag:refs/tags/$tag" --force
+          git checkout "$tag"
+          echo "path=$apk_path" >> "$GITHUB_OUTPUT"
+          echo "built=true" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Java
+        if: steps.apk.outputs.built == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        if: steps.apk.outputs.built == 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.9'
+          cache: true
+
+      - name: Build x86_64 test APK from tag
+        if: steps.apk.outputs.built == 'true'
+        env:
+          IDLE_TEST_PACKAGE: '1'
+        run: |
+          set -euo pipefail
+          flutter pub get
+          python3 tool/ci/patch_android_test_apk.py apply
+          flutter build apk --release \
+            --target-platform android-x64 \
+            --dart-define=GIT_SHA="$(git rev-parse HEAD)"
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk apk/idle-party-test-x86_64.apk
+          python3 tool/ci/patch_android_test_apk.py restore
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Emulator smoke (com.idleparty.app.test)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: |
+            bash tool/ci/emulator_smoke.sh apk/idle-party-test-x86_64.apk emulator-smoke-out
+
+      - name: Upload smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-smoke-${{ steps.tag.outputs.tag }}
+          path: |
+            emulator-smoke-out/logcat.txt
+            emulator-smoke-out/screenshot-after-20s.png
+          if-no-files-found: warn

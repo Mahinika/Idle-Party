@@ -102,7 +102,20 @@ before-and-after, or a lock or missing fact blocks the next step.
 ## Workflow
 
 Source work is a branch and a PR, in the cloud or locally. Do not put
-ordinary agent work on `main`. Nothing merges unless the owner asks. A
-test APK and a Play AAB stay where their workflows already are, and
-neither starts unless the owner asks in that turn. Check the workflow
-`on:` before a push. Priority is revenue.
+ordinary agent work on `main`. A test APK and a Play AAB stay where their
+workflows already are, and neither starts unless the owner asks in that
+turn. Check the workflow `on:` before a push. Priority is revenue.
+
+### Agents, CI, and branches
+
+- **PR text in English** (title, description, review comments on automation PRs).
+- **Local verify:** `flutter analyze lib test --no-fatal-infos` plus **targeted**
+  tests for touched code. Do not run the full `flutter test --exclude-tags sim`
+  suite locally; GitHub CI runs it.
+- **Merge to `test/fight-ui-stack`:** agents may merge their own PR when CI is
+  green. Never merge agent PRs into `main` without the owner's yes in that turn.
+- **Merge to `main`:** add a short bullet under `CHANGELOG.md` → `[Unreleased]`
+  (repo root; CI enforces this). In-game What's New stays `ChangelogCatalog`.
+- **Big features:** new large surfaces and existing large ones (e.g. town) ship
+  behind Firebase Remote Config on/off flags (`RemoteTune` / console), not only
+  compile-time gates. Wiring flags is per-batch; do not half-flag a screen.
