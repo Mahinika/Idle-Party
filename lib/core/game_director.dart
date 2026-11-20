@@ -829,9 +829,10 @@ class GameDirector extends ChangeNotifier {
         _state.gearStash.isEmpty) {
       return;
     }
+    final lift = GearService.plannedAutoEquipLift(_state);
     final result = GameLogic.autoEquipBetterGearResult(_state);
     if (result.equipped <= 0) return;
-    final worn = GearService.wornLine(result.names);
+    final worn = GearService.wornLineWithLift(result.names, lift);
     if (worn.isNotEmpty) showToast(worn, life: 2.2);
     _state = result.state;
     final spatial = _spatial;

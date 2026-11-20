@@ -468,14 +468,19 @@ class _Is2CombatCornerChromeState extends State<_Is2CombatCornerChrome> {
               listenable: d.combatFrame,
               builder: (context, _) {
                 final world = d.spatial;
-                if (widget.dpsMeterOpen ||
-                    world == null ||
-                    world.bossBannerTimer <= 0) {
+                if (widget.dpsMeterOpen || world == null) {
                   return const SizedBox.shrink();
                 }
-                return BossIntroBanner(
-                  name: world.bossBannerName,
-                );
+                if (world.bossBannerTimer > 0) {
+                  return BossIntroBanner(name: world.bossBannerName);
+                }
+                if (world.beatCalloutTimer > 0) {
+                  return BossIntroBanner(
+                    name: world.beatCalloutLabel,
+                    prefix: '',
+                  );
+                }
+                return const SizedBox.shrink();
               },
             ),
           ),

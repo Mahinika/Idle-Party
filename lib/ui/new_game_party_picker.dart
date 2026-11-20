@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/game_logic.dart';
+import '../core/gear/gear_upgrade_copy.dart';
 import '../core/party_name_filter.dart';
 import '../core/remote_tune.dart';
 import '../core/starter_gear.dart';
@@ -480,6 +481,10 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                                   for (final specId in starterSpecs)
                                     _SpecPickRow(
                                       def: HeroSpecs.def(specId),
+                                      versus: HeroSpecs.def(
+                                        _slots[_activeSlot] ??
+                                            HeroSpecId.protection,
+                                      ),
                                       taken: _slots.contains(specId),
                                       preview: _previewHero(
                                         specId,
@@ -639,12 +644,14 @@ class _SlotCard extends StatelessWidget {
 class _SpecPickRow extends StatelessWidget {
   const _SpecPickRow({
     required this.def,
+    required this.versus,
     required this.taken,
     required this.onTap,
     required this.preview,
   });
 
   final HeroSpecDef def;
+  final HeroSpecDef versus;
   final bool taken;
   final VoidCallback onTap;
   final PartyHero preview;
@@ -671,7 +678,7 @@ class _SpecPickRow extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          def.plainRoleLine,
+                          def.versusLine(versus),
                           style: GameTheme.readable(color: GameTheme.torchHot),
                         ),
                         Text(

@@ -181,6 +181,7 @@ class ZoneFloorStyle {
     required this.wonders,
     required this.particles,
     required this.setpieceDecal,
+    this.setpieceCallout,
     required this.accentArgb,
     required this.loadingArgb,
     this.organicEdges = false,
@@ -199,6 +200,9 @@ class ZoneFloorStyle {
 
   /// Floor detail under the zone's signature room.
   final FloorDecalKind setpieceDecal;
+
+  /// Short HUD word on the zone's signature setpiece room.
+  final String? setpieceCallout;
 
   /// Hero / setpiece light colour (ARGB).
   final int accentArgb;
@@ -236,6 +240,7 @@ class ZoneFloorStyle {
       wonders: [WonderKind.hoard, WonderKind.giantSkeleton],
       particles: AmbientParticleKind.dust,
       setpieceDecal: FloorDecalKind.sandDrift,
+      setpieceCallout: 'BURIED HATCH',
       accentArgb: 0xFFF0B060,
       loadingArgb: 0xFFD6B070,
       organicEdges: true,
@@ -247,8 +252,9 @@ class ZoneFloorStyle {
       wonders: [WonderKind.hoard],
       particles: AmbientParticleKind.motes,
       setpieceDecal: FloorDecalKind.ash,
+      setpieceCallout: 'RAIDER STASH',
       accentArgb: 0xFF70D070,
-      loadingArgb: 0xFF766034,
+      loadingArgb: 0xFF4A7030,
       organicEdges: true,
     ),
     'king': ZoneFloorStyle(

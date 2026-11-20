@@ -79,6 +79,7 @@ extension GameDirectorBag on GameDirector {
       for (final hero in _state.heroes)
         for (final item in hero.equipped.values) item.id,
     };
+    final lift = GearService.plannedAutoEquipLift(_state);
     final result = GameLogic.autoEquipBetterGearResult(_state);
     var next = result.state;
     final beforeLen = next.gearStash.length;
@@ -101,7 +102,7 @@ extension GameDirectorBag on GameDirector {
       final cleared = beforeLen - _state.gearStash.length;
       final gold = _state.gold - beforeGold;
       final ess = _state.essence - beforeEss;
-      final worn = GearService.wornLine(result.names);
+      final worn = GearService.wornLineWithLift(result.names, lift);
       final bits = <String>[
         if (worn.isNotEmpty)
           worn

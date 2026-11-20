@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../assets/custom_assets.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/gear/gear_upgrade_copy.dart';
 import '../../models/hero.dart';
 import '../../models/hero_spec.dart';
 import '../game_theme.dart';
@@ -37,6 +38,16 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
   GameDirector get director => widget.director;
 
   void _toast(String msg) => director.showToast(msg, life: 2.4);
+
+  HeroSpecDef? _pendingReplaceSpec(List<PartyHero> active) {
+    final id = _pendingSlotReplace;
+    if (id == null) return null;
+    if (id.startsWith('empty_')) return null;
+    for (final h in active) {
+      if (h.id == id) return HeroSpecs.def(h.specId);
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +167,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
             for (final specId in HeroSpecs.forClass(classId))
               _RosterSpecRow(
                 def: HeroSpecs.def(specId),
+                versus: _pendingReplaceSpec(active),
                 unlocked: state.isSpecUnlocked(specId),
                 onRoster: state.heroRoster.any((h) => h.specId == specId),
                 inActive: active.any((h) => h.specId == specId),
@@ -278,6 +290,7 @@ class _ActiveSlotChip extends StatelessWidget {
 class _RosterSpecRow extends StatelessWidget {
   const _RosterSpecRow({
     required this.def,
+    this.versus,
     required this.unlocked,
     required this.onRoster,
     required this.inActive,
@@ -287,6 +300,7 @@ class _RosterSpecRow extends StatelessWidget {
   });
 
   final HeroSpecDef def;
+  final HeroSpecDef? versus;
   final bool unlocked;
   final bool onRoster;
   final bool inActive;
@@ -335,7 +349,7 @@ class _RosterSpecRow extends StatelessWidget {
                 : inActive
                 ? 'ACTIVE'
                 : onRoster
-                ? def.plainRoleLine
+                ? def.versusLine(versus)
                 : 'READY',
             style: GameTheme.hint(
               color: inActive

@@ -294,8 +294,8 @@ abstract final class ZoneArt {
       landmarks: [MapPropKind.hatch, MapPropKind.hatch, MapPropKind.rubble],
       ambient: Color(0xFF0C0A08),
       // Lighter wash so cracked sandstone tiles stay readable on phone.
-      wash: Color(0x28E0A858),
-      floorBlend: Color(0x2AA07038),
+      wash: Color(0x38E8B060),
+      floorBlend: Color(0x42B07840),
       corridorShade: Color(0x24080502),
       projectileTint: Color(0xFFE0A050),
       normalRoomChestChance: 0.12,
@@ -335,8 +335,8 @@ abstract final class ZoneArt {
         MapPropKind.torch,
       ],
       ambient: Color(0xFF0A0C09),
-      wash: Color(0x3A28A050),
-      floorBlend: Color(0x5A284828),
+      wash: Color(0x4828C858),
+      floorBlend: Color(0x5A306828),
       projectileTint: Color(0xFF60C070),
       // Raider dens: choke approaches + frequent stolen-stash alcoves.
       preferChoke: true,

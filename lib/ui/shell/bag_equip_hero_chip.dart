@@ -104,7 +104,9 @@ class _EquipHeroChip extends StatelessWidget {
                 ),
                 if (plannedUpgrade)
                   Text(
-                    'UPGRADE',
+                    cmp.powerDelta > 0
+                        ? 'Better · Score ${GameLogic.formatDelta(cmp.powerDelta)}'
+                        : 'UPGRADE',
                     style: GameTheme.hint(color: GameTheme.clear),
                   ),
               ],

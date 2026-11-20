@@ -43,6 +43,9 @@ class _BagSlot extends StatelessWidget {
         : rarityBorderColor(item!.rarity);
     final isBest = item != null && isBestStashItem(state, item!);
     final isUpgrade = item != null && isUpgradeForAny(state, item!);
+    final upgradeBrief = item != null && isUpgrade
+        ? GearUpgradeCopy.bagTileDeltaLine(state, item!)
+        : '';
     final ilLabel = item == null ? null : gearDisplayIlvlLabel(item!);
     final a11yLabel = item == null
         ? 'Empty bag slot'
@@ -142,6 +145,30 @@ class _BagSlot extends StatelessWidget {
                                 child: _badge(
                                   isBest ? 'BEST' : 'UP',
                                   GameTheme.mossChip,
+                                ),
+                              ),
+                            ),
+                          if (upgradeBrief.isNotEmpty)
+                            Positioned(
+                              top: 2,
+                              left: 2,
+                              right: 2,
+                              child: ExcludeSemantics(
+                                child: Text(
+                                  upgradeBrief,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: GameTheme.hint(color: GameTheme.clear)
+                                      .copyWith(
+                                        fontSize: 9,
+                                        shadows: const [
+                                          Shadow(
+                                            color: GameTheme.chunkyShadow,
+                                            offset: Offset(1, 1),
+                                          ),
+                                        ],
+                                      ),
                                 ),
                               ),
                             ),

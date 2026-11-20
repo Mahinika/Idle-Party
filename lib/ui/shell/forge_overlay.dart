@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/gear/gear_upgrade_copy.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/home_layout.dart';
@@ -351,8 +352,10 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       gainNext: next,
       gainNote: soft ? 'SOFT' : null,
       progress: ForgeOverlay.forgeSoftProgress(state, type),
-      detail: onPressed == null && shortGold > 0
+      detail: shortGold > 0
           ? 'Need ${formatGold(shortGold)} more'
+          : onPressed != null
+          ? GearUpgradeCopy.forgeNextFloorLine(state, type)
           : null,
       selected: recommended,
       dense: true,

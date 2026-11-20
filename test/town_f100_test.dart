@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/core/town_access.dart';
@@ -112,7 +113,7 @@ void main() {
   });
 
   for (final scale in [1.0, GameTheme.typeScaleMax]) {
-    a100TestHome('town @$scale: no rail, buildings open, MENU holds SCROLLS', (
+    a100TestHome('town @$scale: SCROLLS one tap, buildings open, MENU mirror', (
       t,
     ) async {
       final (d, r) = await a100Pump(
@@ -136,34 +137,32 @@ void main() {
       expect(r.moreSection, MoreSection.quests);
       r.close();
       await a100Settle(t);
-      // Tickets wait: the dot moved from the SCROLLS chip to MENU.
-      expect(find.byKey(HomeTopBar.menuDotKey), findsOneWidget);
-      expect(find.bySemanticsLabel('MENU, ready'), findsOneWidget);
-      r.open(MenuRoute.more);
-      await a100Settle(t);
       expect(find.text('SCROLLS'), findsOneWidget);
       expect(find.text('SCROLLS 3'), findsNothing);
-      final scrolls = find.text('SCROLLS');
-      a100ExpectWhole(t, scrolls);
-      expect(find.byKey(RailButton.countKey), findsOneWidget);
+      await t.tap(find.text('SCROLLS').first);
+      await a100Settle(t);
+      expect(find.text('Ad Tickets'), findsOneWidget);
+      r.close();
+      await a100Settle(t);
+      r.open(MenuRoute.more);
+      await a100Settle(t);
       expect(
         find.descendant(
-          of: find.byKey(RailButton.countKey),
-          matching: find.text('3'),
+          of: find.byType(HomeMenuGrid),
+          matching: find.text('SCROLLS'),
         ),
         findsOneWidget,
       );
-      final cell = find.ancestor(of: scrolls, matching: find.byType(InkWell));
-      expect(
-        t.getSize(cell.first).height,
-        greaterThanOrEqualTo(GameTheme.minTouch - 0.01),
-      );
-      if (GameLogic.showDailyRunOnHub(d.state)) {
-        expect(find.text('DAILY'), findsOneWidget);
+      if (GameLogic.showDailyRunOnHub(d.state) &&
+          HubChase.forState(d.state).kind != HubChaseKind.dailyRun) {
+        expect(
+          find.descendant(
+            of: find.byType(HomeMenuGrid),
+            matching: find.text('DAILY RUN'),
+          ),
+          findsOneWidget,
+        );
       }
-      await t.tap(scrolls);
-      await a100Settle(t);
-      expect(find.text('Ad Tickets'), findsOneWidget);
     });
   }
 
@@ -199,7 +198,7 @@ void main() {
     expect(find.text('SCROLLS'), findsOneWidget);
     expect(find.text('SCROLLS 3'), findsNothing);
     expect(find.byKey(RailButton.countKey), findsOneWidget);
-    for (final label in ['QUESTS', 'VAULT', 'DAILY']) {
+    for (final label in ['QUESTS', 'VAULT', 'RUN']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
     expect(find.byKey(HomeTopBar.menuDotKey), findsNothing);

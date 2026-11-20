@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../assets/custom_assets.dart';
 import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
+import '../../../core/hub_chase.dart';
 import '../../../core/game_state.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
@@ -129,8 +130,10 @@ abstract final class HomeCatalog {
       place: HomePlace.rightRail,
       order: 30,
       icon: UiIcon.daily,
-      label: 'DAILY',
-      visible: (s, _) => GameLogic.showDailyRunOnHub(s),
+      label: 'RUN',
+      visible: (s, _) =>
+          GameLogic.showDailyRunOnHub(s) &&
+          HubChase.forState(s).kind != HubChaseKind.dailyRun,
       badge: (_) => false,
       open: (context, director, _) => confirmDailyRun(context, director),
     ),
@@ -271,8 +274,10 @@ abstract final class HomeCatalog {
       place: HomePlace.menuGrid,
       order: 83,
       icon: UiIcon.daily,
-      label: 'DAILY',
-      visible: (s, _) => GameLogic.showDailyRunOnHub(s),
+      label: 'DAILY RUN',
+      visible: (s, _) =>
+          GameLogic.showDailyRunOnHub(s) &&
+          HubChase.forState(s).kind != HubChaseKind.dailyRun,
       badge: (_) => false,
       open: (context, director, _) => confirmDailyRun(context, director),
     ),
