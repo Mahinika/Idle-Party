@@ -320,7 +320,7 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Up next:'), findsNothing);
+    expect(find.textContaining('Up next:'), findsOneWidget);
     expect(find.textContaining('Why:'), findsNothing);
     final line = tester.widget<Text>(
       find.textContaining('No gold or essence this time'),
@@ -415,7 +415,7 @@ void main() {
             await tester.pumpAndSettle();
           }
           expect(tester.takeException(), isNull);
-          expect(find.textContaining('Up next'), findsNothing);
+          expect(find.textContaining('Up next'), findsOneWidget);
           expect(
             tester.getRect(find.text('WELCOME BACK')).top,
             greaterThanOrEqualTo(44),
@@ -1011,9 +1011,15 @@ void main() {
       expect(director.offlineSummary, isNull);
     }
 
-    // Batch 2: Welcome Back is skipped under 5 minutes, even if some
-    // away credit could apply after 60s.
+    // First-return teach can show under 5 minutes when the first boss is still
+    // ahead and hub away credit paid gold (auto-cave threshold unchanged).
     await resume(const Duration(minutes: 4, seconds: 59));
+    expect(find.text('WELCOME BACK'), findsOneWidget);
+    final collectEnter = find.byKey(OfflineWelcomeKeys.enter);
+    expect(collectEnter, findsOneWidget);
+    await tester.tap(collectEnter);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('WELCOME BACK'), findsNothing);
 
     final awayAt = DateTime.now().subtract(const Duration(minutes: 6));
