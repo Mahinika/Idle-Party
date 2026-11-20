@@ -40,6 +40,7 @@ class HomeEntry {
     required this.badge,
     required this.open,
     this.timer,
+    this.accessibilityLabel,
   });
 
   final String id;
@@ -47,6 +48,9 @@ class HomeEntry {
   final int order;
   final String icon;
   final String label;
+
+  /// Spoken label when [label] is shortened on screen (e.g. rail "RUN").
+  final String? accessibilityLabel;
   final bool Function(GameState state, GameDirector director) visible;
   final bool Function(GameState state) badge;
   final String? Function(GameState state)? timer;
@@ -132,6 +136,7 @@ abstract final class HomeCatalog {
       order: 30,
       icon: UiIcon.daily,
       label: 'RUN',
+      accessibilityLabel: 'Daily Run',
       visible: (s, _) =>
           GameLogic.showDailyRunOnHub(s) &&
           HubChase.forState(s).kind != HubChaseKind.dailyRun,

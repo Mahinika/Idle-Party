@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/chase_contract.dart';
 import '../../../core/first_climb_coach.dart';
 import '../../../core/game_director.dart';
+import '../../../core/game_logic.dart';
 import '../../../core/hub_chase.dart';
 import '../../../core/keystone.dart';
 import '../../../core/game_state.dart';
@@ -87,8 +88,11 @@ class HomeTopBar extends StatelessWidget {
       state,
       inDungeon: state.inDungeon,
     );
+    final vaultClaimInCave =
+        state.inDungeon && GameLogic.canClaimDailyVault(state);
     final showBarGoal = goal != null &&
         goal.isNotEmpty &&
+        !vaultClaimInCave &&
         !(compactTop && climbCoach != null);
     final chase = showBarGoal
         ? NavCopy.playerText(goal, HomeLayout.home)

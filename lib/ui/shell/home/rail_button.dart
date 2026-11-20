@@ -44,6 +44,7 @@ class RailButton extends StatelessWidget {
     if (!entry.visible(state, director)) return const SizedBox.shrink();
     final timer = entry.timer?.call(state);
     final badge = entry.badge(state);
+    final spoken = entry.accessibilityLabel ?? entry.label;
     if (compact) {
       // A short count rides the icon corner, so the label never cuts it off
       // at 1.45 ("SCROLLS…", polish7 P029). Longer timers stay inline.
@@ -115,9 +116,9 @@ class RailButton extends StatelessWidget {
         ],
       );
       if (listCard) {
-        final semanticsLabel = badge ? '${entry.label}, ready' : entry.label;
+        final semanticsLabel = badge ? '$spoken, ready' : spoken;
         return WebClickScope(
-          label: entry.label,
+          label: spoken,
           onPressed: () => entry.open(context, director, router),
           child: Semantics(
             button: true,
@@ -137,11 +138,11 @@ class RailButton extends StatelessWidget {
       }
       if (stacked) {
         return WebClickScope(
-          label: entry.label,
+          label: spoken,
           onPressed: () => entry.open(context, director, router),
           child: Semantics(
             button: true,
-            label: pip == null ? entry.label : '${entry.label}, $pip',
+            label: pip == null ? spoken : '$spoken, $pip',
             child: Material(
               color: GameTheme.panelInset.withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(GameTheme.radiusSm),
@@ -173,11 +174,11 @@ class RailButton extends StatelessWidget {
         );
       }
       return WebClickScope(
-        label: entry.label,
+        label: spoken,
         onPressed: () => entry.open(context, director, router),
         child: Semantics(
           button: true,
-          label: pip == null ? entry.label : '${entry.label}, $pip',
+          label: pip == null ? spoken : '$spoken, $pip',
           child: Material(
             color: GameTheme.panelInset.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(GameTheme.radiusSm),
@@ -198,11 +199,11 @@ class RailButton extends StatelessWidget {
         ),
       );
     }
-    final semanticsLabel = badge ? '${entry.label}, ready' : entry.label;
+    final semanticsLabel = badge ? '$spoken, ready' : spoken;
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: WebClickScope(
-        label: entry.label,
+        label: spoken,
         onPressed: () => entry.open(context, director, router),
         child: Semantics(
           button: true,

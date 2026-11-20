@@ -212,7 +212,7 @@ class _MapScreenState extends State<MapScreen> {
                 ? '${state.metaDepth.worldBossTickets}'
                 : null,
           ),
-        _card('DAILY', 'Today\'s cave.', () {
+        _card('DAILY RUN', 'One free floor a day.', () {
           setState(() => _hunt = null);
           confirmDailyRun(context, director);
         }, portrait: UiIcon.daily),

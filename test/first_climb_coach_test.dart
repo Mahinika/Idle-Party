@@ -199,11 +199,11 @@ void main() {
 
     await tester.pumpWidget(_home(director, router));
     await tester.pump();
-    expect(find.text('Tap CLAIM. The boss is on floor 2.'), findsOneWidget);
-    expect(find.text('CLAIM'), findsOneWidget);
+    expect(find.text('Tap CLAIM. The boss is on floor 2.'), findsNothing);
+    expect(find.text('CLAIM VAULT'), findsOneWidget);
 
     final before = director.state.essence;
-    await tester.tap(find.text('CLAIM'));
+    await tester.tap(find.text('CLAIM VAULT'));
     await tester.pump();
     expect(director.state.metaDepth.dailyVaultClaimed, isTrue);
     expect(director.state.essence, greaterThan(before));
@@ -214,7 +214,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('CLAIM'), findsNothing);
+    expect(find.text('CLAIM VAULT'), findsNothing);
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());

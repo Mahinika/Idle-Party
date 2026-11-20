@@ -27,15 +27,6 @@ class _BagSlot extends StatelessWidget {
     return snapped.clamp(side * 0.55, side * 0.72).floorToDouble();
   }
 
-  static Widget _badge(String text, Color fill) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-    decoration: BoxDecoration(
-      color: fill,
-      borderRadius: BorderRadius.circular(3),
-    ),
-    child: Text(text, style: GameTheme.hint(color: GameTheme.clear)),
-  );
-
   @override
   Widget build(BuildContext context) {
     final rarityColor = item == null
@@ -43,9 +34,9 @@ class _BagSlot extends StatelessWidget {
         : rarityBorderColor(item!.rarity);
     final isBest = item != null && isBestStashItem(state, item!);
     final isUpgrade = item != null && isUpgradeForAny(state, item!);
-    final upgradeBrief = item != null && isUpgrade
-        ? GearUpgradeCopy.bagTileDeltaLine(state, item!)
-        : '';
+    final upgradePower = item != null
+        ? GearUpgradeCopy.stashPowerDelta(state, item!)
+        : null;
     final ilLabel = item == null ? null : gearDisplayIlvlLabel(item!);
     final a11yLabel = item == null
         ? 'Empty bag slot'
@@ -141,35 +132,9 @@ class _BagSlot extends StatelessWidget {
                             Positioned(
                               top: 2,
                               right: 2,
-                              child: ExcludeSemantics(
-                                child: _badge(
-                                  isBest ? 'BEST' : 'UP',
-                                  GameTheme.mossChip,
-                                ),
-                              ),
-                            ),
-                          if (upgradeBrief.isNotEmpty)
-                            Positioned(
-                              top: 2,
-                              left: 2,
-                              right: 2,
-                              child: ExcludeSemantics(
-                                child: Text(
-                                  upgradeBrief,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                  style: GameTheme.hint(color: GameTheme.clear)
-                                      .copyWith(
-                                        fontSize: 9,
-                                        shadows: const [
-                                          Shadow(
-                                            color: GameTheme.chunkyShadow,
-                                            offset: Offset(1, 1),
-                                          ),
-                                        ],
-                                      ),
-                                ),
+                              child: GearBagBadge(
+                                isBest: isBest,
+                                powerDelta: upgradePower,
                               ),
                             ),
                           if (isSoulboundItem(item!))
