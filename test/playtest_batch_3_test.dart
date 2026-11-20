@@ -19,6 +19,8 @@ import 'package:idle_party/ui/shell/discord_thanks_overlay.dart';
 import 'package:idle_party/ui/shell/home/home_catalog.dart';
 import 'package:idle_party/ui/shell/home/rail_button.dart';
 import 'package:idle_party/ui/shell/dungeon_loot_log.dart';
+import 'package:idle_party/ui/shell/dungeon_top_hud.dart';
+import 'package:idle_party/ui/shell/home/fight_seam.dart';
 import 'package:idle_party/ui/shell/home/town_viewport.dart';
 import 'package:idle_party/ui/shell/inventory_dock.dart';
 import 'package:idle_party/ui/shell/menu_surface.dart';
@@ -70,9 +72,7 @@ void main() {
     final director = GameDirector.preview();
     addTearDown(director.dispose);
     var state = GameLogic.enterDungeon(director.state);
-    state = state.copyWith(
-      seenTips: [...state.seenTips, 'first_run'],
-    );
+    state = state.copyWith(seenTips: [...state.seenTips, 'first_run']);
     director.debugHoldSave(state);
     final world = SpatialCombat.build(state);
     world.combatElapsed = 5;
@@ -101,14 +101,18 @@ void main() {
     );
     await tester.pump();
     expect(find.bySemanticsLabel('Music volume'), findsOneWidget);
-    final semantics = tester.getSemantics(find.bySemanticsLabel('Music volume'));
+    final semantics = tester.getSemantics(
+      find.bySemanticsLabel('Music volume'),
+    );
     expect(semantics.label, 'Music volume');
     expect(semantics.value, '20 percent');
   });
 
   test('ability info dialog drops duplicate title line', () {
-    final ability = ClassKits.hudAbilitiesAtSpec(HeroSpecId.protection, 20)
-        .firstWhere((a) => a.id == AbilityId.shieldBlock);
+    final ability = ClassKits.hudAbilitiesAtSpec(
+      HeroSpecId.protection,
+      20,
+    ).firstWhere((a) => a.id == AbilityId.shieldBlock);
     final body = abilityInfoDialogBody(ability);
     expect(body.startsWith('Shield Block'), isFalse);
     expect(body, contains('DR window'));
@@ -123,8 +127,7 @@ void main() {
         metaDepth: director.state.metaDepth.copyWith(adTickets: 1),
       ),
     );
-    final entry =
-        HomeCatalog.entries.firstWhere((e) => e.id == 'menu_scrolls');
+    final entry = HomeCatalog.entries.firstWhere((e) => e.id == 'menu_scrolls');
     final router = MenuRouter();
     addTearDown(router.dispose);
     await tester.pumpWidget(
@@ -231,8 +234,9 @@ void main() {
     }
     final legend = find.byKey(CharacterEquipPanel.slotLegendKey);
     expect(legend, findsOneWidget);
-    final legendP =
-        tester.renderObject<RenderParagraph>(find.byKey(CharacterEquipPanel.slotLegendKey));
+    final legendP = tester.renderObject<RenderParagraph>(
+      find.byKey(CharacterEquipPanel.slotLegendKey),
+    );
     expect(legendP.didExceedMaxLines, isFalse);
     final equipBtn = find.textContaining('EQUIP BEST');
     if (equipBtn.evaluate().isNotEmpty) {
@@ -250,10 +254,57 @@ void main() {
     expect(panel, findsOneWidget);
     await expectLater(
       panel,
-      matchesGoldenFile(
-        'goldens/widgets/playtest_gear_equip_360_scale145.png',
+      matchesGoldenFile('goldens/widgets/playtest_gear_equip_360_scale145.png'),
+    );
+  });
+
+  testWidgets('floor clear has no HOLD skip-walk control', (tester) async {
+    final director = GameDirector.preview();
+    addTearDown(director.dispose);
+    director.debugHoldSave(GameLogic.enterDungeon(director.state));
+    final world = SpatialCombat.build(director.state);
+    world.awaitingExit = true;
+    director.debugAttachSpatial(world);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              DungeonTopHud(
+                state: director.state,
+                director: director,
+                onOpenSettings: () {},
+                onOpenContracts: () {},
+              ),
+              FightSeam(director: director, router: router, onLeave: () {}),
+            ],
+          ),
+        ),
       ),
     );
+    await tester.pump();
+    expect(find.text('HOLD'), findsNothing);
+    expect(
+      find.bySemanticsLabel('HOLD — skip walk, finish floor now'),
+      findsNothing,
+    );
+    expect(find.textContaining('HOLD skips'), findsNothing);
+    expect(
+      find.text(
+        GameLogic.dungeonModeAfterClearHint(
+          director.state,
+          director.state.dungeonMode,
+        ),
+      ),
+      findsOneWidget,
+    );
+    expect(director.spatial!.awaitingExit, isTrue);
   });
 
   testWidgets('floor clear recap wraps gold xp essence at 360 1.45', (
@@ -271,9 +322,7 @@ void main() {
           textScaler: TextScaler.linear(GameTheme.typeScaleMax),
         ),
         child: const MaterialApp(
-          home: Scaffold(
-            body: DungeonLootLog(lines: [line]),
-          ),
+          home: Scaffold(body: DungeonLootLog(lines: [line])),
         ),
       ),
     );

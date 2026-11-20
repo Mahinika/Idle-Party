@@ -428,19 +428,6 @@ extension GameDirectorFight on GameDirector {
     unawaited(_persistFlush());
   }
 
-  /// True while the player paused auto-walk to stairs after a clear.
-  bool get exitHoldActive => (_spatial?.exitHoldSec ?? 0) > 0;
-
-  /// Skip the stairs walk — bump the soft-lock timer so the floor finishes
-  /// on the next combat tick (matches HOLD tip / What’s New).
-  void startExitHold() {
-    final spatial = _spatial;
-    if (spatial == null || !spatial.awaitingExit) return;
-    spatial.exitHoldSec = 0;
-    spatial.exitWaitTimer = 99;
-    _directorNotify();
-  }
-
   /// Keep the cleared floor still while the away-ping card is up.
   bool pauseExitForPrompt() {
     final spatial = _spatial;

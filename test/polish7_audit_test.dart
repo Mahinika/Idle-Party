@@ -459,6 +459,28 @@ void main() {
   });
 
   group('P029 a short rail count rides the icon at 1.45', () {
+    void expectScrollsCount(WidgetTester t) {
+      // Short ticket counts always ride the icon pip so the label never
+      // becomes "SCROLLS 3" and clip at 1.45.
+      expect(find.text('SCROLLS 3'), findsNothing);
+      expect(find.text('SCROLLS'), findsOneWidget);
+      final scrolls = find.ancestor(
+        of: find.text('SCROLLS'),
+        matching: find.byType(RailButton),
+      );
+      expect(scrolls, findsOneWidget);
+      final pip = find.descendant(
+        of: scrolls,
+        matching: find.byKey(RailButton.countKey),
+      );
+      expect(pip, findsOneWidget);
+      expect(
+        find.descendant(of: pip, matching: find.text('3')),
+        findsOneWidget,
+      );
+      a100ExpectWhole(t, find.text('SCROLLS'));
+    }
+
     for (final scale in _scales) {
       a100TestHome('fight rail @$scale', (t) async {
         await a100Pump(
@@ -471,20 +493,28 @@ void main() {
         );
         await a100Settle(t);
         await popAll(t);
-        if (scale > 1.2) {
-          expect(find.text('SCROLLS 3'), findsNothing);
-          expect(find.text('SCROLLS'), findsOneWidget);
-          final pip = find.byKey(RailButton.countKey);
-          expect(pip, findsOneWidget);
-          expect(
-            find.descendant(of: pip, matching: find.text('3')),
-            findsOneWidget,
-          );
-          a100ExpectWhole(t, find.text('SCROLLS'));
-        } else {
-          expect(find.text('SCROLLS 3'), findsOneWidget);
-          expect(find.byKey(RailButton.countKey), findsNothing);
-        }
+        expectScrollsCount(t);
+      });
+    }
+
+    for (final scale in _scales) {
+      a100TestHome('town MENU @$scale', (t) async {
+        await a100Pump(
+          t,
+          _sizes.first,
+          scale,
+          inDungeon: false,
+          live: true,
+          clearedFloors: 4,
+          adTickets: 3,
+        );
+        await a100Settle(t);
+        await popAll(t);
+        // Town hides the fight rail; SCROLLS lives on the MENU grid.
+        expect(find.text('SCROLLS'), findsNothing);
+        await t.tap(find.bySemanticsLabel(RegExp(r'^MENU')).first);
+        await a100Settle(t);
+        expectScrollsCount(t);
       });
     }
   });
@@ -713,7 +743,9 @@ void main() {
         await bind(t, _sizes.first, scale);
         final d = await a100Director();
         await t.pumpWidget(
-          MaterialApp(home: Scaffold(body: ShopDock(director: d))),
+          MaterialApp(
+            home: Scaffold(body: ShopDock(director: d)),
+          ),
         );
         await t.pump();
         expect(find.text('UNAVAILABLE'), findsNothing);

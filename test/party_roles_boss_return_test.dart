@@ -297,6 +297,7 @@ void main() {
       OfflineProgressResult(
         state: director.state,
         secondsApplied: 0,
+        secondsAway: 3600,
         goldGained: 0,
         essenceGained: 0,
         roomsCleared: 0,
@@ -342,6 +343,7 @@ void main() {
     OfflineProgressResult card() => OfflineProgressResult(
       state: director.state,
       secondsApplied: 0,
+      secondsAway: 3600,
       goldGained: 0,
       essenceGained: 0,
       roomsCleared: 0,
@@ -735,6 +737,7 @@ void main() {
       OfflineProgressResult(
         state: rich,
         secondsApplied: 60,
+        secondsAway: 3600,
         goldGained: 100,
         essenceGained: 0,
         roomsCleared: 1,
@@ -785,6 +788,7 @@ void main() {
       OfflineProgressResult(
         state: forgeState,
         secondsApplied: 60,
+        secondsAway: 3600,
         goldGained: 100,
         essenceGained: 0,
         roomsCleared: 1,
@@ -856,6 +860,7 @@ void main() {
       OfflineProgressResult(
         state: campState,
         secondsApplied: 60,
+        secondsAway: 3600,
         goldGained: 0,
         essenceGained: 12,
         roomsCleared: 1,
@@ -913,6 +918,7 @@ void main() {
       OfflineProgressResult(
         state: state,
         secondsApplied: 60,
+        secondsAway: 3600,
         goldGained: 80,
         essenceGained: 0,
         roomsCleared: 1,
@@ -1005,13 +1011,18 @@ void main() {
       expect(director.offlineSummary, isNull);
     }
 
-    final awayAt = DateTime.now().subtract(const Duration(seconds: 90));
+    // Batch 2: Welcome Back is skipped under 5 minutes, even if some
+    // away credit could apply after 60s.
+    await resume(const Duration(minutes: 4, seconds: 59));
+    expect(find.text('WELCOME BACK'), findsNothing);
+
+    final awayAt = DateTime.now().subtract(const Duration(minutes: 6));
     final rich = GameLogic.createInitialState(
       now: awayAt,
     ).copyWith(gold: 50000, bossVictories: 1, homeLayout: HomeLayout.home);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     director.debugHoldSave(rich);
-    director.debugStampAway(lastUpdatedAgo: const Duration(seconds: 90));
+    director.debugStampAway(lastUpdatedAgo: const Duration(minutes: 6));
     final beforeGold = director.state.gold;
     final beforeEssence = director.state.essence;
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
@@ -1064,6 +1075,7 @@ void main() {
       OfflineProgressResult(
         state: poor,
         secondsApplied: 60,
+        secondsAway: 3600,
         goldGained: 1,
         essenceGained: 0,
         roomsCleared: 1,
@@ -1099,6 +1111,10 @@ Future<void> _writeWelcomeShot(WidgetTester tester, String name) async {
   );
   image!.dispose();
   final dir = Directory('/opt/cursor/artifacts/party-roles');
-  dir.createSync(recursive: true);
-  File('${dir.path}/$name').writeAsBytesSync(bytes!.buffer.asUint8List());
+  try {
+    dir.createSync(recursive: true);
+    File('${dir.path}/$name').writeAsBytesSync(bytes!.buffer.asUint8List());
+  } on FileSystemException {
+    // Diagnostic stills are optional; assertions already ran.
+  }
 }

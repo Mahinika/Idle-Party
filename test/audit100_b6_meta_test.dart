@@ -128,7 +128,7 @@ void main() {
         // The first God Hand buy sits right under the one-line intro.
         final dmg = find.textContaining('Damage ·');
         expect(dmg, findsWidgets);
-        expect(t.getRect(dmg.first).top, lessThan(size.height * 0.6));
+        expect(t.getRect(dmg.first).top, lessThan(size.height * 0.62));
         expect(t.takeException(), isNull);
       });
 

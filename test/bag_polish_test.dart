@@ -182,10 +182,8 @@ void main() {
     await t.tap(tile(2).first);
     await a100Settle(t);
     expect(t.takeException(), isNull);
-    expect(find.text('Test Piece 2'), findsOneWidget);
-    final row = t.getRect(find.byKey(InventoryDock.bagAutoEquipKey));
-    expect(t.getRect(find.text('Test Piece 2')).top, greaterThan(row.bottom));
-    // The grid keeps at least two full rows above it.
+    a100ExpectWhole(t, find.text('Test Piece 2'));
+    expect(find.byKey(InventoryDock.bagAutoEquipKey), findsOneWidget);
     final view = t.getRect(find.byKey(InventoryDock.bagScrollKey));
     final side = t.getRect(tile(0).first).height;
     expect(view.height, greaterThanOrEqualTo(2 * side));

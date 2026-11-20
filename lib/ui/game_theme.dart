@@ -242,7 +242,8 @@ abstract final class GameTheme {
   /// Home and classic bars share this height so the label is not clipped.
   static double navBarExtent(double textScale) {
     final scale = textScale < 1 ? 1.0 : textScale;
-    return 64 * scale;
+    final capped = scale > typeScaleMax ? typeScaleMax : scale;
+    return 64 * capped;
   }
 
   // —— Bottom nav slot fills (TT2-style color blocks) ————————————————

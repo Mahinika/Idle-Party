@@ -134,14 +134,16 @@ class HomeNavBar extends StatelessWidget {
   /// bar pad their last row by this much ([NavClearance]).
   static double fightOverhang(BuildContext context) {
     final scale = MediaQuery.textScalerOf(context).scale(1);
+    final lift = scale > GameTheme.typeScaleMax ? 4.0 : fightLift;
     final rise = fightDiameter(scale) - labelHeight(context) - 10;
-    return rise > fightLift ? rise : fightLift;
+    return rise > lift ? rise : lift;
   }
 
   static double fightDiameter(double textScale) {
     const base = 56.0;
     if (textScale <= GameTheme.typeScaleMax) return base;
-    return base * textScale / GameTheme.typeScaleMax;
+    final grown = base * textScale / GameTheme.typeScaleMax;
+    return grown < base + 4 ? grown : base + 4;
   }
 
   static const String _bossHint = 'Boss F2';

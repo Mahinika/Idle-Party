@@ -96,7 +96,7 @@ void main() {
       roomsCleared: 2,
       highestFloorDelta: 0,
       bossDelta: 0,
-      secondsAway: 120,
+      secondsAway: 3600,
       wasInDungeon: true,
       materialsGained: const {ApexCraft.slagId: 2},
     );
