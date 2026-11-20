@@ -76,8 +76,8 @@ GameState createPartyState({
   );
 }
 
-/// Endgame KEY boards: pad to 5 with tanks/healers so casters live long enough
-/// to land bolts. Extra bodies are never extra DPS specs.
+/// Endgame KEY boards: pad to [size] on fixed role slots (1T/1H/3DPS at 5).
+/// Fill empty DPS slots with sturdy ranged/melee kits — not duplicate tanks.
 GameState withEndgameSupportParty(GameState state, {int size = 5}) {
   final cap = size.clamp(GameLogic.starterPartySize, 5);
   var next = state.copyWith(
@@ -86,11 +86,11 @@ GameState withEndgameSupportParty(GameState state, {int size = 5}) {
   );
   if (next.heroes.length >= cap) return next;
   const fillers = <HeroSpecId>[
-    HeroSpecId.protection,
-    HeroSpecId.discipline,
-    HeroSpecId.protPaladin,
-    HeroSpecId.holyPaladin,
-    HeroSpecId.holyPriest,
+    HeroSpecId.survival,
+    HeroSpecId.beastMastery,
+    HeroSpecId.marksmanship,
+    HeroSpecId.frostMage,
+    HeroSpecId.fire,
   ];
   final party = [...next.heroes];
   final used = party.map((h) => h.specId).toSet();

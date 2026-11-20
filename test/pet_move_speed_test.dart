@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/pet.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
@@ -7,14 +8,35 @@ import 'package:idle_party/spatial/spatial_combat.dart';
 void main() {
   test('pets use the owner move speed, including forge MOVE', () {
     const grub = Pet(id: 'grub', name: 'Grub', attackBonus: 2);
-    final state = GameLogic.createInitialState(
+    var state = GameLogic.createInitialState(
       now: DateTime(2026, 9, 30),
       partySpecs: [
+        HeroSpecId.protection,
+        HeroSpecId.discipline,
         HeroSpecId.beastMastery,
-        HeroSpecId.unholy,
-        HeroSpecId.demonology,
       ],
-    ).copyWith(moveSpeedBonus: 40, activePet: grub, ownedPets: [grub]);
+    );
+    state = state.copyWith(
+      ascensionLevel: GameLogic.partySlot5MinAscension,
+      essence: GameLogic.partySlot5EssenceCost,
+      moveSpeedBonus: 40,
+      activePet: grub,
+      ownedPets: [grub],
+      metaDepth: state.metaDepth.copyWith(partySlot5Unlocked: true),
+    );
+    final extra = [
+      PartyHero.starting(
+        name: HeroSpecs.def(HeroSpecId.unholy).defaultName,
+        specId: HeroSpecId.unholy,
+        stats: PartyHero.startingStatsForSpec(HeroSpecId.unholy),
+      ),
+      PartyHero.starting(
+        name: HeroSpecs.def(HeroSpecId.demonology).defaultName,
+        specId: HeroSpecId.demonology,
+        stats: PartyHero.startingStatsForSpec(HeroSpecId.demonology),
+      ),
+    ];
+    state = state.withActiveParty([...state.heroes, ...extra]);
 
     final world = SpatialCombat.build(state);
     expect(world.pets, hasLength(4));

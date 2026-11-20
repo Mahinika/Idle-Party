@@ -466,7 +466,11 @@ void main() {
     GameState armed() {
       var state = GameLogic.createInitialState(
         now: DateTime(2026, 8, 20),
-        partySpecs: [HeroSpecId.arms, HeroSpecId.discipline, HeroSpecId.fire],
+        partySpecs: [
+          HeroSpecId.protection,
+          HeroSpecId.discipline,
+          HeroSpecId.arms,
+        ],
       );
       final hi = state.heroes.indexWhere((h) => h.specId == HeroSpecId.arms);
       final equipped =
@@ -496,10 +500,11 @@ void main() {
       ),
       isTrue,
     );
-    expect(MenuAlerts.bagUpgradeCount(fromMh), 1);
-    expect(GameLogic.planBiSAssignments(fromMh).map((s) => s.itemId).toList(), [
-      oneH.id,
-    ]);
+    expect(MenuAlerts.bagUpgradeCount(fromMh), 2);
+    expect(
+      GameLogic.planBiSAssignments(fromMh).map((s) => s.itemId).toSet(),
+      {oneH.id, shield.id},
+    );
 
     fromMh = GameLogic.equipFromStash(fromMh, oneH.id, heroIndex: hi);
     expect(fromMh.heroes[hi].itemIn(EquipmentSlot.weapon)?.id, oneH.id);

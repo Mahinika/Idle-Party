@@ -196,9 +196,9 @@ void main() {
     expect(find.text('CLASS'), findsOneWidget);
     expect(find.text('RACE'), findsOneWidget);
     expect(find.text('SET'), findsOneWidget);
-    expect(find.text('Tank'), findsWidgets);
-    expect(find.text('Healer'), findsWidgets);
-    expect(find.text('DPS'), findsWidgets);
+    expect(find.text('Guardian'), findsWidgets);
+    expect(find.text('Oracle'), findsWidgets);
+    expect(find.text('Fire'), findsWidgets);
     expect(find.text('Party name'), findsOneWidget);
     expect(find.text('The Ember Guard'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
@@ -466,16 +466,14 @@ void main() {
         ),
       );
 
-      final protInList = find.descendant(
-        of: find.byType(ListView),
-        matching: find.textContaining('WALL'),
-      );
-      await tester.tap(protInList.first);
+      final guardianRow = find.text('Guardian');
+      await tester.tap(guardianRow);
       await tester.pump();
-      await tester.tap(protInList.first);
+      // Auto-advanced to healer slot — Guardian is the wrong role there.
+      await tester.tap(guardianRow);
       await tester.pump();
 
-      expect(find.textContaining('already picked'), findsOneWidget);
+      expect(find.textContaining('HEALER'), findsOneWidget);
       expect(
         find.textContaining('Pick a specialization for 2 slots'),
         findsOneWidget,
