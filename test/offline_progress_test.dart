@@ -197,7 +197,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('WELCOME BACK'), findsOneWidget);
       expect(find.textContaining('Away for'), findsOneWidget);
-      expect(find.textContaining('Up next:'), findsNothing);
+      expect(find.textContaining('Up next:'), findsOneWidget);
       expect(find.textContaining('Why:'), findsNothing);
       expect(find.textContaining('AFK'), findsNothing);
       expect(find.textContaining('Sanctuary'), findsNothing);
@@ -208,13 +208,37 @@ void main() {
     },
   );
 
+  testWidgets('first offline return can show Welcome Back under 5 minutes', (
+    tester,
+  ) async {
+    final director = GameDirector.preview();
+    addTearDown(director.dispose);
+    director.uiFeedback.presentOffline(
+      result(gold: 40, essence: 0, seconds: 60, secondsAway: 90),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showOfflineProgressDialog(context, director),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('WELCOME BACK'), findsOneWidget);
+    expect(find.textContaining('40 gold'), findsWidgets);
+  });
+
   testWidgets('Welcome Back is skipped when away under 5 minutes', (
     tester,
   ) async {
     final director = GameDirector.preview();
     addTearDown(director.dispose);
     director.uiFeedback.presentOffline(
-      result(gold: 40, essence: 2, seconds: 60, secondsAway: 5 * 60 - 1),
+      result(seconds: 60, secondsAway: 5 * 60 - 1),
     );
     await tester.pumpWidget(
       MaterialApp(
@@ -265,7 +289,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('WELCOME BACK'), findsOneWidget);
-    expect(find.textContaining('Up next:'), findsNothing);
+    expect(find.textContaining('Up next:'), findsOneWidget);
     expect(find.textContaining('Why:'), findsNothing);
     expect(find.textContaining('Daily Run'), findsNothing);
     expect(find.textContaining('KEY'), findsNothing);

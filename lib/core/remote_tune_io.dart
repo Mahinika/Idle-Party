@@ -50,6 +50,10 @@ Future<void> _refresh() async {
       intervalSec: rc.getInt(RemoteTune.keyIntervalSec),
       visibleSec: rc.getInt(RemoteTune.keyVisibleSec),
       shopFeaturedId: rc.getString(RemoteTune.keyShopFeatured),
+      firstClimbAutoContinue: rc.getBool(RemoteTune.keyFirstClimbAutoContinue),
+      firstClimbPlayNow: rc.getBool(RemoteTune.keyFirstClimbPlayNow),
+      welcomeBackFirstReturnShort:
+          rc.getBool(RemoteTune.keyWelcomeBackFirstReturnShort),
       fromRemote: true,
     );
     final shop = RemoteTune.shopFeaturedId;

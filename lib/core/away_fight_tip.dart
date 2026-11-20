@@ -17,7 +17,7 @@ abstract final class AwayFightTip {
   /// Hub, after they have entered once and before the first boss.
   /// Fighting continues only in the cave.
   static const String hubLine =
-      'Leave them in the cave and they keep fighting. On the hub, gold gathers.';
+      'Leave them in the cave — they keep fighting. Short hub visits stay on the chest until 5 minutes.';
 
   /// [inCave] is the live dungeon, including floor 1. [bossStairs] is the
   /// walk to the stairs after the first boss, before the hub opens.

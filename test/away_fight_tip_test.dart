@@ -18,8 +18,8 @@ void main() {
     );
     expect(AwayFightTip.lineFor(state), AwayFightTip.line);
     expect(AwayFightTip.lineFor(state, onHub: true), AwayFightTip.hubLine);
-    expect(AwayFightTip.hubLine.toLowerCase(), contains('gold'));
     expect(AwayFightTip.hubLine.toLowerCase(), contains('cave'));
+    expect(AwayFightTip.hubLine.toLowerCase(), contains('5 minutes'));
 
     final entered = FunnelAnalytics.onFirstEnter(
       state,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/chase_contract.dart';
+import '../../../core/first_climb_coach.dart';
 import '../../../core/game_director.dart';
 import '../../../core/hub_chase.dart';
 import '../../../core/keystone.dart';
@@ -72,14 +74,26 @@ class HomeTopBar extends StatelessWidget {
     EssencePanel essencePanel,
   ) {
     final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final compactTop = state.homeLayout == HomeLayout.home && state.inDungeon;
     final chaseHub = HubChase.forState(state);
     final questReady = chaseHub.kind == HubChaseKind.claimMissions;
-    final chaseTitle = questReady ? '' : chaseHub.title;
-    final chase = chaseTitle.isEmpty
-        ? ''
-        : NavCopy.playerText(chaseTitle, HomeLayout.home);
+    final goal = questReady
+        ? null
+        : ChaseContract.goalLine(
+            state,
+            inDungeon: state.inDungeon,
+          );
+    final climbCoach = FirstClimbCoach.line(
+      state,
+      inDungeon: state.inDungeon,
+    );
+    final showBarGoal = goal != null &&
+        goal.isNotEmpty &&
+        !(compactTop && climbCoach != null);
+    final chase = showBarGoal
+        ? NavCopy.playerText(goal, HomeLayout.home)
+        : '';
     final third = _third(context, state, route, essencePanel);
-    final compactTop = state.homeLayout == HomeLayout.home && state.inDungeon;
     final perMin = GoldIncome.hubGoldPerMinute(state);
     final fast = state.combatPace >= 2;
     final goldHasSub = perMin > 0;

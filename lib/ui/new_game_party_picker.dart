@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_logic.dart';
 import '../core/party_name_filter.dart';
+import '../core/remote_tune.dart';
 import '../core/starter_gear.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
@@ -91,7 +92,20 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     });
   }
 
-  Future<void> _tryStart() async {
+  Future<void> _playNow() async {
+    if (_starting) return;
+    for (var i = 0; i < _slots.length; i++) {
+      _slots[i] = HeroSpecs.starterUnlocked[i];
+      _looks[i] = HeroRace.human;
+      _sexes[i] = HeroSex.defaultFor(HeroSpecs.def(_slots[i]!).gearAffinity);
+    }
+  if (_nameCtrl.text.trim().isEmpty) {
+      _nameCtrl.text = 'The Ember Guard';
+    }
+    await _tryStart(skipRaceDialog: true);
+  }
+
+  Future<void> _tryStart({bool skipRaceDialog = false}) async {
     if (!_ready || _starting) return;
     final name = PartyNameFilter.sanitize(_nameCtrl.text);
     if (name == null) {
@@ -99,7 +113,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
       return;
     }
     final hasNonHuman = _looks.any((r) => r != HeroRace.human);
-    if (hasNonHuman) {
+    if (hasNonHuman && !skipRaceDialog) {
       final ok = await showDialog<bool>(
         context: context,
         barrierColor: MenuChrome.scrim,
@@ -494,6 +508,20 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                   style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
                 const SizedBox(height: 6),
+              ],
+              if (RemoteTune.firstClimbPlayNow) ...[
+                GameButton(
+                  label: 'PLAY NOW',
+                  style: GameButtonStyle.go,
+                  onPressed: _starting ? null : () => unawaited(_playNow()),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Or pick class and race below, then START.',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
+                ),
+                const SizedBox(height: 8),
               ],
               Row(
                 children: [
