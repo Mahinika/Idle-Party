@@ -82,7 +82,7 @@ abstract final class ReturnWeek {
     return _withReady(
       state,
       'Tomorrow: $cave — ${pay.name}, ${pay.hookPrize}. '
-          'Leave them in the cave tonight. $keepsFighting',
+          '${spendSentence(pay)} Leave them in the cave tonight. $keepsFighting',
     );
   }
 
