@@ -91,6 +91,15 @@ abstract final class HeroRigPainter {
     await Future.wait(pending);
   }
 
+  /// Drop cached frames that [DecodedImageCache.clear] disposed, so paint
+  /// does not call [Canvas.drawImage] on a non-genuine image after a resume.
+  static void evictDisposedImages() {
+    bool gone(ui.Image image) => DecodedImageCache.isDisposed(image);
+    _frames.removeWhere((_, image) => gone(image));
+    _solid.removeWhere((_, image) => gone(image));
+    _lastByHero.removeWhere((_, image) => gone(image));
+  }
+
   /// True when the cutout was drawn. False leaves the caller on the class
   /// picture. The still doll is not a stand-in once this family has a rig.
   static bool paintOwned(
@@ -106,6 +115,11 @@ abstract final class HeroRigPainter {
     int frameToken = 0,
     bool allowStillDoll = true,
   }) {
+    if (DecodedImageCache.isDisposed(body) ||
+        DecodedImageCache.anyDisposed(images.values)) {
+      evictDisposedImages();
+      return false;
+    }
     final family = pose.bodyFamily;
     final rig = family == null ? null : HeroRigLibrary.peek(family);
     final idleKey = rigBodyKey(pose, images);
@@ -344,6 +358,11 @@ abstract final class HeroRigPainter {
         !center.dy.isFinite) {
       return false;
     }
+    if (DecodedImageCache.isDisposed(bodyImage) ||
+        DecodedImageCache.anyDisposed(images.values)) {
+      evictDisposedImages();
+      return false;
+    }
     final bodyCut =
         RigPartCache.peek(RigPartCache.key(bodyKey, rig.family, 0, 1)) != null;
     if (!bodyCut ||
@@ -369,7 +388,10 @@ abstract final class HeroRigPainter {
       spread: spreadFrames,
       frameToken: frameToken,
     );
-    if (frame == null) return false;
+    if (frame == null || DecodedImageCache.isDisposed(frame)) {
+      evictDisposedImages();
+      return false;
+    }
     _blit
       ..color = alpha >= 1
           ? const ui.Color(0xFFFFFFFF)

@@ -1,7 +1,5 @@
 import 'package:flutter/painting.dart';
 
-import '../ui/decoded_image_cache.dart';
-
 /// Caps and trims decoded image memory so a backgrounded process is a
 /// smaller target for Android's killer.
 abstract final class AppMemory {
@@ -16,10 +14,13 @@ abstract final class AppMemory {
     cache.maximumSizeBytes = imageCacheBytes;
   }
 
-  /// Drop decoded sprites and the Flutter image cache. Call on
-  /// paused / hidden / detached, not on a brief inactive shade swipe.
+  /// Drop Flutter's [ImageCache] on paused / hidden / detached, not on a
+  /// brief inactive shade swipe.
+  ///
+  /// Does not dispose combat-sprite images still held by the dungeon
+  /// view, hero rig, or party dolls. Disposing those while the view is
+  /// mounted makes CustomPaint fail with "non-genuine Image" until a remount.
   static void trimForBackground() {
-    DecodedImageCache.clear();
     final cache = PaintingBinding.instance.imageCache;
     cache.clear();
     cache.clearLiveImages();

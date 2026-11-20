@@ -11,6 +11,25 @@ abstract final class DecodedImageCache {
   static final Map<String, Future<ui.Image>> _inflight =
       <String, Future<ui.Image>>{};
 
+  /// Bumps when [clear] disposes cached images so mounted views can reload.
+  static int _epoch = 0;
+  static int get epoch => _epoch;
+
+  /// Whether [image] has been [ui.Image.dispose]d.
+  ///
+  /// Always false in release, where [ui.Image.debugDisposed] is unavailable.
+  static bool isDisposed(ui.Image? image) {
+    if (image == null) return false;
+    var disposed = false;
+    assert(() {
+      disposed = image.debugDisposed;
+      return true;
+    }());
+    return disposed;
+  }
+
+  static bool anyDisposed(Iterable<ui.Image?> images) => images.any(isDisposed);
+
   static Future<ui.Image> load(
     String asset, {
     int? targetWidth,
@@ -48,6 +67,7 @@ abstract final class DecodedImageCache {
   }
 
   static void clear() {
+    _epoch++;
     for (final img in _images.values) {
       img.dispose();
     }
