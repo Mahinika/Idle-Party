@@ -77,6 +77,32 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
   });
 
+  testWidgets('target strip golden boss at 360x640 scale 1.45', (tester) async {
+    final key = GlobalKey();
+    final director = await _pumpTargetStripGolden(
+      tester,
+      key,
+      size: const Size(360, 640),
+      scale: GameTheme.typeScaleMax,
+      name: 'Earth Kraken',
+      role: EnemyRole.boss,
+      archetype: EnemyArchetype.brute,
+    );
+    final title = tester.widget<Text>(find.byKey(TargetCornerHud.titleKey));
+    expect(title.data, 'EARTH KRAKEN');
+    expect(title.data, isNot(contains('…')));
+    expect(find.text('BOSS'), findsOneWidget);
+    await expectLater(
+      find.byKey(key),
+      matchesGoldenFile(
+        'goldens/widgets/playtest_target_boss_360_scale145.png',
+      ),
+    );
+    director.dispose();
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 400));
+  });
+
   testWidgets('long gear toast wraps at 360 and 411', (tester) async {
     const msg =
         'Equipped: Aegis Amulet of the Gorilla (+2) · combo ready';

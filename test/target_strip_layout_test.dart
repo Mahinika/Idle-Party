@@ -402,6 +402,7 @@ void main() {
     (size: const Size(411, 891), scale: 1.0, name: 'THRONE WARDEN'),
     (size: const Size(360, 640), scale: GameTheme.typeScaleMax, name: 'SOUL SPITTER'),
     (size: const Size(360, 640), scale: GameTheme.typeScaleMax, name: 'EYE PRIEST'),
+    (size: const Size(360, 640), scale: GameTheme.typeScaleMax, name: 'EARTH KRAKEN'),
   ]) {
     testWidgets(
       'target name ${spec.name} whole at ${spec.size} @ ${spec.scale}',
@@ -413,7 +414,9 @@ void main() {
 
         final director = await _fightDirectorPinned(
           name: spec.name,
-          role: spec.name.startsWith('ELITE') || spec.name == 'THRONE WARDEN'
+          role: spec.name == 'EARTH KRAKEN'
+              ? EnemyRole.boss
+              : spec.name.startsWith('ELITE') || spec.name == 'THRONE WARDEN'
               ? EnemyRole.elite
               : EnemyRole.normal,
         );
