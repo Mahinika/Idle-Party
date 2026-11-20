@@ -388,7 +388,7 @@ void main() {
       final summary = OfflineProgressResult(
         state: director.state,
         secondsApplied: 120,
-        secondsAway: 120,
+        secondsAway: 3600,
         goldGained: 12,
         essenceGained: 0,
         roomsCleared: 1,

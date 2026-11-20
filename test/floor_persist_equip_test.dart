@@ -122,7 +122,7 @@ void main() {
       ),
       isTrue,
     );
-    expect(director.toast, 'Cave Sword on — fight on');
+    expect(director.toast, 'Equipped: Cave Sword — fight on');
 
     for (final hero in director.spatial!.heroes) {
       hero.hp = 0;

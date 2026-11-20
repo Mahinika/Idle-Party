@@ -165,6 +165,13 @@ class _HomeShellState extends State<HomeShell> {
     final sheet = route != MenuRoute.none && !interceptGold;
     final showPanel = !sheet && state.inDungeon;
     final full = state.homePanelFull;
+    // OS text above the app cap on a short phone: drop the split town
+    // strip so the cave and nav stay inside the viewport (audit P010).
+    final crampedFight = showPanel &&
+        !full &&
+        textScale > GameTheme.typeScaleMax - 0.01 &&
+        MediaQuery.sizeOf(context).height < 700;
+    final panelFull = full || crampedFight;
     final alerts = MenuAlerts.forHub(
       state,
       chaseKind: HubChase.forState(state).kind,
@@ -190,7 +197,7 @@ class _HomeShellState extends State<HomeShell> {
                   children: [
                     Expanded(
                       flex: showPanel
-                          ? (full
+                          ? (panelFull
                                 ? 1
                                 : () {
                                     final h = MediaQuery.sizeOf(context).height;
@@ -226,10 +233,10 @@ class _HomeShellState extends State<HomeShell> {
                           director: director,
                           router: router,
                           onLeave: widget.onLeave,
-                          hideRails: full,
+                          hideRails: panelFull,
                         ),
                       ),
-                    if (showPanel && !full)
+                    if (showPanel && !panelFull)
                       Expanded(
                         flex: 2,
                         child: RepaintBoundary(
@@ -251,7 +258,7 @@ class _HomeShellState extends State<HomeShell> {
                           ),
                         ),
                       ),
-                    if (showPanel && full)
+                    if (showPanel && panelFull && full)
                       HomeGoldDock(director: director, router: router),
                   ],
                 ),
@@ -309,15 +316,21 @@ class _HomeShellState extends State<HomeShell> {
     final shown = duplicateCoach || offCta ? null : text;
     final showClaim = state.inDungeon && GameLogic.canClaimDailyVault(state);
     if (shown == null && !showClaim) return const SizedBox.shrink();
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
+      padding: EdgeInsets.fromLTRB(
+        8,
+        0,
+        8,
+        textScale > GameTheme.typeScaleMax - 0.01 ? 0 : 2,
+      ),
       child: Row(
         children: [
           if (shown != null)
             Expanded(
               child: Text(
                 shown,
-                maxLines: 2,
+                maxLines: textScale >= 2 ? 1 : 2,
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.hint(color: GameTheme.torchHot),
               ),

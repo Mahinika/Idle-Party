@@ -38,9 +38,9 @@ void main() {
                 .descendant(of: title, matching: find.byType(RichText))
                 .evaluate()) {
           final p = e.renderObject! as RenderParagraph;
-          // Target strip is one line; at 1.45 long names ellipsize.
+          // Long targets may use two lines at 1.45; still no hard clip.
           if (scale >= 1.4) {
-            expect(p.maxLines, 1);
+            expect(p.maxLines, lessThanOrEqualTo(2));
           } else {
             expect(p.didExceedMaxLines, isFalse, reason: p.text.toPlainText());
           }

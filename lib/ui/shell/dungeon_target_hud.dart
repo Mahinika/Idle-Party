@@ -12,18 +12,20 @@ import 'shell_common.dart';
 double targetStripHeight(TextScaler scaler) {
   final raw = scaler.scale(1);
   final scale = raw.clamp(1.0, GameTheme.typeScaleMax);
-  final vPad = scale >= 1.4 ? 1.0 : 2.0;
+  final vPad = raw > GameTheme.typeScaleMax
+      ? 0.0
+      : (scale >= 1.4 ? 1.0 : 2.0);
   // Measured from combat + hint on two lines (name row + HP row).
   // Name row may wrap to two lines on wide targets; reserve two at 1.45.
   final titleLine = GameTheme.hudPixelComfort * 1.2 * scale;
   final hpLine = GameTheme.hudPixel * 1.35 * scale;
   final hpRow = math.max(hpLine, GameTheme.minTouch);
-  final between = 2.0;
+  final between = raw > GameTheme.typeScaleMax ? 0.0 : 2.0;
   // Accessibility > 1.45 (stress tests): grow the reserved slot.
   final slack = raw > GameTheme.typeScaleMax
       ? (raw - GameTheme.typeScaleMax) * GameTheme.hudPixel * 1.2
       : 0.0;
-  const layoutSlack = 6.0;
+  final layoutSlack = raw > GameTheme.typeScaleMax ? 0.0 : 6.0;
   return vPad + titleLine + between + hpRow + vPad + slack + layoutSlack;
 }
 
@@ -327,6 +329,8 @@ class TargetCornerHud extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: GameTheme.hint(color: GameTheme.parchmentDim),
       );
+    } else if (trailing != null && trailing.isNotEmpty) {
+      hpRow = Row(children: trailing);
     }
 
     return _stripShell(

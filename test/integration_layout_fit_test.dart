@@ -44,6 +44,7 @@ void main() {
     addTearDown(director.dispose);
     addTearDown(router.dispose);
     addTearDown(() => release(tester));
+    await director.boot(deferCombatLoop: true);
     for (final scale in scales) {
       bindPhone(tester, scale);
       await tester.pumpWidget(

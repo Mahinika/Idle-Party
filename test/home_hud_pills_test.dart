@@ -233,7 +233,7 @@ void main() {
     tester.view.physicalSize = const Size(360, 780);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    final seeded = GameLogic.createInitialState(now: DateTime(2026, 11, 16))
+    var seeded = GameLogic.createInitialState(now: DateTime(2026, 11, 16))
         .copyWith(
           homeLayout: HomeLayout.home,
           bossVictories: bosses,
@@ -241,10 +241,13 @@ void main() {
           gold: 99_000,
           essence: 120,
           ascensionLevel: al,
-          inDungeon: dungeon,
-          homePanelFull: !dungeon,
           combatPace: 1,
         );
+    if (dungeon) {
+      seeded = GameLogic.enterDungeon(seeded);
+    } else {
+      seeded = seeded.copyWith(inDungeon: false, homePanelFull: true);
+    }
     final director = GameDirector.preview(initialState: seeded);
     addTearDown(director.dispose);
     final router = MenuRouter();

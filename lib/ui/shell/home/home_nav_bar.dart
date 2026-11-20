@@ -141,7 +141,8 @@ class HomeNavBar extends StatelessWidget {
   static double fightDiameter(double textScale) {
     const base = 56.0;
     if (textScale <= GameTheme.typeScaleMax) return base;
-    return base * textScale / GameTheme.typeScaleMax;
+    final grown = base * textScale / GameTheme.typeScaleMax;
+    return grown < base + 6 ? grown : base + 6;
   }
 
   static const String _bossHint = 'Boss F2';
