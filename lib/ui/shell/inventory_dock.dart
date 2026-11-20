@@ -364,8 +364,11 @@ class _InventoryDockState extends State<InventoryDock>
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: ShellLayout.sheetHorizontal,
+            padding: const EdgeInsets.fromLTRB(
+              ShellLayout.sheetHorizontal,
+              0,
+              ShellLayout.sheetHorizontal,
+              68,
             ),
             child: sheet(),
           ),

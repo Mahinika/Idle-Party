@@ -275,20 +275,16 @@ class _SettingsOverlayState extends State<SettingsOverlay>
             final wide = MediaQuery.sizeOf(context).width >= 400;
             final largeType = MediaQuery.textScalerOf(context).scale(1) > 1.2;
             final percent = '${(state.uiTextScale * 100).round()}%';
-            final slider = Semantics(
-              slider: true,
+            final slider = MenuChrome.slider(
               label: 'UI text scale',
-              value: '${(state.uiTextScale * 100).round()} percent',
-              child: MenuChrome.slider(
-                value: state.uiTextScale.clamp(
-                  kUiTextScaleMin,
-                  kUiTextScaleMax,
-                ),
-                min: kUiTextScaleMin,
-                max: kUiTextScaleMax,
-                divisions: 13,
-                onChanged: director.setUiTextScale,
+              value: state.uiTextScale.clamp(
+                kUiTextScaleMin,
+                kUiTextScaleMax,
               ),
+              min: kUiTextScaleMin,
+              max: kUiTextScaleMax,
+              divisions: 13,
+              onChanged: director.setUiTextScale,
             );
             if (wide || !largeType) {
               return Row(
@@ -708,6 +704,7 @@ class _VolumeSlider extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           MenuChrome.slider(
+            label: '$label volume',
             value: value.clamp(0.0, 1.0),
             min: 0,
             max: 1,

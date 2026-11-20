@@ -30,6 +30,7 @@ class CharacterEquipPanel extends StatelessWidget {
   static String heroStatsLine({required num atk, required num def}) =>
       'AP ${atk.round()} · Armor ${def.round()}';
   static const Key heroStatsLineKey = ValueKey('hero_stats_line');
+  static const Key heroGearLineKey = ValueKey('hero_gear_line');
 
   const CharacterEquipPanel({
     super.key,
@@ -339,17 +340,24 @@ class CharacterEquipPanel extends StatelessWidget {
                     () {
                       final avg = _avgDisplayItemLevel(hero);
                       final minIl = _minDisplayItemLevel(hero);
-                      // Joined parts: the line never starts with a "·".
                       return [
                         if (avg != null) 'iLvl $avg',
                         if (avg != null && minIl != null && minIl != avg)
                           'min $minIl',
-                        state.isPartyDefeated
-                            ? 'WIPED'
-                            : 'HP ${hero.currentHp.clamp(0, maxHp)}/$maxHp',
                       ].join('  ·  ');
                     }(),
+                    key: CharacterEquipPanel.heroGearLineKey,
                     textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.section(color: GameTheme.parchmentDim),
+                  ),
+                  Text(
+                    state.isPartyDefeated
+                        ? 'WIPED'
+                        : 'HP ${hero.currentHp.clamp(0, maxHp)}/$maxHp',
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
                     style: GameTheme.section(color: GameTheme.parchmentDim),
                   ),
                 ],
@@ -479,14 +487,21 @@ class CharacterEquipPanel extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  // Hint size: one line at 1.0, never a ragged 3-line wrap
-                  // at 1.45 (polish7 P051).
-                  Text(
-                    CharacterEquipPanel.slotLegend,
-                    key: CharacterEquipPanel.slotLegendKey,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    style: GameTheme.hint(color: GameTheme.parchmentDim),
+                  Builder(
+                    builder: (context) {
+                      final big =
+                          MediaQuery.textScalerOf(context).scale(1) > 1.2;
+                      final legend = compact && big
+                          ? 'Main · Off · Rng · Charms · Flask'
+                          : CharacterEquipPanel.slotLegend;
+                      return Text(
+                        legend,
+                        key: CharacterEquipPanel.slotLegendKey,
+                        textAlign: TextAlign.center,
+                        maxLines: compact && big ? 3 : 2,
+                        style: GameTheme.hint(color: GameTheme.parchmentDim),
+                      );
+                    },
                   ),
                 ],
               ),

@@ -41,6 +41,7 @@ class _PlayShellState extends State<PlayShell> {
   GameDirector get director => widget.director;
   MenuRouter get router => widget.router;
   late bool _inDungeon;
+  DateTime? _lastExitBack;
 
   @override
   void initState() {
@@ -280,11 +281,28 @@ class _PlayShellState extends State<PlayShell> {
         ),
     ];
 
+    final atRoot = !router.isOpen && router.homeDepth == 0;
+    final homeDoubleBackExit = director.state.homeLayout == HomeLayout.home &&
+        !inDungeon &&
+        atRoot;
+
     return _withRecoveryGate(
       PopScope(
-        canPop: !router.isOpen && router.homeDepth == 0,
+        canPop: atRoot && !homeDoubleBackExit,
         onPopInvokedWithResult: (didPop, _) {
           if (didPop) return;
+          if (homeDoubleBackExit) {
+            final now = DateTime.now();
+            if (_lastExitBack != null &&
+                now.difference(_lastExitBack!) <
+                    const Duration(seconds: 2)) {
+              SystemNavigator.pop();
+              return;
+            }
+            _lastExitBack = now;
+            director.showToast('Press back again to exit', life: 2);
+            return;
+          }
           router.back();
         },
         child: director.state.homeLayout == HomeLayout.home

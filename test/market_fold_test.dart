@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:idle_party/ui/menu_chrome.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/market_listings_service.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/core/meta_systems.dart';
+import 'package:idle_party/ui/game_button.dart';
 import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/home/home_nav_bar.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
@@ -321,7 +321,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('BUY FLASK'), findsOneWidget);
     expect(find.text('ALL GEAR'), findsNothing);
-    await tester.tap(find.byKey(MenuChrome.sheetCloseKey));
+    await tester.tap(find.widgetWithText(GameButton, 'CLOSE'));
     await tester.pumpAndSettle();
     expect(find.textContaining('BUY FLASK'), findsNothing);
     await tester.tap(find.byKey(MarketHeaderControls.filterKey));

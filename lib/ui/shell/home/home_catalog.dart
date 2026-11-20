@@ -84,7 +84,11 @@ abstract final class HomeCatalog {
       label: 'POUCH',
       visible: (s, _) => ReinstallPouch.showOffer(s),
       badge: (_) => true,
-      open: (context, director, _) => openPowerupsSheet(context, director),
+      open: (context, director, _) => openPowerupsSheet(
+        context,
+        director,
+        focus: PowerupsFocus.pouch,
+      ),
     ),
     HomeEntry(
       id: 'update',
@@ -290,7 +294,11 @@ abstract final class HomeCatalog {
       label: 'POUCH',
       visible: (s, _) => ReinstallPouch.showOffer(s),
       badge: (_) => true,
-      open: (context, director, _) => openPowerupsSheet(context, director),
+      open: (context, director, _) => openPowerupsSheet(
+        context,
+        director,
+        focus: PowerupsFocus.pouch,
+      ),
     ),
     HomeEntry(
       id: 'menu_update',

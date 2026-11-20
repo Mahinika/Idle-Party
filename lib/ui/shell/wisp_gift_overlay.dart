@@ -146,7 +146,7 @@ class _WispTapTargetState extends State<_WispTapTarget>
                         ),
                         if (widget.showTapHint)
                           Positioned(
-                            top: 46,
+                            top: 50,
                             left: -28,
                             width: 104,
                             child: IgnorePointer(

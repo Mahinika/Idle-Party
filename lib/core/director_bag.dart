@@ -111,7 +111,7 @@ extension GameDirectorBag on GameDirector {
               : 'Equipped ${result.equipped} upgrades',
         if (cleared > 0) 'cleaned $cleared',
         if (gold > 0) '+${gold}g',
-        if (ess > 0) '+${ess}e',
+        if (ess > 0) '+$ess essence',
       ];
       showToast(bits.join(' · '), life: 2.0);
     } else {
@@ -142,7 +142,7 @@ extension GameDirectorBag on GameDirector {
       final bits = <String>[
         if (gold > 0) '+${gold}g',
         if (gold < 0) '${gold}g',
-        if (ess > 0) '+${ess}e',
+        if (ess > 0) '+$ess essence',
       ];
       showToast(
         bits.isEmpty

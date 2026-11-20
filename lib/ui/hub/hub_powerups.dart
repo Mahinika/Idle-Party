@@ -26,6 +26,9 @@ import '../shell/shell_layout.dart';
 import '../shell/wallet_strip.dart';
 import '../web_click_bridge.dart';
 
+/// Which SCROLLS block to open on (POUCH vs default hub body).
+enum PowerupsFocus { none, pouch }
+
 /// One-tap SCROLLS row on the hub, under the cave button.
 ///
 /// Hidden until the first boss (same gate as SHOP). The map corner stays
@@ -157,6 +160,10 @@ class _TicketBadge extends StatelessWidget {
 /// Copy and keys for the SCROLLS sheet.
 abstract final class ScrollsSheet {
   static const Key ticketPillKey = ValueKey('scrolls-ticket-pill');
+  static final GlobalKey pouchSectionKey = GlobalKey(
+    debugLabel: 'scrolls-pouch-section',
+  );
+  static const Key pouchTitleKey = ValueKey('scrolls-pouch-title');
 
   static String _tickets(int n) => n == 1 ? '1 ticket' : '$n tickets';
 
@@ -172,8 +179,9 @@ const Key powerupsSheetKey = ValueKey('powerups-sheet');
 /// Bottom sheet: earn tickets (WATCH) + spend on buffs.
 Future<void> openPowerupsSheet(
   BuildContext context,
-  GameDirector director,
-) async {
+  GameDirector director, {
+  PowerupsFocus focus = PowerupsFocus.none,
+}) async {
   WebClickBridge.pushLayer();
   unawaited(director.syncFriendReferral());
   final router = PlayNav.maybeOf(context)?.router;
@@ -202,7 +210,11 @@ Future<void> openPowerupsSheet(
             top: hudBottom ?? viewPad.top,
             bottom: bottomGap,
           ),
-          child: _PowerupsSheet(director: director, router: router),
+          child: _PowerupsSheet(
+            director: director,
+            router: router,
+            focus: focus,
+          ),
         );
       },
     );
@@ -212,10 +224,15 @@ Future<void> openPowerupsSheet(
 }
 
 class _PowerupsSheet extends StatefulWidget {
-  const _PowerupsSheet({required this.director, required this.router});
+  const _PowerupsSheet({
+    required this.director,
+    required this.router,
+    this.focus = PowerupsFocus.none,
+  });
 
   final GameDirector director;
   final MenuRouter? router;
+  final PowerupsFocus focus;
 
   @override
   State<_PowerupsSheet> createState() => _PowerupsSheetState();
@@ -224,11 +241,32 @@ class _PowerupsSheet extends StatefulWidget {
 class _PowerupsSheetState extends State<_PowerupsSheet> {
   bool _nudgeLatched = false;
   bool _impressionQueued = false;
+  final ScrollController _scroll = ScrollController();
 
   @override
   void initState() {
     super.initState();
     unawaited(_refreshStore());
+    if (widget.focus == PowerupsFocus.pouch) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToPouch());
+    }
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _scrollToPouch() {
+    final ctx = ScrollsSheet.pouchSectionKey.currentContext;
+    if (ctx == null || !_scroll.hasClients) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOut,
+      alignment: 0.05,
+    );
   }
 
   Future<void> _refreshStore() async {
@@ -364,9 +402,50 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                   ShellLayout.blockGapWidget(),
                   Expanded(
                     child: SingleChildScrollView(
+                      controller: _scroll,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          if (ReinstallPouch.showOffer(state)) ...[
+                            KeyedSubtree(
+                              key: ScrollsSheet.pouchSectionKey,
+                              child: DecoratedBox(
+                                decoration: widget.focus == PowerupsFocus.pouch
+                                    ? MenuChrome.listCard(selected: true)
+                                    : const BoxDecoration(),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 6,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Text(
+                                        'POUCH',
+                                        key: ScrollsSheet.pouchTitleKey,
+                                        style: GameTheme.title(),
+                                      ),
+                                      ShellLayout.gap(4),
+                                      ShellLayout.hint(
+                                        'One-time starter gold after a fresh install.',
+                                        maxLines: 2,
+                                      ),
+                                      ShellLayout.gap(6),
+                                      ReinstallPouchFab(
+                                        state: state,
+                                        onWatch: () => unawaited(
+                                          director.watchReinstallPouchAd(),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
                           MenuChrome.sectionLabelScoped(
                             'THE WELL',
                             scope: MenuScope.today,
@@ -680,7 +759,9 @@ class _BuffRow extends StatelessWidget {
 Widget scrollsSheetForTest({
   required GameDirector director,
   MenuRouter? router,
-}) => _PowerupsSheet(director: director, router: router);
+  PowerupsFocus focus = PowerupsFocus.none,
+}) =>
+    _PowerupsSheet(director: director, router: router, focus: focus);
 
 /// One WATCH gold pile after a fresh install with no prior save file.
 class ReinstallPouchFab extends StatelessWidget {

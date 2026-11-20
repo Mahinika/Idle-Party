@@ -78,12 +78,9 @@ class EssenceTilesScreen extends StatelessWidget {
     final sub = _subBody();
     if (sub != null) return SingleChildScrollView(child: sub);
     final state = director.state;
-    return Column(
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       children: [
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-            children: [
               // Rows of two that grow with their text: a fixed grid aspect
               // cut the locked hints and overflowed CRAFT at 1.45.
               _tileRow(
@@ -152,10 +149,10 @@ class EssenceTilesScreen extends StatelessWidget {
                 ),
               ),
               ),
-            ],
-          ),
-        ),
-        _summary(context, state),
+        if (GameLogic.canAscend(state)) ...[
+          const SizedBox(height: 10),
+          _summary(context, state),
+        ],
       ],
     );
   }

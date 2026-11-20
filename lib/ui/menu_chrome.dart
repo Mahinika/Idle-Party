@@ -230,6 +230,17 @@ abstract final class MenuChrome {
     onPressed: () => Navigator.maybePop(context),
   );
 
+  /// Dense grey CLOSE for sheet headers (matches overlay scaffolds).
+  static Widget sheetClosePill(BuildContext context) {
+    return GameButton(
+      label: 'CLOSE',
+      style: GameButtonStyle.grey,
+      expanded: false,
+      dense: true,
+      onPressed: () => Navigator.maybePop(context),
+    );
+  }
+
   /// Section label for dense menus (GEAR / PROGRESS / …).
   static Widget sectionLabel(String text) {
     return Padding(
@@ -1142,6 +1153,7 @@ abstract final class MenuChrome {
   /// Expand/collapse block — replaces Material ExpansionTile in menus.
   /// ▸ / ▾ beside SHOW / HIDE on a [fold].
   static const Key foldChevronKey = ValueKey('fold-chevron');
+  static const Key foldHeaderKey = ValueKey('menu-fold-header');
 
   static Widget fold({
     required String title,
@@ -1194,13 +1206,11 @@ class _MenuSlider extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final w = constraints.maxWidth;
-        final shown = ((value - min) / (max - min) * divisions)
-            .round()
-            .clamp(0, divisions);
+        final pct = ((value - min) / (max - min) * 100).round().clamp(0, 100);
         return Semantics(
           slider: true,
           label: label ?? 'Slider',
-          value: '$shown',
+          value: '$pct percent',
           child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapDown: (d) => _setFromLocal(d.localPosition.dx, w),
@@ -1287,10 +1297,14 @@ class _MenuFoldState extends State<_MenuFold> {
           child: InkWell(
             onTap: () => setState(() => _open = !_open),
             borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
-                children: [
+            child: ConstrainedBox(
+              key: MenuChrome.foldHeaderKey,
+              constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1326,6 +1340,7 @@ class _MenuFoldState extends State<_MenuFold> {
                   ),
                 ],
               ),
+            ),
             ),
           ),
         ),

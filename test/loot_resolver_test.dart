@@ -102,7 +102,7 @@ void main() {
     expect(receipt.summaryLine(), contains('2 gear'));
     expect(receipt.summaryLine(), contains('+40 g'));
     expect(receipt.summaryLine(includeGold: false), contains('2 gear'));
-    expect(receipt.summaryLine(includeGold: false), contains('+6 e'));
+    expect(receipt.summaryLine(includeGold: false), contains('+6 essence'));
     expect(receipt.summaryLine(includeGold: false), isNot(contains('+40 g')));
   });
 

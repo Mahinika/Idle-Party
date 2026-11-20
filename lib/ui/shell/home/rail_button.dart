@@ -47,15 +47,8 @@ class RailButton extends StatelessWidget {
     if (compact) {
       // A short count rides the icon corner, so the label never cuts it off
       // at 1.45 ("SCROLLS…", polish7 P029). Longer timers stay inline.
-      final bigText = MediaQuery.textScalerOf(context).scale(1) > 1.2;
       final pip =
-          bigText &&
-              !listCard &&
-              timer != null &&
-              timer.isNotEmpty &&
-              timer.length <= 3
-          ? timer
-          : null;
+          timer != null && timer.isNotEmpty && timer.length <= 3 ? timer : null;
       final label = Text(
         timer != null && timer.isNotEmpty && pip == null
             ? '${entry.label} $timer'

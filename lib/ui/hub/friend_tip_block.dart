@@ -7,6 +7,7 @@ import '../../core/game_director.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../redeem_coupon_dialog.dart';
 
 /// SCROLLS → EARN: share a Play link, or paste a friend's code.
 class FriendTipBlock extends StatefulWidget {
@@ -113,6 +114,11 @@ class _FriendTipBlockState extends State<FriendTipBlock> {
               ),
             ],
           ),
+        const SizedBox(height: 4),
+        MenuChrome.textLink(
+          label: 'REDEEM >',
+          onPressed: () => showRedeemCouponDialog(context, widget.director),
+        ),
       ],
     );
   }

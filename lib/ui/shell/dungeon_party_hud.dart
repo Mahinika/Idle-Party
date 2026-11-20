@@ -56,6 +56,19 @@ String homeChipCcLabel(List<String> labels) =>
     labels.length > 1 ? '${labels.first}+' : labels.first;
 const Key homeChipCcKey = ValueKey('home-chip-cc');
 
+String homeChipRoleTag(String role) => switch (role) {
+      'Healer' => 'Heal',
+      _ => role,
+    };
+
+String abilityInfoDialogBody(ClassAbilityDef ability) {
+  final lines = ability.tooltipMessage.split('\n');
+  if (lines.isNotEmpty && lines.first.trim() == ability.name.trim()) {
+    return lines.skip(1).join('\n').trim();
+  }
+  return ability.tooltipMessage;
+}
+
 Color partyCcChipColor(List<String> labels) {
   if (labels.contains('ROOT')) return GameTheme.mossLit;
   if (labels.contains('HEX')) return GameTheme.bloodLit;
@@ -1199,19 +1212,30 @@ class _HomePartyChip extends StatelessWidget {
                 const SizedBox(height: 1),
                 Row(
                   children: [
-                    // Crowd control takes the role word's slot while it
-                    // lasts, so "Tank SLOW" never runs past a 360 dp chip.
-                    if (cc.isNotEmpty) ...[
+                    if (cc.isNotEmpty)
+                      Flexible(
+                        child: Text(
+                          role.isNotEmpty
+                              ? '${homeChipRoleTag(role)} · ${homeChipCcLabel(cc)}'
+                              : homeChipCcLabel(cc),
+                          key: homeChipCcKey,
+                          maxLines: 1,
+                          softWrap: false,
+                          textScaler: TextScaler.noScaling,
+                          style: GameTheme.hint(
+                            color: partyCcChipColor(cc),
+                          ),
+                        ),
+                      )
+                    else if (named && role.isNotEmpty)
                       Text(
-                        homeChipCcLabel(cc),
-                        key: homeChipCcKey,
+                        role,
                         maxLines: 1,
                         softWrap: false,
                         textScaler: TextScaler.noScaling,
-                        style: GameTheme.combat(color: partyCcChipColor(cc)),
-                      ),
-                      const SizedBox(width: 3),
-                    ] else if (named) ...[
+                        style: GameTheme.combat(color: GameTheme.torchHot),
+                      )
+                    else if (role.isNotEmpty)
                       Text(
                         role,
                         maxLines: 1,
@@ -1219,9 +1243,9 @@ class _HomePartyChip extends StatelessWidget {
                         textScaler: TextScaler.noScaling,
                         style: GameTheme.combat(color: GameTheme.torchHot),
                       ),
-                      const SizedBox(width: 3),
-                    ],
-                    Expanded(
+                    const SizedBox(width: 1),
+                    SizedBox(
+                      width: 16,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(1),
                         child: LinearProgressIndicator(
@@ -1834,7 +1858,7 @@ class _InlineAbilityChip extends StatelessWidget {
           builder: (ctx) => MenuChrome.dialog(
             title: ability.name,
             content: Text(
-              tip,
+              abilityInfoDialogBody(ability),
               style: GameTheme.readable(color: GameTheme.parchment),
             ),
             actions: [
@@ -1859,7 +1883,7 @@ class _InlineAbilityChip extends StatelessWidget {
               builder: (ctx) => MenuChrome.dialog(
                 title: ability.name,
                 content: Text(
-                  tip,
+                  abilityInfoDialogBody(ability),
                   style: GameTheme.readable(color: GameTheme.parchment),
                 ),
                 actions: [

@@ -68,8 +68,10 @@ class LootGrantResult {
     if (gearAutoSold > 0) bits.add('$gearAutoSold sold');
     if (gearAutoDisassembled > 0) bits.add('$gearAutoDisassembled scrapped');
     if (includeGold && goldGained > 0) bits.add('+$goldGained g');
-    if (essenceGained > 0) bits.add('+$essenceGained e');
-    if (overflowEssence > 0) bits.add('+$overflowEssence e overflow');
+    if (essenceGained > 0) bits.add('+$essenceGained essence');
+    if (overflowEssence > 0) {
+      bits.add('+$overflowEssence essence overflow');
+    }
     if (bits.isEmpty) return '';
     return bits.join(' · ');
   }

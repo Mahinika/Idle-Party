@@ -703,7 +703,7 @@ extension GameDirectorFight on GameDirector {
       showToast(
         _state.dungeonMode == DungeonMode.farm
             ? 'FARM — loop this floor for loot · 0 essence'
-            : 'PUSH — clear to advance · +1e clear · +2e boss',
+            : 'PUSH — clear to advance · +1 essence clear · +2 essence boss',
         life: 2.2,
       );
     }
