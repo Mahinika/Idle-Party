@@ -18,6 +18,7 @@ import '../coach_pulse.dart';
 import '../first_session_tips.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
+import '../party_role_icon.dart';
 import '../hero_doll_sprite.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -55,11 +56,6 @@ List<String> partyCcChipLabels(SpatialActor? actor) {
 String homeChipCcLabel(List<String> labels) =>
     labels.length > 1 ? '${labels.first}+' : labels.first;
 const Key homeChipCcKey = ValueKey('home-chip-cc');
-
-String homeChipRoleTag(String role) => switch (role) {
-      'Healer' => 'Heal',
-      _ => role,
-    };
 
 String abilityInfoDialogBody(ClassAbilityDef ability) {
   final lines = ability.tooltipMessage.split('\n');
@@ -125,7 +121,7 @@ class PartyHudSpecLine extends StatelessWidget {
     required this.level,
     required this.color,
     this.extra = '',
-    this.role = '',
+    this.partyRole,
   });
 
   final String spec;
@@ -133,21 +129,16 @@ class PartyHudSpecLine extends StatelessWidget {
   final Color color;
   final String extra;
 
-  /// Tank / Healer / DPS. Stays whole while the name ellipsizes.
-  final String role;
+  /// Small shield / cross / bow so the name keeps width.
+  final PartyRoleBucket? partyRole;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        if (role.isNotEmpty) ...[
-          Text(
-            role,
-            maxLines: 1,
-            softWrap: false,
-            style: GameTheme.combat(color: GameTheme.torchHot),
-          ),
-          const SizedBox(width: 4),
+        if (partyRole != null) ...[
+          PartyRoleIcon(bucket: partyRole!, size: 10, color: GameTheme.torchHot),
+          const SizedBox(width: 2),
         ],
         Flexible(
           child: Text(
@@ -348,7 +339,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
             selected: widget.selectedHeroIndex == i,
             label:
                 '${partyStripName(hero, plainEnglish: plainEnglish)} '
-                '${hero.spec.roleTag.plainLabel} level ${hero.level} — '
+                '${PartyRoleIcon.semanticsLabel(partyRoleBucketFor(hero))} '
+                'level ${hero.level} — '
                 'tap for abilities, '
                 'long-press for gear',
             onTap: () => _onHeroTap(i),
@@ -564,7 +556,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                                 selected: widget.selectedHeroIndex == i,
                                 label:
                                     '${partyStripName(party[i], plainEnglish: plainEnglish)} '
-                                    '${party[i].spec.roleTag.plainLabel} — tap for abilities, '
+                                    '${PartyRoleIcon.semanticsLabel(partyRoleBucketFor(party[i]))} — tap for abilities, '
                                     'long-press for gear',
                                 onTap: () => _onHeroTap(i),
                                 onLongPress: _onLongPressGear,
@@ -1109,10 +1101,11 @@ class _HomePartyChip extends StatelessWidget {
     final hpColor = hp <= 0
         ? GameTheme.blood
         : (frac <= 0.35 ? GameTheme.bloodLit : GameTheme.clear);
-    final role = hero.spec.roleTag.plainLabel;
+    final bucket = partyRoleBucketFor(hero);
+    final roleWord = hero.spec.roleTag.plainLabel;
     final cc = partyCcChipLabels(spatial);
     final named = name.trim().isNotEmpty;
-    final who = named ? name.trim() : role;
+    final who = named ? name.trim() : roleWord;
     final doll = dense ? 18.0 : 20.0;
     // Large text: the name gets the whole first line. The level is in the
     // chip's semantics and the hero sheet; the border shows the pick.
@@ -1212,12 +1205,12 @@ class _HomePartyChip extends StatelessWidget {
                 const SizedBox(height: 1),
                 Row(
                   children: [
+                    PartyRoleIcon(bucket: bucket, size: 10),
+                    const SizedBox(width: 2),
                     if (cc.isNotEmpty)
                       Flexible(
                         child: Text(
-                          role.isNotEmpty
-                              ? '${homeChipRoleTag(role)} · ${homeChipCcLabel(cc)}'
-                              : homeChipCcLabel(cc),
+                          homeChipCcLabel(cc),
                           key: homeChipCcKey,
                           maxLines: 1,
                           softWrap: false,
@@ -1226,22 +1219,6 @@ class _HomePartyChip extends StatelessWidget {
                             color: partyCcChipColor(cc),
                           ),
                         ),
-                      )
-                    else if (named && role.isNotEmpty)
-                      Text(
-                        role,
-                        maxLines: 1,
-                        softWrap: false,
-                        textScaler: TextScaler.noScaling,
-                        style: GameTheme.combat(color: GameTheme.torchHot),
-                      )
-                    else if (role.isNotEmpty)
-                      Text(
-                        role,
-                        maxLines: 1,
-                        softWrap: false,
-                        textScaler: TextScaler.noScaling,
-                        style: GameTheme.combat(color: GameTheme.torchHot),
                       ),
                     const SizedBox(width: 1),
                     SizedBox(
@@ -1453,6 +1430,8 @@ class _PartyRow extends StatelessWidget {
                     spec: who,
                     level: hero.level,
                     color: GameTheme.parchment,
+                    partyRole:
+                        stripOnly ? null : partyRoleBucketFor(hero),
                     extra: _companionLine(spatial, world, hero.specId) ?? '',
                   ),
                   const SizedBox(height: 1),
@@ -1520,6 +1499,7 @@ class _PartyRow extends StatelessWidget {
                       spec: who,
                       level: hero.level,
                       color: GameTheme.parchment,
+                      partyRole: partyRoleBucketFor(hero),
                       extra: () {
                         final kind = SpecMastery.kindFor(hero.specId);
                         if (kind == null || !showKit) return '';

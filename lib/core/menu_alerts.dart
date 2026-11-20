@@ -433,7 +433,7 @@ class MenuAlerts {
     if (state.metaDepth.pendingHeroReveals.isEmpty) return '';
     if (!MenuTabs.showRoster(state)) return '';
     if (panel == GearPanel.roster) {
-      return 'Tap ADD to put the new specialization in the party';
+      return 'Tap SWAP to change the hero in that role slot';
     }
     return 'New specialization — open ROSTER tab';
   }
