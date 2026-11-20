@@ -64,6 +64,15 @@ abstract final class GameTheme {
   static const Color hudManaText = Color(0xFF80C0FF);
   static const Color hudFarmGreen = Color(0xFF3A5018);
 
+  /// Fight strip role marks (shield / cross / bow).
+  static const Color roleIconShieldSteel = Color(0xFF5A7A9A);
+  static const Color roleIconShieldRim = Color(0xFF8CB4D8);
+  static const Color roleIconCrossGold = Color(0xFFD4A83A);
+  static const Color roleIconCrossGreen = Color(0xFF5A9A5A);
+  static const Color roleIconBowWood = Color(0xFF8B5A2B);
+  static const Color roleIconBowString = Color(0xFFC9A66B);
+  static const Color roleIconBowArrow = Color(0xFF9A8060);
+
   /// RUN / TODAY / ACCOUNT scope tones (hub + POWER section headers).
   /// Run scope is dusk lavender: green stays reserved for "this goes up".
   static const Color scopeRun = levelAccent;
@@ -262,6 +271,10 @@ abstract final class GameTheme {
   static const double hudPixel = 9;
   static const double hudPixelComfort = 11;
 
+  /// Five-wide home party strip — smaller base so names still scale with
+  /// the OS and fit ~6 chars at 360 dp / [typeScaleMax].
+  static const double hudPixelPartyDense = 8;
+
   /// Modern menu radii.
   static const double radiusSm = 8;
   static const double radiusMd = 12;
@@ -446,4 +459,15 @@ abstract final class GameTheme {
     color: color,
     height: height,
   );
+
+  /// Home fight strip when five heroes share one row (still uses [MediaQuery] scale).
+  static TextStyle combatPartyStripDense({Color color = parchment}) =>
+      GoogleFonts.pressStart2p(
+        fontSize: hudPixelPartyDense,
+        color: color,
+        height: 1.15,
+        shadows: const [
+          Shadow(color: shadow, offset: Offset(1, 1), blurRadius: 0),
+        ],
+      ).copyWith(fontFamilyFallback: glyphFallback);
 }

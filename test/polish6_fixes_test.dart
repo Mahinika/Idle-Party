@@ -474,7 +474,7 @@ void main() {
     final hud = find.byType(PartyCornerHud);
     for (final h in director.state.heroes) {
       expect(
-        find.descendant(of: hud, matching: find.text(' L${h.level}')),
+        find.descendant(of: hud, matching: find.text('L${h.level}')),
         findsWidgets,
       );
     }

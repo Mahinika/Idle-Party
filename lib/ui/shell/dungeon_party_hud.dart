@@ -18,6 +18,7 @@ import '../coach_pulse.dart';
 import '../first_session_tips.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
+import '../party_role_icon.dart';
 import '../hero_doll_sprite.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -55,11 +56,6 @@ List<String> partyCcChipLabels(SpatialActor? actor) {
 String homeChipCcLabel(List<String> labels) =>
     labels.length > 1 ? '${labels.first}+' : labels.first;
 const Key homeChipCcKey = ValueKey('home-chip-cc');
-
-String homeChipRoleTag(String role) => switch (role) {
-      'Healer' => 'Heal',
-      _ => role,
-    };
 
 String abilityInfoDialogBody(ClassAbilityDef ability) {
   final lines = ability.tooltipMessage.split('\n');
@@ -125,7 +121,7 @@ class PartyHudSpecLine extends StatelessWidget {
     required this.level,
     required this.color,
     this.extra = '',
-    this.role = '',
+    this.partyRole,
   });
 
   final String spec;
@@ -133,21 +129,16 @@ class PartyHudSpecLine extends StatelessWidget {
   final Color color;
   final String extra;
 
-  /// Tank / Healer / DPS. Stays whole while the name ellipsizes.
-  final String role;
+  /// Small shield / cross / bow so the name keeps width.
+  final PartyRoleBucket? partyRole;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        if (role.isNotEmpty) ...[
-          Text(
-            role,
-            maxLines: 1,
-            softWrap: false,
-            style: GameTheme.combat(color: GameTheme.torchHot),
-          ),
-          const SizedBox(width: 4),
+        if (partyRole != null) ...[
+          PartyRoleIcon(bucket: partyRole!),
+          const SizedBox(width: 2),
         ],
         Flexible(
           child: Text(
@@ -348,7 +339,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
             selected: widget.selectedHeroIndex == i,
             label:
                 '${partyStripName(hero, plainEnglish: plainEnglish)} '
-                '${hero.spec.roleTag.plainLabel} level ${hero.level} — '
+                '${PartyRoleIcon.semanticsLabel(partyRoleBucketFor(hero))} '
+                'level ${hero.level} — '
                 'tap for abilities, '
                 'long-press for gear',
             onTap: () => _onHeroTap(i),
@@ -397,6 +389,9 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     final textScale = MediaQuery.textScalerOf(
       context,
     ).scale(1).clamp(1.0, GameTheme.typeScaleMax);
+    final shortViewport = MediaQuery.sizeOf(context).height < 680;
+    final tuckPartyPad = shortViewport &&
+        textScale > GameTheme.typeScaleMax - 0.01;
     final lineHeight = _homePartyRowHeight * textScale;
     final denseParty = heroCount >= 5;
     return Column(
@@ -412,17 +407,22 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(4, 2, 4, 3),
+            padding: EdgeInsets.fromLTRB(
+              2,
+              tuckPartyPad ? 0 : 2,
+              2,
+              tuckPartyPad ? 0 : 3,
+            ),
             child: SizedBox(
               height: lineHeight,
               child: Row(
                 children: [
                   for (var i = 0; i < heroCount; i++) ...[
-                    if (i > 0)
+                    if (i > 0 && !denseParty)
                       Container(
                         width: 1,
                         height: lineHeight - 4,
-                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                        margin: EdgeInsets.zero,
                         color: GameTheme.border.withValues(alpha: 0.35),
                       ),
                     Expanded(
@@ -512,7 +512,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     final kitActor = (selected >= 0) ? _spatialFor(world, selected) : null;
     final showSideKit =
         _kitOpen && kitHero != null && kitActor != null && kitActor.isAlive;
-    final showFlask = GameLogic.canUseConsumable(state);
+    final showFlask =
+        GameLogic.canUseConsumable(state) && heroCount < 5;
     final coachKit = FirstSessionTips.lineFor(
       state,
       CoachTarget.kit,
@@ -564,7 +565,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                                 selected: widget.selectedHeroIndex == i,
                                 label:
                                     '${partyStripName(party[i], plainEnglish: plainEnglish)} '
-                                    '${party[i].spec.roleTag.plainLabel} — tap for abilities, '
+                                    '${PartyRoleIcon.semanticsLabel(partyRoleBucketFor(party[i]))} — tap for abilities, '
                                     'long-press for gear',
                                 onTap: () => _onHeroTap(i),
                                 onLongPress: _onLongPressGear,
@@ -1109,14 +1110,15 @@ class _HomePartyChip extends StatelessWidget {
     final hpColor = hp <= 0
         ? GameTheme.blood
         : (frac <= 0.35 ? GameTheme.bloodLit : GameTheme.clear);
-    final role = hero.spec.roleTag.plainLabel;
+    final bucket = partyRoleBucketFor(hero);
+    final roleWord = hero.spec.roleTag.plainLabel;
     final cc = partyCcChipLabels(spatial);
     final named = name.trim().isNotEmpty;
-    final who = named ? name.trim() : role;
-    final doll = dense ? 18.0 : 20.0;
-    // Large text: the name gets the whole first line. The level is in the
-    // chip's semantics and the hero sheet; the border shows the pick.
-    final roomy = MediaQuery.textScalerOf(context).scale(1) <= 1.2;
+    final who = named ? name.trim() : roleWord;
+    final doll = dense ? 0.0 : 14.0;
+    final nameStyle = dense
+        ? GameTheme.combatPartyStripDense(color: GameTheme.parchment)
+        : GameTheme.combat(color: GameTheme.parchment);
     return Container(
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 1),
@@ -1127,139 +1129,77 @@ class _HomePartyChip extends StatelessWidget {
           color: selected ? GameTheme.toggleOnAccent : Colors.transparent,
         ),
       ),
-      child: Row(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            width: doll,
-            height: doll,
-            child: HeroDollSprite(
-              hero: hero,
-              partyIndex: partyIndex,
-              size: doll,
-              demonForm: demonForm,
-            ),
+          Text(
+            who,
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
+            style: nameStyle,
           ),
-          const SizedBox(width: 2),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                LayoutBuilder(
-                  builder: (context, box) {
-                    // Narrow phone: the name wins. "› L1" only shows when
-                    // the whole name still fits beside it (audit F020).
-                    final scaler = MediaQuery.textScalerOf(context);
-                    final base = DefaultTextStyle.of(context).style;
-                    double w(String t, TextStyle st) {
-                      final tp = TextPainter(
-                        // Same merge as Text: inherit the default style.
-                        text: TextSpan(text: t, style: base.merge(st)),
-                        textDirection: TextDirection.ltr,
-                        textScaler: scaler,
-                        maxLines: 1,
-                      )..layout();
-                      final width = tp.width;
-                      tp.dispose();
-                      return width;
-                    }
-
-                    final nameW = w(
-                      who,
-                      GameTheme.combat(color: GameTheme.parchment),
-                    );
-                    final levelW =
-                        w(
-                          ' L$level',
-                          GameTheme.readable(color: GameTheme.parchment),
-                        ) +
-                        (selected ? 10 : 0);
-                    final showLevel = roomy && nameW + levelW <= box.maxWidth;
-                    return Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            who,
-                            maxLines: 1,
-                            softWrap: false,
-                            overflow: TextOverflow.ellipsis,
-                            style: GameTheme.combat(color: GameTheme.parchment),
-                          ),
-                        ),
-                        if (selected && showLevel)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 2),
-                            child: GameIcon.glyph(
-                              UiGlyph.next,
-                              size: 8,
-                              color: GameTheme.torchHot,
-                            ),
-                          ),
-                        if (showLevel)
-                          Text(
-                            ' L$level',
-                            key: PartyCornerHud.chipLevelKey,
-                            maxLines: 1,
-                            softWrap: false,
-                            style: GameTheme.readable(
-                              color: GameTheme.parchment,
-                            ),
-                          ),
-                      ],
-                    );
-                  },
+          const SizedBox(height: 1),
+          Row(
+            children: [
+              if (doll > 0) ...[
+                SizedBox(
+                  width: doll,
+                  height: doll,
+                  child: HeroDollSprite(
+                    hero: hero,
+                    partyIndex: partyIndex,
+                    size: doll,
+                    demonForm: demonForm,
+                  ),
                 ),
-                const SizedBox(height: 1),
-                Row(
-                  children: [
-                    if (cc.isNotEmpty)
-                      Flexible(
-                        child: Text(
-                          role.isNotEmpty
-                              ? '${homeChipRoleTag(role)} · ${homeChipCcLabel(cc)}'
-                              : homeChipCcLabel(cc),
-                          key: homeChipCcKey,
-                          maxLines: 1,
-                          softWrap: false,
-                          textScaler: TextScaler.noScaling,
-                          style: GameTheme.hint(
-                            color: partyCcChipColor(cc),
-                          ),
-                        ),
-                      )
-                    else if (named && role.isNotEmpty)
-                      Text(
-                        role,
-                        maxLines: 1,
-                        softWrap: false,
-                        textScaler: TextScaler.noScaling,
-                        style: GameTheme.combat(color: GameTheme.torchHot),
-                      )
-                    else if (role.isNotEmpty)
-                      Text(
-                        role,
-                        maxLines: 1,
-                        softWrap: false,
-                        textScaler: TextScaler.noScaling,
-                        style: GameTheme.combat(color: GameTheme.torchHot),
-                      ),
-                    const SizedBox(width: 1),
-                    SizedBox(
-                      width: 16,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(1),
-                        child: LinearProgressIndicator(
-                          value: frac,
-                          minHeight: 3,
-                          backgroundColor: GameTheme.hudHpFill,
-                          color: hpColor,
-                        ),
-                      ),
-                    ),
-                  ],
+                const SizedBox(width: 2),
+              ],
+              PartyRoleIcon(bucket: bucket),
+              const SizedBox(width: 2),
+              Text(
+                'L$level',
+                key: PartyCornerHud.chipLevelKey,
+                maxLines: 1,
+                softWrap: false,
+                textScaler: TextScaler.noScaling,
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              ),
+              if (selected) ...[
+                const SizedBox(width: 1),
+                GameIcon.glyph(
+                  UiGlyph.next,
+                  size: 8,
+                  color: GameTheme.torchHot,
                 ),
               ],
-            ),
+              if (cc.isNotEmpty)
+                Flexible(
+                  child: Text(
+                    homeChipCcLabel(cc),
+                    key: homeChipCcKey,
+                    maxLines: 1,
+                    softWrap: false,
+                    textScaler: TextScaler.noScaling,
+                    style: GameTheme.hint(
+                      color: partyCcChipColor(cc),
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 2),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(1),
+                  child: LinearProgressIndicator(
+                    value: frac,
+                    minHeight: 3,
+                    backgroundColor: GameTheme.hudHpFill,
+                    color: hpColor,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1453,6 +1393,8 @@ class _PartyRow extends StatelessWidget {
                     spec: who,
                     level: hero.level,
                     color: GameTheme.parchment,
+                    partyRole:
+                        stripOnly ? null : partyRoleBucketFor(hero),
                     extra: _companionLine(spatial, world, hero.specId) ?? '',
                   ),
                   const SizedBox(height: 1),
@@ -1520,6 +1462,7 @@ class _PartyRow extends StatelessWidget {
                       spec: who,
                       level: hero.level,
                       color: GameTheme.parchment,
+                      partyRole: partyRoleBucketFor(hero),
                       extra: () {
                         final kind = SpecMastery.kindFor(hero.specId);
                         if (kind == null || !showKit) return '';

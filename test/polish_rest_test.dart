@@ -64,7 +64,7 @@ void main() {
         expect(t.takeException(), isNull);
         final cc = find.byKey(homeChipCcKey);
         expect(cc, findsWidgets);
-        expect(find.textContaining(' · SLOW'), findsWidgets);
+        expect(find.text('SLOW'), findsWidgets);
         a100ExpectWhole(t, cc);
       });
     }
