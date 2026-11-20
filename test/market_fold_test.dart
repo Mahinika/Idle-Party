@@ -154,7 +154,7 @@ void main() {
           isFalse,
         );
         expect(tester.getRect(filter).right, lessThanOrEqualTo(size.width));
-        for (final label in ['FORGE', 'CAMP', 'MARKET']) {
+        for (final label in ['TRAIN', 'CAMP', 'MARKET']) {
           final para = tester.renderObject<RenderParagraph>(
             find
                 .descendant(
@@ -249,7 +249,7 @@ void main() {
             expect(r.bottom, lessThanOrEqualTo(fold + 0.5));
             expect(r.right, lessThanOrEqualTo(size.width));
           }
-          for (final label in ['FORGE', 'CAMP', 'MARKET']) {
+          for (final label in ['TRAIN', 'CAMP', 'MARKET']) {
             final para = tester.renderObject<RenderParagraph>(
               find
                   .descendant(

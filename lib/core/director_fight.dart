@@ -654,9 +654,11 @@ extension GameDirectorFight on GameDirector {
     _dungeonTilesReady = false;
     if (_isLoading) return;
     _awaitingWipeChoice = false;
+    final clearedExit = _spatial?.awaitingExit == true;
     final hadSpeedBoost = AdBoost.speedActive(_state.metaDepth);
     final leaveDungeonId = _state.dungeonId;
     final leaveFloor = _state.currentRoom.floorNumber;
+    final leaveCaveName = DungeonCatalog.byId(leaveDungeonId).name;
     _state = GameLogic.ensureWeeklyContract(GameLogic.leaveDungeon(_state));
     _spatialTimer?.cancel();
     _spatialTimer = null;
@@ -673,6 +675,8 @@ extension GameDirectorFight on GameDirector {
     final payoffs = LogicNotices.takeMetaPayoffs();
     if (payoffs.isNotEmpty) {
       showToast(payoffs.join(' · '), life: 3.0);
+    } else if (clearedExit && _state.homeLayout == HomeLayout.home) {
+      showToast('$leaveCaveName cleared · back in town', life: 2.8);
     } else if (hadSpeedBoost) {
       showToast('Dungeon speed back to 1× in hub', life: 2.2);
     } else {

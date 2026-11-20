@@ -290,7 +290,7 @@ class _UpgradePanelState extends State<UpgradePanel> {
     });
   }
 
-  static const _tabLabels = ['FORGE', 'CAMP', 'MARKET'];
+  static const _tabLabels = ['TRAIN', 'CAMP', 'MARKET'];
 
   Widget _tab(_Panel p) {
     final selected = _mode == p;

@@ -118,7 +118,7 @@ class FirstSessionTips extends StatelessWidget {
   static String displayLine(CoachHint hint, GameState state) {
     if (state.homeLayout != HomeLayout.home) return hint.line;
     return switch (hint.target) {
-      CoachTarget.gold => 'FORGE under the fight.',
+      CoachTarget.gold => 'TRAIN under the fight.',
       CoachTarget.gear => 'Tap HEROES.',
       CoachTarget.essence => 'Tap ESSENCE.',
       CoachTarget.enter => 'Tap ENTER.',

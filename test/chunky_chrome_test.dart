@@ -97,7 +97,7 @@ void main() {
         width: 330,
         child: MenuChrome.segmented(
           dense: true,
-          labels: const ['FORGE', 'CAMP', 'MARKET'],
+          labels: const ['TRAIN', 'CAMP', 'MARKET'],
           icons: UiIcon.goldDockSegment,
           selectedIndex: 1,
           onSelect: (_) {},

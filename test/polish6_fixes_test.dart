@@ -218,7 +218,7 @@ void main() {
         findsOneWidget,
         reason: tab,
       );
-      for (final other in ['FORGE', 'CAMP', 'MARKET']..remove(tab)) {
+      for (final other in ['TRAIN', 'CAMP', 'MARKET']..remove(tab)) {
         expect(
           find.text('$other opens after the first boss (F2).'),
           findsNothing,

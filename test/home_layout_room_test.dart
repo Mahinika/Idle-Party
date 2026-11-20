@@ -155,7 +155,7 @@ void main() {
       greaterThanOrEqualTo(GameTheme.minTouch),
     );
     expect(find.byType(BuyQtyToggle), findsOneWidget);
-    for (final label in ['FORGE', 'CAMP', 'MARKET']) {
+    for (final label in ['TRAIN', 'CAMP', 'MARKET']) {
       final r = tester.getRect(
         find.descendant(
           of: find.byType(UpgradePanel),

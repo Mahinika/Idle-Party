@@ -2,6 +2,7 @@ import '../models/loot.dart';
 import 'gear_service.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'town_access.dart';
 import 'shop_hub_offer.dart';
 import 'hub_chase.dart';
 import 'keystone.dart';
@@ -473,8 +474,7 @@ abstract final class MenuTabs {
 
   static bool showMerge(GameState s) =>
       s.ascensionLevel >= 1 || s.highestDungeonCleared >= 0;
-  static bool showRoster(GameState s) =>
-      s.ascensionLevel >= 1 || s.metaDepth.pendingHeroReveals.isNotEmpty;
+  static bool showRoster(GameState s) => TownAccess.innRosterOpen(s);
 
   /// ESSENCE stays off the bar until the first boss, even if a clear paid essence.
   static bool showCamp(GameState s) =>
