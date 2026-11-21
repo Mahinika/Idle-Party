@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- QA 2026-11-21: wipe scrim covers fight tools, ability-name floaters stack, the tomorrow teaser stays on the town card, and small UI fixes (MENU, party chip, shop, vault CTA, speed tip).
 - Docs refresh for 1.14.0: README ship line, town and theme notes, sweep ledger, and playtest memory after the stack merged to main.
 
 ## [1.14.0] — 2026-11-21

@@ -454,7 +454,8 @@ class DungeonTopHud extends StatelessWidget {
     final bossBit = _firstBossBit(state, floor);
     final affixLine = _keyAffixBit(state).replaceFirst(' · ', '');
     final fightBit = bossBit.isNotEmpty ? bossBit : _packJobBit(world);
-    final placeLine = state.isPartyDefeated
+    final partyDown = state.isPartyDefeated || director.awaitingWipeChoice;
+    final placeLine = partyDown
         ? (state.inGauntlet || state.inAnyRiftMode
               ? 'WIPED · End → hub'
               : 'WIPED · Retry / Hub')
@@ -495,7 +496,7 @@ class DungeonTopHud extends StatelessWidget {
           snap != null &&
           !snap.isEmpty &&
           snap.chipLabel != '0 DPS';
-      final lineColor = awaitingExit || state.isPartyDefeated
+      final lineColor = awaitingExit || partyDown
           ? GameTheme.clear
           : GameTheme.parchment;
       return Container(

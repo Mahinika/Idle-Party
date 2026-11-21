@@ -1174,19 +1174,20 @@ class _HomePartyChip extends StatelessWidget {
                   color: GameTheme.torchHot,
                 ),
               ],
-              if (cc.isNotEmpty)
-                Flexible(
-                  child: Text(
-                    homeChipCcLabel(cc),
-                    key: homeChipCcKey,
-                    maxLines: 1,
-                    softWrap: false,
-                    textScaler: TextScaler.noScaling,
-                    style: GameTheme.hint(
-                      color: partyCcChipColor(cc),
-                    ),
+              if (cc.isNotEmpty) ...[
+                const SizedBox(width: 4),
+                Text(
+                  homeChipCcLabel(cc),
+                  key: homeChipCcKey,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.visible,
+                  textScaler: TextScaler.noScaling,
+                  style: GameTheme.hint(
+                    color: partyCcChipColor(cc),
                   ),
                 ),
+              ],
               const SizedBox(width: 2),
               Expanded(
                 child: ClipRRect(

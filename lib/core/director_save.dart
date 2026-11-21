@@ -40,6 +40,7 @@ extension GameDirectorSave on GameDirector {
           debugPrint('save failed: setString returned false');
           return false;
         }
+        _rememberActiveSummary();
         PlayGamesBridge.notePartyPower(
           score: GameLogic.partyPowerScore(snapshot),
           partyName: snapshot.partyName,

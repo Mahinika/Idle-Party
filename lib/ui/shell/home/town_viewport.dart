@@ -252,7 +252,9 @@ class _TownViewportState extends State<TownViewport> {
     final state = director.state;
     final chase = HubChase.forState(state);
     final plan = ChaseDispatcher.plan(chase, state: state);
-    final label = plan.label ?? 'ENTER';
+    final held = director.vaultClaimHold;
+    final label = held ? 'CLAIM VAULT' : (plan.label ?? 'ENTER');
+    final tomorrow = chase.title.startsWith('Tomorrow:') ? chase.title : null;
     final cave = DungeonCatalog.byId(state.dungeonId).name;
     final al = state.ascensionLevel;
     final primaryIsEnter =
@@ -345,6 +347,16 @@ class _TownViewportState extends State<TownViewport> {
                   ],
                 ),
                 const SizedBox(height: 4),
+                if (tomorrow != null) ...[
+                  Text(
+                    tomorrow,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.hint(color: GameTheme.torchHot),
+                  ),
+                  const SizedBox(height: 4),
+                ],
                 // Pick FARM strength before the run (Robert, Nov 19): only
                 // when this button enters a normal cave, a floor is cleared
                 // and no KEY is dialled (a KEY run has no FARM strength).
@@ -365,21 +377,25 @@ class _TownViewportState extends State<TownViewport> {
                         active: TownEnterCoach.active(state),
                         child: WebClickScope(
                           label: label,
-                          onPressed: () => runChasePlan(
-                            context: context,
-                            director: director,
-                            router: router,
-                            plan: plan,
-                            onEnterDungeon: (id) {
-                              router.close();
-                              director.enterDungeon(dungeonId: id);
-                            },
-                          ),
+                          onPressed: held
+                              ? null
+                              : () => runChasePlan(
+                                  context: context,
+                                  director: director,
+                                  router: router,
+                                  plan: plan,
+                                  onEnterDungeon: (id) {
+                                    router.close();
+                                    director.enterDungeon(dungeonId: id);
+                                  },
+                                ),
                           child: GameButton(
                             label: label,
                             style: GameButtonStyle.go,
                             primary: true,
-                            onPressed: () => runChasePlan(
+                            onPressed: held
+                                ? null
+                                : () => runChasePlan(
                               context: context,
                               director: director,
                               router: router,

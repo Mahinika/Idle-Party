@@ -190,8 +190,9 @@ class TargetCornerHud extends StatelessWidget {
     final edge = edgeInset ? GameTheme.edgeGap : 0.0;
     final enemy = _focusEnemy(world, director);
     final awaitingExit = world?.awaitingExit == true;
+    final wiped = director.awaitingWipeChoice || state.isPartyDefeated;
 
-    if (awaitingExit && !state.isPartyDefeated) {
+    if (awaitingExit && !wiped) {
       return _stripShell(
         context,
         height: height,
@@ -215,16 +216,13 @@ class TargetCornerHud extends StatelessWidget {
       );
     }
 
-    final showEmpty =
-        enemy == null && !state.isPartyDefeated && !awaitingExit;
-    final label = enemy == null
-        ? (state.isPartyDefeated
-              ? 'WIPED'
-              : awaitingExit
-              ? 'CLEAR'
-              : '—')
+    final showEmpty = enemy == null && !wiped && !awaitingExit;
+    final label = wiped
+        ? 'WIPED'
+        : enemy == null
+        ? (awaitingExit ? 'CLEAR' : '—')
         : enemy.name.toUpperCase();
-    final roleTag = enemy == null
+    final roleTag = wiped || enemy == null
         ? null
         : _roleTagLabel(role: enemy.role, archetype: enemy.archetype);
     final hpFrac = enemy == null || enemy.maxHp <= 0
@@ -244,11 +242,11 @@ class TargetCornerHud extends StatelessWidget {
         : (roleTag == 'ELITE'
               ? GameTheme.torch.withValues(alpha: 0.55)
               : GameTheme.hudWellBorder);
-    final bombBit = enemy != null && enemy.livingBombTimer > 0
+    final bombBit = !wiped && enemy != null && enemy.livingBombTimer > 0
         ? ' · BOMB ${formatCombatSeconds(enemy.livingBombTimer)}'
         : '';
     final nameLine = '$label$bombBit';
-    final hpLabel = enemy == null
+    final hpLabel = wiped || enemy == null
         ? ''
         : swarmPack
         ? '$foeCount foes'
@@ -290,7 +288,7 @@ class TargetCornerHud extends StatelessWidget {
 
     final trailing = hpRowTrailing;
     Widget? hpRow;
-    if (enemy != null && hpLabel.isNotEmpty) {
+    if (!wiped && enemy != null && hpLabel.isNotEmpty) {
       hpRow = Row(
         children: [
           Expanded(
@@ -323,7 +321,7 @@ class TargetCornerHud extends StatelessWidget {
           ...?trailing,
         ],
       );
-    } else if (enemy == null && state.isPartyDefeated) {
+    } else if (wiped) {
       hpRow = Text(
         state.inGauntlet || state.inAnyRiftMode ? 'End → hub' : 'Retry / Hub',
         maxLines: 1,

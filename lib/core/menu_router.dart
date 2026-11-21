@@ -423,6 +423,8 @@ class MenuRouter extends ChangeNotifier {
 
     bool mapEndgame = false,
 
+    bool closeOnBack = false,
+
   }) {
 
     final before = debugWhere;
@@ -477,7 +479,9 @@ class MenuRouter extends ChangeNotifier {
 
     // A deep link to a MENU section lands on that section, not on the MENU
     // grid one step early (audit F080). BACK still returns to the grid.
-    _homeDepth = route == MenuRoute.more && more != null ? 1 : 0;
+    // The town CTA passes [closeOnBack] so Android Back returns to town.
+    _homeDepth =
+        route == MenuRoute.more && more != null && !closeOnBack ? 1 : 0;
 
     _emitNav(before);
 

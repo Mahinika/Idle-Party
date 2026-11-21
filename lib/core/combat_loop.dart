@@ -257,9 +257,10 @@ extension GameDirectorCombatLoop on GameDirector {
         _spatialTimer = null;
         GameAudio.wipe();
         GameAudio.noteWipe();
-        // Panel owns the wipe copy — drop CLEAR/bag toast so it does not
-        // draw on top of PARTY WIPED.
+        // Panel owns the wipe copy — drop CLEAR/bag toast and the floor
+        // CLEAR loot line so neither sits on the panel or the coach row.
         clearToast();
+        uiFeedback.dropFloorClearLines();
         final spatial = _spatial;
         if (spatial != null) {
           _state = GameLogic.notePartyWipe(

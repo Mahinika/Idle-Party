@@ -186,12 +186,14 @@ void paintFloaterLabels({
     final snapped = (alpha * 10).round() / 10.0;
     final color = Color(floater.argb).withValues(alpha: snapped);
     final outline = GameTheme.lootInkShadow.withValues(alpha: snapped * 0.9);
+    final abilityName = FloaterBannerStack.isAbilityName(floater.text);
     final pair = FloaterLabelCache.pair(
       text: floater.text,
       size: size < GameTheme.hudPixel ? GameTheme.hudPixel : size,
       color: color,
       outline: outline,
       maxWidth: maxW,
+      maxLines: abilityName ? 2 : null,
     );
     pairs.add(pair);
     final displayY = floaterDisplayY(

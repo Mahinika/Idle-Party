@@ -88,12 +88,14 @@ abstract final class AwayFightTip {
     if (ReturnWeek.active(state)) {
       final cave = ReturnWeek.caveName(state);
       if (state.metaDepth.dailyVaultClaimed) {
+        if (!onHub) return line;
         return 'Tomorrow: $cave pays ${pay.hookPrize}. '
             '${ReturnWeek.spendSentence(pay)}';
       }
       return 'One cave, $cave, fills the vault. ${ReturnWeek.spendSentence(pay)}';
     }
     if (state.metaDepth.dailyVaultClaimed) {
+      if (!onHub) return line;
       return 'Tomorrow pays ${pay.hookPrize}.';
     }
     return 'One cave fills the vault.';

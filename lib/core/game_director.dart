@@ -242,6 +242,26 @@ class GameDirector extends ChangeNotifier {
   bool _awaitingWipeChoice = false;
   Timer? _wipeAutoTimer;
 
+  /// After CLAIM VAULT, the town button stays on that claim until the
+  /// reward toast has had time to be read. The chase itself already moved on.
+  DateTime? _vaultCtaHoldUntil;
+  Timer? _vaultCtaHoldTimer;
+
+  bool get vaultClaimHold {
+    final until = _vaultCtaHoldUntil;
+    return until != null && DateTime.now().isBefore(until);
+  }
+
+  void _armVaultClaimHold() {
+    _vaultCtaHoldUntil = DateTime.now().add(const Duration(milliseconds: 2800));
+    _vaultCtaHoldTimer?.cancel();
+    _vaultCtaHoldTimer = Timer(const Duration(milliseconds: 2800), () {
+      _vaultCtaHoldUntil = null;
+      _vaultCtaHoldTimer = null;
+      if (!_directorClosed) notifyListeners();
+    });
+  }
+
   /// Seconds until a wipe retries on its own. 0 means no countdown.
   final ValueNotifier<int> wipeAutoSeconds = ValueNotifier(0);
 
@@ -526,7 +546,11 @@ class GameDirector extends ChangeNotifier {
   void cycleCombatPace() {
     final next = _state.combatPace >= 2 ? 1 : 2;
     _applyUpgrade(_state.copyWith(combatPace: next));
-    showToast(next >= 2 ? 'Fight speed 2×' : 'Fight speed 1×', life: 1.4);
+    showToast(
+      next >= 2 ? 'Fight speed 2×' : 'Fight speed 1×',
+      life: 1.4,
+      replace: true,
+    );
   }
 
   void setDebugTimeScale(double scale) {
@@ -580,6 +604,13 @@ class GameDirector extends ChangeNotifier {
   @visibleForTesting
   void debugSetGold(int gold) {
     _state = _state.copyWith(gold: gold);
+  }
+
+  /// Test helper: the wipe panel is up without killing the party.
+  @visibleForTesting
+  void debugSetAwaitingWipe(bool value) {
+    _awaitingWipeChoice = value;
+    notifyListeners();
   }
 
   bool get awaitingWipeChoice => _awaitingWipeChoice;
@@ -644,8 +675,16 @@ class GameDirector extends ChangeNotifier {
     String message, {
     double life = 2.4,
     NoticeKind kind = NoticeKind.tip,
+    bool replace = false,
   }) {
-    if (!uiFeedback.showToast(message, life: life, kind: kind)) return;
+    if (!uiFeedback.showToast(
+      message,
+      life: life,
+      kind: kind,
+      replace: replace,
+    )) {
+      return;
+    }
     DebugPlayLog.toast(message);
     _ensureUiTimer();
     notifyListeners();
@@ -1850,7 +1889,12 @@ class GameDirector extends ChangeNotifier {
       final notices = LogicNotices.takeMetaPayoffs();
       final gained = _state.essence - before;
       final extra = notices.isEmpty ? '' : ' · ${notices.join(' · ')}';
-      showToast('Daily Vault claimed · +$gained essence$extra', life: 2.8);
+      _armVaultClaimHold();
+      showToast(
+        'Daily Vault claimed · +$gained essence$extra',
+        life: 3.6,
+        kind: NoticeKind.celebrate,
+      );
     }
   }
 
@@ -2433,6 +2477,7 @@ class GameDirector extends ChangeNotifier {
   /// Open the title screen from MENU without wiping the current file.
   void requestStartMenu() {
     if (_isLoading) return;
+    _rememberActiveSummary();
     _pendingStartMenu = true;
     _directorNotify();
   }
@@ -2610,6 +2655,7 @@ class GameDirector extends ChangeNotifier {
     _spatialTimer = null;
     _combatFrameQueued = false;
     _wipeAutoTimer?.cancel();
+    _vaultCtaHoldTimer?.cancel();
     wipeAutoSeconds.dispose();
     _uiTimer?.cancel();
     _bootWarmup?.cancel();

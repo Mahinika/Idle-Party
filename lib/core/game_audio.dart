@@ -271,7 +271,8 @@ abstract final class GameAudio {
         await _loadPath(path);
       }
     } catch (e, st) {
-      debugPrint('GameAudio mood load failed: $e\n$st');
+      final path = AudioAssets.dungeonAmbience(mood);
+      debugPrint('GameAudio mood load failed: $path: $e\n$st');
     }
   }
 
@@ -284,7 +285,7 @@ abstract final class GameAudio {
       _byPath[path] = source;
       return source;
     } catch (e, st) {
-      debugPrint('GameAudio load failed: $e\n$st');
+      debugPrint('GameAudio load failed: $path: $e\n$st');
       return null;
     }
   }

@@ -66,6 +66,21 @@ abstract final class FloaterBannerStack {
   static const double heroHeadHeightTiles = 0.55;
   static const double heroHeadCenterUpTiles = 0.2;
 
+  /// Cast names such as POWER WORD: SHIELD. Hit numbers, crits, and
+  /// +g / +XP stay out so fight-hit goldens keep their authored Y.
+  static bool isAbilityName(String text) {
+    final t = text.trim();
+    if (t.length < 3) return false;
+    if (t.startsWith('ABSORB')) return false;
+    if (RegExp(r'^[+\-]?\d').hasMatch(t)) return false;
+    if (RegExp(r'^CRIT\b', caseSensitive: false).hasMatch(t)) return false;
+    if (t.contains('+') &&
+        (t.contains('g') || t.contains('XP') || t.contains('xp'))) {
+      return false;
+    }
+    return RegExp(r'[A-Za-z]{3,}').hasMatch(t);
+  }
+
   static bool isStackable({
     required bool speech,
     required int priority,
@@ -73,7 +88,8 @@ abstract final class FloaterBannerStack {
   }) {
     if (speech) return false;
     if (priority >= 1) return true;
-    return text.startsWith('ABSORB');
+    if (text.startsWith('ABSORB')) return true;
+    return isAbilityName(text);
   }
 
   static double labelTop(double displayY) => displayY - labelAnchorUpTiles;

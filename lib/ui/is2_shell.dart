@@ -344,7 +344,10 @@ class _Is2FightTopBarState extends State<_Is2FightTopBar> {
             onOpenForge: () => widget.router.open(MenuRoute.gold),
             onOpenParty: () => widget.router.toggleGear(GearPanel.gear),
           ),
-        if (d.dungeonTilesReady && d.toast != null && !widget.router.isOpen)
+        if (d.dungeonTilesReady &&
+            d.toast != null &&
+            !widget.router.isOpen &&
+            !d.awaitingWipeChoice)
           SizedBox(
             width: double.infinity,
             child: FeedbackToast(
