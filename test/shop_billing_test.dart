@@ -345,7 +345,8 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.textContaining('Cinders in GEAR'), findsOneWidget);
+      expect(find.textContaining('Google Play packs'), findsOneWidget);
+      expect(find.textContaining('not sold here'), findsOneWidget);
 
       final scroll = find.byType(Scrollable).first;
       for (final label in [
