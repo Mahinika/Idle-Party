@@ -1,16 +1,21 @@
 # Idle Party Town
 
-**Branch:** `cursor/town-life-617a` (town life pass, off merged main)  
-**Updated:** 2026-11-08  
+**Updated:** 2026-11-21 (main, 1.14.0)  
 **Phone:** Samsung A56 360×780, English UI, `FilterQuality.none`
 
 When the party is **not in a dungeon**, they rest in a town between
 climbs. The town is a place: Guild Hall and Vault on the back row,
 FORGE / MARKET / INN on the square, a yard between them, heroes in
-front, one ENTER.
+front. Town always offers ENTER DUNGEON beside claims.
 
 Live home layout: `HomeShell` → `TownViewport`. `TownPreview` is the
-isolated harness. In the cave, FORGE / CAMP / MARKET stay under the fight.
+isolated harness. In the cave, TRAIN / CAMP / MARKET sit under the fight.
+
+The square can be turned off. Firebase Remote Config key `town_enabled`
+(`RemoteTune.keyTownEnabled`) defaults to **true**. When it is false,
+`HomeShell` uses the fight-first rails instead of the town square
+(`RemoteTune.townSquareActive` is true only when the flag is on and the
+party is out of the cave).
 
 ---
 
@@ -22,11 +27,15 @@ isolated harness. In the cave, FORGE / CAMP / MARKET stay under the fight.
 | **MARKET** | GOLD → **MARKET** listings | First boss (`MenuTabs.showGold`) | "MARKET opens after the first boss." |
 | **INN** | GEAR → **ROSTER** (`TeamCompositionOverlay`) | First Ascend or a pending spec | Honest gap: starter three cannot swap until then |
 | **GUILD** | MORE → **QUESTS** (`JobsOverlay`) | First floor / claim waiting | "QUESTS open after the first floor." |
-| **VAULT** | `director.claimDailyVault()` when ready | Season after first boss | Progress copy, or "claimed today" |
+| **VAULT** | `director.claimDailyVault()` when ready; the button is **CLAIM VAULT** | Season after first boss | Progress copy, or "Vault claimed today." |
 
-FORGE is the Apex craft/upgrade station, **not** GOLD run-power tracks
-(those stay labeled FORGE under the fight). MARKET is `MarketOverlay`
-listings. INN is party composition, not the GEAR tab.
+FORGE on the square is the Apex craft/upgrade station (CRAFT after the
+first boss). It is **not** the under-fight panel — that row is labeled
+**TRAIN / CAMP / MARKET**. MARKET on the square opens `MarketOverlay`
+listings. INN is party composition (HEROES → ROSTER), not the GEAR bag.
+
+**CLAIM VAULT** is the same claim in town and in the cave (`home_shell.dart`,
+`chase_dispatcher.dart`). Daily Vault is not Daily Run.
 
 No new currency, save field, energy, chore timer, or ad gate. Offline
 gold, auto combat, SHOP, and WISP-in-the-cave are untouched.
@@ -34,12 +43,12 @@ gold, auto combat, SHOP, and WISP-in-the-cave are untouched.
 ```
 HomeShell  →  TownViewport     (live, out of the cave)
 TownPreview → TownViewport     (harness)
-Fight      → FightViewport + HomeGoldDock (FORGE tracks / CAMP / MARKET)
+Fight      → FightViewport + HomeGoldDock (TRAIN / CAMP / MARKET)
 ```
 
 Out-of-dungeon `HomeGoldDock` is gone. Town buildings own FORGE and MARKET.
-CAMP stays on ESSENCE. GOLD opened from town is a real `GoldDock` overlay
-(listings). In the cave, GOLD still intercepts to the fight dock.
+CAMP stays on ESSENCE as well as the under-fight tab. In the cave, the
+dock row is TRAIN / CAMP / MARKET.
 
 ---
 
@@ -53,18 +62,30 @@ CAMP stays on ESSENCE. GOLD opened from town is a real `GoldDock` overlay
 | **POUCH** | One-time reinstall gold | Shown only when due | **Keep while due.** |
 
 `HomeCatalog.entries` still defines WATCH / WISP. `HomeCatalog.of`
-applies `TownNavPolicy`, so rails and MENU drop those chips. SCROLLS
-opens `openPowerupsSheet` (WATCH AD lives there). POUCH stays while due.
+applies `TownNavPolicy`. In town there is no quick rail (audit F100):
+buildings are the entry points. SCROLLS, DAILY RUN, POUCH, and UPDATE
+live in MENU (`TownNavPolicy.townMenuFromRail`). QUESTS open at the
+GUILD and the daily chest at the VAULT. In a fight, the rail is
+unchanged (SCROLLS / QUESTS / VAULT / DAILY…). The Daily Run catalog
+label is **DAILY RUN** in MENU; the hidden rail entry still uses short
+**RUN** with accessibility label "Daily Run" (`home_catalog.dart`).
+Daily Run is separate from Daily Vault. POUCH stays while due.
+SCROLLS opens `openPowerupsSheet` (WATCH AD lives there).
 
 ---
 
 ## Domain gap (INN)
 
-Party composition is `TeamCompositionOverlay` on the ROSTER tab. That
-tab exists at **first Ascend** (or when a new spec is waiting). A new
-game has three fixed starters and **no swap command**. Town does not
-open GEAR and call that composition. Locked INN tells the player the
-real gate.
+The INN on the square and the HEROES **ROSTER** tab share one gate:
+`TownAccess.innRosterOpen` is `ascensionLevel >= 1`. Locked INN copy is
+still "Party swaps unlock at first Ascend. Until then the starter three
+rest here." Town does not open the bag and call that composition.
+
+Once the roster is open, it uses fixed role slots (`PartyRoleSlots`):
+**TANK**, **HEALER**, and **DPS**. Each slot has PICK or SWAP within
+that role. Class and spec names use the display labels from
+`hero_spec.dart`. A slot may be empty; the party warns if tank or
+healer is vacant.
 
 ---
 
@@ -138,15 +159,16 @@ duration.
 Portrait 360×780. Sky and hills stay above the roofs. Guild and Vault
 sit on the back row, the yard (path + walkers) is between the rows, and
 FORGE / MARKET / INN and the party fill the front. Name chips sit on
-the buildings, not in the sky. Labels `GameTheme.hint`; hit targets
-stay on the building boxes and at least 44 dp on the phone sizes the
-layout test covers. Text scale 1.45 and 2.0 still show ENTER. 360×640
-uses the compact pack; the yard keeps a walker when it is at least one
-sprite tall.
+the buildings, not in the sky. The town card header is one row: town
+tier (`Timber town` / `Stone town`), an em dash (`—`), then the cave
+name (`town_viewport.dart`, key `townHeaderKey`). Labels `GameTheme.hint`;
+hit targets stay on the building boxes and at least 44 dp on the phone
+sizes the layout test covers. Text scale 1.45 and 2.0 still show ENTER.
+360×640 uses the compact pack; the yard keeps a walker when it is at
+least one sprite tall.
 
----
-
-PRs 57, 58, 59, and 61 are already in this release candidate.
+Town always offers ENTER DUNGEON beside claims (and ASCEND when it is
+ready), including when the primary chase button is CLAIM VAULT.
 
 ---
 

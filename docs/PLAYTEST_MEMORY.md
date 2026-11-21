@@ -1,8 +1,10 @@
 # Playtest memory
 
-Read this before every `/playtest`. Update it only through
+Read this before every `/playtest`. Scripted `/playtest` rows
+(`Bra`, `Lärt`, `OK`) are updated only through
 `py -3 tool/playtest_run.py` (`ok`, `good`, `learn`), so the next
-round looks for what this round learned.
+round looks for what this round learned. Owner phone-test notes
+below are written by hand and are not `/playtest` OK streaks.
 
 An OK is not a skip. Every round still opens that screen.
 Baselines live in `tool/playtest_baseline/`.
@@ -54,3 +56,7 @@ Baselines live in `tool/playtest_baseline/`.
 | gold | early | 2026-11-01 | 7e0af18f | 1 |
 | essence | early | 2026-11-01 | 7e0af18f | 1 |
 | more | early | 2026-11-01 | 7e0af18f | 1 |
+
+## Owner phone
+
+- 2026-11-21 · Robert phone-tested test APK **252** (`test-roster-252-653564ec`, roster role slots and UI polish after 251) and test APK **253** (`test-fight-icons-253-0d66611c`, role icons on the fight party strip, 1.14.0 stack). He approved 253 ("Allt ser bra ut") the same day. That stack is merged to main as 1.14.0 (PR #112). This is an owner sideload, not a `/playtest` script row.

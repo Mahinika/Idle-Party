@@ -5,7 +5,7 @@
 **IA + flat nav + feature placement** (Game UX Director): see
 [`.cursor/rules/where-screens-live.mdc`](../.cursor/rules/where-screens-live.mdc).
 Bottom destinations on the home layout are **HEROES · ESSENCE · FIGHT · MAP ·
-SHOP**. MENU is the top button. FORGE, CAMP, and MARKET sit under the fight.
+SHOP**. MENU is the top button. TRAIN, CAMP, and MARKET sit under the fight.
 A test build can switch back to **GEAR · GOLD · SHOP · ESSENCE · MORE · KEY**
 in SETTINGS. RUN / TODAY / ACCOUNT below are **copy scopes**, not bottom tabs.
 
@@ -144,6 +144,8 @@ flowchart TB
 | Panels, tabs, chips, helpers | [`lib/ui/menu_chrome.dart`](../lib/ui/menu_chrome.dart) |
 | Actions | [`lib/ui/game_button.dart`](../lib/ui/game_button.dart) (`KenneyButton` is the same widget) |
 | Chrome icons | [`lib/ui/game_icon.dart`](../lib/ui/game_icon.dart) — `UiIcon` sprites + `UiGlyph` marks |
+| Party role icons | [`lib/ui/party_role_icon.dart`](../lib/ui/party_role_icon.dart) — `PartyRoleIcon` shield / cross / bow |
+| Fight party strip | [`lib/ui/shell/dungeon_party_hud.dart`](../lib/ui/shell/dungeon_party_hud.dart) (`_HomePartyChip`) |
 | Honesty test | [`test/ui_theme_test.dart`](../test/ui_theme_test.dart) |
 | Menu sheet reference layout | [`lib/ui/character_equip_panel.dart`](../lib/ui/character_equip_panel.dart), [`lib/ui/shell/inventory_dock.dart`](../lib/ui/shell/inventory_dock.dart) |
 
@@ -266,6 +268,16 @@ Check every UI batch against the rendered phone, not the source size alone.
 10. Tab-specific status → `tabBanner` on that tab only.
 
 **Compact combat is not a menu.** Party strip, target plate, mode chips, and world-space floater labels may use `combat` (Press Start 9 or comfort 11) and a shorter row. They still ellipsize instead of shrinking the type size. The web letterbox and the boot cinematic may use `FittedBox` to frame a whole scene. Menu sheets do not.
+
+### Fight party strip (1.14.0)
+
+The home and in-cave party HP strip is compact combat, not a menu sheet.
+
+- **`PartyRoleIcon`** (`lib/ui/party_role_icon.dart`): pixel `CustomPaint` marks — shield (tank), cross (healer), bow (DPS). Semantics labels are Tank / Healer / DPS. Default size is 15, so the name keeps the first line at text scale 1.0 and 1.45.
+- **Chip layout** (`_HomePartyChip` in `dungeon_party_hud.dart`): first line is the hero name. Second line is the role icon, `L{level}`, optional CC / status hints, and the HP bar.
+- **Five-wide:** when `heroCount >= 5`, the strip is `dense`. The 14 px hero doll is omitted, and the name uses `GameTheme.combatPartyStripDense` (Press Start at `hudPixelPartyDense` 8) so about six characters still fit at 360 dp / `typeScaleMax`. Narrower parties keep the doll and use `combat`.
+- **Names still scale.** `combatPartyStripDense` uses the MediaQuery / `composeTextScaler` scale (capped at `typeScaleMax` 1.45) and ellipsizes if needed.
+- **`TextScaler.noScaling`** applies only to the small `L{level}` and CC hints on that second line, so those marks do not collide with the name at large text. Do not spread `noScaling` to the name or to menu type.
 
 ---
 
