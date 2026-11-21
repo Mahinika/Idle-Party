@@ -71,9 +71,10 @@ abstract final class FloaterLabelCache {
     required double size,
     required Color color,
     required double maxWidth,
+    required int maxLines,
   }) {
     return '${size.toStringAsFixed(2)}|${color.toARGB32()}|'
-        '${maxWidth.toStringAsFixed(1)}|$text';
+        '${maxWidth.toStringAsFixed(1)}|$maxLines|$text';
   }
 
   /// One fill or outline painter. Marks the key as used this frame and never
@@ -83,12 +84,15 @@ abstract final class FloaterLabelCache {
     required double size,
     required Color color,
     required double maxWidth,
+    int? maxLines,
   }) {
+    final lines = maxLines ?? 0;
     final key = _key(
       text: text,
       size: size,
       color: color,
       maxWidth: maxWidth,
+      maxLines: lines,
     );
     _usedThisFrame.add(key);
     final hit = _cache.remove(key);
@@ -106,6 +110,8 @@ abstract final class FloaterLabelCache {
         style: GameTheme.pixelCached(size: size, color: color),
       ),
       textDirection: TextDirection.ltr,
+      maxLines: maxLines,
+      ellipsis: maxLines == null ? null : '…',
     )..layout(maxWidth: maxWidth);
     _cache[key] = painter;
     return painter;
@@ -119,10 +125,23 @@ abstract final class FloaterLabelCache {
     required Color color,
     required Color outline,
     required double maxWidth,
+    int? maxLines,
   }) {
     return (
-      fill: of(text: text, size: size, color: color, maxWidth: maxWidth),
-      outline: of(text: text, size: size, color: outline, maxWidth: maxWidth),
+      fill: of(
+        text: text,
+        size: size,
+        color: color,
+        maxWidth: maxWidth,
+        maxLines: maxLines,
+      ),
+      outline: of(
+        text: text,
+        size: size,
+        color: outline,
+        maxWidth: maxWidth,
+        maxLines: maxLines,
+      ),
     );
   }
 }

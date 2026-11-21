@@ -26,6 +26,11 @@ extension GameDirectorSave on GameDirector {
       _saveChain = _saveChain.then((_) async => false);
       return;
     }
+    // Stamp before the write is queued. A dungeon save must carry the clock
+    // of the wallet it stores, or a cold start replays live play as PUSH
+    // essence. Done here, not inside the chain, so a test that rewinds the
+    // clock after the flush is requested still owns that rewind.
+    _noteInRunSaveClock();
     // Snapshot when this turn runs, not when it was queued, and write those
     // bytes. A later cloud install cannot be overwritten by a stale capture,
     // and a grant cannot change the bytes after this turn has read them.
@@ -40,6 +45,7 @@ extension GameDirectorSave on GameDirector {
           debugPrint('save failed: setString returned false');
           return false;
         }
+        _rememberActiveSummary();
         PlayGamesBridge.notePartyPower(
           score: GameLogic.partyPowerScore(snapshot),
           partyName: snapshot.partyName,
@@ -64,6 +70,22 @@ extension GameDirectorSave on GameDirector {
         ),
       ),
     );
+  }
+
+  /// A cave save's [GameState.lastUpdated] is the moment this wallet was
+  /// stored. A clock already ahead of now is left alone so a backward device
+  /// clock cannot turn the gap into time away.
+  void _noteInRunSaveClock() {
+    if (!_state.inDungeon) return;
+    final now = DateTime.now();
+    if (!now.isAfter(_state.lastUpdated)) return;
+    _state = _state.copyWith(lastUpdated: now);
+  }
+
+  void _persistIfAutosaveDue() {
+    if (_autosaveAccum < GameDirector._autosaveIntervalSec) return;
+    _autosaveAccum = 0;
+    _persist();
   }
 
   /// One save mutation at a time. The action reads [_state] when it starts,
@@ -98,6 +120,13 @@ extension GameDirectorSave on GameDirector {
   Future<bool> _persistFlush() {
     _persist();
     return _saveChain;
+  }
+
+  /// Shade swipe. Writes the live wallet and waits for the commit. Combat
+  /// keeps ticking; a brief shade is not a Welcome Back.
+  Future<bool> flushLifecycleWallet() {
+    if (!_appPaused) _flushHubIdle();
+    return _persistFlush();
   }
 
   void _applyFunnelTick(FunnelTick tick, {bool persist = true}) {
@@ -569,7 +598,10 @@ extension GameDirectorSave on GameDirector {
     _safeRecoverySlots = safe;
   }
 
-  void setAppPaused(bool paused) {
+  /// Background pause. The returned future finishes when the wallet commit
+  /// has returned, so a pause/hidden/detached transition does not drop the
+  /// write on the floor. The paused flag is set before that wait.
+  Future<void> setAppPaused(bool paused) async {
     if (_appPaused == paused) return;
     _appPaused = paused;
     if (paused) {
@@ -581,7 +613,7 @@ extension GameDirectorSave on GameDirector {
       _flushHubIdle();
       _pauseBackgroundLoops();
       _syncHubIdleTimer();
-      unawaited(_persistFlush());
+      await _persistFlush();
       unawaited(_syncAwayReminders(backgrounded: true));
     } else {
       _foregroundSince = DateTime.now();
@@ -743,10 +775,7 @@ extension GameDirectorSave on GameDirector {
       seconds,
     ).copyWith(lastUpdated: now);
     _autosaveAccum += seconds.toDouble();
-    if (_autosaveAccum >= GameDirector._autosaveIntervalSec) {
-      _autosaveAccum = 0;
-      _persist();
-    }
+    _persistIfAutosaveDue();
     if (_state.gold != beforeGold || _state.essence != beforeEssence) {
       _directorNotify();
     }

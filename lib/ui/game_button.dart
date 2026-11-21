@@ -125,9 +125,14 @@ class GameButton extends StatelessWidget {
   /// Invisible tap margin above and below the painted face.
   static const double _facePad = 3;
 
+  /// Primary CTAs (CLAIM / ENTER) keep a 44 dp painted face inside the
+  /// 48 dp tap. The shared 3 dp pad left the face at 42.
+  static const double _primaryFacePad = 2;
+
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
+    final facePad = primary && !dense ? _primaryFacePad : _facePad;
     final palette = _palette;
     final radius = BorderRadius.circular(GameTheme.radiusSm);
     final padH = dense ? 10.0 : 14.0;
@@ -158,7 +163,7 @@ class GameButton extends StatelessWidget {
         // The painted face is [_facePad] shorter on each side than the tap
         // area, so the button reads lighter and still meets 44/48 dp.
         child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: _facePad),
+        padding: EdgeInsets.symmetric(vertical: facePad),
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: radius,
@@ -196,7 +201,7 @@ class GameButton extends StatelessWidget {
               minHeight: (dense
                       ? GameTheme.minTouch
                       : (primary ? GameTheme.primaryTouch : GameTheme.minTouch)) -
-                  2 * _facePad,
+                  2 * facePad,
             ),
             child: expanded
                 ? SizedBox(

@@ -128,7 +128,8 @@ class ChaseContract {
     if (climb != null && climb.isNotEmpty) return climb;
     if (!inDungeon && ReturnWeek.active(state)) {
       final rw = ReturnWeek.coachLine(state);
-      if (rw.isNotEmpty) return rw;
+      // "Tomorrow: …" belongs on the town card, not the top bar or sheets.
+      if (rw.isNotEmpty && !rw.startsWith('Tomorrow:')) return rw;
     }
     if (!inDungeon &&
         GameLogic.firstBossPending(state) &&
@@ -137,7 +138,7 @@ class ChaseContract {
     }
     final chase = HubChase.forState(state, now: now);
     final title = chase.title.trim();
-    if (title.isEmpty) return null;
+    if (title.isEmpty || title.startsWith('Tomorrow:')) return null;
     return title;
   }
 

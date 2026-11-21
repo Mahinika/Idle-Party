@@ -18,6 +18,15 @@ class WispGiftOverlay extends StatelessWidget {
 
   final GameDirector director;
 
+  /// How far a top-of-fight toast must sit below the lantern, including
+  /// "Tap for gold" when [hint] is on. The toast used to cover that hint
+  /// at text scale 1.45.
+  static double toastTopClearance(BuildContext context, {required bool hint}) {
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    final hintBlock = hint ? 8.0 + GameTheme.typeHint * scale * 2 : 0.0;
+    return 8 + 48 + hintBlock + 8;
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -26,19 +35,43 @@ class WispGiftOverlay extends StatelessWidget {
         if (!director.isWispVisible) return const SizedBox.shrink();
         if (director.wispMenuPaused) return const SizedBox.shrink();
         final minimal = director.state.vfxQuality == VfxQuality.minimal;
-        return Align(
-          alignment: const Alignment(0.84, -0.58),
-          child: _WispTapTarget(
-            minimal: minimal,
-            showTapHint: director.state.metaDepth.wispBossHold,
-            onTap: () async {
-              director.tapWispGift();
-              if (!director.wispPendingChoice) return;
-              director.setWispChoiceOpen(true);
-              await openWispChoiceSheet(context, director);
-              director.setWispChoiceOpen(false);
-            },
-          ),
+        final showTapHint = director.state.metaDepth.wispBossHold;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final scale = MediaQuery.textScalerOf(context).scale(1);
+            final hintWidth = showTapHint
+                ? (96.0 * (scale < 1 ? 1 : scale)).clamp(96.0, 128.0)
+                : 48.0;
+            final cluster = 48.0 + (showTapHint ? 8.0 + 18.0 * scale : 0.0);
+            final adTop = constraints.maxHeight - 96 - 56;
+            final overlapsAd =
+                !constraints.hasBoundedHeight ||
+                constraints.maxHeight < 280 ||
+                8 + cluster > adTop;
+            final clearAd = overlapsAd || scale > 1.15;
+            // WATCH AD sits at right: 6. This inset keeps the lantern and
+            // the "Tap for gold" hint left of that button and on a 360 dp
+            // screen at text scale 1.45.
+            final right = clearAd ? 160.0 : 8.0;
+            return Padding(
+              padding: EdgeInsets.only(top: 8, right: right),
+              child: Align(
+                alignment: Alignment.topRight,
+                child: _WispTapTarget(
+                  minimal: minimal,
+                  showTapHint: showTapHint,
+                  hintWidth: hintWidth,
+                  onTap: () async {
+                    director.tapWispGift();
+                    if (!director.wispPendingChoice) return;
+                    director.setWispChoiceOpen(true);
+                    await openWispChoiceSheet(context, director);
+                    director.setWispChoiceOpen(false);
+                  },
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -49,11 +82,13 @@ class _WispTapTarget extends StatefulWidget {
   const _WispTapTarget({
     required this.minimal,
     required this.showTapHint,
+    required this.hintWidth,
     required this.onTap,
   });
 
   final bool minimal;
   final bool showTapHint;
+  final double hintWidth;
   final VoidCallback onTap;
 
   @override
@@ -125,8 +160,8 @@ class _WispTapTargetState extends State<_WispTapTarget>
                   final glow = widget.minimal ? 0.5 : 0.42 + t * 0.38;
                   return Transform.translate(
                     offset: Offset(0, dy),
-                    child: Stack(
-                      clipBehavior: Clip.none,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         SizedBox(
                           width: 48,
@@ -145,14 +180,16 @@ class _WispTapTargetState extends State<_WispTapTarget>
                           ),
                         ),
                         if (widget.showTapHint)
-                          Positioned(
-                            top: 50,
-                            left: -28,
-                            width: 104,
-                            child: IgnorePointer(
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: SizedBox(
+                              width: widget.hintWidth,
                               child: Text(
                                 'Tap for gold',
                                 textAlign: TextAlign.center,
+                                maxLines: 2,
+                                softWrap: true,
+                                overflow: TextOverflow.ellipsis,
                                 style: GameTheme.hint(
                                   color: GameTheme.torchHot,
                                 ),

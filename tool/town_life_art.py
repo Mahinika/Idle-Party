@@ -21,57 +21,58 @@ LOGICAL_H = CELL_H // 2
 PLANT_W = 64
 PLANT_H = 52
 
-# Spring lawn. Dark to light. Upper-left is the light.
+# Dusk lawn. Dark to light, still saturated. Upper-left is the light.
+# Same greens as generate_town_art.GRASS, with two extra tip stops.
 GRASS = [
-    (22, 78, 34),
-    (34, 112, 40),
-    (46, 142, 46),
-    (62, 168, 54),
-    (86, 186, 64),
-    (118, 204, 78),
-    (158, 214, 96),
-    (198, 220, 118),
+    (12, 36, 14),
+    (16, 52, 16),
+    (22, 68, 18),
+    (28, 84, 22),
+    (34, 100, 24),
+    (44, 116, 28),
+    (56, 132, 34),
+    (70, 146, 40),
 ]
 CLOVER = [
-    (28, 96, 62),
-    (42, 128, 78),
-    (64, 158, 96),
-    (96, 184, 120),
+    (16, 52, 32),
+    (24, 72, 40),
+    (34, 92, 48),
+    (48, 112, 56),
 ]
 SUN = [
-    (176, 196, 64),
-    (198, 210, 78),
-    (220, 214, 96),
-    (236, 224, 120),
+    (70, 88, 28),
+    (88, 108, 32),
+    (108, 124, 40),
+    (128, 140, 52),
 ]
 DIRT = [
-    (96, 62, 36),
-    (128, 84, 48),
-    (162, 112, 64),
-    (196, 146, 90),
-    (224, 182, 124),
+    (58, 36, 22),
+    (82, 50, 28),
+    (108, 68, 36),
+    (136, 90, 48),
+    (164, 116, 68),
 ]
 STONE = [
-    (78, 68, 56),
-    (112, 98, 82),
-    (148, 132, 110),
-    (182, 166, 142),
-    (214, 200, 176),
-    (236, 226, 208),
+    (62, 48, 32),
+    (88, 68, 44),
+    (114, 90, 58),
+    (140, 112, 74),
+    (164, 136, 94),
+    (186, 158, 114),
 ]
 STONE_GREY = [
-    (72, 78, 82),
-    (104, 112, 116),
-    (140, 148, 152),
-    (176, 184, 186),
-    (210, 216, 214),
-    (232, 236, 232),
+    (42, 46, 50),
+    (62, 68, 74),
+    (84, 90, 98),
+    (108, 114, 122),
+    (132, 138, 144),
+    (154, 160, 164),
 ]
 MOSS = [
-    (24, 72, 44),
-    (36, 104, 58),
-    (52, 136, 72),
-    (78, 164, 90),
+    (14, 40, 22),
+    (20, 58, 28),
+    (28, 76, 34),
+    (40, 96, 42),
 ]
 
 
@@ -216,7 +217,7 @@ def _tuft(pix: Pix, x: int, y: int, blades: tuple[tuple[int, int, int], ...]) ->
 
 
 def ground() -> Image.Image:
-    """Seamless pixel grass. A bright base, a few tufts, dirt, one pebble.
+    """Seamless dusk grass. Two close greens, a few tufts, dirt.
 
     No flowers: those live on the planting sprites. No soft ramp and no
     per-pixel noise. Marks use wrapped coordinates so each edge continues
@@ -225,13 +226,14 @@ def ground() -> Image.Image:
     """
     w = h = GROUND_TILE
     pix = Pix(w, h)
-    # Two close greens in 4px clumps. 4 divides 64, so a clump never
-    # straddles the wrap as a cut rectangle. About half the tile steps
-    # lighter so one green cannot own it.
+    # 4px mottling of two close greens. Small enough that a repeat is
+    # texture, not a checker of slabs. Two of every five cells step down
+    # so one green cannot own the tile.
     for y in range(h):
         for x in range(w):
-            pix.put(x, y, GRASS[4])
-    # A few lighter clumps so the base is not one flat fill.
+            alt = ((x // 4) + (y // 4) * 2) % 5 < 2
+            pix.put(x, y, GRASS[3] if alt else GRASS[4])
+    # A few lighter clumps so the base is not only those two fills.
     for cx, cy in ((8, 4), (28, 12), (48, 20), (16, 36), (40, 44)):
         for dy in range(4):
             for dx in range(5):
@@ -333,12 +335,12 @@ def _flower(pix: Pix, x: int, y: int, kind: int) -> None:
         if under is not None and not _is_grass(under):
             return
     stems = (
-        ((196, 48, 58), (236, 150, 140), (255, 214, 200)),  # poppy
-        ((230, 186, 48), (255, 230, 140), (255, 248, 210)),  # buttercup
-        ((236, 236, 228), (255, 250, 236), (255, 214, 80)),  # daisy
-        ((132, 72, 186), (196, 150, 220), (236, 210, 246)),  # violet
-        ((64, 112, 196), (140, 176, 230), (220, 232, 255)),  # cornflower
-        ((220, 112, 48), (255, 176, 96), (255, 220, 170)),  # marigold
+        ((176, 42, 52), (210, 130, 120), (228, 176, 164)),  # poppy
+        ((186, 140, 36), (210, 180, 110), (214, 186, 140)),  # buttercup
+        ((186, 180, 166), (206, 198, 184), (196, 160, 64)),  # daisy
+        ((110, 60, 156), (156, 116, 180), (196, 170, 204)),  # violet
+        ((48, 84, 150), (104, 136, 186), (168, 184, 206)),  # cornflower
+        ((180, 88, 36), (210, 140, 72), (220, 176, 128)),  # marigold
     )
     petal, hi, core = stems[kind % 6]
     pix.put_wrap(x, y + 3, GRASS[2])
@@ -352,7 +354,7 @@ def _flower(pix: Pix, x: int, y: int, kind: int) -> None:
     pix.put_wrap(x, y + 3, GRASS[0])
 
 
-MORTAR = (58, 86, 48)
+MORTAR = (22, 40, 20)
 
 
 def _mortar(pix: Pix) -> None:
@@ -775,13 +777,14 @@ def contact() -> Image.Image:
 def nameplate() -> Image.Image:
     """A wood plaque the building name sits on. Not a rounded pill."""
     pix = Pix(88, 18)
-    pix.rect(0, 0, 88, 18, (72, 48, 28))
-    pix.rect(1, 1, 86, 16, (112, 74, 42))
-    pix.rect(2, 2, 84, 14, (148, 102, 62))
-    pix.rect(2, 2, 84, 1, (196, 150, 96))
-    pix.rect(2, 15, 84, 1, (64, 40, 22))
-    pix.put(4, 4, (210, 170, 110))
-    pix.put(82, 4, (90, 58, 32))
+    # Fill (132, 88, 52) is about 5:1 with parchment, so the 12px name clears AA.
+    pix.rect(0, 0, 88, 18, (56, 36, 22))
+    pix.rect(1, 1, 86, 16, (88, 58, 34))
+    pix.rect(2, 2, 84, 14, (132, 88, 52))
+    pix.rect(2, 2, 84, 1, (168, 120, 72))
+    pix.rect(2, 15, 84, 1, (48, 30, 18))
+    pix.put(4, 4, (180, 140, 88))
+    pix.put(82, 4, (72, 46, 28))
     return pix.image()
 
 

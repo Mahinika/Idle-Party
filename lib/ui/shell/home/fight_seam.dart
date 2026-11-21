@@ -118,6 +118,7 @@ class FightFieldControls extends StatelessWidget {
     final seamFitsExtras = osScale <= GameTheme.typeScaleMax;
     final full = state.homePanelFull;
     final showFarmChip = FarmIntensity.applies(state);
+    final wiped = director.awaitingWipeChoice;
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -207,17 +208,27 @@ class FightFieldControls extends StatelessWidget {
               children: [
                 Expanded(
                   flex: 3,
-                  child: MenuChrome.segmented(
-                    dense: true,
-                    labels: [farmLabel, pushLabel],
-                    selectedIndex: state.dungeonMode == DungeonMode.farm
-                        ? 0
-                        : 1,
-                    onSelect: (i) => _setFightMode(
-                      context,
-                      director,
-                      i == 0 ? DungeonMode.farm : DungeonMode.push,
-                      plain,
+                  child: Opacity(
+                    opacity: wiped ? 0.38 : 1,
+                    child: IgnorePointer(
+                      key: const ValueKey('fight-mode-wipe-lock'),
+                      ignoring: wiped,
+                      child: MenuChrome.segmented(
+                        dense: true,
+                        labels: [farmLabel, pushLabel],
+                        selectedIndex: state.dungeonMode == DungeonMode.farm
+                            ? 0
+                            : 1,
+                        onSelect: (i) {
+                          if (wiped) return;
+                          _setFightMode(
+                            context,
+                            director,
+                            i == 0 ? DungeonMode.farm : DungeonMode.push,
+                            plain,
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),

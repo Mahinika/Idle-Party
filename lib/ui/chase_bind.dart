@@ -44,7 +44,11 @@ void runChasePlan({
       // Open the board with the rewards still waiting. Claiming here
       // replaced Bounty, Side, and Contract before the player saw them.
       if (openMenus) {
-        router.open(MenuRoute.more, more: MoreSection.quests);
+        router.open(
+          MenuRoute.more,
+          more: MoreSection.quests,
+          closeOnBack: true,
+        );
       }
     case ChaseOp.claimMonth:
       director.claimMonthPass();

@@ -209,6 +209,63 @@ class CharacterEquipPanel extends StatelessWidget {
           heroIndex: heroIndex,
         );
 
+    Widget heroTab(int i) {
+      final h = heroes[i];
+      final active = i == index;
+      final role = h.displayName(
+        plainEnglish: GameLogic.plainPlayerChrome(state),
+      );
+      final level = 'Lv${h.level}';
+      final label = '$role · $level';
+      return Semantics(
+        button: true,
+        selected: active,
+        label: label,
+        child: InkWell(
+          onTap: () => onSelectHero(i),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: compact ? 6 : 8,
+                vertical: compact ? 4 : 6,
+              ),
+              alignment: Alignment.center,
+              decoration: MenuChrome.cardBox(selected: active),
+              child: Row(
+                children: [
+                  if (!compact) ...[
+                    HeroDollSprite(hero: h, partyIndex: i, size: 26),
+                    const SizedBox(width: 4),
+                  ],
+                  Expanded(
+                    child: Text(
+                      role,
+                      key: ValueKey('hero-tab-name-$i'),
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.readable(color: GameTheme.torchHot),
+                    ),
+                  ),
+                  // Level is a badge: it stays full size and does not scale,
+                  // so a long name ellipsizes instead of eating the last digit.
+                  Text(
+                    ' · $level',
+                    key: ValueKey('hero-tab-level-$i'),
+                    maxLines: 1,
+                    softWrap: false,
+                    textScaler: TextScaler.noScaling,
+                    style: GameTheme.readable(color: GameTheme.torchHot),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     Widget slotFor(EquipmentSlot slot, {double? size}) {
       final item = hero.itemIn(slot);
       return PaperDollSlot(
@@ -233,63 +290,13 @@ class CharacterEquipPanel extends StatelessWidget {
         if (showHeroStrip) ...[
           SizedBox(
             height: GameTheme.minTouch,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: heroes.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 4),
-              itemBuilder: (context, i) {
-                final h = heroes[i];
-                final active = i == index;
-                // Hero names, as on the party strip (audit F010).
-                final role = h.displayName(
-                  plainEnglish: GameLogic.plainPlayerChrome(state),
-                );
-                final label = '$role · Lv${h.level}';
-                // Above 1.2 text scale the chips show the role only, so three
-                // fit on a 360 dp phone; the level is under the doll and in
-                // the semantics label.
-                final chipText = MediaQuery.textScalerOf(context).scale(1) > 1.2
-                    ? role
-                    : label;
-                return Semantics(
-                  button: true,
-                  selected: active,
-                  label: label,
-                  child: InkWell(
-                    onTap: () => onSelectHero(i),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        minHeight: GameTheme.minTouch,
-                      ),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: compact ? 8 : 10,
-                          vertical: compact ? 4 : 6,
-                        ),
-                        alignment: Alignment.center,
-                        decoration: MenuChrome.cardBox(selected: active),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (!compact) ...[
-                              HeroDollSprite(hero: h, partyIndex: i, size: 26),
-                              const SizedBox(width: 6),
-                            ],
-                            Text(
-                              chipText,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GameTheme.readable(
-                                color: GameTheme.torchHot,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+            child: Row(
+              children: [
+                for (var i = 0; i < heroes.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 4),
+                  Expanded(child: heroTab(i)),
+                ],
+              ],
             ),
           ),
           SizedBox(height: compact ? 4 : 8),

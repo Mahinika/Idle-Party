@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/ui_feedback.dart';
 import '../game_theme.dart';
 
 /// Last floor payoffs, oldest at the top. Text only — no banner.
@@ -78,10 +79,8 @@ class _DungeonLootLogState extends State<DungeonLootLog>
     );
   }
 
-  static bool _floorClearPayoff(String line) {
-    return RegExp(r'\bF\d+ CLEAR\b').hasMatch(line) ||
-        line.startsWith('Spire F');
-  }
+  static bool _floorClearPayoff(String line) =>
+      UiFeedback.isFloorClearLine(line);
 
   Widget _line(String text, int index, int count, double lift) {
     final rare = _rare(text);

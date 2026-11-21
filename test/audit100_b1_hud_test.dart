@@ -154,7 +154,9 @@ void main() {
     expect(find.text('▸'), findsOneWidget);
   });
 
-  testWidgets('MENU has a caption at 1.0 and keeps one label', (tester) async {
+  testWidgets('MENU has a caption through 1.45 and keeps one label', (
+    tester,
+  ) async {
     await pumpBar(tester, state: seeded());
     expect(find.text('MENU'), findsOneWidget);
     expect(find.bySemanticsLabel('MENU'), findsOneWidget);
@@ -163,7 +165,12 @@ void main() {
     expect(r.right, lessThanOrEqualTo(360));
     await tester.pumpWidget(const SizedBox.shrink());
     await pumpBar(tester, state: seeded(), scale: GameTheme.typeScaleMax);
-    expect(find.text('MENU'), findsNothing);
+    // The word stays on the face through typeScaleMax. No shrink, one label.
+    expect(find.text('MENU'), findsOneWidget);
+    expect(find.byType(FittedBox), findsNothing);
     expect(find.bySemanticsLabel('MENU'), findsOneWidget);
+    final scaled = tester.getRect(find.bySemanticsLabel('MENU'));
+    expect(scaled.height, greaterThanOrEqualTo(GameTheme.minTouch));
+    expect(scaled.right, lessThanOrEqualTo(360));
   });
 }

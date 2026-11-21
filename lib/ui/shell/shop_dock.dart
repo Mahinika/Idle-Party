@@ -19,6 +19,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../shell/shell_layout.dart';
+import 'home/home_nav_bar.dart';
 import '../redeem_coupon_dialog.dart';
 
 /// Bottom-tab SHOP: real-money catalog via Play Billing.
@@ -56,7 +57,8 @@ class ShopDock extends StatefulWidget {
     required bool showEssence,
     HomeLayout layout = HomeLayout.classic,
   }) => NavCopy.playerText(
-    'Bag and pets use gold or Cinders in GEAR — not real money.',
+    'Ad-free, Long Away, and Supporter are Google Play packs. '
+        'Bag and pets are not sold here.',
     layout,
   );
 
@@ -221,8 +223,12 @@ class _ShopDockState extends State<ShopDock> {
     VoidCallback? onToggleAllPacks,
   }) {
     final state = widget.director.state;
+    final navClear =
+        HomeNavBar.fightOverhang(context) + GameTheme.primaryTouch;
     return ListView(
-      padding: ShellLayout.listPadding,
+      padding: ShellLayout.listPadding.copyWith(
+        bottom: ShellLayout.listPadding.bottom + navClear,
+      ),
       children: [
         if (showAllPacksToggle && onToggleAllPacks != null)
           ShellLayout.sheetLink(

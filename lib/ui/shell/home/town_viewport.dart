@@ -252,7 +252,9 @@ class _TownViewportState extends State<TownViewport> {
     final state = director.state;
     final chase = HubChase.forState(state);
     final plan = ChaseDispatcher.plan(chase, state: state);
-    final label = plan.label ?? 'ENTER';
+    final held = director.vaultClaimHold;
+    final label = held ? 'CLAIM VAULT' : (plan.label ?? 'ENTER');
+    final tomorrow = chase.title.startsWith('Tomorrow:') ? chase.title : null;
     final cave = DungeonCatalog.byId(state.dungeonId).name;
     final al = state.ascensionLevel;
     final primaryIsEnter =
@@ -345,6 +347,16 @@ class _TownViewportState extends State<TownViewport> {
                   ],
                 ),
                 const SizedBox(height: 4),
+                if (tomorrow != null) ...[
+                  Text(
+                    tomorrow,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.hint(color: GameTheme.torchHot),
+                  ),
+                  const SizedBox(height: 4),
+                ],
                 // Pick FARM strength before the run (Robert, Nov 19): only
                 // when this button enters a normal cave, a floor is cleared
                 // and no KEY is dialled (a KEY run has no FARM strength).
@@ -365,21 +377,25 @@ class _TownViewportState extends State<TownViewport> {
                         active: TownEnterCoach.active(state),
                         child: WebClickScope(
                           label: label,
-                          onPressed: () => runChasePlan(
-                            context: context,
-                            director: director,
-                            router: router,
-                            plan: plan,
-                            onEnterDungeon: (id) {
-                              router.close();
-                              director.enterDungeon(dungeonId: id);
-                            },
-                          ),
+                          onPressed: held
+                              ? null
+                              : () => runChasePlan(
+                                  context: context,
+                                  director: director,
+                                  router: router,
+                                  plan: plan,
+                                  onEnterDungeon: (id) {
+                                    router.close();
+                                    director.enterDungeon(dungeonId: id);
+                                  },
+                                ),
                           child: GameButton(
                             label: label,
                             style: GameButtonStyle.go,
                             primary: true,
-                            onPressed: () => runChasePlan(
+                            onPressed: held
+                                ? null
+                                : () => runChasePlan(
                               context: context,
                               director: director,
                               router: router,
@@ -458,6 +474,9 @@ class _TownViewportState extends State<TownViewport> {
 
 /// Town card header row: town tier — cave name.
 const Key townHeaderKey = ValueKey('town-card-header');
+
+/// Red wash on the square when the next cave is Hell's Gate.
+const Key townHellWashKey = ValueKey('town-hell-wash');
 
 /// Town ENTER shows the FARM strength picker when the button starts a
 /// normal cave run, at least one floor is cleared and KEY is +0.
@@ -595,6 +614,20 @@ class _TownSquare extends StatelessWidget {
                 : (size.height < 380 ? 34 : 42),
           ),
         ),
+        const Positioned.fill(child: IgnorePointer(child: _TownDuskWash())),
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          height: math.max(28, layout.grassTop + 8),
+          child: const IgnorePointer(child: _TownSkyFog()),
+        ),
+        if (state.dungeonId == 'hell')
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: ColoredBox(key: townHellWashKey, color: GameTheme.townHellWash),
+            ),
+          ),
         if (TownTier.showPennants(state.ascensionLevel) && layout.grassTop > 26)
           const Positioned(
             left: 16,
@@ -755,6 +788,43 @@ class _TownSquare extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Corner darkening. One static radial fill, no blur and no ticker.
+class _TownDuskWash extends StatelessWidget {
+  const _TownDuskWash();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment(0, 0.15),
+          radius: 1.05,
+          colors: [GameTheme.townWashNone, GameTheme.townVignette],
+          stops: [0.72, 1],
+        ),
+      ),
+    );
+  }
+}
+
+/// Light plum mist over the sky band only. Static. Not a shader tick.
+class _TownSkyFog extends StatelessWidget {
+  const _TownSkyFog();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [GameTheme.townFog, GameTheme.townFogNone],
         ),
       ),
     );

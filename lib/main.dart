@@ -327,12 +327,13 @@ class _GameHomePageState extends State<GameHomePage>
       case AppLifecycleState.hidden:
       case AppLifecycleState.detached:
         GameAudio.onAppPaused(release: true);
-        _director.setAppPaused(true);
+        unawaited(_director.setAppPaused(true));
         AppMemory.trimForBackground();
       case AppLifecycleState.inactive:
-        // Control-center / notification shade — mute audio only; keep sim
-        // so a brief swipe does not stutter combat.
+        // Shade swipe. Keep the sim so a brief pull does not stutter combat,
+        // and still commit the wallet before a force-stop can land.
         GameAudio.onAppPaused();
+        unawaited(_director.flushLifecycleWallet());
       case AppLifecycleState.resumed:
         GameAudio.onAppResumed();
         _director.setAppPaused(false);

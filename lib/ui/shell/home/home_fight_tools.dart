@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
+import '../../../core/game_state.dart';
+import '../../../core/ui_feedback.dart';
+import '../../menu_chrome.dart';
 import '../boost_ad_button.dart';
 import '../dungeon_loot_log.dart';
 import '../rift_progress_hud.dart';
@@ -21,15 +24,45 @@ class HomeFightTools extends StatelessWidget {
   /// Bottom inset so the loot log sits above the fight seam.
   final double seamClearance;
 
+  /// Dims loot, the lantern, and WATCH AD while the wipe panel is up.
+  static const Key wipeScrimKey = ValueKey('home-fight-wipe-scrim');
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: director,
       builder: (context, _) {
         final state = director.state;
+        final wiped = director.awaitingWipeChoice;
+        final lines = [
+          for (final line in director.lootLog)
+            if (!wiped || !UiFeedback.isFloorClearLine(line)) line,
+        ];
         return Stack(
           fit: StackFit.expand,
+          clipBehavior: Clip.hardEdge,
           children: [
+            IgnorePointer(
+              ignoring: wiped,
+              child: Stack(
+                fit: StackFit.expand,
+                clipBehavior: Clip.hardEdge,
+                children: _tools(state, lines),
+              ),
+            ),
+            if (wiped)
+              const ColoredBox(
+                key: wipeScrimKey,
+                color: MenuChrome.scrim,
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  List<Widget> _tools(GameState state, List<String> lines) {
+    return [
             if (state.inRift)
               Positioned(
                 left: 8,
@@ -65,7 +98,7 @@ class HomeFightTools extends StatelessWidget {
               left: 8,
               right: 72,
               bottom: seamClearance,
-              child: DungeonLootLog(lines: director.lootLog),
+              child: DungeonLootLog(lines: lines),
             ),
             Positioned(
               right: 6,
@@ -84,9 +117,6 @@ class HomeFightTools extends StatelessWidget {
               ),
             ),
             WispGiftOverlay(director: director),
-          ],
-        );
-      },
-    );
+    ];
   }
 }

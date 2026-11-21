@@ -63,6 +63,20 @@ class UiFeedback {
 
   void clearLootLog() => _lootLog.clear();
 
+  /// Floor CLEAR lines (`F4 CLEAR · +54g · +243 XP`, Spire clears).
+  static bool isFloorClearLine(String line) {
+    return RegExp(r'\bF\d+ CLEAR\b').hasMatch(line) ||
+        line.startsWith('Spire F');
+  }
+
+  /// Drop floor-clear payoffs so they cannot sit on the wipe panel or the
+  /// coach row after the panel closes. Other loot lines stay.
+  bool dropFloorClearLines() {
+    final before = _lootLog.length;
+    _lootLog.removeWhere(isFloorClearLine);
+    return _lootLog.length != before;
+  }
+
   bool get hasActiveTimers =>
       _life > 0 || _pendingTip != null || _offlineSummaryLife > 0;
 
@@ -74,6 +88,7 @@ class UiFeedback {
     String message, {
     double life = 2.4,
     NoticeKind kind = NoticeKind.tip,
+    bool replace = false,
   }) {
     if (kind == NoticeKind.celebrate) {
       return _setNotice(message, life: life, kind: kind);
@@ -90,7 +105,7 @@ class UiFeedback {
       _lastAt = DateTime.now();
       return true;
     }
-    return _setTip(message, life: life);
+    return _setTip(message, life: life, replace: replace);
   }
 
   /// Floor / KEY / zone celebration — same slot as toast, green style.
@@ -164,7 +179,7 @@ class UiFeedback {
     return true;
   }
 
-  bool _setTip(String message, {required double life}) {
+  bool _setTip(String message, {required double life, bool replace = false}) {
     final now = DateTime.now();
     if (_lastMessage == message &&
         _lastAt != null &&
@@ -173,7 +188,8 @@ class UiFeedback {
     }
     _lastMessage = message;
     _lastAt = now;
-    if (_message != null &&
+    if (!replace &&
+        _message != null &&
         _life > 0.35 &&
         _kind == NoticeKind.tip &&
         _message != message &&

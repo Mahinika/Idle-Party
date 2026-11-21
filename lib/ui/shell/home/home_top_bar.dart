@@ -105,8 +105,8 @@ class HomeTopBar extends StatelessWidget {
     final showMeta = HomeTopBar.showsMetaPills(state);
     final showMetaPills = showMeta &&
         !(compactTop && textScale > GameTheme.typeScaleMax);
-    final menuCaption =
-        textScale <= 1.1 && textScale <= GameTheme.typeScaleMax;
+    final menuCaption = textScale <= GameTheme.typeScaleMax;
+    final menuCaptionTight = textScale <= 1.1;
     final tightChrome = compactTop && textScale > 1.9;
     final chromeInset = textScale > GameTheme.typeScaleMax ? 6.0 : 8.0;
     // Town has no quick rail (F100): SCROLLS / POUCH / UPDATE wait in MENU,
@@ -266,22 +266,34 @@ class HomeTopBar extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               GameIcon.asset(UiIcon.menu, size: 14),
-                              // Fixed width: the caption never widens
-                              // the face past its 36 dp minimum.
+                              // At 1.0 the caption stays in a 28 dp slot so
+                              // the face keeps its 36 dp minimum. Up to
+                              // 1.45 the word is allowed to take its own
+                              // width — no FittedBox, no shrink.
                               ExcludeSemantics(
-                                child: SizedBox(
-                                  width: 28,
-                                  child: Text(
-                                    'MENU',
-                                    maxLines: 1,
-                                    softWrap: false,
-                                    overflow: TextOverflow.clip,
-                                    textAlign: TextAlign.center,
-                                    style: GameTheme.hint(
-                                      color: GameTheme.parchment,
-                                    ).copyWith(height: 1),
-                                  ),
-                                ),
+                                child: menuCaptionTight
+                                    ? SizedBox(
+                                        width: 28,
+                                        child: Text(
+                                          'MENU',
+                                          maxLines: 1,
+                                          softWrap: false,
+                                          overflow: TextOverflow.clip,
+                                          textAlign: TextAlign.center,
+                                          style: GameTheme.hint(
+                                            color: GameTheme.parchment,
+                                          ).copyWith(height: 1),
+                                        ),
+                                      )
+                                    : Text(
+                                        'MENU',
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        textAlign: TextAlign.center,
+                                        style: GameTheme.hint(
+                                          color: GameTheme.parchment,
+                                        ).copyWith(height: 1),
+                                      ),
                               ),
                             ],
                           )

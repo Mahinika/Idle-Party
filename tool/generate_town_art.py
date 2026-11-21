@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Idle Party town art. Owned daylight pixel town.
+"""Idle Party town art. Owned dusk pixel town.
 
-The square is painted in the same material language as the heroes and the
-hub scene: cut stone, wood grain, tile courses, cloth folds, iron rivets.
-Light comes from the upper left. Outlines are one pixel of warm ink.
-Nothing here is a foreign sprite. Deterministic: no RNG.
+The square uses the same materials as the heroes and the cave: cut stone,
+wood grain, tile courses, cloth folds, iron rivets. Light is twilight.
+The sky is plum, the lawn is a dark saturated green, and windows are
+lamps. The key still falls from the upper left. Outlines are one pixel
+of warm ink. Nothing here is a foreign sprite. Deterministic: no RNG.
 
     python3 tool/generate_town_art.py
 
@@ -30,62 +31,65 @@ import town_life_art as life_art  # noqa: E402
 INK = (32, 22, 18, 255)
 
 # Ramps run dark → light. Index picks a cluster, not a smooth blend.
+# Dusk ramps. Sky and the dark greens are pulled toward the cave:
+# underworld plum (0x402C58), Sandy sand (0xD6B070) knocked down, and
+# the moss floor (0x4A7030) pushed darker and more saturated.
 STONE = [
-    (58, 50, 44),
-    (86, 76, 66),
-    (118, 106, 92),
-    (154, 140, 122),
-    (188, 174, 154),
-    (220, 208, 188),
+    (40, 34, 30),
+    (62, 52, 44),
+    (86, 74, 62),
+    (112, 98, 84),
+    (138, 122, 106),
+    (164, 148, 130),
 ]
 TIMBER = [
     (48, 28, 16),
     (78, 46, 26),
     (112, 68, 36),
     (148, 96, 52),
-    (184, 128, 72),
-    (214, 164, 108),
+    (176, 118, 66),
+    (196, 142, 90),
 ]
 PLASTER = [
-    (132, 108, 84),
-    (168, 146, 116),
-    (198, 176, 146),
-    (222, 204, 176),
-    (238, 226, 204),
-    (248, 240, 226),
+    (72, 58, 46),
+    (98, 80, 64),
+    (124, 102, 82),
+    (148, 124, 102),
+    (170, 146, 122),
+    (190, 168, 144),
 ]
 TILE = [
-    (92, 36, 32),
-    (128, 48, 40),
-    (164, 64, 48),
-    (192, 88, 60),
-    (214, 118, 78),
-    (232, 156, 108),
+    (78, 32, 28),
+    (112, 42, 34),
+    (146, 56, 40),
+    (176, 78, 48),
+    (198, 108, 64),
+    (216, 142, 88),
 ]
 SLATE = [
-    (48, 56, 64),
-    (70, 80, 90),
-    (96, 108, 118),
-    (126, 138, 148),
-    (158, 170, 178),
-    (196, 206, 212),
+    (28, 32, 40),
+    (44, 50, 60),
+    (62, 70, 82),
+    (84, 94, 108),
+    (108, 118, 132),
+    (132, 142, 154),
 ]
 LEAF = [
-    (22, 52, 28),
-    (32, 78, 36),
-    (46, 104, 44),
-    (64, 132, 52),
-    (92, 158, 64),
-    (132, 184, 86),
-    (176, 206, 112),
+    (10, 32, 14),
+    (16, 48, 18),
+    (24, 68, 22),
+    (32, 88, 26),
+    (44, 108, 32),
+    (58, 126, 38),
+    (74, 142, 46),
 ]
 GRASS = [
-    (36, 78, 40),
-    (48, 98, 48),
-    (62, 118, 54),
-    (78, 138, 62),
-    (104, 158, 74),
-    (138, 176, 92),
+    (12, 36, 14),
+    (22, 68, 18),
+    (34, 100, 24),
+    (44, 116, 28),
+    (56, 132, 34),
+    (70, 146, 40),
 ]
 IRON = [
     (28, 30, 34),
@@ -168,25 +172,27 @@ AMBER = [
     (252, 226, 170),
 ]
 PATH_STONE = [
-    (72, 58, 42),
-    (104, 84, 60),
-    (138, 114, 82),
-    (170, 146, 110),
-    (198, 176, 140),
-    (222, 204, 172),
+    (62, 48, 32),
+    (88, 68, 44),
+    (114, 90, 58),
+    (140, 112, 74),
+    (164, 136, 94),
+    (186, 158, 114),
 ]
+# Plum night down to a warm horizon. Same family as the cave surround,
+# not the old noon cyan.
 SKY = [
-    (118, 168, 196),
-    (146, 190, 214),
-    (176, 208, 224),
-    (206, 222, 214),
-    (228, 214, 186),
+    (26, 18, 40),
+    (44, 30, 62),
+    (72, 42, 70),
+    (112, 58, 58),
+    (156, 82, 52),
 ]
 CLOUD = [
-    (168, 186, 196),
-    (206, 218, 224),
-    (236, 242, 244),
-    (250, 252, 252),
+    (32, 26, 44),
+    (52, 40, 62),
+    (74, 58, 78),
+    (98, 78, 92),
 ]
 
 FOLK_CELL_W = life_art.CELL_W
@@ -421,11 +427,13 @@ def gable(pix: Pix, peak: tuple[int, int], left: tuple[int, int], right: tuple[i
 
 def window(pix: Pix, x: int, y: int, w: int = 11, h: int = 13, curtains: bool = False) -> None:
     pix.rect(x, y, w, h, TIMBER[1])
-    pix.rect(x + 1, y + 1, w - 2, h - 2, AMBER[2])
-    # Glass is a few hard clusters, upper-left catchlight.
-    pix.rect(x + 2, y + 2, max(1, w // 2 - 2), max(1, h // 2 - 2), AMBER[5])
-    pix.put(x + 2, y + 2, AMBER[5])
-    pix.put(x + 3, y + 3, EMBER[6])
+    # Lamp glass. The body is hotter than the dusk wall so the window
+    # reads as a light, not a brown pane. The glow stays inside the
+    # frame so the ink outline is still the building edge.
+    pix.rect(x + 1, y + 1, w - 2, h - 2, EMBER[3])
+    pix.rect(x + 2, y + 2, max(1, w // 2 - 2), max(1, h // 2 - 2), EMBER[5])
+    pix.put(x + 2, y + 2, EMBER[6])
+    pix.put(x + 3, y + 3, EMBER[5])
     pix.rect(x + w // 2, y + 1, 1, h - 2, TIMBER[2])
     pix.rect(x + 1, y + h // 2, w - 2, 1, TIMBER[2])
     # Sill
@@ -1007,25 +1015,25 @@ def trunk(pix: Pix, x: int, y: int, w: int, h: int) -> None:
 
 # Extra canopy colors. The shared LEAF ramp stays for building moss.
 CANOPY = [
-    (14, 42, 24),
-    (22, 64, 32),
-    (32, 92, 40),
-    (46, 122, 48),
-    (68, 152, 58),
-    (98, 176, 72),
-    (138, 198, 92),
-    (176, 214, 118),
-    (206, 220, 140),
-    (168, 196, 86),
-    (86, 140, 92),
-    (48, 100, 78),
+    (8, 26, 12),
+    (14, 42, 16),
+    (20, 58, 20),
+    (28, 76, 24),
+    (36, 94, 28),
+    (48, 112, 32),
+    (60, 128, 38),
+    (74, 142, 44),
+    (90, 156, 50),
+    (64, 118, 40),
+    (36, 84, 36),
+    (20, 56, 28),
 ]
 BLOSSOM = [
-    (120, 48, 72),
-    (176, 86, 112),
-    (214, 130, 150),
-    (240, 180, 186),
-    (255, 220, 214),
+    (96, 36, 58),
+    (140, 68, 90),
+    (176, 104, 122),
+    (200, 146, 152),
+    (220, 176, 168),
 ]
 APPLE = [(120, 24, 28), (168, 36, 36), (206, 64, 52), (236, 120, 96)]
 BIRD = [(36, 36, 48), (72, 78, 96), (186, 150, 64), (240, 210, 120)]
@@ -1111,8 +1119,8 @@ def generate_tree_round() -> Image.Image:
 def generate_tree_tall() -> Image.Image:
     pix = Pix(48, 112)
     trunk(pix, 20, 78, 8, 26)
-    pix.rect(22, 84, 2, 12, (78, 108, 62))
-    pix.put(23, 90, (150, 176, 110))
+    pix.rect(22, 84, 2, 12, (36, 64, 30))
+    pix.put(23, 90, (64, 96, 42))
     pix.put(21, 96, TIMBER[0])
     layers = (
         (24, 86, 16, 7, 2),
@@ -1158,7 +1166,7 @@ def generate_folk() -> Image.Image:
 
 def generate_backdrop() -> Image.Image:
     pix = Pix(360, 200)
-    # Banded sky, warm toward the horizon. Bands are several pixels, not a ramp per row.
+    # Banded dusk. Plum overhead, warm only at the horizon.
     bands = (
         (0, 36, SKY[0]),
         (36, 78, SKY[1]),
@@ -1168,15 +1176,22 @@ def generate_backdrop() -> Image.Image:
     )
     for y0, y1, col in bands:
         pix.rect(0, y0, 360, y1 - y0, col)
-    # Sun with a hard core and a few ray pixels.
-    for y in range(16, 40):
-        for x in range(24, 48):
-            if (x - 36) ** 2 + (y - 28) ** 2 <= 100:
-                pix.put(x, y, (255, 206, 96))
-            if (x - 36) ** 2 + (y - 28) ** 2 <= 36:
-                pix.put(x, y, (255, 236, 180))
-    for rx, ry in ((18, 28), (54, 28), (36, 10), (36, 46), (22, 16), (50, 40)):
-        pix.put(rx, ry, (255, 220, 140))
+    # A small moon in the plum. Not a noon sun.
+    for y in range(18, 36):
+        for x in range(292, 310):
+            d = (x - 301) ** 2 + (y - 27) ** 2
+            if d <= 49:
+                pix.put(x, y, (168, 160, 184))
+            if d <= 16:
+                pix.put(x, y, (206, 198, 216))
+    # Setting sun, low, so the ridge covers the bottom of the disc.
+    for y in range(140, 172):
+        for x in range(36, 76):
+            d = (x - 56) ** 2 + (y - 166) ** 2
+            if d <= 160:
+                pix.put(x, y, (210, 96, 42))
+            if d <= 48:
+                pix.put(x, y, (236, 148, 64))
     # Lumpy clouds: stacked runs, flat shaded bottoms, not one oval.
     clouds = (
         (78, 22, (10, 18, 26, 22, 14)),
@@ -1197,7 +1212,7 @@ def generate_backdrop() -> Image.Image:
         if 150 < x < 230:
             ridge -= 8
         for y in range(ridge, 176):
-            pix.put(x, y, LEAF[4] if y < ridge + 2 else LEAF[2])
+            pix.put(x, y, LEAF[2] if y < ridge + 2 else LEAF[1])
     for tx in (30, 70, 120, 190, 250, 300, 340):
         pix.rect(tx, 146, 2, 10, TIMBER[1])
         canopy_cluster(pix, tx + 1, 142, 6, 5, LEAF, bias=3)
@@ -1210,12 +1225,11 @@ def generate_backdrop() -> Image.Image:
         pix.put(bx - 2, by - 1, STONE[1])
         pix.put(bx + 3, by, STONE[1])
         pix.put(bx - 3, by, STONE[1])
-    # A calm lawn under the ridge. Wide bands, the same greens as the tile.
-    # 120 divides 360, so the band edges are not a one-pixel speckle.
+    # The same dusk greens as the lawn tile. 120 divides 360.
     for y in range(176, 200):
         for x in range(360):
             band = (x // 120 + (0 if y < 188 else 1)) % 2
-            pix.put(x, y, (62, 168, 54) if band == 0 else (86, 186, 64))
+            pix.put(x, y, GRASS[2] if band == 0 else GRASS[3])
     return pix.image()
 
 
@@ -1266,10 +1280,10 @@ python3 tool/generate_town_art.py
 | Rule | Choice |
 |------|--------|
 | Ink (32, 22, 18), 1 px contour | Same warm ink as the heroes |
-| Light | Upper-left, in clusters on each stone, tile, and fold |
-| Ground | Soft lawn, 480×960, seamless. Cobbles and flowers sit on the paths |
+| Light | Dusk. Upper-left key, plum sky, warm horizon, lamp windows |
+| Ground | Dark saturated lawn, 64×64, seamless. Cobbles and flowers sit on the paths |
 | Roofs | Individual tiles. Guild slate, houses terracotta, market a folded awning |
-| Windows | Amber glass, wood mullions |
+| Windows | Hot amber glass, wood mullions, light stays inside the frame |
 | People | Smith, courier, and gardener. Idle + 4 walk frames |
 | Scale | `FilterQuality.none`. Folk are authored for the 48×56 yard |
 
@@ -1277,9 +1291,9 @@ python3 tool/generate_town_art.py
 
 | File | Use |
 |------|-----|
-| backdrop.png | Banded sky, clouds, ridge, distant roof |
-| ground.png | Soft lawn, 480×960, edges meet |
-| path.png | Cobble street, 360×36, flower beds at the ends |
+| backdrop.png | Dusk sky, moon, low sun, ridge, distant roof |
+| ground.png | Dusk lawn, 64×64, edges meet |
+| path.png / path_b.png | Cobble street, 360×36, flower beds at the ends |
 | approach.png | Cobble spur, 36×192, mortar meets at the wrap |
 | alert.png | Claim spark on guild and vault |
 | tree_round.png / tree_tall.png | Leaf clumps, blossoms, fruit |
@@ -1304,6 +1318,7 @@ def main() -> int:
         ("backdrop.png", generate_backdrop()),
         ("ground.png", generate_ground()),
         ("path.png", generate_path()),
+        ("path_b.png", life_art.path_alt()),
         ("approach.png", life_art.approach()),
         ("tree_round.png", generate_tree_round()),
         ("tree_tall.png", generate_tree_tall()),
@@ -1378,6 +1393,9 @@ def main() -> int:
     def stats(name: str) -> tuple[int, float]:
         return life_art.opaque_stats(by_name[name])
 
+    life_art.assert_path_seam(by_name["path.png"])
+    life_art.assert_path_seam(by_name["path_b.png"])
+    life_art.assert_same_joint(by_name["path.png"], by_name["path_b.png"])
     ground_n, ground_top = stats("ground.png")
     seam, interior = life_art.edge_gap(by_name["ground.png"])
     round_n, _ = stats("tree_round.png")

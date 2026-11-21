@@ -1230,6 +1230,18 @@ abstract final class SpatialCombat {
         }
       }
     }
+    // One +g / +XP near a body. A second payoff on the same hero is dropped
+    // so the numbers do not pile up at text scale 1.0 or 1.45.
+    if (_walletFloater(text)) {
+      var wallets = 0;
+      for (final f in world.floaters) {
+        if (!_walletFloater(f.text)) continue;
+        wallets++;
+        if ((f.x - x).abs() < 2.2 && (f.y - y).abs() < 2.2) return;
+      }
+      if (wallets >= 2) return;
+      y -= 0.45;
+    }
     // Stagger stack at the same tile so gold/XP/loot don't fully overlap.
     var nearby = 0;
     for (final f in world.floaters) {
@@ -1253,6 +1265,11 @@ abstract final class SpatialCombat {
       ),
     );
     _trimFloaters(world);
+  }
+
+  static bool _walletFloater(String text) {
+    if (!text.contains('+')) return false;
+    return text.contains('g') || text.contains('XP') || text.contains('xp');
   }
 
   /// Melee / bolt hit numbers — crits always, routine hits throttled.

@@ -310,9 +310,13 @@ class _HomeShellState extends State<HomeShell> {
     // Keep this row mounted while the first climb is on screen. Removing it
     // in the same build that opens HEROES marks the top bar dirty.
     if (sheet && climb == null) return const SizedBox.shrink();
-    final back = climb == null && ReturnWeek.active(state)
+    final rawBack = climb == null && ReturnWeek.active(state)
         ? ReturnWeek.coachLine(state)
         : null;
+    // The town card owns "Tomorrow: …". This row is the sky above town.
+    final back = rawBack != null && rawBack.startsWith('Tomorrow:')
+        ? null
+        : rawBack;
     final tip = !state.inDungeon && climb == null && back == null
         ? FirstSessionTips.active(state, inDungeon: false)
         : null;

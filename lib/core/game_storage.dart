@@ -61,20 +61,7 @@ class SaveSlotSummary {
       final decoded = jsonDecode(raw);
       if (decoded is! Map) return unreadable(index);
       final json = Map<String, dynamic>.from(decoded);
-      final roster = json['heroRoster'];
-      var level = 1;
-      if (roster is List && roster.isNotEmpty) {
-        var sum = 0;
-        var n = 0;
-        for (final hero in roster) {
-          if (hero is Map && hero['level'] is num) {
-            sum += (hero['level'] as num).toInt();
-            n++;
-          }
-        }
-        if (n > 0) level = sum ~/ n;
-        if (level < 1) level = 1;
-      }
+      final level = partyLevelFromJson(json);
       final dungeonId = json['dungeonId'] as String? ?? 'sandy';
       final name = json['partyName'];
       return SaveSlotSummary(
@@ -89,6 +76,38 @@ class SaveSlotSummary {
     } catch (_) {
       return unreadable(index);
     }
+  }
+
+  /// Active-party mean, matching [GameLogic.partyMeanLevel] / [GameState.heroes].
+  /// Empty active ids fall back to the whole roster. Display only.
+  static int partyLevelFromJson(Map<String, dynamic> json) {
+    final roster = json['heroRoster'];
+    final levels = <String, int>{};
+    if (roster is List) {
+      for (final hero in roster) {
+        if (hero is! Map) continue;
+        final level = hero['level'];
+        final id = hero['id'];
+        if (level is! num || id is! String || id.isEmpty) continue;
+        levels[id] = level.toInt();
+      }
+    }
+    final active = json['activeHeroIds'];
+    final picked = <int>[];
+    if (active is List) {
+      for (final id in active) {
+        if (id is! String || id.isEmpty) continue;
+        final level = levels[id];
+        if (level != null) picked.add(level);
+      }
+    }
+    final values = picked.isNotEmpty
+        ? picked
+        : levels.values.toList(growable: false);
+    if (values.isEmpty) return 1;
+    final level = values.fold<int>(0, (sum, value) => sum + value) ~/
+        values.length;
+    return level < 1 ? 1 : level;
   }
 }
 
