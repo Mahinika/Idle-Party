@@ -28,10 +28,10 @@ python3 tool/generate_town_art.py
 | Rule | Choice |
 |------|--------|
 | Ink (32, 22, 18), 1 px contour | Same warm ink as the heroes |
-| Light | Upper-left, in clusters on each stone, tile, and fold |
-| Ground | Soft lawn, 480×960, seamless. Cobbles and flowers sit on the paths |
+| Light | Dusk. Upper-left key, plum sky, warm horizon, lamp windows |
+| Ground | Dark saturated lawn, 64×64, seamless. Cobbles and flowers sit on the paths |
 | Roofs | Individual tiles. Guild slate, houses terracotta, market a folded awning |
-| Windows | Amber glass, wood mullions |
+| Windows | Hot amber glass, wood mullions, light stays inside the frame |
 | People | Smith, courier, and gardener. Idle + 4 walk frames |
 | Scale | `FilterQuality.none`. Folk are authored for the 48×56 yard |
 
@@ -39,9 +39,9 @@ python3 tool/generate_town_art.py
 
 | File | Use |
 |------|-----|
-| backdrop.png | Banded sky, clouds, ridge, distant roof |
-| ground.png | Soft lawn, 480×960, edges meet |
-| path.png | Cobble street, 360×36, flower beds at the ends |
+| backdrop.png | Dusk sky, moon, low sun, ridge, distant roof |
+| ground.png | Dusk lawn, 64×64, edges meet |
+| path.png / path_b.png | Cobble street, 360×36, flower beds at the ends |
 | approach.png | Cobble spur, 36×192, mortar meets at the wrap |
 | alert.png | Claim spark on guild and vault |
 | tree_round.png / tree_tall.png | Leaf clumps, blossoms, fruit |

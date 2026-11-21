@@ -185,6 +185,22 @@ abstract final class GameTheme {
   static const Color boostOrangeBottom = Color(0xFFC47030);
   static const Color levelAccent = Color(0xFF9C88CC);
   static const Color levelAccentDeep = Color(0xFF3C2D57);
+
+  /// Town square dusk. Static fills on the lawn card. Not a per-frame shader.
+  /// The vignette is ink at the corners only; the yard center stays open.
+  static const Color townVignette = Color(0x610B0709);
+
+  /// Same ink as [townVignette] at alpha 0, so the radial fade has no second hue.
+  static const Color townWashNone = Color(0x000B0709);
+
+  /// Plum mist for the sky band (levelAccentDeep at low alpha).
+  static const Color townFog = Color(0x383C2D57);
+
+  /// [townFog] at alpha 0.
+  static const Color townFogNone = Color(0x003C2D57);
+
+  /// Hell's Gate only. Blood at 14%, over the square and under the name chips.
+  static const Color townHellWash = Color(0x248B3A2A);
   static const Color gainGreen = Color(0xFFAFCB8E);
 
   /// Dark rim under red (leave / danger) chunky buttons.
