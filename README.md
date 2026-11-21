@@ -8,7 +8,7 @@ Idle Party is a portrait Android idle RPG. Install from Google Play — not from
 
 **Live on Play: 1.13.17 (243)** (released 2026-11-11). The ship number lives in `pubspec.yaml` and matches `ChangelogCatalog.currentVersion` in `lib/core/changelog.dart`. What’s New in the game is that catalog (`MORE → INFO → PATCH NOTES`).
 
-**Next candidate branch:** `test/fight-ui-stack` at **1.13.18+249** — integration and phone polish, not a second live version.
+**Next candidate branch:** `test/fight-ui-stack` at **1.14.0+252** — fight UI stack ready for main, not live on Play until the owner confirms a v-tag and upload.
 
 <p align="center">
   <img src="tool/art_backups/app_icon.png" alt="Idle Party app icon" width="160" />

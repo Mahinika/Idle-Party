@@ -1,1 +1,5 @@
-Fixade en visningskrasch i grottor; stridsbanners överlappar inte längre.
+Rollplatser i INN: Tank, Healer och DPS, med tydligare klassnamn. Fight-listen använder ikoner så att hela hjältenamn får plats, även med stor text.
+
+Tydligare claims i stan och namnet Daily Run. Väskans uppgraderingar visar Better +score. TRAIN, CAMP och MARKET sitter under fighten.
+
+Inkluderar också 1.13.18-fixar som inte nådde Play: visningskrasch i grottor, överlappande stridsbanners, snabbare återgång med en save, och menyer som rymmer stor text.

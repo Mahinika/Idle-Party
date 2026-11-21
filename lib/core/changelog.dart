@@ -82,12 +82,43 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.18';
+  static const String currentVersion = '1.14.0';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
       version: currentVersion,
+      date: 'Nov 21, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON from town. Town is home.',
+      added: <String>[
+        'INN roster uses fixed role slots: TANK, HEALER, and DPS. Tap a slot to swap within that role; class and spec names are clearer on pickers.',
+      ],
+      changed: <String>[
+        'Fight party strip: tank, healer, and DPS show as small icons so hero names fit on phone, including at large text.',
+        'Bag upgrades read Better +score on the tile. Daily Run uses one name everywhere (Daily Vault stays separate). Town headers use a clear dash between tier and cave.',
+        'In town, QUESTS open at the GUILD and the daily chest at the VAULT. Scrolls, Daily Run, and the pouch sit in MENU. In a fight they stay on the fight rail.',
+        'TRAIN, CAMP, and MARKET sit under the fight. Town always offers ENTER DUNGEON beside claims.',
+        'Welcome Back and first-climb guidance are clearer. Upgrade previews explain why a piece is better. SCROLLS stay one tap away.',
+        'A new game starts in Sandy Caverns.',
+        'Clearer words: FARM repeats a floor for loot, and PUSH goes deeper.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MENU → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. TRAIN under the fight does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+      fixed: <String>[
+        'Fixed a display crash in dungeons when many combat numbers appear at once.',
+        'ELITE DOWN, LEVEL UP, and ABSORB banners no longer overlap.',
+        'With one save, the game skips the intro when the phone closed it in the background.',
+        'Menus fit large text without cut words, and each sheet has one clear main button.',
+        'After a background resume, the cave no longer comes back empty.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.13.18',
       date: 'Nov 19, 2026',
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON from town. Town is home.',
@@ -98,18 +129,14 @@ abstract final class ChangelogCatalog {
         'Menus fit large text without cut words, and each sheet has one clear main button.',
       ],
       changed: <String>[
-        'INN roster uses fixed role slots: TANK, HEALER, and DPS. Tap a slot to swap within that role; class and spec names are clearer on pickers.',
-        'Fight party strip: tank, healer, and DPS show as small icons so hero names fit on phone.',
-        'Bag upgrades read Better +score on the tile. Daily Run uses one name everywhere (Daily Vault stays separate). Town headers use a clear dash between tier and cave.',
-        'In town, QUESTS open at the GUILD and the daily chest at the VAULT. Scrolls, Daily Run, and the pouch sit in MENU. In a fight they stay on the fight rail.',
-        'TRAIN, CAMP, and MARKET sit under the fight. Town always offers ENTER DUNGEON beside claims.',
-        'A new game starts in Sandy Caverns.',
+        'In town, QUESTS open at the GUILD and the daily chest at the VAULT. Scrolls, Daily, and the pouch sit in MENU. In a fight they stay on the fight rail.',
+        'FORGE, CAMP, and MARKET sit under the fight. A new game starts in Sandy Caverns.',
         'Clearer words: FARM repeats a floor for loot, and PUSH goes deeper.',
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MENU → CRAFT still runs a monthly Craft Trial.',
         'Race still locks after New Game START.',
         'KEY waits until every active hero is Lv100.',
-        'Ranked GR packs still scale with rank only. TRAIN under the fight does not buff monsters.',
+        'Ranked GR packs still scale with rank only. FORGE under the fight does not buff monsters.',
         'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
       ],
     ),

@@ -8,4 +8,4 @@ checks that this file changed.
 
 ## [Unreleased]
 
-<!-- Add one line per merge to main. -->
+- Release 1.14.0: fight UI stack (role icons, roster slots, town, Copilot batches A–C). Includes the unreleased 1.13.18 dungeon crash, banner, resume, and large-text fixes.

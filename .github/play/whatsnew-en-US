@@ -1,1 +1,5 @@
-Fixed a display crash in dungeons; combat banners no longer overlap.
+Role slots in the INN: Tank, Healer, and DPS, with clearer class names. The fight HP strip uses icons so full hero names fit, even with large text.
+
+Town claims and Daily Run naming are clearer. Bag upgrades show Better +score. TRAIN, CAMP, and MARKET sit under the fight.
+
+Also includes 1.13.18 fixes that never reached Play: a dungeon display crash, overlapping combat banners, faster resume with one save, and menus that fit large text.
