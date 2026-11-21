@@ -578,12 +578,35 @@ extension GameDirectorSave on GameDirector {
       if (seconds >= 15) {
         unawaited(AppAnalytics.sessionLength(seconds));
       }
+      _flushHubIdle();
+      _pauseBackgroundLoops();
       _syncHubIdleTimer();
       unawaited(_persistFlush());
       unawaited(_syncAwayReminders(backgrounded: true));
     } else {
       _foregroundSince = DateTime.now();
+      _resumeBackgroundLoops();
       unawaited(_resumeFromBackground());
+    }
+  }
+
+  /// Stop wall-clock loops so a backgrounded process is not still ticking
+  /// at 60 Hz. Spatial state stays so a warm resume does not rebuild the floor.
+  void _pauseBackgroundLoops() {
+    _spatialTimer?.cancel();
+    _spatialTimer = null;
+    _uiTimer?.cancel();
+    _uiTimer = null;
+  }
+
+  void _resumeBackgroundLoops() {
+    if (_isLoading || _directorClosed) return;
+    _ensureUiTimer();
+    if (enableSpatialLoop &&
+        _state.inDungeon &&
+        _spatial != null &&
+        !_durableSaveBlocked) {
+      _startSpatialLoop();
     }
   }
 

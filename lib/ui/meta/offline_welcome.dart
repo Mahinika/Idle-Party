@@ -5,6 +5,8 @@ import 'dart:async' show unawaited;
 import '../../core/ad_rewarded.dart';
 import '../../core/analytics_events.dart';
 import '../../core/chase_contract.dart';
+import '../../core/offline_progress.dart';
+import '../../core/remote_tune.dart';
 import '../../core/chase_dispatcher.dart';
 import '../../core/comeback_chest.dart';
 import '../../core/game_director.dart';
@@ -15,6 +17,7 @@ import '../../core/hub_chase.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/pet_service.dart';
 import '../chase_bind.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -25,6 +28,12 @@ import '../shell/play_nav.dart';
 import '../web_click_bridge.dart';
 
 /// Short Welcome Back: wow lead, ≤3 highlights, one Up next, dismiss.
+/// Test keys for the WELCOME BACK dialog.
+abstract final class OfflineWelcomeKeys {
+  static const collectAll = ValueKey('welcome_collect_all');
+  static const enter = ValueKey('welcome_enter');
+}
+
 Future<void> showOfflineProgressDialog(
   BuildContext context,
   GameDirector director, {
@@ -33,10 +42,24 @@ Future<void> showOfflineProgressDialog(
   final summary = director.offlineSummary;
   final rewardState = summary?.state ?? director.state;
   final now = DateTime.now();
+  final firstReturnTeach = summary != null &&
+      RemoteTune.welcomeBackFirstReturnShort &&
+      summary.secondsAway < OfflineProgress.autoCaveMinSec &&
+      GameLogic.firstBossPending(rewardState) &&
+      (summary.goldGained > 0 ||
+          summary.roomsCleared > 0 ||
+          summary.bossDelta > 0 ||
+          (summary.wasInDungeon && summary.secondsApplied >= 20));
+  if (summary != null &&
+      summary.secondsAway < 5 * 60 &&
+      !firstReturnTeach) {
+    return;
+  }
   if (summary == null && !GameLogic.returnCardWaiting(rewardState, now)) {
     return;
   }
   final contract = ChaseContract.fromState(rewardState);
+  final upNext = contract.upNextLine;
   final checkInLine = GameLogic.checkInWelcomeLine(rewardState);
   final chase = contract.chase;
   final rows = summary?.highlightRows ?? const <(String, String)>[];
@@ -111,12 +134,18 @@ Future<void> showOfflineProgressDialog(
     essenceGained: summary?.essenceGained ?? 0,
     canOpenGold: canSpend && MenuTabs.showGold(rewardState),
     canOpenEssence: canSpend && MenuTabs.showCamp(rewardState),
+    prizeWaiting:
+        chestLine.isNotEmpty || petLine.isNotEmpty || checkInLine.isNotEmpty,
+    nextLabel: returnLabel,
   );
-  final showCheckIn = checkInLine.isNotEmpty &&
-      !gainLine.contains('wallet covers') &&
-      !gainLine.contains('Open ESSENCE');
-  final openGold = canSpend && gainLine.contains('Open GOLD');
-  final openEssence = canSpend && gainLine.contains('Open ESSENCE');
+  final canBuy = gainLine.contains(GameLogic.returnCanBuy);
+  final campBuy = gainLine.contains(GameLogic.returnCampBuy);
+  final showCheckIn = checkInLine.isNotEmpty && !canBuy;
+  final openGold = canSpend &&
+      MenuTabs.showGold(rewardState) &&
+      canBuy &&
+      !campBuy;
+  final openEssence = canSpend && MenuTabs.showCamp(rewardState) && campBuy;
   final shownGain = _welcomeGainVisible(
     welcome: summary?.welcomeLead ?? '',
     gainLine: gainLine,
@@ -141,7 +170,8 @@ Future<void> showOfflineProgressDialog(
           GameButton(
             label: 'OPEN GOLD',
             expanded: false,
-            style: GameButtonStyle.grey,
+            // A link, not a third big button (audit F042).
+            style: GameButtonStyle.ghost,
             onPressed: () => _openReturnSpend(
               context,
               ctx,
@@ -156,7 +186,7 @@ Future<void> showOfflineProgressDialog(
           GameButton(
             label: 'OPEN ESSENCE',
             expanded: false,
-            style: GameButtonStyle.grey,
+            style: GameButtonStyle.ghost,
             onPressed: () => _openReturnSpend(
               context,
               ctx,
@@ -238,6 +268,25 @@ Future<void> showOfflineProgressDialog(
               style: GameTheme.readable(color: GameTheme.torchHot),
             ),
           ],
+          if (upNext.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              upNext,
+              style: GameTheme.section(color: GameTheme.torchHot),
+            ),
+          ],
+          if (summary != null && showWatch) ...[
+            const SizedBox(height: 8),
+            Text(
+              _watchLootLine(
+                gold: summary.goldGained,
+                essence: summary.essenceGained,
+                stateGold: rewardState.gold,
+                stateEssence: rewardState.essence,
+              ),
+              style: GameTheme.readable(color: GameTheme.parchment),
+            ),
+          ],
           if (rows.isNotEmpty) ...[
             const SizedBox(height: 10),
             for (final row in rows.take(OfflineProgressResult.maxHighlightRows))
@@ -253,9 +302,12 @@ Future<void> showOfflineProgressDialog(
                     .where((m) => m.canClaim)
                     .length;
                 if (ready == 0) return const SizedBox.shrink();
+                // The prize is the main action here: amber go face (F042).
                 return GameButton(
+                  key: OfflineWelcomeKeys.collectAll,
                   label: 'COLLECT ALL',
-                  style: GameButtonStyle.grey,
+                  style: GameButtonStyle.go,
+                  primary: true,
                   onPressed: director.claimAllReadyMissions,
                 );
               },
@@ -297,6 +349,7 @@ Future<void> showOfflineProgressDialog(
                             ? 'LOADING AD…'
                             : summary.welcomeBackAdLabel,
                         style: GameButtonStyle.grey,
+                        icon: UiIcon.watchAd,
                         onPressed: watchBusy
                             ? null
                             : () async {
@@ -343,10 +396,12 @@ Future<void> showOfflineProgressDialog(
       actions: [
         if (!crowded) ...greyActions,
         GameButton(
+          key: OfflineWelcomeKeys.enter,
           label: returnLabel,
           expanded: false,
           style: GameButtonStyle.brown,
-          primary: true,
+          // COLLECT ALL leads while quests wait; the fight comes after (F042).
+          primary: !director.state.missions.any((m) => m.canClaim),
           onPressed: () {
             director.claimReturnRewards();
             director.dismissOfflineSummary();
@@ -379,6 +434,29 @@ Future<void> showOfflineProgressDialog(
 
 /// Drop a gain sentence that only repeats gold [welcome] already named.
 /// Keep a sentence that adds the next forge or CAMP buy.
+String _watchLootLine({
+  required int gold,
+  required int essence,
+  required int stateGold,
+  required int stateEssence,
+}) {
+  final parts = <String>[];
+  if (gold > 0) {
+    parts.add(
+      'Gold ${OfflineProgressResult.groupedCount(stateGold)} → '
+      '${OfflineProgressResult.groupedCount(stateGold + gold)} if you watch',
+    );
+  }
+  if (essence > 0) {
+    parts.add(
+      'Essence ${OfflineProgressResult.groupedCount(stateEssence)} → '
+      '${OfflineProgressResult.groupedCount(stateEssence + essence)} if you watch',
+    );
+  }
+  if (parts.isEmpty) return 'Watch doubles this trip\'s loot (2×).';
+  return parts.join(' · ');
+}
+
 String _welcomeGainVisible({
   required String welcome,
   required String gainLine,

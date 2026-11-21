@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../../models/vfx_quality.dart';
 import '../cave_atmosphere.dart';
@@ -5,6 +7,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
+import 'shell_common.dart';
 import 'shell_layout.dart';
 import 'wallet_strip.dart';
 
@@ -328,8 +331,40 @@ class _SheetHeader extends StatelessWidget {
         final titleWidth = _textWidth(title, GameTheme.title());
         final walletWidth = showWallet ? _textWidth('888.8k', GameTheme.button(size: GameTheme.typeButton)) * (showEssence ? 2.4 : 1.2) : 0.0;
         final closeWidth = showClose ? 96.0 : 0.0;
+        // The same check with the real text scale and the real wallet
+        // labels. Unscaled, a 1.45 title is measured too short and gets cut
+        // ("ESSEN") instead of moving the wallet under it.
+        final scaler = MediaQuery.textScalerOf(context);
+        final scaledTitle = _textWidth(title, GameTheme.title(), scaler);
+        final walletText = GameTheme.button(size: GameTheme.typeButton);
+        final scaledWallet = !showWallet
+            ? 0.0
+            : _walletChipWidth(formatGold(gold!), walletText, scaler) +
+                  (showEssence
+                      ? 8 +
+                            _walletChipWidth(
+                              formatCount(essence!),
+                              walletText,
+                              scaler,
+                            )
+                      : 0);
+        // Dense grey CLOSE: 10 dp padding and a 2 dp rim on each side.
+        final scaledClose = !showClose
+            ? 0.0
+            : math.max(
+                GameTheme.minTouch,
+                24 +
+                    _textWidth(
+                      'CLOSE',
+                      GameTheme.button(size: GameTheme.typeButtonDense),
+                      scaler,
+                    ),
+              );
         final stack = showWallet &&
-            titleWidth + walletWidth + closeWidth + 24 > constraints.maxWidth;
+            (titleWidth + walletWidth + closeWidth + 24 >
+                    constraints.maxWidth ||
+                scaledTitle + 6 + scaledWallet + 6 + scaledClose + 4 >
+                    constraints.maxWidth);
         if (stack) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -362,13 +397,29 @@ class _SheetHeader extends StatelessWidget {
     );
   }
 
-  static double _textWidth(String text, TextStyle style) {
+  static double _textWidth(
+    String text,
+    TextStyle style, [
+    TextScaler scaler = TextScaler.noScaling,
+  ]) {
     if (text.isEmpty) return 0;
     final painter = TextPainter(
       text: TextSpan(text: text, style: style),
       textDirection: TextDirection.ltr,
+      textScaler: scaler,
       maxLines: 1,
     )..layout();
-    return painter.width;
+    final w = painter.width;
+    painter.dispose();
+    return w;
   }
+
+  /// One wallet chip: 10 dp padding each side, a 24 dp icon, 6 dp gap,
+  /// the amount, and the 1 dp card rim.
+  static double _walletChipWidth(
+    String label,
+    TextStyle style,
+    TextScaler scaler,
+  ) =>
+      22 + GameTheme.iconNav + 6 + _textWidth(label, style, scaler);
 }

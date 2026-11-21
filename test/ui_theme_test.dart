@@ -19,6 +19,7 @@ void main() {
     'cave_atmosphere.dart',
     'dungeon_paint_actors.dart',
     'dungeon_paint_floaters.dart',
+    'floater_paint.dart',
     'dungeon_paint_projectiles.dart',
     'ability_vfx_paint.dart',
     'dungeon_paint_spell_fx.dart',

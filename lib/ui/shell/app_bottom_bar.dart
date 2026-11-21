@@ -47,7 +47,7 @@ class AppBottomBar extends StatelessWidget {
     MenuRoute.shop => 'SHOP',
     MenuRoute.essence => 'ESSENCE',
     MenuRoute.key => 'KEY',
-    MenuRoute.more => 'MORE',
+    MenuRoute.more => 'MENU',
     MenuRoute.map => 'MAP',
     MenuRoute.none => '',
   };

@@ -28,6 +28,7 @@ int _gameLogicForgeGoldBudget(GameState state, ForgeGoldSpendMode mode) {
     ForgeGoldSpendMode.pct25 => (state.gold * 25) ~/ 100,
     ForgeGoldSpendMode.pct50 => (state.gold * 50) ~/ 100,
     ForgeGoldSpendMode.pct100 => state.gold,
+    ForgeGoldSpendMode.x10 => state.gold,
   };
 }
 
@@ -37,7 +38,7 @@ bool _gameLogicCanForgeGoldSpend( GameState state, PartyUpgradeType type, ForgeG
   if (state.gold < cost) {
     return false;
   }
-  if (mode == ForgeGoldSpendMode.one) {
+  if (mode == ForgeGoldSpendMode.one || mode == ForgeGoldSpendMode.x10) {
     return true;
   }
   return _gameLogicForgeGoldBudget(state, mode) >= cost;
@@ -67,7 +68,8 @@ bool _gameLogicCanForgeGoldSpendEven(GameState state) {
   var cur = state;
   var buys = 0;
   var spent = 0;
-  for (var i = 0; i < 10000; i++) {
+  final cap = mode.maxBuys ?? 10000;
+  for (var i = 0; i < cap; i++) {
     final cost = _gameLogicUpgradeCostFor(cur, type);
     if (cost > remaining || cost > cur.gold) {
       break;
@@ -93,14 +95,19 @@ GameState _gameLogicUpgradeWithSpendMode( GameState state, { required PartyUpgra
   if (budget <= 0) {
     return state;
   }
-  return _gameLogicUpgradeWithBudget(state, type: type, budget: budget);
+  return _gameLogicUpgradeWithBudget(
+    state,
+    type: type,
+    budget: budget,
+    maxBuys: mode.maxBuys ?? 10000,
+  );
 }
 
 
-GameState _gameLogicUpgradeWithBudget( GameState state, { required PartyUpgradeType type, required int budget, }) {
+GameState _gameLogicUpgradeWithBudget( GameState state, { required PartyUpgradeType type, required int budget, int maxBuys = 10000, }) {
   var remaining = min(budget, state.gold);
   var cur = state;
-  for (var i = 0; i < 10000; i++) {
+  for (var i = 0; i < maxBuys; i++) {
     final cost = _gameLogicUpgradeCostFor(cur, type);
     if (cost > remaining || cost > cur.gold) {
       break;

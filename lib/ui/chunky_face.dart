@@ -1,0 +1,177 @@
+import 'package:flutter/material.dart';
+
+import 'game_theme.dart';
+
+/// One meaning per tone. Gold = buy / can afford. Grey = locked or cannot
+/// afford. Rose = the picked toggle. Red = leave / danger. Stone = a plain
+/// action that is neither. Orange = a live boost (2× speed). Go = amber
+/// "start this" (ENTER / START / CLAIM). Essence = an essence price.
+enum ChunkyTone { gold, grey, rose, red, stone, orange, go, essence }
+
+/// Chunky pixel button face: dark outline, a light top edge, and a hard
+/// drop shadow so it reads as pressable. Pure paint; callers own the tap,
+/// the semantics, and the 44/48 dp floor (pass it as [minHeight]).
+class ChunkyFace extends StatelessWidget {
+  const ChunkyFace({
+    super.key,
+    required this.child,
+    this.tone = ChunkyTone.stone,
+    this.raised = true,
+    this.highlight = false,
+    this.minWidth = 0,
+    this.minHeight = GameTheme.minTouch,
+    this.padding = const EdgeInsets.symmetric(horizontal: 8),
+    this.radius = GameTheme.radiusSm,
+    this.edgeColor,
+  });
+
+  final Widget child;
+  final ChunkyTone tone;
+
+  /// Hard shadow under the face. Off for disabled or pressed looks.
+  final bool raised;
+
+  /// Torch rim (BEST or the focused choice).
+  final bool highlight;
+  final double minWidth;
+  final double minHeight;
+  final EdgeInsets padding;
+  final double radius;
+
+  /// Rim override. A secondary pick (the ×N selector) is a stone face with
+  /// a rose rim, so only one filled rose face shows at a time.
+  final Color? edgeColor;
+
+  static (Color, Color, Color, Color) colorsFor(ChunkyTone tone) =>
+      switch (tone) {
+        ChunkyTone.gold => (
+          GameTheme.buyGoldTop,
+          GameTheme.buyGoldBottom,
+          GameTheme.buyGoldShine,
+          GameTheme.buyGoldEdge,
+        ),
+        ChunkyTone.grey => (
+          GameTheme.buyGreyTop,
+          GameTheme.buyGreyBottom,
+          GameTheme.buyGreyShine,
+          GameTheme.buyGreyEdge,
+        ),
+        ChunkyTone.rose => (
+          GameTheme.toggleOnTop,
+          GameTheme.toggleOnBottom,
+          GameTheme.toggleOnShine,
+          GameTheme.buyGoldEdge,
+        ),
+        ChunkyTone.red => (
+          GameTheme.buttonRedTop,
+          GameTheme.buttonRedBottom,
+          GameTheme.bloodLit,
+          GameTheme.buyGreyEdge,
+        ),
+        ChunkyTone.stone => (
+          GameTheme.chunkyStoneTop,
+          GameTheme.chunkyStoneBottom,
+          GameTheme.buyGreyShine,
+          GameTheme.buyGreyEdge,
+        ),
+        ChunkyTone.orange => (
+          GameTheme.boostOrangeTop,
+          GameTheme.boostOrangeBottom,
+          GameTheme.buyGoldShine,
+          GameTheme.buyGoldEdge,
+        ),
+        ChunkyTone.go => (
+          GameTheme.goTop,
+          GameTheme.goBottom,
+          GameTheme.goShine,
+          GameTheme.buyGoldEdge,
+        ),
+        ChunkyTone.essence => (
+          GameTheme.essenceBuyTop,
+          GameTheme.essenceBuyBottom,
+          GameTheme.essenceBuyShine,
+          GameTheme.essenceBuyEdge,
+        ),
+      };
+
+  /// Readable label color on [tone].
+  static Color textOn(ChunkyTone tone) => switch (tone) {
+    ChunkyTone.gold => GameTheme.buyGoldText,
+    ChunkyTone.grey => GameTheme.buyGreyText,
+    ChunkyTone.rose => GameTheme.toggleOnText,
+    ChunkyTone.red => GameTheme.parchment,
+    ChunkyTone.stone => GameTheme.parchment,
+    ChunkyTone.orange => GameTheme.buyGoldText,
+    ChunkyTone.go => GameTheme.goText,
+    ChunkyTone.essence => GameTheme.essenceBuyText,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final (top, bottom, shine, edge) = colorsFor(tone);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [top, bottom],
+        ),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(
+          color: highlight ? GameTheme.torchHot : (edgeColor ?? edge),
+          width: GameTheme.chunkyRim,
+        ),
+        boxShadow: raised
+            ? const [
+                BoxShadow(
+                  color: GameTheme.chunkyShadow,
+                  offset: Offset(0, GameTheme.chunkyDepth),
+                ),
+              ]
+            : null,
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minWidth: minWidth, minHeight: minHeight),
+        child: Stack(
+          fit: StackFit.passthrough,
+          children: [
+            Padding(
+              padding: padding,
+              child: Align(widthFactor: 1, heightFactor: 1, child: child),
+            ),
+            Positioned(
+              top: 1,
+              left: radius / 2 + 2,
+              right: radius / 2 + 2,
+              height: 1,
+              child: IgnorePointer(child: ColoredBox(color: shine)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Keeps a tap area of at least [minWidth] x [minHeight] around a smaller
+/// painted face, centered. Put it inside the InkWell, around the face.
+class TapPad extends StatelessWidget {
+  const TapPad({
+    super.key,
+    required this.child,
+    this.minWidth = GameTheme.minTouch,
+    this.minHeight = GameTheme.minTouch,
+  });
+
+  final Widget child;
+  final double minWidth;
+  final double minHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(minWidth: minWidth, minHeight: minHeight),
+      child: Center(widthFactor: 1, heightFactor: 1, child: child),
+    );
+  }
+}

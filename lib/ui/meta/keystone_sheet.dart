@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/hub_chase.dart';
 import '../../core/hub_endgame_act.dart';
+import '../../core/menu_router.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
 import '../shell/shell_layout.dart';
@@ -18,8 +19,15 @@ import 'rift_hub_panel.dart';
 /// One scroll of named hunts — no inner FARM/RANKED tabs hiding Rifts.
 /// Hub ENDGAME tab is the other door to the same hunts.
 class KeystoneSheet extends StatelessWidget {
-  const KeystoneSheet({super.key, required this.director});
+  const KeystoneSheet({super.key, required this.director, this.router});
+
+  /// One intro for the sheet (polish7 P048).
+  static const String intro =
+      'Turn the KEY dial, then ENTER from town. The hunts are their own modes.';
   final GameDirector director;
+
+  /// Closes the menu before ENTER from the dial.
+  final MenuRouter? router;
 
   @override
   Widget build(BuildContext context) {
@@ -39,88 +47,86 @@ class KeystoneSheet extends StatelessWidget {
     return Padding(
       padding: ShellLayout.listPadding,
       child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (huntHint.isNotEmpty) ...[
-          Text(
-            huntHint,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GameTheme.hint(color: GameTheme.torchHot),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (huntHint.isNotEmpty) ...[
+            Text(
+              huntHint,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.hint(color: GameTheme.torchHot),
+            ),
+            ShellLayout.gap(4),
+          ],
+          ShellLayout.hint(
+            KeystoneSheet.intro,
+            maxLines: 3,
           ),
-          ShellLayout.gap(4),
-        ],
-        ShellLayout.hint(
-          'Turn the dial, then ENTER. The hunts below are separate from PATH caves.',
-          maxLines: 3,
-        ),
-        ShellLayout.gap(8),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: ShellLayout.scrollBodyPadding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                MenuChrome.fold(
-                  title: 'KEY',
-                  subtitle: 'Dial, then ENTER',
-                  initiallyExpanded: hunt == null,
-                  children: [
-                    ChallengeToggles(
-                      director: d,
-                      lockExpanded: true,
-                      foldEssays: true,
-                    ),
-                  ],
-                ),
-                MenuChrome.fold(
-                  title: 'GAUNTLET',
-                  subtitle: 'Boss every 5 · not a 16th cave',
-                  initiallyExpanded: hunt == HubEndgameHunt.gauntlet,
-                  children: [
-                    GauntletHubPanel(director: d),
-                  ],
-                ),
-                MenuChrome.fold(
-                  title: 'RANKED GR',
-                  subtitle:
-                      'Mothveil · pick GR on ENTER · clock · ranked',
-                  initiallyExpanded: hunt == HubEndgameHunt.rankedGr,
-                  children: [
-                    GreaterRiftHubPanel(director: d),
-                  ],
-                ),
-                MenuChrome.fold(
-                  title: 'FARM RIFT',
-                  subtitle:
-                      'Stormwake · pick R on ENTER · gold + gear · not ranked',
-                  initiallyExpanded: hunt == HubEndgameHunt.farmRift,
-                  children: [
-                    RiftHubPanel(director: d),
-                  ],
-                ),
-                MenuChrome.fold(
-                  title: 'ASHEN CROWN',
-                  subtitle: 'Weekly ticket boss · one clear',
-                  initiallyExpanded: hunt == HubEndgameHunt.ashen,
-                  children: [
-                    AshenCrownHubPanel(director: d),
-                  ],
-                ),
-                MenuChrome.fold(
-                  title: 'BOARDS',
-                  subtitle: "This month's ranks",
-                  initiallyExpanded: false,
-                  children: [
-                    PlayGamesBoardsSection(director: d),
-                  ],
-                ),
-              ],
+          ShellLayout.gap(8),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: ShellLayout.scrollBodyPadding,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  MenuChrome.fold(
+                    title: 'KEY',
+                    subtitle: 'Harder caves, better loot',
+                    initiallyExpanded: hunt == null,
+                    children: [
+                      ChallengeToggles(
+                        director: d,
+                        lockExpanded: true,
+                        foldEssays: true,
+                        onEnter: () {
+                          router?.close();
+                          d.enterDungeon(dungeonId: d.state.dungeonId);
+                        },
+                      ),
+                    ],
+                  ),
+                  // One intro above, then groups (polish7 P048).
+                  ShellLayout.gap(6),
+                  MenuChrome.sectionLabel('HUNTS'),
+                  MenuChrome.fold(
+                    title: 'GAUNTLET',
+                    subtitle: 'Boss every 5 · not a 16th cave',
+                    initiallyExpanded: hunt == HubEndgameHunt.gauntlet,
+                    children: [GauntletHubPanel(director: d)],
+                  ),
+                  MenuChrome.fold(
+                    // Plain words, not GR / pick R / clock (audit F036).
+                    title: 'RANKED RIFT',
+                    subtitle: 'Mothveil · timed · ranked',
+                    initiallyExpanded: hunt == HubEndgameHunt.rankedGr,
+                    children: [GreaterRiftHubPanel(director: d)],
+                  ),
+                  MenuChrome.fold(
+                    title: 'FARM RIFT',
+                    subtitle: 'Stormwake · loot run · not ranked',
+                    initiallyExpanded: hunt == HubEndgameHunt.farmRift,
+                    children: [RiftHubPanel(director: d)],
+                  ),
+                  MenuChrome.fold(
+                    title: 'ASHEN CROWN',
+                    subtitle: 'Weekly ticket boss · one clear',
+                    initiallyExpanded: hunt == HubEndgameHunt.ashen,
+                    children: [AshenCrownHubPanel(director: d)],
+                  ),
+                  ShellLayout.gap(6),
+                  MenuChrome.sectionLabel('RANKS'),
+                  MenuChrome.fold(
+                    title: 'BOARDS',
+                    subtitle: "This month's ranks",
+                    initiallyExpanded: false,
+                    children: [PlayGamesBoardsSection(director: d)],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
-    ),
+        ],
+      ),
     );
   }
 }

@@ -5,12 +5,17 @@ import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/gear/gear_cleanup.dart';
 import '../../core/menu_alerts.dart';
+import '../../models/loot.dart';
 import '../game_theme.dart';
+import '../item_tooltip.dart';
 import '../menu_chrome.dart';
 
 /// Auto-sell (gold) and auto-scrap (essence) rules.
 /// Same widget in BAG → FILTERS and MORE → SETTINGS → BAG.
 class BagCleanupFilters extends StatelessWidget {
+  /// Rarity limit label in the filter rows.
+  static const rarityLabelKey = ValueKey('bag-cleanup-rarity');
+
   const BagCleanupFilters({
     super.key,
     required this.director,
@@ -27,7 +32,8 @@ class BagCleanupFilters extends StatelessWidget {
     final showScrap = MenuTabs.showCamp(state);
     final showMarket = MenuTabs.showGold(state);
     final keepLine =
-        'SELL JUNK sells every filter match, including upgrades. Keeps Apex and soulbound.';
+        'SELL JUNK sells everything that matches, upgrades too. '
+        'Apex and bound gear are never sold.';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -43,15 +49,33 @@ class BagCleanupFilters extends StatelessWidget {
             scope: MenuScope.account,
           ),
           const SizedBox(height: 4),
+          // One line up top, the rest folds so the controls stay high
+          // (polish7 P038). Plain words, not iLvl / soulbound (P040).
           Text(
-            showScrap
-                ? 'Near-full bag auto-rules (also BAG → FILTERS). '
-                      'Auto-sell = gold · auto-scrap = essence. $keepLine'
-                : 'Near-full bag auto-rules (also BAG → FILTERS). '
-                      'Auto-sell = gold. $keepLine',
+            'When the bag is nearly full these rules tidy it.',
             style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
-          const SizedBox(height: 10),
+          MenuChrome.fold(
+            title: 'How cleanup works',
+            children: [
+              Text(
+                showScrap
+                    ? 'Selling gives gold, scrapping gives essence. $keepLine'
+                    : 'Selling gives gold. $keepLine',
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _footer(
+                  compact: false,
+                  showScrap: showScrap,
+                  showMarket: showMarket,
+                ),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
         ],
         MenuChrome.sectionLabelScoped(
           'AUTO-SELL · gold',
@@ -64,7 +88,7 @@ class BagCleanupFilters extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'Max iLvl to sell',
+          'Sell up to item level',
           style: GameTheme.section(color: GameTheme.torchHot),
         ),
         _IlvlFilterRow(
@@ -94,13 +118,13 @@ class BagCleanupFilters extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Leftovers broken for essence after sell pass — not the same as sell. '
-            '${state.autoDisassembleMaxIlvl <= 0 ? 'Off = never auto-scraps.' : 'Scraps iLvl 1–${state.autoDisassembleMaxIlvl} at or below the rarity cap.'}',
+            'Breaks what is left after selling into essence. '
+            '${state.autoDisassembleMaxIlvl <= 0 ? 'Off = never scraps.' : 'Scraps item level 1–${state.autoDisassembleMaxIlvl}, up to the rarity below.'}',
             style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),
           Text(
-            'Max iLvl to scrap',
+            'Scrap up to item level',
             style: GameTheme.section(color: GameTheme.mossLit),
           ),
           _IlvlFilterRow(
@@ -116,34 +140,36 @@ class BagCleanupFilters extends StatelessWidget {
             enabled: state.autoDisassembleMaxIlvl > 0,
           ),
         ],
-        const SizedBox(height: 8),
-        Text(
-          _footer(
-            compact: compact,
-            showScrap: showScrap,
-            showMarket: showMarket,
+        if (compact) ...[
+          const SizedBox(height: 8),
+          Text(
+            _footer(
+              compact: compact,
+              showScrap: showScrap,
+              showMarket: showMarket,
+            ),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
-          style: GameTheme.hint(color: GameTheme.parchmentDim),
-        ),
+        ],
       ],
     );
   }
 
   static String _sellRule(GameState state) {
     if (state.autoSellMaxPower <= 0) {
-      return 'Junk sold for coins when the bag is near full or you SELL JUNK. '
-          'Off = never auto-sells.';
+      return 'Sells junk for gold when the bag is nearly full or you tap '
+          'SELL JUNK. Off = never sells.';
     }
     final cap =
-        'Sells iLvl 1–${state.autoSellMaxPower} at or below the rarity cap.';
+        'Sells item level 1–${state.autoSellMaxPower}, up to the rarity below.';
     final worn = GearCleanup.partyWornIlvl(state);
     if (worn == null) {
-      return 'Junk sold for coins when the bag is near full or you SELL JUNK. $cap';
+      return 'Sells junk for gold when the bag is nearly full or you tap SELL JUNK. $cap';
     }
     final vs = state.autoSellMaxPower >= worn
-        ? ' Worn gear is about i$worn, so this cap can sell upgrades.'
-        : ' Worn gear is about i$worn.';
-    return 'Junk sold for coins when the bag is near full or you SELL JUNK. $cap$vs';
+        ? ' Your worn gear is about item level $worn, so this can sell upgrades.'
+        : ' Your worn gear is about item level $worn.';
+    return 'Sells junk for gold when the bag is nearly full or you tap SELL JUNK. $cap$vs';
   }
 
   static String _footer({
@@ -153,7 +179,7 @@ class BagCleanupFilters extends StatelessWidget {
   }) {
     final sell = compact
         ? 'SELL JUNK: sell gold first'
-        : 'Pickup & SELL JUNK: sell gold first (≤iLvl + rarity)';
+        : 'On pickup and SELL JUNK: sell for gold first';
     final scrap = showScrap
         ? (compact
               ? ', then scrap leftovers that match'
@@ -161,8 +187,8 @@ class BagCleanupFilters extends StatelessWidget {
         : '';
     final market = showMarket
         ? (compact
-              ? '. GOLD → MARKET buys flasks — it does not tap-sell stash.'
-              : '. GOLD → MARKET buys flasks and listings — it does not tap-sell stash.')
+              ? '. MARKET buys flasks — it does not tap-sell stash.'
+              : '. MARKET buys flasks and listings — it does not tap-sell stash.')
         : '.';
     return '$sell$scrap$market';
   }
@@ -207,7 +233,7 @@ class _IlvlFilterRow extends StatelessWidget {
         SizedBox(
           width: 52,
           child: Text(
-            value <= 0 ? offLabel : 'i$value',
+            value <= 0 ? offLabel : 'Lv $value',
             textAlign: TextAlign.right,
             style: GameTheme.readable(color: GameTheme.parchmentDim),
           ),
@@ -236,7 +262,7 @@ class _RarityFilterRow extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            'Max rarity',
+            'Up to rarity',
             style: GameTheme.section(color: GameTheme.parchmentDim),
           ),
           const Spacer(),
@@ -246,11 +272,19 @@ class _RarityFilterRow extends StatelessWidget {
             onPressed: enabled && value > 0 ? () => onChanged(value - 1) : null,
           ),
           SizedBox(
-            width: 88,
+            width: 96,
+            // Section-size text in the rarity's own colour (polish7 P040).
             child: Text(
               label,
+              key: BagCleanupFilters.rarityLabelKey,
               textAlign: TextAlign.center,
-              style: GameTheme.hint(color: GameTheme.torchHot),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.section(
+                color: itemRarityColor(
+                  LootRarity.values[value.clamp(0, LootRarity.values.length - 1)],
+                ),
+              ),
             ),
           ),
           MenuChrome.stepperButton(

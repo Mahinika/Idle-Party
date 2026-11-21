@@ -25,6 +25,10 @@ Future<void> showRedeemCouponDialog(
   director.redeemCoupon(code);
 }
 
+abstract final class RedeemCouponKeys {
+  static const redeem = ValueKey<String>('redeem-submit');
+}
+
 class _RedeemCouponDialog extends StatefulWidget {
   const _RedeemCouponDialog();
 
@@ -38,7 +42,14 @@ class _RedeemCouponDialogState extends State<_RedeemCouponDialog> {
   @override
   void initState() {
     super.initState();
-    _ctrl = TextEditingController();
+    _ctrl = TextEditingController()..addListener(_onText);
+  }
+
+  bool _hasCode = false;
+
+  void _onText() {
+    final has = _ctrl.text.trim().isNotEmpty;
+    if (has != _hasCode) setState(() => _hasCode = has);
   }
 
   @override
@@ -48,6 +59,8 @@ class _RedeemCouponDialogState extends State<_RedeemCouponDialog> {
   }
 
   void _submit() {
+    // Empty field: nothing to redeem (polish7 P046).
+    if (_ctrl.text.trim().isEmpty) return;
     Navigator.of(context).pop(_ctrl.text);
   }
 
@@ -61,7 +74,8 @@ class _RedeemCouponDialogState extends State<_RedeemCouponDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Try FOREVERSCROLLS for all forever scrolls. '
+              // Never print a live code here (polish7 P046).
+              'Got a code from us? Type it here. '
               'Already owned forever scrolls will not burn the code.',
               style: GameTheme.section(color: GameTheme.parchmentDim),
             ),
@@ -104,10 +118,11 @@ class _RedeemCouponDialogState extends State<_RedeemCouponDialog> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         GameButton(
+          key: RedeemCouponKeys.redeem,
           label: 'REDEEM',
-          style: GameButtonStyle.brown,
+          style: GameButtonStyle.go,
           expanded: false,
-          onPressed: _submit,
+          onPressed: _hasCode ? _submit : null,
         ),
       ],
     );

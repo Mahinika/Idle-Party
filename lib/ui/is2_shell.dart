@@ -27,6 +27,9 @@ import 'shell/scroll_buff_stack.dart';
 
 /// Idle Party dungeon scene: full-bleed stage + corner HUD.
 /// Shared menu sheets + bottom bar are owned by [PlayShell], not this scene.
+/// Home fight: floor line overlays the map; the target strip lives in
+/// [HomeTopBar] under the currency row (polish7 P027).
+
 class Is2Shell extends StatefulWidget {
   const Is2Shell({
     super.key,
@@ -196,7 +199,10 @@ class _Is2ShellState extends State<Is2Shell> {
               return MenuChrome.playSafeArea(
                 child: SpatialDungeonView(
                   director: d,
-                  cameraTopInset: widget.homeChrome ? 8 : _topChromePx,
+                  cameraTopInset: widget.homeChrome
+                      ? 8
+                      : _topChromePx +
+                            targetStripHeight(MediaQuery.textScalerOf(context)),
                   cameraBottomInset: widget.homeChrome
                       ? widget.extraBottomInset
                       : partyBottom + partyStrip + 8,
@@ -218,6 +224,12 @@ class _Is2ShellState extends State<Is2Shell> {
                   onMeasured: _readTopChrome,
                 ),
               ),
+              if (!widget.homeChrome)
+                ListenableBuilder(
+                  listenable: d.combatFrame,
+                  builder: (context, _) =>
+                      TargetCornerHud(director: d),
+                ),
               Expanded(
                 child: _Is2CombatCornerChrome(
                   director: d,
@@ -333,11 +345,14 @@ class _Is2FightTopBarState extends State<_Is2FightTopBar> {
             onOpenParty: () => widget.router.toggleGear(GearPanel.gear),
           ),
         if (d.dungeonTilesReady && d.toast != null && !widget.router.isOpen)
-          FeedbackToast(
-            message: d.toast!,
-            kind: d.noticeKind,
-            maxLines: 2,
-            docked: true,
+          SizedBox(
+            width: double.infinity,
+            child: FeedbackToast(
+              message: d.toast!,
+              kind: d.noticeKind,
+              maxLines: 2,
+              docked: true,
+            ),
           ),
       ],
     );
@@ -440,32 +455,32 @@ class _Is2CombatCornerChromeState extends State<_Is2CombatCornerChrome> {
                     ),
             ),
           Positioned(
-            right: hudSide,
-            top: widget.homeChrome
-                ? (state.inRift || state.inGreaterRift ? 38 : 4)
-                : 22,
-            child: TargetCornerHud(director: d),
-          ),
-          Positioned(
             left: 0,
             right: 0,
-            top:
-                bossIntroBannerTop(
-                  MediaQuery.textScalerOf(context).scale(1),
-                ) +
+            top: (widget.homeChrome
+                    ? 2 +
+                        MediaQuery.textScalerOf(context).scale(GameTheme.typeHint) *
+                            1.2 +
+                        6
+                    : 6) +
                 (state.keystoneRunActive ? 22 : 0),
             child: ListenableBuilder(
               listenable: d.combatFrame,
               builder: (context, _) {
                 final world = d.spatial;
-                if (widget.dpsMeterOpen ||
-                    world == null ||
-                    world.bossBannerTimer <= 0) {
+                if (widget.dpsMeterOpen || world == null) {
                   return const SizedBox.shrink();
                 }
-                return BossIntroBanner(
-                  name: world.bossBannerName,
-                );
+                if (world.bossBannerTimer > 0) {
+                  return BossIntroBanner(name: world.bossBannerName);
+                }
+                if (world.beatCalloutTimer > 0) {
+                  return BossIntroBanner(
+                    name: world.beatCalloutLabel,
+                    prefix: '',
+                  );
+                }
+                return const SizedBox.shrink();
               },
             ),
           ),

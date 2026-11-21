@@ -494,17 +494,16 @@ void main() {
   });
 
   test('party level unlocks dungeons, not wallet gold', () {
-    final state = GameLogic.createInitialState(
-      now: DateTime(2026, 7, 4),
-    ).copyWith(
-      gold: 0,
-      heroes: [
-        for (final h in GameLogic.createInitialState(
-          now: DateTime(2026, 7, 4),
-        ).heroes)
-          h.copyWith(level: 8, xp: 0),
-      ],
-    );
+    final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
+        .copyWith(
+          gold: 0,
+          heroes: [
+            for (final h in GameLogic.createInitialState(
+              now: DateTime(2026, 7, 4),
+            ).heroes)
+              h.copyWith(level: 8, xp: 0),
+          ],
+        );
     expect(
       DungeonCatalog.isUnlocked(
         'goblin',
@@ -714,12 +713,7 @@ void main() {
     final unit = state.enemies[world.enemies.indexOf(enemy)];
     expect(unit.rewardGold, greaterThan(0));
     final beforeXp = state.heroes.fold<int>(0, (sum, h) => sum + h.xp);
-    final result = SpatialCombat.onEnemyKilled(
-      world,
-      state,
-      enemy,
-      Random(1),
-    );
+    final result = SpatialCombat.onEnemyKilled(world, state, enemy, Random(1));
     final afterXp = result.state.heroes.fold<int>(0, (sum, h) => sum + h.xp);
     expect(result.gold, unit.rewardGold);
     expect(afterXp, greaterThan(beforeXp));
@@ -848,10 +842,7 @@ void main() {
       world.floaters.any((f) => f.text == 'FLASK' && f.priority >= 2),
       isTrue,
     );
-    expect(
-      world.floaters.where((f) => f.text == 'FLASK').length,
-      1,
-    );
+    expect(world.floaters.where((f) => f.text == 'FLASK').length, 1);
   });
 
   test('cleared floor opens stairs for exit', () {
@@ -873,7 +864,7 @@ void main() {
     }
     expect(opened, isNotNull);
     expect(world.awaitingExit, isTrue);
-    // No "GO" floater — CLEAR corner + HOLD already say what's next.
+    // No "GO" floater — the CLEAR corner already says what's next.
   });
 
   test('brass boss telegraphs CRUSH', () {
@@ -968,10 +959,7 @@ void main() {
   });
 
   test('ashen crown boss uses week telegraph on smash, not SLAM', () {
-    final seen = _bossTellTexts(
-      'ember',
-      inWorldBoss: true,
-    );
+    final seen = _bossTellTexts('ember', inWorldBoss: true);
     expect(seen.contains('CROWN'), isTrue);
     expect(seen.contains('SLAM'), isFalse);
     expect(seen.contains('SLOW') || seen.contains('CROWN'), isTrue);
@@ -1032,11 +1020,7 @@ void main() {
   test('KEY week on Sandy uses that week cave tell, not SLAM', () {
     final weekKey = _weekKeyForCave('tide');
     expect(Keystone.weekCaveId(weekKey), 'tide');
-    final seen = _bossTellTexts(
-      'sandy',
-      keystoneRun: true,
-      weeklyKey: weekKey,
-    );
+    final seen = _bossTellTexts('sandy', keystoneRun: true, weeklyKey: weekKey);
     expect(seen.contains('WAVE'), isTrue);
     expect(seen.contains('SLAM'), isFalse);
     expect(seen.contains('PULSE'), isFalse);
@@ -1154,7 +1138,11 @@ void main() {
       }
       if (glassText != null) break;
     }
-    expect(glassText, isNotNull, reason: 'expected glassTell or EXECUTE floater');
+    expect(
+      glassText,
+      isNotNull,
+      reason: 'expected glassTell or EXECUTE floater',
+    );
     expect(glassText == 'GLASS', isFalse);
   });
 
@@ -1170,7 +1158,10 @@ void main() {
     final pack = GameLogic.createEnemyGroup(room, dungeonId: 'sandy');
     final mites = [
       for (var i = 0; i < 3; i++)
-        pack[i].copyWith(archetype: EnemyArchetype.swarm, role: EnemyRole.normal),
+        pack[i].copyWith(
+          archetype: EnemyArchetype.swarm,
+          role: EnemyRole.normal,
+        ),
     ];
     state = state.copyWith(
       dungeonId: 'sandy',
@@ -1229,8 +1220,10 @@ void main() {
       enemyLevel: 4,
       enemyCount: 1,
     );
-    final mite = GameLogic.createEnemyGroup(room, dungeonId: 'sandy').first
-        .copyWith(archetype: EnemyArchetype.swarm, role: EnemyRole.normal);
+    final mite = GameLogic.createEnemyGroup(
+      room,
+      dungeonId: 'sandy',
+    ).first.copyWith(archetype: EnemyArchetype.swarm, role: EnemyRole.normal);
     state = state.copyWith(
       dungeonId: 'sandy',
       currentRoom: room,
@@ -1266,16 +1259,8 @@ void main() {
     final enemy = world.enemies.first
       ..dormant = false
       ..hp = 50;
-    SpatialCombat.godHand(
-      world,
-      state,
-      tileX: enemy.x,
-      tileY: enemy.y,
-    );
-    expect(
-      world.bursts.any((b) => b.kind == SpatialBurstKind.ring),
-      isTrue,
-    );
+    SpatialCombat.godHand(world, state, tileX: enemy.x, tileY: enemy.y);
+    expect(world.bursts.any((b) => b.kind == SpatialBurstKind.ring), isTrue);
   });
 
   test('sandy brute shouts CRASH before the cleave lands', () {
@@ -1287,8 +1272,10 @@ void main() {
       enemyLevel: 4,
       enemyCount: 1,
     );
-    final brute = GameLogic.createEnemyGroup(room, dungeonId: 'sandy').first
-        .copyWith(archetype: EnemyArchetype.brute, role: EnemyRole.normal);
+    final brute = GameLogic.createEnemyGroup(
+      room,
+      dungeonId: 'sandy',
+    ).first.copyWith(archetype: EnemyArchetype.brute, role: EnemyRole.normal);
     state = state.copyWith(
       dungeonId: 'sandy',
       currentRoom: room,
@@ -1334,8 +1321,10 @@ void main() {
       enemyLevel: 4,
       enemyCount: 1,
     );
-    final brute = GameLogic.createEnemyGroup(room, dungeonId: 'sandy').first
-        .copyWith(archetype: EnemyArchetype.brute, role: EnemyRole.normal);
+    final brute = GameLogic.createEnemyGroup(
+      room,
+      dungeonId: 'sandy',
+    ).first.copyWith(archetype: EnemyArchetype.brute, role: EnemyRole.normal);
     state = state.copyWith(
       dungeonId: 'sandy',
       currentRoom: room,
@@ -1372,8 +1361,10 @@ void main() {
       enemyLevel: 4,
       enemyCount: 1,
     );
-    final brute = GameLogic.createEnemyGroup(room, dungeonId: 'goblin').first
-        .copyWith(archetype: EnemyArchetype.brute, role: EnemyRole.normal);
+    final brute = GameLogic.createEnemyGroup(
+      room,
+      dungeonId: 'goblin',
+    ).first.copyWith(archetype: EnemyArchetype.brute, role: EnemyRole.normal);
     state = state.copyWith(
       dungeonId: 'goblin',
       currentRoom: room,
@@ -1452,8 +1443,10 @@ void main() {
       enemyLevel: 4,
       enemyCount: 1,
     );
-    final spit = GameLogic.createEnemyGroup(room, dungeonId: 'tide').first
-        .copyWith(archetype: EnemyArchetype.ranged, role: EnemyRole.normal);
+    final spit = GameLogic.createEnemyGroup(
+      room,
+      dungeonId: 'tide',
+    ).first.copyWith(archetype: EnemyArchetype.ranged, role: EnemyRole.normal);
     state = state.copyWith(
       dungeonId: 'tide',
       currentRoom: room,
@@ -1493,8 +1486,10 @@ void main() {
       enemyLevel: 6,
       enemyCount: 1,
     );
-    final tank = GameLogic.createEnemyGroup(room, dungeonId: 'king').first
-        .copyWith(archetype: EnemyArchetype.tank, role: EnemyRole.elite);
+    final tank = GameLogic.createEnemyGroup(
+      room,
+      dungeonId: 'king',
+    ).first.copyWith(archetype: EnemyArchetype.tank, role: EnemyRole.elite);
     state = state.copyWith(
       dungeonId: 'king',
       currentRoom: room,

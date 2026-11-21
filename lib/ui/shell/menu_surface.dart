@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../core/chase_contract.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
 import '../../core/nav_intent.dart';
+import '../menu_chrome.dart';
 import 'essence_dock.dart';
 import 'gold_dock.dart';
 import 'inventory_dock.dart';
@@ -22,6 +24,19 @@ import 'home/map_screen.dart';
 /// The one menu sheet, shared by hub and dungeon.
 /// All routes fill the stack above the shared [AppBottomBar] (full height).
 class MenuSurface extends StatefulWidget {
+  /// Subtitle of the home ESSENCE tile hub.
+  static const essenceHubHint = 'Lasting upgrades for the party';
+
+  /// Home GEAR sub-tabs, under the sheet title (audit F046).
+  static const Key gearTabsKey = ValueKey('home_gear_tabs');
+
+  static String gearTabLabel(GearPanel panel) => switch (panel) {
+    GearPanel.gear => 'GEAR',
+    GearPanel.bag => 'BAG',
+    GearPanel.merge => 'MERGE',
+    GearPanel.roster => 'ROSTER',
+  };
+
   const MenuSurface({
     super.key,
     required this.director,
@@ -165,6 +180,24 @@ class _MenuSurfaceState extends State<MenuSurface> {
     );
   }
 
+  Widget _gearTabs() {
+    final panels = MenuRouter.visibleGearPanels(state);
+    if (panels.isEmpty) return const SizedBox.shrink();
+    final selected = panels
+        .indexOf(router.gearPanel)
+        .clamp(0, panels.length - 1);
+    return Padding(
+      key: MenuSurface.gearTabsKey,
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+      child: MenuChrome.segmented(
+        dense: true,
+        labels: [for (final p in panels) MenuSurface.gearTabLabel(p)],
+        selectedIndex: selected,
+        onSelect: (i) => router.gearPanel = panels[i],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final d = widget.director;
@@ -180,17 +213,48 @@ class _MenuSurfaceState extends State<MenuSurface> {
     // SHOP / ESSENCE / KEY / MORE match GEAR (never cover the bar; OverlayScrim
     // lives only inside the Expanded scene stack).
     final navOwnedClose = widget.home && _homeNavOwnsClose(router.route);
+    // Home ESSENCE tiles: the hub is always "ESSENCE", whichever panel was
+    // last open (RELICS / PETS used to retitle the same tile grid).
+    final essenceHub = widget.home &&
+        router.route == MenuRoute.essence &&
+        !router.homeAtSub;
+    final goal = widget.home
+        ? ChaseContract.goalLine(state, inDungeon: state.inDungeon)
+        : null;
+    String sheetSubtitle() {
+      if (homeMenuGrid) return HomeMenuGrid.hint;
+      if (essenceHub) return MenuSurface.essenceHubHint;
+      if (goal != null && goal.isNotEmpty) return goal;
+      return router.jobHintFor(state);
+    }
+
     return OverlayScrim(
-      title: homeMenuGrid ? '' : router.title,
-      subtitle: homeMenuGrid ? '' : router.jobHintFor(state),
+      title: homeMenuGrid
+          ? 'MENU'
+          : essenceHub
+          ? 'ESSENCE'
+          : router.title,
+      subtitle: sheetSubtitle(),
       heightFactor: 1,
-      gold: state.gold,
-      essence: state.essence,
+      // Home keeps the top bar (essence, gold, gold/min) above every sheet,
+      // so the sheet header does not repeat the wallet.
+      gold: widget.home ? null : state.gold,
+      essence: widget.home ? null : state.essence,
       showEssence: MenuTabs.showCamp(state),
       showClose: !navOwnedClose,
       onClose: router.close,
       child: switch (router.route) {
-        MenuRoute.gear => _inventoryDock(),
+        // Home: GEAR / BAG / MERGE / ROSTER sit under the title, not as a
+        // second tab row on top of the bottom nav (audit F046).
+        MenuRoute.gear => widget.home
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _gearTabs(),
+                  Expanded(child: _inventoryDock()),
+                ],
+              )
+            : _inventoryDock(),
         MenuRoute.gold => GoldDock(
           director: d,
           panel: router.goldPanel,
@@ -205,7 +269,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
                 panel: router.essencePanel,
                 onPanelChanged: (panel) => router.essencePanel = panel,
               ),
-        MenuRoute.key => KeystoneSheet(director: d),
+        MenuRoute.key => KeystoneSheet(director: d, router: router),
         MenuRoute.map => widget.home
             ? MapScreen(director: d, router: router)
             : const SizedBox.shrink(),
@@ -220,6 +284,8 @@ class _MenuSurfaceState extends State<MenuSurface> {
           director: d,
           section: router.moreSection,
           initialInfoPane: router.moreInfoPane,
+          showSectionRail: !widget.home,
+          showPatchNotes: !widget.home,
           onSectionChanged: (sec) => router.moreSection = sec,
           onOpenWhatsNew: () => WhatsNewOverlay.show(context, d),
           onClose: router.close,

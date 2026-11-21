@@ -23,10 +23,11 @@ isolate from the old ANR notes.
    is closed, and the hub already names one cave for tomorrow. D7 is still
    9 devices. The first-boss coach line now says the party keeps fighting
    if you close the app. Do not add a second daily calendar.
-2. **Offer the ad when the gold is on screen.** Welcome Back now has an
-   optional watch that turns that return’s gold into ×3 — the same number
-   as Scroll of Rest. Skip keeps the gold. Ad-free and Forever Rest are
-   not asked. Nothing new is written into the save. Next: keep SCROLLS
+2. **Offer the ad when the gold is on screen.** Welcome Back has an
+   optional watch that **doubles** that return’s gold and essence (2×).
+   Scroll of Rest is a separate ×3 gold ticket. Skip keeps the loot.
+   Ad-free and Forever Rest are not asked. Nothing new is written into the
+   save. Next: keep SCROLLS
    one tap from the hub after the first boss, and do not remove the boot
    preload (that only hides requests; it does not create watches).
 3. **Sell what Play can already charge.** SHOP now lists Ad-free,

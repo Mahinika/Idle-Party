@@ -55,7 +55,7 @@ void main() {
     );
     expect(
       ChaseDispatcher.navIntent(meet, state)?.gear,
-      GearPanel.roster,
+      GearPanel.gear,
     );
 
     final bag = ChaseDispatcher.plan(

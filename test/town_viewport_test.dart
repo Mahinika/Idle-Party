@@ -6,6 +6,7 @@ import 'package:idle_party/assets/custom_assets.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/core/town_access.dart';
 import 'package:idle_party/models/mission.dart';
@@ -97,6 +98,16 @@ void main() {
 
     test('first Ascend opens roster swaps', () {
       expect(TownAccess.innOpen(afterAscend()), isTrue);
+    });
+
+    test('pending hero reveal alone does not open INN roster', () {
+      final s = afterBoss().copyWith(
+        metaDepth: afterBoss().metaDepth.copyWith(
+          pendingHeroReveals: const ['combat'],
+        ),
+      );
+      expect(TownAccess.innRosterOpen(s), isFalse);
+      expect(MenuTabs.showRoster(s), isFalse);
     });
   });
 
@@ -305,7 +316,7 @@ void main() {
       expect(router.route, MenuRoute.gear);
       expect(router.gearPanel, GearPanel.roster);
       expect(find.text('ROSTER'), findsWidgets);
-      expect(find.textContaining('Pick up to'), findsOneWidget);
+      expect(find.textContaining('Fixed roles: TANK'), findsOneWidget);
       expect(find.text('ACTIVE'), findsWidgets);
       await tester.tap(find.text('CLOSE').first);
       await tester.pump();
@@ -324,7 +335,7 @@ void main() {
       expect(router.moreSection, MoreSection.quests);
       expect(find.text('QUESTS'), findsWidgets);
       expect(
-        find.textContaining('Claim 3 in a row'),
+        find.textContaining('Every 3rd quest claimed'),
         findsOneWidget,
       );
       await tester.tap(find.text('CLOSE').first);

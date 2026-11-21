@@ -362,7 +362,10 @@ void main() {
         );
         expect(find.text(label), findsOneWidget);
       }
-      expect(find.text('UNAVAILABLE'), findsWidgets);
+      // polish7 P058: a note, not a dead UNAVAILABLE button.
+      expect(find.text('UNAVAILABLE'), findsNothing);
+      expect(find.text(ShopDock.needsPlay), findsWidgets);
+      expect(find.text(ShopDock.noPrice), findsNothing);
       expect(find.text('BUY'), findsNothing);
       expect(find.textContaining('\$'), findsNothing);
       expect(find.text('NOT ON PLAY'), findsNothing);
@@ -375,7 +378,7 @@ void main() {
       expect(find.text('RESTORE'), findsOneWidget);
       expect(find.text('REDEEM CODE'), findsOneWidget);
 
-      await tester.tap(find.text('UNAVAILABLE').first);
+      await tester.tap(find.text(ShopDock.needsPlay).first);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(director.state.metaDepth.adFree, isFalse);

@@ -1,5 +1,9 @@
 import 'dart:math' as math;
-import 'dart:ui';
+
+import 'package:flutter/painting.dart';
+
+import '../../../models/town_building.dart';
+import '../../game_theme.dart';
 
 /// Sprite pixel sizes from `tool/generate_town_art.py`.
 abstract final class TownSpriteSize {
@@ -169,13 +173,39 @@ class TownSceneLayout {
       wellH,
     );
 
-    Rect labelOn(Rect b) {
-      final base = math.min(math.max(28.0, b.width - 8), 88.0);
-      final lw = math.min(b.width - 4, base * math.max(1.0, textScale));
+    Rect labelOn(Rect b, String label) {
+      const edge = 4.0;
+      const chipPad = 14.0; // _nameChip padding + nameplate rim
+      final scaler = TextScaler.linear(textScale);
+      final style = GameTheme.hint(color: GameTheme.parchment);
+      final painter = TextPainter(
+        text: TextSpan(text: label, style: style),
+        textDirection: TextDirection.ltr,
+        textScaler: scaler,
+        maxLines: 1,
+      )..layout();
+      final neededW = painter.width + chipPad;
+      painter.dispose();
+
       final lh = math.min(labelH, math.max(10.0, b.height - 4));
       final top = math.max(b.top, b.bottom - lh - 2);
       final height = math.min(lh, b.bottom - top);
-      return Rect.fromLTWH(b.center.dx - lw / 2, top, lw, height);
+      var lw = math.max(neededW, 28.0);
+      lw = math.min(lw, w - edge * 2);
+      final rightAnchored = b.right >= w - edge - 24;
+      late double left;
+      if (rightAnchored) {
+        left = math.max(edge, b.right - lw);
+      } else {
+        left = b.center.dx - lw / 2;
+        if (left < edge) left = edge;
+        if (left + lw > w - edge) left = w - edge - lw;
+      }
+      if (left < edge) {
+        left = edge;
+        lw = math.min(neededW, w - edge * 2);
+      }
+      return Rect.fromLTWH(left, top, lw, height);
     }
 
     final lane = Rect.fromLTRB(
@@ -310,9 +340,12 @@ class TownSceneLayout {
       well: well,
       front: front,
       party: party,
-      guildLabel: labelOn(guild),
-      vaultLabel: labelOn(vault),
-      frontLabels: front.map(labelOn).toList(),
+      guildLabel: labelOn(guild, TownBuilding.byId(TownBuildingId.guild).label),
+      vaultLabel: labelOn(vault, TownBuilding.byId(TownBuildingId.vault).label),
+      frontLabels: [
+        for (var i = 0; i < front.length; i++)
+          labelOn(front[i], TownBuilding.frontRow[i].label),
+      ],
       lane: lane,
       folkScale: folkScale,
       courtyardPath: Rect.fromLTRB(0, backBottom - 8, w, frontTop),

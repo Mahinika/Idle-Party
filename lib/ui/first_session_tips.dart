@@ -5,6 +5,7 @@ import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/home_layout.dart';
 import '../core/menu_alerts.dart';
+import '../core/remote_tune.dart';
 
 /// Where a one-line coach hint lives (the real control, not a GOT IT card).
 enum CoachTarget { enter, godhand, farmPush, kit, gear, gold, essence }
@@ -29,6 +30,10 @@ class CoachHint {
 class FirstSessionTips extends StatelessWidget {
   const FirstSessionTips({super.key, required this.director});
 
+  /// Early FARM/PUSH help: same names as later, plainer words (polish7 P005).
+  static const String farmPushPlain =
+      'FARM repeats this floor for loot. PUSH goes deeper.';
+
   final GameDirector director;
 
   /// Button-anchored tips only (order = priority).
@@ -50,8 +55,8 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'farm_push',
-      title: 'Repeat / Next',
-      body: 'Repeat loots. Next goes deeper.',
+      title: 'FARM / PUSH',
+      body: FirstSessionTips.farmPushPlain,
     ),
     (
       id: 'kit_abilities',
@@ -114,7 +119,7 @@ class FirstSessionTips extends StatelessWidget {
   static String displayLine(CoachHint hint, GameState state) {
     if (state.homeLayout != HomeLayout.home) return hint.line;
     return switch (hint.target) {
-      CoachTarget.gold => 'FORGE under the fight.',
+      CoachTarget.gold => 'TRAIN under the fight.',
       CoachTarget.gear => 'Tap HEROES.',
       CoachTarget.essence => 'Tap ESSENCE.',
       CoachTarget.enter => 'Tap ENTER.',
@@ -127,7 +132,7 @@ class FirstSessionTips extends StatelessWidget {
   /// FARM/PUSH labels match the dungeon mode chips when jargon is on.
   static String _farmPushLine(GameState s) {
     if (GameLogic.plainPlayerChrome(s)) {
-      return 'Repeat loots. Next goes deeper.';
+      return FirstSessionTips.farmPushPlain;
     }
     return 'FARM loops loot. PUSH climbs.';
   }
@@ -154,13 +159,23 @@ class FirstSessionTips extends StatelessWidget {
     return hint.line;
   }
 
+  static bool _deferUntilFirstBoss(GameState s) =>
+      RemoteTune.firstClimbAutoContinue && GameLogic.firstBossPending(s);
+
   static String? nextTipId(GameState s, {required bool inDungeon}) {
     final seen = s.seenTips;
     final porch = leftPorch(s);
     final rewarded = earnedFirstReward(s);
+    final deferBoss = _deferUntilFirstBoss(s);
     for (final tip in tips) {
       if (seen.contains(tip.id)) continue;
       if (!rewarded && !firstRunBeatIds.contains(tip.id)) continue;
+      if (deferBoss &&
+          (tip.id == 'godhand' ||
+              tip.id == 'farm_push' ||
+              tip.id == 'kit_abilities')) {
+        continue;
+      }
 
       if (tip.id == 'first_run') {
         if (inDungeon) continue;
@@ -173,9 +188,9 @@ class FirstSessionTips extends StatelessWidget {
       }
       if (tip.id == 'godhand') {
         if (!inDungeon || !leftPorch(s)) continue;
-        // A later run already knows the fight. The line stayed up for a
-        // whole clear when the fist was never tapped.
-        if (s.ascensionLevel > 0 || s.bossVictories > 0) continue;
+        if (_deferUntilFirstBoss(s)) continue;
+        // A later Ascend run already knows the fight.
+        if (s.ascensionLevel > 0) continue;
         return tip.id;
       }
       if (tip.id == 'farm_push') {

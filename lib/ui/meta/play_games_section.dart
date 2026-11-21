@@ -504,6 +504,14 @@ class PlayGamesSection extends StatefulWidget {
   const PlayGamesSection({super.key, required this.director});
   final GameDirector director;
 
+  /// Player-facing season line (P041). Dev note, kept out of the UI: Oct
+  /// reuses the Aug KEY/Gauntlet + Sep GR Console leaderboard ids
+  /// (see play_leaderboard_ids.dart).
+  static String seasonLine(String month, {required bool boards}) {
+    if (!boards) return 'Season $month · cloud backup.';
+    return 'Season $month · cloud backup. Boards: KEY, Gauntlet, Ranked Rift.';
+  }
+
   @override
   State<PlayGamesSection> createState() => _PlayGamesSectionState();
 }
@@ -542,10 +550,10 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
         ),
         const SizedBox(height: 4),
         Text(
-          GameLogic.showKeystoneJargon(widget.director.state)
-              ? 'Season $month · cloud backup. Boards: KEY, Gauntlet, Ranked GR '
-                    '(Oct reuses Aug KEY/Gauntlet + Sep GR Console ids).'
-              : 'Season $month · cloud backup.',
+          PlayGamesSection.seasonLine(
+            month,
+            boards: GameLogic.showKeystoneJargon(widget.director.state),
+          ),
           style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         if (lastBackup != null) ...[
@@ -558,7 +566,8 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
         const SizedBox(height: 8),
         GameButton(
           label: signedIn ? 'SIGNED IN' : 'SIGN IN WITH PLAY GAMES',
-          style: GameButtonStyle.brown,
+          // The one go action on ACCOUNT (polish7 P001/P042).
+          style: signedIn ? GameButtonStyle.grey : GameButtonStyle.go,
           onPressed: playGamesBusy || signedIn ? null : signInPlayGamesFlow,
         ),
         const SizedBox(height: 6),

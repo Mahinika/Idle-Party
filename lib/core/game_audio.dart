@@ -446,7 +446,9 @@ abstract final class GameAudio {
   /// UI and body chirps yield when the phone is already full of hits.
   static bool _shouldDrop(String id) {
     final quiet =
-        id.startsWith('mat_') || id.startsWith('swish_') || id.startsWith('ui_');
+        id.startsWith('mat_') ||
+        id.startsWith('swish_') ||
+        id.startsWith('ui_');
     if (!quiet) return false;
     try {
       return SoLoud.instance.getActiveVoiceCount() >= dropQuietLayersAt;
@@ -648,7 +650,11 @@ abstract final class GameAudio {
         _ambienceHandle == null) {
       _restartAmbienceOnly();
     }
-    if (forceRestart || placeChanged || bossChanged || moodChanged || !musicOk) {
+    if (forceRestart ||
+        placeChanged ||
+        bossChanged ||
+        moodChanged ||
+        !musicOk) {
       await _realizeMusic(
         restart: forceRestart || placeChanged || bossChanged || moodChanged,
       );
@@ -770,11 +776,7 @@ abstract final class GameAudio {
         final length = soloud.getLength(source);
         _score.setBedLimit(length);
       }
-      final handle = soloud.play(
-        source,
-        volume: 0.001,
-        looping: _loops(stem),
-      );
+      final handle = soloud.play(source, volume: 0.001, looping: _loops(stem));
       if (gen != _fadeGen) {
         _releaseHandle(handle, Duration.zero);
         return;
@@ -842,8 +844,9 @@ abstract final class GameAudio {
   };
 
   static AudioSource? _sourceFor(MusicStem stem) => switch (stem) {
-    MusicStem.hub || MusicStem.dungeon || MusicStem.boss =>
-      _trackPath == null ? null : _byPath[_trackPath],
+    MusicStem.hub ||
+    MusicStem.dungeon ||
+    MusicStem.boss => _trackPath == null ? null : _byPath[_trackPath],
     MusicStem.resolve => _resolveMusic,
     MusicStem.down => _downMusic,
     MusicStem.none => null,
@@ -926,8 +929,18 @@ abstract final class GameAudio {
   }
 
   /// App lifecycle: pause ambience + music when backgrounded.
-  static void onAppPaused() {
+  ///
+  /// [release] also stops voices and the score timer so a hidden process
+  /// is not holding decoded audio streams open. A brief inactive shade
+  /// swipe should leave [release] false.
+  static void onAppPaused({bool release = false}) {
     _backgroundPaused = true;
+    if (release) {
+      stopAmbience();
+      _scoreTimer?.cancel();
+      _scoreTimer = null;
+      return;
+    }
     _pauseBackgroundInternal();
   }
 

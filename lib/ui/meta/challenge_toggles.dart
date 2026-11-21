@@ -10,6 +10,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
+import 'farm_strength_picker.dart';
 
 /// Keystone run prefs — set before entering a dungeon (Mythic+-style).
 class ChallengeToggles extends StatefulWidget {
@@ -19,7 +20,19 @@ class ChallengeToggles extends StatefulWidget {
     this.collapsed = false,
     this.lockExpanded = false,
     this.foldEssays = false,
+    this.onEnter,
   });
+
+  /// KEY sheet: ENTER right under the dial (audit F034). Null hides it.
+  final VoidCallback? onEnter;
+
+  static const Key enterKey = ValueKey('key-dial-enter');
+  static const Key valueKey = ValueKey('key-dial-value');
+  static const String nextEnterLine =
+      'The dial applies on your next ENTER from town.';
+
+  static String enterLabel(int level) =>
+      level <= 0 ? 'ENTER' : 'ENTER KEY +$level';
   final GameDirector director;
   final bool collapsed;
 
@@ -119,7 +132,9 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                           activeBits.isEmpty ? 'off' : activeBits.join(' · '),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GameTheme.section(color: GameTheme.parchmentDim),
+                          style: GameTheme.section(
+                            color: GameTheme.parchmentDim,
+                          ),
                         ),
                       ),
                     ],
@@ -143,214 +158,246 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
             textAlign: TextAlign.center,
             style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
+          if (widget.onEnter != null) ...[
+            // FARM strength is picked with the key, before ENTER.
+            if (FarmStrengthPicker.showBeforeEnter(state)) ...[
+              const SizedBox(height: 6),
+              FarmStrengthPicker(director: director),
+            ],
+            const SizedBox(height: 6),
+            if (state.inDungeon)
+              Text(
+                ChallengeToggles.nextEnterLine,
+                textAlign: TextAlign.center,
+                style: GameTheme.hint(color: GameTheme.torchHot),
+              )
+            else
+              GameButton(
+                key: ChallengeToggles.enterKey,
+                label: ChallengeToggles.enterLabel(state.hardmodeLevel),
+                style: GameButtonStyle.gold,
+                primary: true,
+                onPressed: widget.onEnter,
+              ),
+          ],
           ...() {
             final essays = <Widget>[
-          if (GameLogic.endgameUnlocked(state)) ...[
-            const SizedBox(height: 4),
-            Text(
-              Keystone.weekFightLine(weekKey),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.hint(color: GameTheme.torchHot),
-            ),
-          ],
-          if (affixes.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 6,
-              runSpacing: 4,
-              children: [
-                for (final a in affixes)
-                  _KeyAffixChip(
-                    label: Keystone.label(a),
-                    blurb: Keystone.blurb(a),
-                    risk: Keystone.riskTier(a),
-                  ),
+              if (GameLogic.endgameUnlocked(state)) ...[
+                const SizedBox(height: 4),
+                Text(
+                  Keystone.weekFightLine(weekKey),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.hint(color: GameTheme.torchHot),
+                ),
               ],
-            ),
-          ],
-          if (week.hasGoal) ...[
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: MenuChrome.cardBox(selected: weekReady || weekAlmost),
-              child: Column(
+              if (affixes.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    for (final a in affixes)
+                      _KeyAffixChip(
+                        label: Keystone.label(a),
+                        blurb: Keystone.blurb(a),
+                        risk: Keystone.riskTier(a),
+                      ),
+                  ],
+                ),
+              ],
+              if (week.hasGoal) ...[
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  decoration: MenuChrome.cardBox(
+                    selected: weekReady || weekAlmost,
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        weekReady
+                            ? 'WEEK GOAL READY'
+                            : weekAlmost
+                            ? 'WEEK GOAL ALMOST'
+                            : 'WEEK GOAL',
+                        textAlign: TextAlign.center,
+                        style: GameTheme.hint(
+                          color: weekReady || weekAlmost
+                              ? GameTheme.torchHot
+                              : GameTheme.parchmentDim,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        week.name,
+                        textAlign: TextAlign.center,
+                        style: GameTheme.section(color: GameTheme.parchment),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        weekClaimed
+                            ? 'Claimed · ${week.titleReward ?? week.name}'
+                            : '${week.blurb}\n'
+                                  '${LocalSeasonCatalog.weekProgressLabel(state, week)}'
+                                  '${weekReady ? ' · auto-claims on hub sync' : ''}',
+                        textAlign: TextAlign.center,
+                        style: GameTheme.hint(color: GameTheme.parchmentDim),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 6),
+              Row(
                 children: [
-                  Text(
-                    weekReady
-                        ? 'WEEK GOAL READY'
-                        : weekAlmost
-                        ? 'WEEK GOAL ALMOST'
-                        : 'WEEK GOAL',
-                    textAlign: TextAlign.center,
-                    style: GameTheme.hint(color: weekReady || weekAlmost
-                          ? GameTheme.torchHot
-                          : GameTheme.parchmentDim),
+                  Expanded(
+                    child: _ChallengeChip(
+                      label: 'BOSS RUSH',
+                      active: state.challengeBossRush,
+                      onTap: () => director.setChallengeBossRush(
+                        !state.challengeBossRush,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    week.name,
-                    textAlign: TextAlign.center,
-                    style: GameTheme.section(color: GameTheme.parchment),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    weekClaimed
-                        ? 'Claimed · ${week.titleReward ?? week.name}'
-                        : '${week.blurb}\n'
-                              '${LocalSeasonCatalog.weekProgressLabel(state, week)}'
-                              '${weekReady ? ' · auto-claims on hub sync' : ''}',
-                    textAlign: TextAlign.center,
-                    style: GameTheme.hint(color: GameTheme.parchmentDim),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _ChallengeChip(
+                      label: 'NO FLASK',
+                      active: state.challengeNoFlask,
+                      onTap: () =>
+                          director.setChallengeNoFlask(!state.challengeNoFlask),
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Expanded(
-                child: _ChallengeChip(
-                  label: 'BOSS RUSH',
-                  active: state.challengeBossRush,
-                  onTap: () =>
-                      director.setChallengeBossRush(!state.challengeBossRush),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _ChallengeChip(
-                  label: 'NO FLASK',
-                  active: state.challengeNoFlask,
-                  onTap: () =>
-                      director.setChallengeNoFlask(!state.challengeNoFlask),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              'Boss Rush: tougher elite packs (not extra bosses) · +2e on clear · '
-              'No Flask: healing flasks disabled · +2e on clear',
-              textAlign: TextAlign.center,
-              style: GameTheme.hint(color: GameTheme.parchmentDim),
-            ),
-          ),
-          const SizedBox(height: 6),
-          _ChallengeChip(
-            label: 'TINY (3 heroes)',
-            active: state.challengeTiny,
-            onTap: () => director.setChallengeTiny(!state.challengeTiny),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              'Tiny: 3 heroes max · +2e on clear (not a harder threat)',
-              textAlign: TextAlign.center,
-              style: GameTheme.hint(color: GameTheme.parchmentDim),
-            ),
-          ),
-          if (state.metaDepth.challengeBestBossRushKey > 0 ||
-              state.metaDepth.challengeBestNoFlaskKey > 0 ||
-              state.metaDepth.challengeBestTinyKey > 0) ...[
-            const SizedBox(height: 4),
-            Text(
-              'PB · Rush +${state.metaDepth.challengeBestBossRushKey} · '
-              'No Flask +${state.metaDepth.challengeBestNoFlaskKey} · '
-              'Tiny +${state.metaDepth.challengeBestTinyKey}',
-              textAlign: TextAlign.center,
-              style: GameTheme.hint(color: GameTheme.parchmentDim),
-            ),
-          ],
-          Text(
-            'Party power ${GameLogic.partyPowerScore(state)} · '
-            'levels, worn gear, Ascend, blessings, Apex, Full Bench, endgame unlock',
-            textAlign: TextAlign.center,
-            style: GameTheme.hint(color: GameTheme.mossLit),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            decoration: MenuChrome.cardBox(selected: vaultReady),
-            child: Column(
-              children: [
-                Text(
-                  'DAILY VAULT',
-                  textAlign: TextAlign.center,
-                  style: GameTheme.hint(color: vaultReady
-                        ? GameTheme.torchHot
-                        : GameTheme.parchmentDim),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  md.dailyVaultClaimed
-                      ? 'Today: claimed'
-                      : 'Today: clears ${md.dailyVaultClears}/'
-                            '${GameLogic.dailyVaultClearTarget}'
-                            ' · best timed KEY +${md.dailyBestTimedKey}'
-                            '${vaultReady ? ' · ready' : ''}',
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  'Boss Rush: tougher elite packs (not extra bosses) · +2e on clear · '
+                  'No Flask: healing flasks disabled · +2e on clear',
                   textAlign: TextAlign.center,
                   style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  md.seasonKey.isEmpty
-                      ? 'Season: rotating…'
-                      : 'Season: ${month.name}',
+              ),
+              const SizedBox(height: 6),
+              _ChallengeChip(
+                label: 'TINY (3 heroes)',
+                active: state.challengeTiny,
+                onTap: () => director.setChallengeTiny(!state.challengeTiny),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  'Tiny: 3 heroes max · +2e on clear (not a harder threat)',
                   textAlign: TextAlign.center,
                   style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
-                if (md.seasonKey.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    '+${GameLogic.seasonWeeklyBonusEssence} essence on the '
-                    'first vault claim this month',
-                    textAlign: TextAlign.center,
-                    style: GameTheme.hint(color: GameTheme.mossLit),
-                  ),
-                ],
-                if (GameLogic.checkInActive(state)) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    GameLogic.checkInWelcomeLine(state),
-                    textAlign: TextAlign.center,
-                    style: GameTheme.hint(color: GameTheme.mossLit),
-                  ),
-                ],
-                if (vaultReady) ...[
-                  const SizedBox(height: 6),
-                  GameButton(
-                    label:
-                        'CLAIM VAULT · +${OfflineProgressResult.groupedCount(vaultE)} essence · +1 Cinder',
-                    onPressed: director.claimDailyVault,
-                  ),
-                ],
+              ),
+              if (state.metaDepth.challengeBestBossRushKey > 0 ||
+                  state.metaDepth.challengeBestNoFlaskKey > 0 ||
+                  state.metaDepth.challengeBestTinyKey > 0) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'PB · Rush +${state.metaDepth.challengeBestBossRushKey} · '
+                  'No Flask +${state.metaDepth.challengeBestNoFlaskKey} · '
+                  'Tiny +${state.metaDepth.challengeBestTinyKey}',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
+                ),
               ],
-            ),
-          ),
-          if (GameLogic.endgameUnlocked(state)) ...[
-            const SizedBox(height: 6),
-            Text(
-              'Hub hunt · ${chase.title}',
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.hint(color: GameTheme.torchHot),
-            ),
-          ],
-          const SizedBox(height: 2),
-          Text(
-            !GameLogic.endgameUnlocked(state)
-                ? 'KEY unlocks when every active hero is Lv${GameLogic.maxHeroLevel}, '
-                      'with Gauntlet, Ranked GR, Farm Rift, Ashen, and Craft Trial.'
-                : 'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2. Keys keep going past +${Keystone.campaignCap}.',
-            textAlign: TextAlign.center,
-            style: GameTheme.hint(color: GameTheme.parchmentDim),
-          ),
+              Text(
+                'Party power ${GameLogic.partyPowerScore(state)} · '
+                'levels, worn gear, Ascend, blessings, Apex, Full Bench, endgame unlock',
+                textAlign: TextAlign.center,
+                style: GameTheme.hint(color: GameTheme.mossLit),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: MenuChrome.cardBox(selected: vaultReady),
+                child: Column(
+                  children: [
+                    Text(
+                      'DAILY VAULT',
+                      textAlign: TextAlign.center,
+                      style: GameTheme.hint(
+                        color: vaultReady
+                            ? GameTheme.torchHot
+                            : GameTheme.parchmentDim,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      md.dailyVaultClaimed
+                          ? 'Today: claimed'
+                          : 'Today: clears ${md.dailyVaultClears}/'
+                                '${GameLogic.dailyVaultClearTarget}'
+                                ' · best timed KEY +${md.dailyBestTimedKey}'
+                                '${vaultReady ? ' · ready' : ''}',
+                      textAlign: TextAlign.center,
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      md.seasonKey.isEmpty
+                          ? 'Season: rotating…'
+                          : 'Season: ${month.name}',
+                      textAlign: TextAlign.center,
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    ),
+                    if (md.seasonKey.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '+${GameLogic.seasonWeeklyBonusEssence} essence on the '
+                        'first vault claim this month',
+                        textAlign: TextAlign.center,
+                        style: GameTheme.hint(color: GameTheme.mossLit),
+                      ),
+                    ],
+                    if (GameLogic.checkInActive(state)) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        GameLogic.checkInWelcomeLine(state),
+                        textAlign: TextAlign.center,
+                        style: GameTheme.hint(color: GameTheme.mossLit),
+                      ),
+                    ],
+                    if (vaultReady) ...[
+                      const SizedBox(height: 6),
+                      GameButton(
+                        label:
+                            'CLAIM VAULT · +${OfflineProgressResult.groupedCount(vaultE)} essence · +1 Cinder',
+                        onPressed: director.claimDailyVault,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (GameLogic.endgameUnlocked(state)) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'Hub hunt · ${chase.title}',
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.hint(color: GameTheme.torchHot),
+                ),
+              ],
+              const SizedBox(height: 2),
+              Text(
+                !GameLogic.endgameUnlocked(state)
+                    ? 'KEY unlocks when every active hero is Lv${GameLogic.maxHeroLevel}, '
+                          'with Gauntlet, Ranked GR, Farm Rift, Ashen, and Craft Trial.'
+                    : 'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2. Keys keep going past +${Keystone.campaignCap}.',
+                textAlign: TextAlign.center,
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              ),
             ];
             if (!widget.foldEssays) return essays;
             return <Widget>[
@@ -381,24 +428,28 @@ class _HardmodeStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: MenuChrome.cardBox(selected: level > 0),
       child: Row(
         children: [
           MenuChrome.stepperButton(
             label: 'KEY -',
             sign: '-',
+            chunky: true,
             onPressed: level > 0 ? () => onChanged(level - 1) : null,
           ),
           Expanded(
             child: Column(
               children: [
+                // A big "KEY +0" between chunky buttons (audit F035).
                 Text(
-                  level <= 0 ? 'OFF' : '+$level',
+                  'KEY +$level',
+                  key: ChallengeToggles.valueKey,
                   textAlign: TextAlign.center,
-                  style: GameTheme.hint(color: level > 0
-                        ? GameTheme.torchHot
-                        : GameTheme.parchmentDim),
+                  maxLines: 1,
+                  style: GameTheme.button(
+                    color: level > 0 ? GameTheme.torchHot : GameTheme.parchment,
+                  ),
                 ),
                 if (level > 0) ...[
                   const SizedBox(height: 2),
@@ -416,6 +467,7 @@ class _HardmodeStepper extends StatelessWidget {
           MenuChrome.stepperButton(
             label: 'KEY +',
             sign: '+',
+            chunky: true,
             onPressed: level < maxLevel ? () => onChanged(level + 1) : null,
           ),
         ],
@@ -478,10 +530,7 @@ class _KeyAffixChip extends StatelessWidget {
               color: _riskColor.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(3),
             ),
-            child: Text(
-              risk,
-              style: GameTheme.hint(color: _riskColor),
-            ),
+            child: Text(risk, style: GameTheme.hint(color: _riskColor)),
           ),
           const SizedBox(width: 6),
           Flexible(
@@ -529,7 +578,9 @@ class _ChallengeChip extends StatelessWidget {
               decoration: MenuChrome.listCard(selected: active),
               child: Text(
                 label,
-                style: GameTheme.readable(color: active ? GameTheme.torchHot : GameTheme.parchmentDim),
+                style: GameTheme.readable(
+                  color: active ? GameTheme.torchHot : GameTheme.parchmentDim,
+                ),
               ),
             ),
           ),

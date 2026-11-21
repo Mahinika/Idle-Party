@@ -17,7 +17,8 @@ Run from repo root, in order:
 ```bash
 flutter pub get
 flutter analyze lib test --no-fatal-infos
-flutter test --exclude-tags sim
+# Before push: targeted tests + whole golden files for touched screens.
+# Full suite: flutter test --exclude-tags sim (GitHub CI before merge).
 ```
 
 Optional live look (UI chrome): follow **a56-playtest** (Samsung A56
@@ -28,7 +29,7 @@ Optional MCP shortcut when `user-idle-party` is up: `verify`.
 ## Rules
 
 - **Hold `flutter analyze lib test --no-fatal-infos` to zero issues** before considering work done.
-- Prefer targeted tests while iterating, then `flutter test --exclude-tags sim` before handoff (same as CI; tag `sim` runs nightly):
+- Prefer targeted tests while iterating. Before push, run analyze plus targeted tests and whole golden files for touched screens. The full `flutter test --exclude-tags sim` suite is CI before merge (tag `sim` runs nightly):
   - kits/combat → `test/class_kits_combat_test.dart`, `test/kit_passives_test.dart`, related `*_abilities_test.dart`
   - balance iterate → `flutter test test/class_balance_share_fast_test.dart` (tagged `sim`, so run it by path; focus specs with MCP `balance_share`); CI gate → `class_balance_gate_test`
   - changelog → `test/changelog_sync_test.dart`
@@ -45,12 +46,12 @@ Verify:
 - [ ] flutter pub get
 - [ ] flutter analyze lib test --no-fatal-infos (0 issues)
 - [ ] targeted tests (if iterating)
-- [ ] flutter test --exclude-tags sim
+- [ ] targeted tests + whole golden files for touched screens (full suite in CI)
 - [ ] optional A56 emulator look (UI only)
 - [ ] commit locally when green
 ```
 
 ## Done when
 
-- Analyze has zero issues and `flutter test --exclude-tags sim` is green.
+- Analyze has zero issues; targeted tests and golden files for this batch are green (full suite green in CI before merge).
 - The matching extra tests from `30-done` for this change are green.

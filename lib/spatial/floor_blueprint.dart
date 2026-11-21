@@ -37,6 +37,7 @@ extension FloorBeatKindLook on FloorBeatKind {
     FloorBeatKind.choke => 'CHOKE',
     FloorBeatKind.treasure => 'CHEST',
     FloorBeatKind.shrine => 'SHRINE',
+    FloorBeatKind.wonder => 'WONDER',
     _ => null,
   };
 }

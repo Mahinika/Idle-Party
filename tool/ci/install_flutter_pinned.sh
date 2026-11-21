@@ -91,5 +91,15 @@ fi
 persist_path "$FLUTTER_HOME"
 flutter --version
 flutter config --no-analytics >/dev/null
-flutter pub get
-echo "Flutter $pin ready (pub get done)."
+
+pub_stamp="$root/.dart_tool/ci_pubget.stamp"
+pub_lock="$root/pubspec.lock"
+if [[ -f "$pub_stamp" && -f "$pub_lock" ]] &&
+  cmp -s "$pub_lock" "$pub_stamp"; then
+  echo "flutter pub get skipped (pubspec.lock unchanged)"
+else
+  flutter pub get
+  cp -f "$pub_lock" "$pub_stamp"
+fi
+
+echo "Flutter $pin ready."

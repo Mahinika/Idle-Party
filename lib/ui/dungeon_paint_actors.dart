@@ -14,7 +14,7 @@ abstract final class FightReadPace {
     _HitPose._until.clear();
     _HitPose._was.clear();
     _EnemyDeath._start.clear();
-    _FloaterHold.live.clear();
+    resetFloaterPaintState();
   }
 }
 
@@ -153,7 +153,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
       } else if (frac <= 0.35) {
         fill = cb ? const Color(0xFFE69F00) : const Color(0xFFE87850);
       } else {
-        fill = cb ? const Color(0xFF009E73) : const Color(0xFFE05050);
+        fill = cb ? const Color(0xFF009E73) : GameTheme.gainGreen;
       }
       _actorBarPaint.color = const Color(0xAA000000);
       canvas.drawRRect(

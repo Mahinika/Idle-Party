@@ -311,8 +311,10 @@ void main() {
       await tester.pump();
       expect(director.toast, contains('Crafted'));
       expect(find.text('UPGRADE → R2'), findsOneWidget);
-      expect(find.textContaining('Now ·'), findsOneWidget);
-      expect(find.textContaining('Next ·'), findsOneWidget);
+      // polish7 P021: NOW / NEXT RANK labels over stat chips.
+      expect(find.text('NOW'), findsOneWidget);
+      expect(find.text('NEXT RANK'), findsOneWidget);
+      expect(find.textContaining('Item Lv'), findsWidgets);
 
       await tester.ensureVisible(find.text('UPGRADE → R2'));
       await tester.pump();
@@ -361,6 +363,9 @@ void main() {
 
       await tester.drag(find.byType(ListView).first, const Offset(0, -320));
       await tester.pump();
+      // The slot chips wrap now (polish7 P020), so the vault sits lower.
+      await tester.ensureVisible(find.text('SHOW').last);
+      await tester.pump();
       await tester.tap(find.text('SHOW').last);
       await tester.pump();
       expect(find.text('No matching hero in party'), findsOneWidget);
@@ -383,7 +388,7 @@ void main() {
       final summary = OfflineProgressResult(
         state: director.state,
         secondsApplied: 120,
-        secondsAway: 120,
+        secondsAway: 3600,
         goldGained: 12,
         essenceGained: 0,
         roomsCleared: 1,

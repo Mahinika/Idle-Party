@@ -1,7 +1,9 @@
 import 'ascend_roadmap.dart';
+import 'first_climb_coach.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'hub_chase.dart';
+import 'return_week.dart';
 
 /// Shared “what am I chasing?” for hub TODAY, offline Up next, and Ascend copy.
 ///
@@ -114,6 +116,30 @@ class ChaseContract {
     HubChaseKind.unlockZone => zoneId != null ? 'PATH' : null,
     _ => null,
   };
+
+  /// One priority line for fight chrome, town, sheets, and Welcome Back.
+  /// [FirstClimbCoach] and [HubChase] stay the only sources — no second list.
+  static String? goalLine(
+    GameState state, {
+    required bool inDungeon,
+    DateTime? now,
+  }) {
+    final climb = FirstClimbCoach.line(state, inDungeon: inDungeon);
+    if (climb != null && climb.isNotEmpty) return climb;
+    if (!inDungeon && ReturnWeek.active(state)) {
+      final rw = ReturnWeek.coachLine(state);
+      if (rw.isNotEmpty) return rw;
+    }
+    if (!inDungeon &&
+        GameLogic.firstBossPending(state) &&
+        GameLogic.canClaimDailyVault(state)) {
+      return 'Tap CLAIM VAULT.';
+    }
+    final chase = HubChase.forState(state, now: now);
+    final title = chase.title.trim();
+    if (title.isEmpty) return null;
+    return title;
+  }
 
   static ChaseContract fromState(GameState state, {DateTime? now}) {
     final chase = HubChase.forState(state, now: now);

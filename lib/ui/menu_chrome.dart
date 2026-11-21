@@ -1,5 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
+import 'chunky_face.dart';
 import 'game_button.dart';
 import 'game_icon.dart';
 import 'game_theme.dart';
@@ -203,6 +206,41 @@ abstract final class MenuChrome {
     );
   }
 
+  /// Bottom-sheet title with the shared close X at the top right: one close
+  /// rule for every sheet (audit F069).
+  static const Key sheetCloseKey = ValueKey('sheet_close_x');
+
+  static Widget sheetTitleRow(BuildContext context, String title) {
+    return Row(
+      children: [
+        Expanded(child: Text(title, style: GameTheme.section())),
+        sheetCloseX(context),
+      ],
+    );
+  }
+
+  /// The shared top-right close X on its own, for sheets with a custom
+  /// title row (audit F069).
+  static Widget sheetCloseX(BuildContext context) => GameIconButton(
+    key: sheetCloseKey,
+    label: 'Close',
+    glyph: UiGlyph.close,
+    size: 16,
+    color: GameTheme.parchmentDim,
+    onPressed: () => Navigator.maybePop(context),
+  );
+
+  /// Dense grey CLOSE for sheet headers (matches overlay scaffolds).
+  static Widget sheetClosePill(BuildContext context) {
+    return GameButton(
+      label: 'CLOSE',
+      style: GameButtonStyle.grey,
+      expanded: false,
+      dense: true,
+      onPressed: () => Navigator.maybePop(context),
+    );
+  }
+
   /// Section label for dense menus (GEAR / PROGRESS / …).
   static Widget sectionLabel(String text) {
     return Padding(
@@ -241,8 +279,14 @@ abstract final class MenuChrome {
     required String sign,
     VoidCallback? onPressed,
     double size = GameTheme.minTouch,
+    bool chunky = false,
   }) {
     final enabled = onPressed != null;
+    final glyph = GameIcon.glyph(
+      sign == '-' ? UiGlyph.remove : UiGlyph.add,
+      size: GameTheme.iconList,
+      color: enabled ? GameTheme.parchment : GameTheme.parchmentDim,
+    );
     return WebClickScope(
       label: label,
       onPressed: onPressed,
@@ -259,19 +303,26 @@ abstract final class MenuChrome {
             borderRadius: BorderRadius.circular(GameTheme.radiusSm),
             child: Opacity(
               opacity: enabled ? 1 : 0.4,
-              child: Container(
-                width: size,
-                height: size,
-                alignment: Alignment.center,
-                decoration: cardBox(inset: true),
-                child: GameIcon.glyph(
-                  sign == '-' ? UiGlyph.remove : UiGlyph.add,
-                  size: GameTheme.iconList,
-                  color: enabled
-                      ? GameTheme.parchment
-                      : GameTheme.parchmentDim,
-                ),
-              ),
+              child: chunky
+                  // Raised stone face, like the other chunky buttons.
+                  ? SizedBox(
+                      width: size,
+                      height: size,
+                      child: ChunkyFace(
+                        tone: ChunkyTone.stone,
+                        raised: enabled,
+                        minHeight: size - 4,
+                        padding: EdgeInsets.zero,
+                        child: Center(child: glyph),
+                      ),
+                    )
+                  : Container(
+                      width: size,
+                      height: size,
+                      alignment: Alignment.center,
+                      decoration: cardBox(inset: true),
+                      child: glyph,
+                    ),
             ),
           ),
         ),
@@ -330,7 +381,22 @@ abstract final class MenuChrome {
     );
   }
 
-  /// GEAR-style inset tab rail (torch wash on selected tab).
+  /// Selected tab: the plum "picked" face, same as every other toggle.
+  static const BoxDecoration _tabSelectedBox = BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        GameTheme.toggleOnShine,
+        GameTheme.toggleOnTop,
+        GameTheme.toggleOnBottom,
+      ],
+      stops: [0, 0.08, 1],
+    ),
+    borderRadius: BorderRadius.all(Radius.circular(GameTheme.radiusSm - 2)),
+  );
+
+  /// GEAR-style inset tab rail (plum face on the selected tab).
   ///
   /// On phone width (or 5+ tabs), scrolls instead of crushing labels.
   static Widget tabRail({
@@ -343,6 +409,16 @@ abstract final class MenuChrome {
       builder: (context, constraints) {
         // Always scroll on the shipping phone chrome so labels stay readable.
         final scroll = scrollable ?? true;
+        // When a scrolling rail's labels do not fit one row (5 tabs at
+        // 1.45), lay them out in full-width rows instead of a rail that
+        // cuts the first or last tab ("UESTS"). Every label is whole and
+        // nothing shrinks. Fixed rails (scrollable: false) keep the TabBar.
+        final rows = scroll
+            ? _tabRows(context, tabs, constraints.maxWidth)
+            : null;
+        if (rows != null) {
+          return _tabGrid(controller, onTap, tabs, rows);
+        }
         return Material(
           color: Colors.transparent,
           child: Container(
@@ -353,7 +429,209 @@ abstract final class MenuChrome {
                 color: GameTheme.border.withValues(alpha: 0.7),
               ),
             ),
-            child: TabBar(
+            // Scrolling rails fade at both ends, so a tab cut by the edge
+            // (5 tabs at 1.45) reads as "more this way", not as clipped.
+            child: !scroll
+                ? _tabBar(controller, onTap, scroll, tabs)
+                : ShaderMask(
+                    key: tabRailFadeKey,
+                    blendMode: BlendMode.dstIn,
+                    shaderCallback: (rect) => const LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        Colors.white,
+                        Colors.white,
+                        Colors.transparent,
+                      ],
+                      stops: [0, 0.03, 0.97, 1],
+                    ).createShader(rect),
+                    child: _tabBar(controller, onTap, scroll, tabs),
+                  ),
+          ),
+        );
+      },
+    );
+  }
+
+  static const tabRailFadeKey = ValueKey('tab-rail-fade');
+
+  /// The multi-row layout [tabRail] uses when one row cannot hold every
+  /// label.
+  static const tabGridKey = ValueKey('tab-rail-grid');
+
+  /// Inner horizontal padding of a tab label (TabBar's scroll padding).
+  static const double _tabPad = 10;
+
+  /// Text of a rail tab: `Tab(text:)` or a [bridgedTab]'s label.
+  static List<String>? _tabTexts(Widget tab) {
+    if (tab is! Tab) return null;
+    final text = tab.text;
+    if (text != null) return [text];
+    final child = tab.child;
+    if (child is WebClickScope) {
+      final inner = child.child;
+      if (inner is Semantics) {
+        final c = inner.child;
+        if (c is Text && c.data != null) return [c.data!];
+        if (c is Column) {
+          return [
+            for (final t in c.children)
+              if (t is Text && t.data != null) t.data!,
+          ];
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Tab indices per row when the labels overflow one row of [maxWidth];
+  /// null when they fit (or cannot be measured) and the TabBar is kept.
+  static List<List<(int, double)>>? _tabRows(
+    BuildContext context,
+    List<Widget> tabs,
+    double maxWidth,
+  ) {
+    if (!maxWidth.isFinite || tabs.length < 2) return null;
+    final scaler = MediaQuery.textScalerOf(context);
+    final widths = <double>[];
+    for (final t in tabs) {
+      final texts = _tabTexts(t);
+      if (texts == null || texts.isEmpty) return null;
+      var w = 0.0;
+      for (final (i, text) in texts.indexed) {
+        final painter = TextPainter(
+          text: TextSpan(
+            text: text,
+            style: i == 0 ? GameTheme.readable() : GameTheme.hint(),
+          ),
+          textDirection: TextDirection.ltr,
+          textScaler: scaler,
+          maxLines: 1,
+        )..layout();
+        w = math.max(w, painter.width);
+        painter.dispose();
+      }
+      widths.add(w + 2 * _tabPad);
+    }
+    // Two px of rail border.
+    final room = maxWidth - 2;
+    if (widths.fold<double>(0, (a, b) => a + b) <= room) return null;
+    final rows = <List<(int, double)>>[];
+    var row = <(int, double)>[];
+    var used = 0.0;
+    for (var i = 0; i < widths.length; i++) {
+      if (row.isNotEmpty && used + widths[i] > room) {
+        rows.add(row);
+        row = <(int, double)>[];
+        used = 0;
+      }
+      row.add((i, widths[i]));
+      used += widths[i];
+    }
+    rows.add(row);
+    // Same number of rows, but balanced (5 tabs: 3 + 2, not 4 + 1) when
+    // the even split still fits.
+    final per = (tabs.length / rows.length).ceil();
+    final even = <List<(int, double)>>[
+      for (var start = 0; start < tabs.length; start += per)
+        [
+          for (var i = start; i < math.min(start + per, tabs.length); i++)
+            (i, widths[i]),
+        ],
+    ];
+    final evenFits = even.length == rows.length &&
+        even.every((r) => r.fold<double>(0, (a, e) => a + e.$2) <= room);
+    return evenFits ? even : rows;
+  }
+
+  static Widget _tabGrid(
+    TabController controller,
+    ValueChanged<int>? onTap,
+    List<Widget> tabs,
+    List<List<(int, double)>> rows,
+  ) {
+    return AnimatedBuilder(
+      key: tabGridKey,
+      animation: controller,
+      builder: (context, _) {
+        Widget cell(int i) {
+          final selected = controller.index == i;
+          void select() {
+            controller.animateTo(i);
+            onTap?.call(i);
+          }
+
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: select,
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm - 2),
+              child: Ink(
+                decoration: selected ? _tabSelectedBox : null,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: GameTheme.primaryTouch,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: _tabPad),
+                    child: Center(
+                      child: DefaultTextStyle.merge(
+                        style: GameTheme.readable(
+                          color: selected
+                              ? GameTheme.toggleOnText
+                              : GameTheme.parchmentDim,
+                        ),
+                        softWrap: false,
+                        child: Semantics(
+                          selected: selected,
+                          child: tabs[i],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Material(
+          color: Colors.transparent,
+          child: Container(
+            decoration: BoxDecoration(
+              color: GameTheme.panelInset.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              border: Border.all(
+                color: GameTheme.border.withValues(alpha: 0.7),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final row in rows)
+                  Row(
+                    children: [
+                      // Share the row by label width, so the longest
+                      // label gets the most room.
+                      for (final (i, w) in row)
+                        Expanded(flex: w.round(), child: cell(i)),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  static Widget _tabBar(
+    TabController controller,
+    ValueChanged<int>? onTap,
+    bool scroll,
+    List<Widget> tabs,
+  ) {
+    return TabBar(
               controller: controller,
               onTap: onTap,
               isScrollable: scroll,
@@ -364,25 +642,24 @@ abstract final class MenuChrome {
               labelStyle: GameTheme.readable(),
               unselectedLabelStyle: GameTheme.readable(),
               indicatorSize: TabBarIndicatorSize.tab,
-              indicator: BoxDecoration(
-                color: GameTheme.torch.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(GameTheme.radiusSm - 2),
-              ),
-              labelColor: GameTheme.torchHot,
+              indicator: _tabSelectedBox,
+              labelColor: GameTheme.toggleOnText,
               unselectedLabelColor: GameTheme.parchmentDim,
               dividerColor: Colors.transparent,
               tabs: tabs,
-            ),
-          ),
-        );
-      },
-    );
+            );
   }
 
   /// Compact exclusive choices in one row (spend ×1 / 5% / …).
   ///
   /// Prefer this over a Wrap of [chip]s — InkWell chips expand to the Wrap's
   /// max width and stack full-width on phone.
+  /// "Can buy" dot on segment [i] of [segmented].
+  static Key segmentDotKey(int i) => ValueKey('segment-dot-$i');
+
+  /// Padlock in place of segment [i]'s icon when [segmented] is locked.
+  static Key segmentLockKey(int i) => ValueKey('segment-lock-$i');
+
   static Widget segmented({
     required List<String> labels,
     required int selectedIndex,
@@ -390,8 +667,11 @@ abstract final class MenuChrome {
     bool dense = false,
     List<String>? icons,
     double? maxHeight,
+    List<bool>? dots,
+    bool locked = false,
   }) {
     assert(labels.isNotEmpty);
+    assert(dots == null || dots.length == labels.length);
     if (icons != null) {
       assert(icons.length == labels.length);
     }
@@ -400,18 +680,34 @@ abstract final class MenuChrome {
         final scale = MediaQuery.textScalerOf(context).scale(1);
         final wanted = GameTheme.minTouch * (scale < 1 ? 1.0 : scale);
         final cap = maxHeight;
-        final height = cap == null || cap >= wanted
-            ? wanted
+        // The chunky rim sits outside the 44 dp tap rows.
+        final full = wanted + 2 * GameTheme.chunkyRim;
+        final height = cap == null || cap >= full
+            ? full
             : (cap < 36 ? 36.0 : cap);
         return Container(
       height: height,
+      // Chunky well: dark rim and a hard shadow. The picked segment is
+      // the rose toggle face (one meaning per color, see [ChunkyTone]).
       decoration: BoxDecoration(
         color: GameTheme.panelInset.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-        border: Border.all(color: GameTheme.border.withValues(alpha: 0.75)),
+        border: Border.all(
+          color: GameTheme.buyGreyEdge,
+          width: GameTheme.chunkyRim,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: GameTheme.chunkyShadow,
+            offset: Offset(0, GameTheme.chunkyDepth),
+          ),
+        ],
       ),
       clipBehavior: Clip.antiAlias,
       child: Row(
+        // Stretch so each segment's tap area and rose face fill the
+        // whole 44+ dp well, not just the icon + label band.
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (var i = 0; i < labels.length; i++) ...[
             if (i > 0)
@@ -426,13 +722,30 @@ abstract final class MenuChrome {
                 child: Semantics(
                   button: true,
                   selected: i == selectedIndex,
-                  label: labels[i],
+                  label: locked
+                      ? '${labels[i]}, locked'
+                      : dots?[i] == true
+                      ? '${labels[i]}, can buy'
+                      : labels[i],
                   onTap: () => onSelect(i),
                   excludeSemantics: true,
                   child: Material(
-                    color: i == selectedIndex
-                        ? GameTheme.torch.withValues(alpha: 0.22)
-                        : Colors.transparent,
+                    color: Colors.transparent,
+                    child: Ink(
+                    decoration: i == selectedIndex
+                        ? const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                GameTheme.toggleOnShine,
+                                GameTheme.toggleOnTop,
+                                GameTheme.toggleOnBottom,
+                              ],
+                              stops: [0, 0.08, 1],
+                            ),
+                          )
+                        : null,
                     child: InkWell(
                       onTap: () => onSelect(i),
                       child: icons == null
@@ -442,7 +755,7 @@ abstract final class MenuChrome {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: GameTheme.readable(color: i == selectedIndex
-                                      ? GameTheme.torchHot
+                                      ? GameTheme.toggleOnText
                                       : GameTheme.parchmentDim),
                               ),
                             )
@@ -450,10 +763,18 @@ abstract final class MenuChrome {
                               padding: const EdgeInsets.symmetric(horizontal: 4),
                               child: Row(
                                 children: [
-                                  GameIcon.asset(
-                                    icons[i],
-                                    size: dense ? 16 : GameTheme.iconList,
-                                  ),
+                                  if (locked)
+                                    GameIcon.glyph(
+                                      UiGlyph.lock,
+                                      key: segmentLockKey(i),
+                                      size: dense ? 14 : 16,
+                                      color: GameTheme.parchmentDim,
+                                    )
+                                  else
+                                    GameIcon.asset(
+                                      icons[i],
+                                      size: dense ? 16 : GameTheme.iconList,
+                                    ),
                                   const SizedBox(width: 4),
                                   Flexible(
                                     child: Text(
@@ -461,13 +782,30 @@ abstract final class MenuChrome {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: GameTheme.readable(color: i == selectedIndex
-                                            ? GameTheme.torchHot
+                                            ? GameTheme.toggleOnText
                                             : GameTheme.parchmentDim),
                                     ),
                                   ),
+                                  // Gold dot: something here is affordable.
+                                  if (dots?[i] == true) ...[
+                                    const SizedBox(width: 4),
+                                    Container(
+                                      key: segmentDotKey(i),
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: GameTheme.torchHot,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: GameTheme.chunkyShadow,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
+                    ),
                     ),
                   ),
                 ),
@@ -547,7 +885,14 @@ abstract final class MenuChrome {
         vertical: stacked ? 8 : 4,
       ),
       alignment: Alignment.center,
-      decoration: cardBox(selected: selected, inset: stacked),
+      decoration: onTap == null
+          ? cardBox(selected: selected, inset: stacked)
+          : cardBox(selected: selected, inset: stacked).copyWith(
+              // Tappable chips read as pressable: hard drop shadow.
+              boxShadow: const [
+                BoxShadow(color: GameTheme.chunkyShadow, offset: Offset(0, 2)),
+              ],
+            ),
       child: stacked
           ? Column(mainAxisSize: MainAxisSize.min, children: parts)
           : Row(mainAxisSize: MainAxisSize.min, children: parts),
@@ -751,16 +1096,19 @@ abstract final class MenuChrome {
 
   /// Square pixel toggle thumb (settings rows) — not Material Switch.
   static Widget toggleMark({required bool value}) {
+    // A real switch, not a 20 px box: 52x30 stadium, amber when on
+    // (audit F085).
     return AnimatedContainer(
+      key: toggleMarkKey,
       duration: const Duration(milliseconds: 140),
-      width: 44,
-      height: 24,
+      width: 52,
+      height: 30,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: value
-            ? GameTheme.mossLit.withValues(alpha: 0.55)
+            ? GameTheme.torch.withValues(alpha: 0.55)
             : GameTheme.stone.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(GameTheme.radiusHud),
+        borderRadius: BorderRadius.circular(15),
         border: Border.all(
           color: value ? GameTheme.torchHot : GameTheme.border,
           width: value ? 1.5 : 1,
@@ -768,15 +1116,20 @@ abstract final class MenuChrome {
       ),
       alignment: value ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        width: 16,
-        height: 16,
+        width: 22,
+        height: 22,
         decoration: BoxDecoration(
           color: value ? GameTheme.torchHot : GameTheme.parchmentDim,
-          borderRadius: BorderRadius.circular(GameTheme.radiusHud),
+          shape: BoxShape.circle,
+          boxShadow: const [
+            BoxShadow(color: GameTheme.chunkyShadow, offset: Offset(0, 1)),
+          ],
         ),
       ),
     );
   }
+
+  static const Key toggleMarkKey = ValueKey('toggle-mark');
 
   /// Discrete horizontal slider (text scale / bag filters).
   static Widget slider({
@@ -798,6 +1151,10 @@ abstract final class MenuChrome {
   }
 
   /// Expand/collapse block — replaces Material ExpansionTile in menus.
+  /// ▸ / ▾ beside SHOW / HIDE on a [fold].
+  static const Key foldChevronKey = ValueKey('fold-chevron');
+  static const Key foldHeaderKey = ValueKey('menu-fold-header');
+
   static Widget fold({
     required String title,
     String? subtitle,
@@ -849,13 +1206,11 @@ class _MenuSlider extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final w = constraints.maxWidth;
-        final shown = ((value - min) / (max - min) * divisions)
-            .round()
-            .clamp(0, divisions);
+        final pct = ((value - min) / (max - min) * 100).round().clamp(0, 100);
         return Semantics(
           slider: true,
           label: label ?? 'Slider',
-          value: '$shown',
+          value: '$pct percent',
           child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapDown: (d) => _setFromLocal(d.localPosition.dx, w),
@@ -942,10 +1297,14 @@ class _MenuFoldState extends State<_MenuFold> {
           child: InkWell(
             onTap: () => setState(() => _open = !_open),
             borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
-                children: [
+            child: ConstrainedBox(
+              key: MenuChrome.foldHeaderKey,
+              constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -968,8 +1327,20 @@ class _MenuFoldState extends State<_MenuFold> {
                     _open ? widget.collapseLabel : widget.expandLabel,
                     style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
+                  // ▸ closed, ▾ open (audit F087).
+                  const SizedBox(width: 4),
+                  RotatedBox(
+                    key: MenuChrome.foldChevronKey,
+                    quarterTurns: _open ? 1 : 0,
+                    child: const GameIcon.glyph(
+                      UiGlyph.next,
+                      size: 10,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
                 ],
               ),
+            ),
             ),
           ),
         ),

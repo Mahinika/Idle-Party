@@ -146,14 +146,16 @@ class _WispTapTargetState extends State<_WispTapTarget>
                         ),
                         if (widget.showTapHint)
                           Positioned(
-                            top: 46,
+                            top: 50,
                             left: -28,
                             width: 104,
                             child: IgnorePointer(
                               child: Text(
                                 'Tap for gold',
                                 textAlign: TextAlign.center,
-                                style: GameTheme.hint(color: GameTheme.torchHot),
+                                style: GameTheme.hint(
+                                  color: GameTheme.torchHot,
+                                ),
                               ),
                             ),
                           ),
@@ -172,10 +174,7 @@ class _WispTapTargetState extends State<_WispTapTarget>
 
 /// Warm torch glow behind the WISP lantern PNG.
 class _WispGlowPainter extends CustomPainter {
-  const _WispGlowPainter({
-    required this.glowStrength,
-    required this.softGlow,
-  });
+  const _WispGlowPainter({required this.glowStrength, required this.softGlow});
 
   final double glowStrength;
   final bool softGlow;
@@ -290,6 +289,7 @@ Future<void> openWispChoiceSheet(
                                     style: GameTheme.title(),
                                   ),
                                 ),
+                                MenuChrome.sheetCloseX(ctx),
                               ],
                             ),
                             const SizedBox(height: 8),

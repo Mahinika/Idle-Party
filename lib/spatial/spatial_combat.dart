@@ -27,6 +27,7 @@ import '../visual/rig/rig_ability_clips.dart';
 import 'combat_avoidance.dart';
 import 'hideout_stash.dart';
 import 'party_room_mark.dart';
+import 'room_beat_callout.dart';
 import 'room_happening.dart';
 import 'tile_map.dart';
 import 'waypoint_cache.dart';
@@ -843,6 +844,9 @@ class SpatialWorld {
     this.pulseTimer = 0,
     this.bossBannerTimer = 0,
     this.bossBannerName = '',
+    this.beatCalloutTimer = 0,
+    this.beatCalloutLabel = '',
+    Set<int>? beatCalloutShown,
     this.afkAssist = false,
     this.roleCover = false,
     this.dungeonId = 'sandy',
@@ -876,6 +880,7 @@ class SpatialWorld {
   }) : openGateIds = openGateIds ?? <int>{},
        clearedChambers = clearedChambers ?? <int>{},
        packShoutedChambers = packShoutedChambers ?? <int>{},
+       beatCalloutShown = beatCalloutShown ?? <int>{},
        floaters = floaters ?? <SpatialFloater>[],
        bursts = bursts ?? <SpatialBurst>[],
        groundFx = groundFx ?? <SpatialGroundFx>[],
@@ -967,6 +972,9 @@ class SpatialWorld {
   double pulseTimer;
   double bossBannerTimer;
   String bossBannerName;
+  double beatCalloutTimer;
+  String beatCalloutLabel;
+  final Set<int> beatCalloutShown;
 
   /// Seconds of active combat this floor (for DPS meter).
   double combatElapsed;
@@ -1983,6 +1991,9 @@ abstract final class SpatialCombat {
     if (world.bossBannerTimer > 0) {
       world.bossBannerTimer = math.max(0, world.bossBannerTimer - dt);
     }
+    if (world.beatCalloutTimer > 0) {
+      world.beatCalloutTimer = math.max(0, world.beatCalloutTimer - dt);
+    }
     SpellSparks.tick(world, dt);
   }
 
@@ -2619,6 +2630,9 @@ abstract final class SpatialCombat {
         pulseTimer: world.pulseTimer,
         bossBannerTimer: world.bossBannerTimer,
         bossBannerName: world.bossBannerName,
+        beatCalloutTimer: world.beatCalloutTimer,
+        beatCalloutLabel: world.beatCalloutLabel,
+        beatCalloutShown: world.beatCalloutShown,
         afkAssist: world.afkAssist,
         roleCover: world.roleCover,
         dungeonId: world.dungeonId,
@@ -3204,6 +3218,26 @@ abstract final class SpatialCombat {
     return 1.0;
   }
 
+  static void _pollBeatCallouts(SpatialWorld world) {
+    if (world.bossBannerTimer > 0 || world.beatCalloutTimer > 0) return;
+    if (world.heroes.isEmpty) return;
+    final hero = world.heroes.firstWhere(
+      (h) => h.hp > 0,
+      orElse: () => world.heroes.first,
+    );
+    RoomBeatCallout.poll(
+      map: world.map,
+      heroX: hero.x,
+      heroY: hero.y,
+      dungeonId: world.dungeonId,
+      shown: world.beatCalloutShown,
+      onShow: (label) {
+        world.beatCalloutLabel = label;
+        world.beatCalloutTimer = 2.4;
+      },
+    );
+  }
+
   /// Advances spatial combat by [dt] seconds and syncs HP into [state].
   static SpatialStepResult step(
     SpatialWorld world,
@@ -3228,6 +3262,7 @@ abstract final class SpatialCombat {
     world.reducedVfx = state.reducedVfx;
     world.spawnPersistentVfx = state.spawnPersistentVfx;
     _updateChambers(world, reducedVfx: state.reducedVfx, softLock: false);
+    _pollBeatCallouts(world);
 
     final inFight =
         !world.awaitingExit &&

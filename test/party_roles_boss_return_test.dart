@@ -297,6 +297,7 @@ void main() {
       OfflineProgressResult(
         state: director.state,
         secondsApplied: 0,
+        secondsAway: 3600,
         goldGained: 0,
         essenceGained: 0,
         roomsCleared: 0,
@@ -319,7 +320,7 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Up next:'), findsNothing);
+    expect(find.textContaining('Up next:'), findsOneWidget);
     expect(find.textContaining('Why:'), findsNothing);
     final line = tester.widget<Text>(
       find.textContaining('No gold or essence this time'),
@@ -342,6 +343,7 @@ void main() {
     OfflineProgressResult card() => OfflineProgressResult(
       state: director.state,
       secondsApplied: 0,
+      secondsAway: 3600,
       goldGained: 0,
       essenceGained: 0,
       roomsCleared: 0,
@@ -413,7 +415,7 @@ void main() {
             await tester.pumpAndSettle();
           }
           expect(tester.takeException(), isNull);
-          expect(find.textContaining('Up next'), findsNothing);
+          expect(find.textContaining('Up next'), findsOneWidget);
           expect(
             tester.getRect(find.text('WELCOME BACK')).top,
             greaterThanOrEqualTo(44),
@@ -700,8 +702,10 @@ void main() {
       canOpenGold: true,
     );
     expect(covered, contains('brought back 100 gold'));
-    expect(covered, contains('wallet covers'));
-    expect(covered, contains('Open GOLD'));
+    // Plain copy: "You can buy AP now (83g)." (audit F086).
+    expect(covered, contains(GameLogic.returnCanBuy));
+    expect(covered, matches(RegExp(r'\(\d[\d,]*g\)\.$')));
+    expect(covered, isNot(contains(' g)')));
     final short = poor.copyWith(gold: 1);
     final gap = GameLogic.returnGainLine(
       short,
@@ -711,6 +715,7 @@ void main() {
     );
     expect(gap, contains('still needs'));
     expect(gap, isNot(contains('Open GOLD')));
+    expect(gap, isNot(contains(GameLogic.returnCanBuy)));
     final noButton = GameLogic.returnGainLine(
       rich,
       goldGained: 100,
@@ -732,6 +737,7 @@ void main() {
       OfflineProgressResult(
         state: rich,
         secondsApplied: 60,
+        secondsAway: 3600,
         goldGained: 100,
         essenceGained: 0,
         roomsCleared: 1,
@@ -782,6 +788,7 @@ void main() {
       OfflineProgressResult(
         state: forgeState,
         secondsApplied: 60,
+        secondsAway: 3600,
         goldGained: 100,
         essenceGained: 0,
         roomsCleared: 1,
@@ -833,7 +840,7 @@ void main() {
         essenceGained: 12,
         canOpenEssence: true,
       ),
-      contains('Open ESSENCE'),
+      contains(GameLogic.returnCampBuy),
     );
     final campDirector = GameDirector.preview(initialState: campState);
     addTearDown(campDirector.dispose);
@@ -853,6 +860,7 @@ void main() {
       OfflineProgressResult(
         state: campState,
         secondsApplied: 60,
+        secondsAway: 3600,
         goldGained: 0,
         essenceGained: 12,
         roomsCleared: 1,
@@ -910,6 +918,7 @@ void main() {
       OfflineProgressResult(
         state: state,
         secondsApplied: 60,
+        secondsAway: 3600,
         goldGained: 80,
         essenceGained: 0,
         roomsCleared: 1,
@@ -923,7 +932,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('OPEN GOLD'), findsOneWidget);
-    expect(find.textContaining('Open GOLD'), findsOneWidget);
+    expect(find.textContaining(GameLogic.returnCanBuy), findsOneWidget);
     final goldBefore = director.state.gold;
     await tester.tap(find.text('OPEN GOLD'));
     await tester.pump();
@@ -955,7 +964,13 @@ void main() {
     expect(find.byType(HomeShell), findsOneWidget);
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 100));
-      for (final label in ['GOT IT', 'MAYBE LATER', 'NOT NOW', 'LATER', 'CLOSE']) {
+      for (final label in [
+        'GOT IT',
+        'MAYBE LATER',
+        'NOT NOW',
+        'LATER',
+        'CLOSE',
+      ]) {
         final hit = find.text(label);
         if (hit.evaluate().isNotEmpty) {
           await tester.tap(hit.last);
@@ -972,8 +987,11 @@ void main() {
     expect(director.state.gold, idleGold);
     expect(director.state.essence, idleEssence);
 
-    Future<void> resume() async {
+    Future<void> resume(Duration gap) async {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      // Stamp after pause so leftover hub-idle is already flushed, then the
+      // gap is only time spent backgrounded.
+      director.debugStampAway(lastUpdatedAgo: gap);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -986,24 +1004,33 @@ void main() {
     ]) {
       final gold = director.state.gold;
       final essence = director.state.essence;
-      director.debugStampAway(lastUpdatedAgo: gap);
-      await resume();
+      await resume(gap);
       expect(find.text('WELCOME BACK'), findsNothing);
       expect(director.state.gold, gold);
       expect(director.state.essence, essence);
       expect(director.offlineSummary, isNull);
     }
 
-    final awayAt = DateTime.now().subtract(const Duration(seconds: 90));
-    final rich = GameLogic.createInitialState(now: awayAt).copyWith(
-      gold: 50000,
-      bossVictories: 1,
-      homeLayout: HomeLayout.home,
-    );
+    // First-return teach can show under 5 minutes when the first boss is still
+    // ahead and hub away credit paid gold (auto-cave threshold unchanged).
+    await resume(const Duration(minutes: 4, seconds: 59));
+    expect(find.text('WELCOME BACK'), findsOneWidget);
+    final collectEnter = find.byKey(OfflineWelcomeKeys.enter);
+    expect(collectEnter, findsOneWidget);
+    await tester.tap(collectEnter);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('WELCOME BACK'), findsNothing);
+
+    final awayAt = DateTime.now().subtract(const Duration(minutes: 6));
+    final rich = GameLogic.createInitialState(
+      now: awayAt,
+    ).copyWith(gold: 50000, bossVictories: 1, homeLayout: HomeLayout.home);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     director.debugHoldSave(rich);
+    director.debugStampAway(lastUpdatedAgo: const Duration(minutes: 6));
     final beforeGold = director.state.gold;
     final beforeEssence = director.state.essence;
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     var saw = false;
     for (var i = 0; i < 20; i++) {
@@ -1054,6 +1081,7 @@ void main() {
       OfflineProgressResult(
         state: poor,
         secondsApplied: 60,
+        secondsAway: 3600,
         goldGained: 1,
         essenceGained: 0,
         roomsCleared: 1,
@@ -1089,6 +1117,10 @@ Future<void> _writeWelcomeShot(WidgetTester tester, String name) async {
   );
   image!.dispose();
   final dir = Directory('/opt/cursor/artifacts/party-roles');
-  dir.createSync(recursive: true);
-  File('${dir.path}/$name').writeAsBytesSync(bytes!.buffer.asUint8List());
+  try {
+    dir.createSync(recursive: true);
+    File('${dir.path}/$name').writeAsBytesSync(bytes!.buffer.asUint8List());
+  } on FileSystemException {
+    // Diagnostic stills are optional; assertions already ran.
+  }
 }

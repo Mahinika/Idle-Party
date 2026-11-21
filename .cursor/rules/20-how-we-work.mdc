@@ -5,12 +5,23 @@ alwaysApply: true
 
 # How we work (Idle Party)
 
-Source: the owner, who vibe-codes. Last sync: **2026-11-01**.
+Source: the owner, who vibe-codes. Last sync: **2026-11-19**.
 This is the only always-on rule. `00-locks`, `10-what-to-build`,
 `30-done`, `play-words`, and `hero-draw` are the full record. Open them
 when their description matches. If they disagree, this page wins.
 
 **Now:** Do the job named this turn, including the related fixes that make it true. A roadmap or week batch already taken on stays that whole batch. Do not start an unrelated feature; name it in the handoff. Commit locally when the checks are green. Cloud handoff is a branch and a PR. Do not merge, do not push a `test-*` or `v*` tag, and do not upload an AAB unless the owner asks in that turn.
+
+## Current owner decisions (2026-11-19) — always apply
+
+- **No economy, price, reward, or save-format change** without the owner's yes in that turn. Display text may change; ids, save keys, and JSON fields never do.
+- **Never weaken a test.** A changed test asserts the same or more. Enemy catalog is append-only. Camera taus stay 0.05 / 0.09. Keep DODGE, BLOCK, and PARRY floating text.
+- **UI target:** Brick Inc. Idle Breaker-style layout, dusk palette from the "Skymning med hjältar" art (plum, amber, muted gold, browns). Small visible button faces, hit areas stay 44 / 48 dp. `typeScaleMax` stays 1.45 and no `FittedBox` shrinking of text.
+- **Approved versions are frozen.** New findings go into the next round, not into an approved PR.
+- **Merge gate:** even "merge and release" means a test APK from the PR first, the owner's phone verdict, then merge. Play upload only on the owner's explicit OK (prefers 100% rollout).
+- **No paid tools** (no Aseprite or paid services) for agent tooling.
+- **Never force-push.** Never uninstall `com.idleparty.app` or wipe saves; only `com.idleparty.app.test` may be uninstalled on an emulator.
+- **Keep runs small:** one batch per run, commit and push when that batch is green, then stop and hand off. Long multi-batch runs get interrupted and lose work.
 
 ## Chase
 
@@ -56,7 +67,7 @@ DEVELOPMENT_STATUS, or a second changelog.
 
 ## Done
 
-Before you say a coding task is finished: `flutter analyze lib test --no-fatal-infos` is clean, and the matching tests in `30-done.mdc` are green. Player text matches the game. Art goes through `CustomAssets` or `KenneyAssets` only. If architecture, Ascend, the world path, distribution, or tooling changed, update `AGENTS.md`.
+Before push: `flutter analyze lib test --no-fatal-infos` is clean (known infos only), plus targeted tests for touched files and whole golden files for touched screens (regenerate goldens by running the whole file with `--update-goldens`). The full `flutter test --exclude-tags sim` suite runs in GitHub CI and must be green before merge. No screenshots/artifacts unless the owner asks. The matching tests in `30-done.mdc` are green. Player text matches the game. Art goes through `CustomAssets` or `KenneyAssets` only. If architecture, Ascend, the world path, distribution, or tooling changed, update `AGENTS.md`.
 
 ## Phone, words, and git
 
@@ -91,7 +102,20 @@ before-and-after, or a lock or missing fact blocks the next step.
 ## Workflow
 
 Source work is a branch and a PR, in the cloud or locally. Do not put
-ordinary agent work on `main`. Nothing merges unless the owner asks. A
-test APK and a Play AAB stay where their workflows already are, and
-neither starts unless the owner asks in that turn. Check the workflow
-`on:` before a push. Priority is revenue.
+ordinary agent work on `main`. A test APK and a Play AAB stay where their
+workflows already are, and neither starts unless the owner asks in that
+turn. Check the workflow `on:` before a push. Priority is revenue.
+
+### Agents, CI, and branches
+
+- **PR text in English** (title, description, review comments on automation PRs).
+- **Local verify:** `flutter analyze lib test --no-fatal-infos` plus **targeted**
+  tests for touched code. Do not run the full `flutter test --exclude-tags sim`
+  suite locally; GitHub CI runs it.
+- **Merge to `test/fight-ui-stack`:** agents may merge their own PR when CI is
+  green. Never merge agent PRs into `main` without the owner's yes in that turn.
+- **Merge to `main`:** add a short bullet under `CHANGELOG.md` → `[Unreleased]`
+  (repo root; CI enforces this). In-game What's New stays `ChangelogCatalog`.
+- **Big features:** new large surfaces and existing large ones (e.g. town) ship
+  behind Firebase Remote Config on/off flags (`RemoteTune` / console), not only
+  compile-time gates. Wiring flags is per-batch; do not half-flag a screen.

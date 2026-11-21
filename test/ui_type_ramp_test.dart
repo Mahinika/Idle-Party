@@ -45,11 +45,11 @@ void main() {
   });
 
   test('hint on a menu panel meets WCAG AA', () {
-    expect(GameTheme.parchmentDim.toARGB32(), 0xFFB4BCC8);
-    expect(GameTheme.panel.toARGB32(), 0xFF182028);
+    expect(GameTheme.parchmentDim.toARGB32(), 0xFFC2B4A4);
+    expect(GameTheme.panel.toARGB32(), 0xFF22181D);
     expect(GameTheme.parchment.toARGB32(), 0xFFECE8DF);
-    expect(_contrast(0xB4, 0xBC, 0xC8, 0x18, 0x20, 0x28), greaterThanOrEqualTo(4.5));
-    expect(_contrast(0xEC, 0xE8, 0xDF, 0x18, 0x20, 0x28), greaterThanOrEqualTo(4.5));
+    expect(_contrast(0xC2, 0xB4, 0xA4, 0x22, 0x18, 0x1D), greaterThanOrEqualTo(4.5));
+    expect(_contrast(0xEC, 0xE8, 0xDF, 0x22, 0x18, 0x1D), greaterThanOrEqualTo(4.5));
   });
 
   test('menus do not introduce a free font size', () {

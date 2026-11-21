@@ -153,6 +153,6 @@ void main() {
   });
 
   test('apex class label helper maps deathKnight', () {
-    expect(HeroSpecs.classLabel(HeroClassId.deathKnight), 'Graveknight');
+    expect(HeroSpecs.classLabel(HeroClassId.deathKnight), 'Death Lord');
   });
 }

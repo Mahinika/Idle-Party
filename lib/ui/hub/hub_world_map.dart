@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/hub_endgame_act.dart';
 import '../../models/dungeon_def.dart';
 import '../../assets/custom_assets.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
 import '../shell/shell_layout.dart';
@@ -203,7 +204,17 @@ class ZonePathMap extends StatelessWidget {
     required this.highestCleared,
     required this.onSelect,
     this.pulse,
+    this.fillWidthWhenShort = false,
   });
+
+  /// Short screens (360x640): when contain-fit would leave the board under
+  /// [shortFillRatio] of the width, draw it full width and scroll it
+  /// vertically, opened on the selected cave, instead of a thumbnail.
+  final bool fillWidthWhenShort;
+  static const double shortFillRatio = 0.8;
+
+  /// The vertical scroller used by [fillWidthWhenShort].
+  static const scrollKey = ValueKey('zone-path-map-scroll');
 
   final List<DungeonDef> dungeons;
   final String selectedId;
@@ -275,9 +286,25 @@ class ZonePathMap extends StatelessWidget {
         final boxW = constraints.maxWidth;
         if (boxW < 8 || !boxW.isFinite) return const SizedBox.shrink();
         final rawH = constraints.maxHeight;
-        final innerH = !rawH.isFinite
-            ? boxW / mapAspect
-            : math.max(rawH, minBoardHeight);
+        final fullH = boxW / mapAspect;
+        if (fillWidthWhenShort &&
+            rawH.isFinite &&
+            containRect(Size(boxW, rawH)).width < boxW * shortFillRatio) {
+          final i = dungeons.indexWhere((d) => d.id == selectedId);
+          final cy = i < 0 || i >= markerNorm.length
+              ? fullH / 2
+              : markerNorm[i].dy * fullH;
+          return _OpenAt(
+            key: scrollKey,
+            offset: (cy - rawH / 2).clamp(0.0, math.max(0.0, fullH - rawH)),
+            child: SizedBox(
+              width: boxW,
+              height: fullH,
+              child: _board(context, Size(boxW, fullH)),
+            ),
+          );
+        }
+        final innerH = !rawH.isFinite ? fullH : math.max(rawH, minBoardHeight);
         final board = _board(context, Size(boxW, innerH));
         if (rawH.isFinite && rawH + 0.5 < innerH) {
           return SingleChildScrollView(
@@ -377,6 +404,42 @@ class ZonePathMap extends StatelessWidget {
   }
 }
 
+/// Vertical scroller that opens at [offset], with a always-visible thumb so
+/// the taller board reads as "scroll for more".
+class _OpenAt extends StatefulWidget {
+  const _OpenAt({super.key, required this.offset, required this.child});
+
+  final double offset;
+  final Widget child;
+
+  @override
+  State<_OpenAt> createState() => _OpenAtState();
+}
+
+class _OpenAtState extends State<_OpenAt> {
+  late final ScrollController _scroll = ScrollController(
+    initialScrollOffset: widget.offset,
+  );
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RawScrollbar(
+      controller: _scroll,
+      thumbVisibility: true,
+      thickness: 4,
+      radius: const Radius.circular(2),
+      thumbColor: GameTheme.borderLit.withValues(alpha: 0.8),
+      child: SingleChildScrollView(controller: _scroll, child: widget.child),
+    );
+  }
+}
+
 class MapZoneMarker extends StatelessWidget {
   const MapZoneMarker({
     super.key,
@@ -404,6 +467,9 @@ class MapZoneMarker extends StatelessWidget {
   final String? iconAsset;
   final String statusWord;
   final VoidCallback onTap;
+
+  /// Padlock on a locked cave marker.
+  static const Key lockKey = ValueKey('map-zone-lock');
 
   Color get _statusColor {
     if (selected) return GameTheme.torchHot;
@@ -489,7 +555,36 @@ class MapZoneMarker extends StatelessWidget {
               SizedBox(
                 width: hitSize,
                 height: hitSize,
-                child: Center(child: disc),
+                child: Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  children: [
+                    disc,
+                    // Locked caves get a padlock, not only a grey disc (F050).
+                    if (!unlocked)
+                      Positioned(
+                        right: (hitSize - discSize) / 2 - 3,
+                        bottom: (hitSize - discSize) / 2 - 3,
+                        child: ExcludeSemantics(
+                          child: DecoratedBox(
+                            key: MapZoneMarker.lockKey,
+                            decoration: BoxDecoration(
+                              color: GameTheme.stoneDeep.withValues(alpha: 0.7),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.all(2),
+                              child: GameIcon.glyph(
+                                UiGlyph.lock,
+                                size: 9,
+                                color: GameTheme.parchment,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
               if (statusWord.isNotEmpty)
                 Text(

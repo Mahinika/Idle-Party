@@ -131,6 +131,7 @@ class DungeonTopHud extends StatelessWidget {
     this.onOpenForge,
     this.onOpenParty,
     this.placeLineOnly = false,
+    this.placeLineDps = true,
     this.onFloorLineTap,
   });
 
@@ -145,6 +146,9 @@ class DungeonTopHud extends StatelessWidget {
 
   /// Home fight already has FARM / PUSH. This paints only the floor line.
   final bool placeLineOnly;
+
+  /// DPS chip after the floor line. Off when the home HUD shows DPS.
+  final bool placeLineDps;
 
   /// Opens the floor jump sheet on the home layout.
   final void Function(BuildContext context)? onFloorLineTap;
@@ -179,11 +183,13 @@ class DungeonTopHud extends StatelessWidget {
                 : unlocked
                 ? 'F$f'
                 : 'F$f · locked',
-            style: GameTheme.combat(color: here
+            style: GameTheme.combat(
+              color: here
                   ? GameTheme.torchHot
                   : unlocked
                   ? GameTheme.parchment
-                  : GameTheme.parchmentDim),
+                  : GameTheme.parchmentDim,
+            ),
           ),
         ),
       );
@@ -217,10 +223,7 @@ class DungeonTopHud extends StatelessWidget {
         items.add(
           PopupMenuItem(
             value: 'quests',
-            child: Text(
-              'QUESTS ($claimable)',
-              style: GameTheme.combat(),
-            ),
+            child: Text('QUESTS ($claimable)', style: GameTheme.combat()),
           ),
         );
       }
@@ -229,26 +232,20 @@ class DungeonTopHud extends StatelessWidget {
         items.add(
           PopupMenuItem(
             value: 'key',
-            child: Text(
-              'KEY',
-              style: GameTheme.combat(),
-            ),
+            child: Text('KEY', style: GameTheme.combat()),
           ),
         );
       }
       items.add(
         PopupMenuItem(
           value: 'more',
-          child: Text('MORE', style: GameTheme.combat()),
+          child: Text('MENU', style: GameTheme.combat()),
         ),
       );
       items.add(
         PopupMenuItem(
           value: 'settings',
-          child: Text(
-            'SETTINGS',
-            style: GameTheme.combat(),
-          ),
+          child: Text('SETTINGS', style: GameTheme.combat()),
         ),
       );
     }
@@ -490,47 +487,36 @@ class DungeonTopHud extends StatelessWidget {
         ? 'F$floor$keyBit$fightBit'
         : '$zoneShort · F$floor$keyBit$fightBit';
     if (placeLineOnly) {
-      final holdLine = awaitingExit &&
-          !state.isPartyDefeated &&
-          !director.exitHoldActive;
       final snap = world != null && world.combatElapsed > 0.05
-          ? PartyMeter.fromHeroes(
-              world.heroes,
-              elapsed: world.combatElapsed,
-            )
+          ? PartyMeter.fromHeroes(world.heroes, elapsed: world.combatElapsed)
           : null;
       final showDps =
-          snap != null && !snap.isEmpty && snap.chipLabel != '0 DPS';
+          placeLineDps &&
+          snap != null &&
+          !snap.isEmpty &&
+          snap.chipLabel != '0 DPS';
       final lineColor = awaitingExit || state.isPartyDefeated
           ? GameTheme.clear
           : GameTheme.parchment;
       return Container(
-        padding: holdLine
-            ? const EdgeInsets.symmetric(horizontal: 6, vertical: 3)
-            : EdgeInsets.zero,
-        decoration: holdLine
-            ? BoxDecoration(
-                borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-                border: Border.all(
-                  color: GameTheme.torchHot.withValues(alpha: 0.65),
-                ),
-                color: GameTheme.torch.withValues(alpha: 0.12),
-              )
-            : null,
+        padding: EdgeInsets.zero,
         child: Row(
           children: [
             Expanded(
               child: Semantics(
-                button: onFloorLineTap != null,
                 label: 'Floor line · $placeLine',
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: onFloorLineTap != null
-                        ? () => onFloorLineTap!(context)
-                        : null,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: GameTheme.stoneDeep.withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     child: Text(
-                      holdLine ? '$placeLine · HOLD' : placeLine,
+                      placeLine,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GameTheme.hint(color: lineColor),
@@ -565,17 +551,17 @@ class DungeonTopHud extends StatelessWidget {
             director: director,
             child: MenuChrome.dialog(
               title: mode == DungeonMode.farm
-                  ? (plain ? 'Switch to Repeat?' : 'Switch to FARM?')
-                  : (plain ? 'Switch to Next?' : 'Switch to PUSH?'),
+                  ? 'Switch to FARM?'
+                  : 'Switch to PUSH?',
               content: Text(
                 mode == DungeonMode.farm
                     ? (plain
-                          ? 'Repeat stays on this floor after clear for more loot. No essence.\n\n'
+                          ? 'FARM stays on this floor after clear for more loot. No essence.\n\n'
                                 'You are mid-fight — switch anyway?'
                           : 'FARM loops the same floor after clear for more loot. No essence.\n\n'
                                 'You are mid-fight — switch anyway?')
                     : (plain
-                          ? 'Next advances toward the boss after each clear. +1 essence a clear, +2 on a boss.\n\n'
+                          ? 'PUSH goes to the next floor after each clear. +1 essence a clear, +2 on a boss.\n\n'
                                 'You are mid-fight — switch anyway?'
                           : 'PUSH advances toward the boss after each clear. +1 essence a clear, +2 on a boss.\n\n'
                                 'You are mid-fight — switch anyway?'),
@@ -632,15 +618,15 @@ class DungeonTopHud extends StatelessWidget {
         return [
           Expanded(
             child: DungeonModeChip(
-          label: chip,
-          selected: true,
-          expand: true,
-          interactive: false,
-          tip: NavCopy.playerText(
-            'Next boss F$nextBoss.$nextBit$pbBit Wipe or leave returns to the hub.$extra',
-            state.homeLayout,
-          ),
-          onTap: () {},
+              label: chip,
+              selected: true,
+              expand: true,
+              interactive: false,
+              tip: NavCopy.playerText(
+                'Next boss F$nextBoss.$nextBit$pbBit Wipe or leave returns to the hub.$extra',
+                state.homeLayout,
+              ),
+              onTap: () {},
             ),
           ),
         ];
@@ -692,7 +678,8 @@ class DungeonTopHud extends StatelessWidget {
     }
 
     final slots = showFightTools ? modeSlots() : const <Widget>[];
-    final showZoneAccent = !state.inGauntlet &&
+    final showZoneAccent =
+        !state.inGauntlet &&
         !state.inRift &&
         !state.inGreaterRift &&
         !state.inWorldBoss;
@@ -734,9 +721,11 @@ class DungeonTopHud extends StatelessWidget {
                       placeLine,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.hint(color: awaitingExit || state.isPartyDefeated
+                      style: GameTheme.hint(
+                        color: awaitingExit || state.isPartyDefeated
                             ? GameTheme.clear
-                            : GameTheme.parchment),
+                            : GameTheme.parchment,
+                      ),
                     ),
                     if (affixLine.isNotEmpty)
                       Text(
@@ -760,9 +749,7 @@ class DungeonTopHud extends StatelessWidget {
                 ),
             ],
           ),
-          if (farm &&
-              FarmIntensity.applies(state) &&
-              showFightTools) ...[
+          if (farm && FarmIntensity.applies(state) && showFightTools) ...[
             const SizedBox(height: 2),
             Row(
               children: [
@@ -796,42 +783,40 @@ class DungeonTopHud extends StatelessWidget {
             height: GameTheme.minTouch,
             child: Row(
               children: [
-                if (slots.isNotEmpty) ...[
-                  ...slots,
-                  const SizedBox(width: 4),
-                ],
+                if (slots.isNotEmpty) ...[...slots, const SizedBox(width: 4)],
                 if (showFightTools && world != null) ...[
-                    Semantics(
-                      button: true,
-                      label: plain
-                          ? 'Long-press the fight, or tap the fist'
-                          : 'God Hand — long-press the fight or tap the fist',
-                      child: CoachPulse(
-                        active: coachGod != null,
-                        child: GodHandRing(
-                          cooldown: world.godHandCooldown,
-                          maxCooldown: state.godHandCooldownSeconds,
-                          urgent: state.wipeStreakCount >= 2 && !plain,
-                          readyLabel:
-                              coachGod ??
-                              (plain
-                                  ? 'Long-press the fight, or tap the fist'
-                                  : null),
-                          coolingLabel:
-                              'Cooling ${formatCombatSeconds(world.godHandCooldown)}',
-                          onTap: () => director.godHandAtFocus(),
-                        ),
+                  Semantics(
+                    button: true,
+                    label: plain
+                        ? 'Long-press the fight, or tap the fist'
+                        : 'God Hand — long-press the fight or tap the fist',
+                    child: CoachPulse(
+                      active: coachGod != null,
+                      child: GodHandRing(
+                        cooldown: world.godHandCooldown,
+                        maxCooldown: state.godHandCooldownSeconds,
+                        urgent: state.wipeStreakCount >= 2 && !plain,
+                        readyLabel:
+                            coachGod ??
+                            (plain
+                                ? 'Long-press the fight, or tap the fist'
+                                : null),
+                        coolingLabel:
+                            'Cooling ${formatCombatSeconds(world.godHandCooldown)}',
+                        onTap: () => director.godHandAtFocus(),
                       ),
                     ),
-                    const SizedBox(width: 4),
-                  ],
+                  ),
+                  const SizedBox(width: 4),
+                ],
                 Expanded(
                   child: DungeonModeChip(
                     label: state.combatPace >= 2 ? '2×' : '1×',
                     selected: state.combatPace >= 2,
                     prominent: true,
                     expand: true,
-                    tip: 'Fight speed. 2× plays the cave faster. Loot and time away stay the same.',
+                    tip:
+                        'Fight speed. 2× plays the cave faster. Loot and time away stay the same.',
                     onTap: director.cycleCombatPace,
                   ),
                 ),
@@ -938,19 +923,6 @@ class DungeonTopHud extends StatelessWidget {
                       style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
                   ),
-                  if (!(director.exitHoldActive))
-                    Semantics(
-                      button: true,
-                      label: 'HOLD — skip walk, finish floor now',
-                      child: GameButton(
-                        label: 'HOLD',
-                        tip: 'Skip the stairs walk and finish this floor now',
-                        style: GameButtonStyle.brown,
-                        dense: true,
-                        expanded: false,
-                        onPressed: director.startExitHold,
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -1047,17 +1019,48 @@ class MissionClaimChip extends StatelessWidget {
     required this.onTap,
     this.onLongPress,
     this.dense = false,
+    this.compact = false,
   });
   final int count;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final bool dense;
 
+  /// Tight fight row: `Q · n` with full quest semantics.
+  final bool compact;
+
+  static String _label(int count, {required bool compact}) =>
+      compact ? 'Q · $count' : 'QUESTS · $count';
+
+  /// Layout width for inline fight-row placement (no [FittedBox]).
+  static double layoutWidth(
+    BuildContext context,
+    int count, {
+    bool dense = false,
+    bool compact = false,
+  }) {
+    final label = _label(count, compact: compact);
+    final scaler = MediaQuery.textScalerOf(context);
+    final painter = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: GameTheme.combat(color: GameTheme.toggleOnText),
+      ),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    final hPad = (dense ? 6 : 8) * 2.0;
+    return painter.width + hPad;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final label = _label(count, compact: compact);
+    final semantics = count == 1 ? 'Quests, 1 ready' : 'Quests, $count ready';
     return Semantics(
       button: true,
-      label: count == 1 ? 'Claim 1 quest' : 'Claim $count quests',
+      label: semantics,
       excludeSemantics: true,
       child: Material(
         color: Colors.transparent,
@@ -1066,7 +1069,10 @@ class MissionClaimChip extends StatelessWidget {
           onLongPress: onLongPress,
           borderRadius: BorderRadius.circular(3),
           child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: GameTheme.minTouch),
+            constraints: BoxConstraints(
+              minHeight: GameTheme.minTouch,
+              minWidth: GameTheme.minTouch,
+            ),
             child: Container(
               padding: EdgeInsets.symmetric(
                 horizontal: dense ? 6 : 8,
@@ -1074,13 +1080,13 @@ class MissionClaimChip extends StatelessWidget {
               ),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: GameTheme.hudFarmGreen,
+                color: GameTheme.toggleOnBottom,
                 borderRadius: BorderRadius.circular(3),
-                border: Border.all(color: GameTheme.clear),
+                border: Border.all(color: GameTheme.toggleOnAccent),
               ),
               child: Text(
-                dense ? 'QUESTS · $count' : 'QUESTS · $count',
-                style: GameTheme.combat(color: GameTheme.clear),
+                label,
+                style: GameTheme.combat(color: GameTheme.toggleOnText),
               ),
             ),
           ),
@@ -1139,6 +1145,16 @@ String _firstBossBit(GameState state, int floor) {
   if (state.inGauntlet || state.inAnyRiftMode || state.inWorldBoss) return '';
   final boss = GameLogic.bossFloorFor(state);
   if (floor == boss) return ' · BOSS';
-  if (floor + 1 == boss) return ' · BOSS NEXT';
+  if (floor + 1 == boss) {
+    // The first-climb coach line already says "Boss on floor N". Do not
+    // say it twice on the same screen (audit F094).
+    if (FirstClimbCoach.line(state, inDungeon: true) != null) return '';
+    return ' · BOSS NEXT';
+  }
   return '';
 }
+
+/// Test hook for the first-climb boss suffix.
+@visibleForTesting
+String firstBossBitForTest(GameState state, int floor) =>
+    _firstBossBit(state, floor);

@@ -65,20 +65,29 @@ void main() {
     expect(FirstSessionTips.nextTipId(state, inDungeon: false), isNull);
   });
 
-  test('dungeon God Hand tip waits until floor 1 is clear', () {
+  test('dungeon God Hand tip waits until after the first boss', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       inDungeon: true,
       seenTips: const ['first_run'],
     );
     expect(FirstSessionTips.nextTipId(state, inDungeon: true), isNull);
     final cleared = state.copyWith(highestFloorCleared: 1);
+    expect(FirstSessionTips.nextTipId(cleared, inDungeon: true), isNull);
+    final afterBoss = cleared.copyWith(
+      bossVictories: 1,
+      homeLayout: HomeLayout.home,
+    );
     expect(
-      FirstSessionTips.nextTipId(cleared, inDungeon: true),
+      FirstSessionTips.nextTipId(afterBoss, inDungeon: true),
       'godhand',
     );
     expect(
-      FirstSessionTips.lineFor(cleared, CoachTarget.godhand, inDungeon: true),
-      'Long-press the fight.',
+      FirstSessionTips.lineFor(
+        afterBoss,
+        CoachTarget.godhand,
+        inDungeon: true,
+      ),
+      contains('long-press'),
     );
   });
 
@@ -159,8 +168,10 @@ void main() {
     expect(FirstSessionTips.nextTipId(afterHub, inDungeon: false), isNull);
     expect(FirstSessionTips.nextTipId(afterHub, inDungeon: true), isNull);
     final cleared = afterHub.copyWith(highestFloorCleared: 1);
+    expect(FirstSessionTips.nextTipId(cleared, inDungeon: true), isNull);
+    final afterBoss = cleared.copyWith(bossVictories: 1, seenTips: const ['first_run']);
     expect(
-      FirstSessionTips.nextTipId(cleared, inDungeon: true),
+      FirstSessionTips.nextTipId(afterBoss, inDungeon: true),
       'godhand',
     );
     final both = afterHub.copyWith(seenTips: const ['first_run', 'godhand']);
@@ -228,7 +239,7 @@ void main() {
         FirstSessionTips.active(afterBoss, inDungeon: true)!,
         afterBoss,
       ),
-      'FORGE under the fight.',
+      'TRAIN under the fight.',
     );
   });
 
@@ -290,10 +301,12 @@ void main() {
     director.dispose();
   });
 
-  test('Repeat/Next coach after first floor clear', () {
+  test('FARM/PUSH coach after the first boss', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       inDungeon: true,
-      highestFloorCleared: 1,
+      highestFloorCleared: 2,
+      bossVictories: 1,
+      homeLayout: HomeLayout.home,
       seenTips: const ['first_run', 'godhand'],
     );
     expect(
@@ -302,7 +315,7 @@ void main() {
     );
     expect(
       FirstSessionTips.lineFor(state, CoachTarget.farmPush, inDungeon: true),
-      'Repeat loots. Next goes deeper.',
+      contains('FARM'),
     );
   });
 }

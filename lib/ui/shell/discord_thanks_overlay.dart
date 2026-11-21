@@ -22,10 +22,16 @@ class DiscordThanksOverlay extends StatelessWidget {
 
   static bool shouldOffer(GameDirector director) {
     if (director.state.seenTips.contains(tipId)) return false;
+    final state = director.state;
+    if (state.inDungeon) {
+      final world = director.spatial;
+      if (world == null || !world.awaitingExit) return false;
+      if (world.combatElapsed < 30) return false;
+    }
     // Never cover the first ENTER tip — wait until that tip is dismissed
     // or they have already entered a cave.
-    if (!director.state.seenTips.contains('first_run') &&
-        !FirstSessionTips.leftPorch(director.state)) {
+    if (!state.seenTips.contains('first_run') &&
+        !FirstSessionTips.leftPorch(state)) {
       return false;
     }
     // Endgame / READY chase owns the hub — Discord stays under MORE · SETTINGS.

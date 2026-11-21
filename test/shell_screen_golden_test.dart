@@ -103,6 +103,7 @@ void main() {
       ),
     );
     await pumpGoldenFrames(tester, ms: 800);
+    await settleGoldenImages(tester);
     await expectShellGolden(tester, find.byKey(key), 'hub_a56.png');
   });
 
@@ -286,6 +287,9 @@ void main() {
       ),
     );
     await pumpGoldenFrames(tester, ms: 600);
+    // The wallet coin/flask must not depend on an earlier test warming the
+    // image cache (home sheets no longer paint the wallet first).
+    await settleGoldenImages(tester);
     await expectShellGolden(
       tester,
       find.byType(OverlayScrim),

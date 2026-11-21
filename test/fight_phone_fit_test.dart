@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/dungeon_party_hud.dart';
 import 'package:idle_party/ui/shell/dungeon_target_hud.dart';
 import 'package:idle_party/ui/shell/dungeon_top_hud.dart';
@@ -113,11 +114,9 @@ void main() {
         'party': tester.getRect(find.byType(PartyCornerHud)),
         'top': tester.getRect(find.byType(DungeonTopHud)),
       };
-      final target = find.byType(TargetCornerHud);
-      if (target.evaluate().isNotEmpty) {
-        final rect = tester.getRect(target);
-        if (rect.width > 1 && rect.height > 1) controls['target'] = rect;
-      }
+      final target = find.byKey(TargetCornerHud.stripKey);
+      expect(target, findsOneWidget);
+      controls['target'] = tester.getRect(target);
 
       for (final item in controls.entries) {
         final r = item.value;
@@ -135,8 +134,8 @@ void main() {
         final rect = controls[name]!;
         expect(
           rect.shortestSide,
-          greaterThanOrEqualTo(40),
-          reason: '$name is ${rect.size}, under a 40dp tap',
+          greaterThanOrEqualTo(GameTheme.minTouch),
+          reason: '$name is ${rect.size}, under min touch',
         );
       }
 
@@ -148,7 +147,7 @@ void main() {
         'floor',
         'party',
         'top',
-        if (controls.containsKey('target')) 'target',
+        'target',
         'leave',
       ];
       for (var i = 0; i < mustNotOverlap.length; i++) {

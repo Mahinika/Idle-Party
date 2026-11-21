@@ -51,17 +51,59 @@ class HeroDollSprite extends StatefulWidget {
   State<HeroDollSprite> createState() => _HeroDollSpriteState();
 }
 
-class _HeroDollSpriteState extends State<HeroDollSprite> {
+class _HeroDollSpriteState extends State<HeroDollSprite>
+    with WidgetsBindingObserver {
   ui.Image? _body;
   Map<String, ui.Image> _overlays = const {};
   String? _fallbackPath;
   String? _formPath;
   int _loadGen = 0;
+  int _artEpoch = 0;
+  bool _reloadQueued = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _artEpoch = DecodedImageCache.epoch;
     _reload();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _reloadIfDisposed();
+    }
+  }
+
+  bool get _dollArtDisposed =>
+      _artEpoch != DecodedImageCache.epoch ||
+      DecodedImageCache.isDisposed(_body) ||
+      DecodedImageCache.anyDisposed(_overlays.values);
+
+  void _reloadIfDisposed({bool fromBuild = false}) {
+    if (!_dollArtDisposed || _reloadQueued) return;
+    _reloadQueued = true;
+    void go() {
+      _reloadQueued = false;
+      if (!mounted || !_dollArtDisposed) return;
+      HeroRigPainter.evictDisposedImages();
+      _reload();
+    }
+
+    if (fromBuild) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) go();
+      });
+    } else {
+      go();
+    }
   }
 
   @override
@@ -121,6 +163,7 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
         _body = form;
         _overlays = const {};
         _fallbackPath = null;
+        _artEpoch = DecodedImageCache.epoch;
       });
       return;
     }
@@ -192,13 +235,17 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
       _formPath = null;
       _body = body;
       _overlays = overlays;
+      _artEpoch = DecodedImageCache.epoch;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_dollArtDisposed) {
+      _reloadIfDisposed(fromBuild: true);
+    }
     final alive = widget.hero.currentHp > 0;
-    final body = _body;
+    final body = _dollArtDisposed ? null : _body;
     final formPath = _formPath;
 
     Widget child;

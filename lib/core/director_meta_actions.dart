@@ -179,11 +179,14 @@ extension GameDirectorMetaActions on GameDirector {
     if (chainBonus > 0 ||
         (beforeChain == 2 && _state.metaDepth.jobChainCount == 0)) {
       showToast(
-        '$title: +${goldReward}g +${essenceReward}e · chain +5e!',
+        '$title: +${goldReward}g +$essenceReward essence · chain +5 essence!',
         life: 2.8,
       );
     } else {
-      showToast('$title: +${goldReward}g +${essenceReward}e', life: 2.6);
+      showToast(
+        '$title: +${goldReward}g +$essenceReward essence',
+        life: 2.6,
+      );
     }
   }
 
@@ -203,8 +206,8 @@ extension GameDirectorMetaActions on GameDirector {
     GameAudio.gold();
     showToast(
       claimed == 1
-          ? 'Claimed 1 quest · +${gold}g +${essence}e'
-          : 'Claimed $claimed quests · +${gold}g +${essence}e',
+          ? 'Claimed 1 quest · +${gold}g +$essence essence'
+          : 'Claimed $claimed quests · +${gold}g +$essence essence',
       life: 2.4,
     );
     return claimed;

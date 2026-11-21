@@ -42,7 +42,9 @@ clips are owned PNGs. Enemies are a separate art pass.
 A batch runs `flutter analyze lib test --no-fatal-infos` and the matching
 tests in `.cursor/rules/30-done.mdc`. CI runs `flutter test --exclude-tags sim`
 plus the Android compile on main. Do not treat that list as a command to
-build an APK.
+build an APK. Agents may merge green PRs into `test/fight-ui-stack` only;
+`CHANGELOG.md` at repo root is required on PRs to `main` (separate from in-game
+`ChangelogCatalog`).
 
 Tag `sim` is nightly (`.github/workflows/sim-nightly.yml`), not missing CI.
 Sideload test APKs stay in `.github/workflows/test-apk-prerelease.yml`
@@ -55,7 +57,7 @@ Cloud agent Builds use `.cursor/environment.json`, which runs
 Share-fast: `flutter test test/class_balance_share_fast_test.dart`.
 New UI goldens: skill `goldens`, helper `test/widget_golden.dart`. Regenerate a whole file on Linux with the CI Flutter pin.
 
-Skills live under `.cursor/skills/`. Agent batches: skill `small-runs` (one batch per run, Composer 2.5 with `fast: false` by default). Slash: `/init` resyncs this file and
+Test map for agents: `docs/TESTING.md`. Skills live under `.cursor/skills/`. Agent batches: skill `small-runs` (one batch per run, Composer 2.5 with `fast: false` by default). Slash: `/init` resyncs this file and
 the rules; `/repo auditandcleaning` is analysis only. `/playtest` continues
 the emulator save for about 10 minutes and writes what it finds.
 

@@ -11,7 +11,10 @@ abstract final class TownAccess {
 
   static bool marketOpen(GameState s) => MenuTabs.showGold(s);
 
-  static bool innOpen(GameState s) => MenuTabs.showRoster(s);
+  /// INN on the square and the HEROES ROSTER tab share one gate.
+  static bool innRosterOpen(GameState s) => s.ascensionLevel >= 1;
+
+  static bool innOpen(GameState s) => innRosterOpen(s);
 
   static bool guildOpen(GameState s) => MenuTabs.showQuests(s);
 

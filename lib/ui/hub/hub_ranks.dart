@@ -112,6 +112,7 @@ Future<void> openHubRanksSheet(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            MenuChrome.sheetHandle(),
                             Row(
                               children: [
                                 const GameIcon.asset(UiIcon.trophy, size: 18),
@@ -122,12 +123,15 @@ Future<void> openHubRanksSheet(
                                     style: GameTheme.title(),
                                   ),
                                 ),
+                                MenuChrome.sheetCloseX(ctx),
                               ],
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'KEY, Gauntlet, Ranked GR, or party power.',
-                              style: GameTheme.hint(color: GameTheme.parchmentDim),
+                              style: GameTheme.hint(
+                                color: GameTheme.parchmentDim,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             Expanded(

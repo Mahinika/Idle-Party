@@ -4,17 +4,22 @@ import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/ui/game_theme.dart';
+import 'package:idle_party/ui/party_role_icon.dart';
 import 'package:idle_party/ui/shell/home/fight_seam_rails.dart';
 import 'package:idle_party/ui/shell/home/rail_button.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
 
 void main() {
   test('fight seam rails still open on SCROLLS', () {
+    // The rail lives in the dungeon; town has none (F100).
     final director = GameDirector.preview(
-      initialState: GameLogic.createInitialState(
-        now: DateTime(2026, 11, 9),
-      ).copyWith(homeLayout: HomeLayout.home, bossVictories: 1),
+      initialState: GameLogic.enterDungeon(
+        GameLogic.createInitialState(
+          now: DateTime(2026, 11, 9),
+        ).copyWith(homeLayout: HomeLayout.home, bossVictories: 1),
+      ),
     );
     addTearDown(director.dispose);
     final entries = FightSeamRails.visibleEntries(director.state, director);
@@ -57,8 +62,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.takeException(), isNull);
-    expect(find.text('Healer'), findsWidgets);
-    expect(find.text('SCROLLS'), findsOneWidget);
+    expect(find.byKey(PartyRoleIcon.keyFor(PartyRoleBucket.healer)), findsOneWidget);
+    expect(find.byType(FightSeamRails), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp(r'^SCROLLS')), findsOneWidget);
     final railButton = tester.getSize(find.byType(RailButton).first);
     expect(railButton.height, greaterThanOrEqualTo(GameTheme.minTouch));
     expect(railButton.width, greaterThanOrEqualTo(GameTheme.minTouch));

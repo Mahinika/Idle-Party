@@ -1,30 +1,46 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
-import '../../core/game_logic.dart';
 import '../../models/enemy.dart';
 import '../../spatial/spatial_combat.dart';
-import '../../assets/kenney_assets.dart';
-import '../kenney_sprite.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
 import 'shell_common.dart';
 
-/// Top inset for the short boss callout, under the corner frames.
-///
-/// The boss frame is title + 28px portrait + bomb line. This grows with
-/// [textScale] so max UI scale (1.45) does not paint the callout on top
-/// of that frame or the DPS chip.
+/// Reserved height for the fight target strip under the top HUD row.
+double targetStripHeight(TextScaler scaler) {
+  final raw = scaler.scale(1);
+  final scale = raw.clamp(1.0, GameTheme.typeScaleMax);
+  final vPad = raw > GameTheme.typeScaleMax
+      ? 0.0
+      : (scale >= 1.4 ? 1.0 : 2.0);
+  // Measured from combat + hint on two lines (name row + HP row).
+  // Name row may wrap to two lines on wide targets; reserve two at 1.45.
+  final titleLine = GameTheme.hudPixelComfort * 1.2 * scale;
+  final hpLine = GameTheme.hudPixel * 1.35 * scale;
+  final hpRow = math.max(hpLine, GameTheme.minTouch);
+  final between = raw > GameTheme.typeScaleMax ? 0.0 : 2.0;
+  // Accessibility > 1.45 (stress tests): grow the reserved slot.
+  final slack = raw > GameTheme.typeScaleMax
+      ? (raw - GameTheme.typeScaleMax) * GameTheme.hudPixel * 1.2
+      : 0.0;
+  final layoutSlack = raw > GameTheme.typeScaleMax ? 0.0 : 6.0;
+  return vPad + titleLine + between + hpRow + vPad + slack + layoutSlack;
+}
+
+/// Top inset for the short boss callout, below the target strip.
 double bossIntroBannerTop(double textScale) {
-  final scale = textScale.clamp(1.0, 1.45);
-  const line = 9 * 1.4;
-  return 2 + line * scale + 2 + 28 + line * scale + 10;
+  final scale = textScale.clamp(1.0, GameTheme.typeScaleMax);
+  return targetStripHeight(TextScaler.linear(scale)) + 6;
 }
 
 /// Timed "BOSS — name" callout. Sits in open map, not on the corner frame.
 class BossIntroBanner extends StatelessWidget {
-  const BossIntroBanner({super.key, required this.name});
+  const BossIntroBanner({super.key, required this.name, this.prefix = 'BOSS — '});
 
   final String name;
+  final String prefix;
 
   @override
   Widget build(BuildContext context) {
@@ -41,9 +57,9 @@ class BossIntroBanner extends StatelessWidget {
               border: Border.all(color: GameTheme.torchHot),
             ),
             child: Text(
-              'BOSS — $name',
-              maxLines: 1,
-              softWrap: false,
+              '$prefix$name',
+              maxLines: 2,
+              softWrap: true,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: GameTheme.combat(comfort: true, color: GameTheme.torchHot),
@@ -56,109 +72,151 @@ class BossIntroBanner extends StatelessWidget {
 }
 
 class TargetCornerHud extends StatelessWidget {
-  const TargetCornerHud({super.key, required this.director});
+  const TargetCornerHud({
+    super.key,
+    required this.director,
+    this.edgeInset = true,
+    this.minTitleWidth = 0,
+    this.hpRowTrailing,
+  });
+
   final GameDirector director;
 
-  static String _archetypeLabel(EnemyArchetype a) => switch (a) {
-        EnemyArchetype.swarm => 'SWARM',
-        EnemyArchetype.brute => 'MELEE',
-        EnemyArchetype.tank => 'TANK',
-        EnemyArchetype.ranged => 'RANGED',
-        EnemyArchetype.glass => 'GLASS',
-        EnemyArchetype.support => 'SUPPORT',
-      };
+  /// Home top bar already pads the width — skip a second inset there.
+  final bool edgeInset;
+
+  /// Keeps the enemy title readable when the row also carries quest chips.
+  final double minTitleWidth;
+
+  /// Floor badge, DPS pill, and quest chip on the HP row (line 2).
+  final List<Widget>? hpRowTrailing;
+
+  /// Enemy name on the target strip (line 1).
+  static const Key titleKey = ValueKey('target-corner-title');
+
+  static const Key stripKey = ValueKey('target-strip-hud');
+
+  static const Key roleTagKey = ValueKey('target-corner-role-tag');
+
+  /// Smallest target strip the row should reserve before wrapping quest chips.
+  static double minLayoutWidth(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final hintStyle = GameTheme.hint(color: GameTheme.parchmentDim);
+    final hpNum = TextPainter(
+      text: TextSpan(text: '9999', style: hintStyle),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    const wellPadding = 16.0;
+    const innerPadding = 8.0 * 2;
+    const gaps = 8.0;
+    const tagReserve = 44.0;
+    return tagReserve + hpNum.width + wellPadding + innerPadding + gaps + 48;
+  }
+
+  static String? _roleTagLabel({
+    required EnemyRole role,
+    required EnemyArchetype archetype,
+  }) {
+    if (role == EnemyRole.boss) return 'BOSS';
+    if (role == EnemyRole.elite) return 'ELITE';
+    if (archetype == EnemyArchetype.swarm) return 'SWARM';
+    return null;
+  }
+
+  static Color _roleTagColor(String tag) => switch (tag) {
+    'BOSS' => GameTheme.bloodLit,
+    'ELITE' => GameTheme.torch,
+    'SWARM' => GameTheme.mossLit,
+    _ => GameTheme.parchmentDim,
+  };
+
+  SpatialActor? _focusEnemy(SpatialWorld? world, GameDirector director) {
+    if (world == null) return null;
+    SpatialActor? focus;
+    final pinnedId = director.hudFocusEnemyId;
+    if (pinnedId != null) {
+      for (final e in world.enemies) {
+        if (e.id == pinnedId && e.hp > 0 && !e.dormant) {
+          focus = e;
+          break;
+        }
+      }
+    }
+    if (focus == null) {
+      SpatialActor? boss;
+      SpatialActor? bomb;
+      final leader = world.leader;
+      final lx = leader?.x ?? 0;
+      final ly = leader?.y ?? 0;
+      double best = double.infinity;
+      SpatialActor? nearest;
+      for (final e in world.enemies) {
+        if (e.hp <= 0 || e.dormant) continue;
+        if (e.role == EnemyRole.boss) boss ??= e;
+        if (e.livingBombTimer > 0) bomb ??= e;
+        final dx = e.x - lx;
+        final dy = e.y - ly;
+        final d = dx * dx + dy * dy;
+        if (d < best) {
+          best = d;
+          nearest = e;
+        }
+      }
+      if (boss != null) {
+        focus = boss;
+      } else if (bomb != null) {
+        focus = bomb;
+      } else {
+        focus = nearest;
+      }
+    } else if (focus.livingBombTimer > 0) {
+      for (final e in world.enemies) {
+        if (e.hp > 0 && !e.dormant && e.role == EnemyRole.boss) {
+          focus = e;
+          break;
+        }
+      }
+    }
+    return focus;
+  }
 
   @override
   Widget build(BuildContext context) {
     final world = director.spatial;
     final state = director.state;
-    SpatialActor? focus;
-    if (world != null) {
-      final pinnedId = director.hudFocusEnemyId;
-      if (pinnedId != null) {
-        for (final e in world.enemies) {
-          if (e.id == pinnedId && e.hp > 0 && !e.dormant) {
-            focus = e;
-            break;
-          }
-        }
-      }
-      if (focus == null) {
-        SpatialActor? boss;
-        SpatialActor? bomb;
-        final leader = world.leader;
-        final lx = leader?.x ?? 0;
-        final ly = leader?.y ?? 0;
-        double best = double.infinity;
-        SpatialActor? nearest;
-        for (final e in world.enemies) {
-          if (e.hp <= 0 || e.dormant) continue;
-          if (e.role == EnemyRole.boss) boss ??= e;
-          if (e.livingBombTimer > 0) bomb ??= e;
-          final dx = e.x - lx;
-          final dy = e.y - ly;
-          final d = dx * dx + dy * dy;
-          if (d < best) {
-            best = d;
-            nearest = e;
-          }
-        }
-        // Living Bomb highlights trash — never steal the boss frame.
-        if (boss != null) {
-          focus = boss;
-        } else if (bomb != null) {
-          focus = bomb;
-        } else {
-          focus = nearest;
-        }
-      } else if (focus.livingBombTimer > 0) {
-        // Pinned bomb still yields to a living boss.
-        for (final e in world.enemies) {
-          if (e.hp > 0 && !e.dormant && e.role == EnemyRole.boss) {
-            focus = e;
-            break;
-          }
-        }
-      }
-    }
-
-    final enemy = focus;
+    final height = targetStripHeight(MediaQuery.textScalerOf(context));
+    final edge = edgeInset ? GameTheme.edgeGap : 0.0;
+    final enemy = _focusEnemy(world, director);
     final awaitingExit = world?.awaitingExit == true;
-    // After clear, don't keep a dead fight frame — CLEAR owns the corner
-    // while walking / HOLD.
+
     if (awaitingExit && !state.isPartyDefeated) {
-      return ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 188.0),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(6, 2, 6, 3),
-          decoration: MenuChrome.hudWell(
-            borderColor: GameTheme.clear.withValues(alpha: 0.7),
+      return _stripShell(
+        context,
+        height: height,
+        edge: edge,
+        borderColor: GameTheme.clear.withValues(alpha: 0.7),
+        child: _twoLineBody(
+          title: Text(
+            'CLEAR',
+            key: titleKey,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.combat(color: GameTheme.clear),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'CLEAR',
-                maxLines: 1,
-                softWrap: false,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.combat(color: GameTheme.clear),
-              ),
-              Text(
-                _stairsHint(world),
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
-              ),
-            ],
+          secondary: Text(
+            _stairsHint(world),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         ),
       );
     }
-    // Hide empty chrome — reclaim map until a foe / wipe / clear matters.
-    if (enemy == null && !state.isPartyDefeated) {
-      return const SizedBox.shrink();
-    }
 
+    final showEmpty =
+        enemy == null && !state.isPartyDefeated && !awaitingExit;
     final label = enemy == null
         ? (state.isPartyDefeated
               ? 'WIPED'
@@ -166,136 +224,163 @@ class TargetCornerHud extends StatelessWidget {
               ? 'CLEAR'
               : '—')
         : enemy.name.toUpperCase();
-    final role = enemy == null
-        ? ''
-        : switch (enemy.role) {
-            EnemyRole.boss => 'BOSS',
-            EnemyRole.elite => 'ELITE',
-            EnemyRole.normal => _archetypeLabel(enemy.archetype),
-          };
+    final roleTag = enemy == null
+        ? null
+        : _roleTagLabel(role: enemy.role, archetype: enemy.archetype);
     final hpFrac = enemy == null || enemy.maxHp <= 0
         ? 0.0
         : (enemy.hp / enemy.maxHp).clamp(0.0, 1.0);
-    final swarmPack = enemy != null &&
+    final swarmPack =
+        enemy != null &&
         enemy.archetype == EnemyArchetype.swarm &&
         world != null;
     final foeCount = swarmPack
-        ? world.enemies
-            .where((e) => e.hp > 0 && !e.dormant && e.isAlive)
-            .length
+        ? world.enemies.where((e) => e.hp > 0 && !e.dormant && e.isAlive).length
         : 0;
-    final atFullHp = hpFrac >= 0.999;
-    final titleColor = role == 'BOSS'
-        ? GameTheme.bloodLit
-        : (role == 'ELITE' ? GameTheme.torch : GameTheme.parchment);
+    final borderColor = showEmpty
+        ? GameTheme.hudWellBorder.withValues(alpha: 0.35)
+        : roleTag == 'BOSS'
+        ? GameTheme.bloodLit.withValues(alpha: 0.7)
+        : (roleTag == 'ELITE'
+              ? GameTheme.torch.withValues(alpha: 0.55)
+              : GameTheme.hudWellBorder);
+    final bombBit = enemy != null && enemy.livingBombTimer > 0
+        ? ' · BOMB ${formatCombatSeconds(enemy.livingBombTimer)}'
+        : '';
+    final nameLine = '$label$bombBit';
+    final hpLabel = enemy == null
+        ? ''
+        : swarmPack
+        ? '$foeCount foes'
+        : (SpatialCombat.compactNumbers
+              ? SpatialCombat.compactCount(enemy.hp)
+              : '${enemy.hp}');
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 240.0),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(6, 2, 6, 3),
-        decoration: MenuChrome.hudWell(
-          borderColor: role == 'BOSS'
-              ? GameTheme.bloodLit.withValues(alpha: 0.7)
-              : (role == 'ELITE'
-                    ? GameTheme.torch.withValues(alpha: 0.55)
-                    : GameTheme.hudWellBorder),
+    final title = Tooltip(
+      message: roleTag == null ? nameLine : '$roleTag · $nameLine',
+      child: Text(
+        nameLine,
+        key: titleKey,
+        maxLines: 2,
+        softWrap: true,
+        overflow: TextOverflow.clip,
+        style: GameTheme.combat(
+          color: showEmpty
+              ? GameTheme.parchmentDim.withValues(alpha: 0.55)
+              : GameTheme.parchment,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Tooltip(
-              message: role.isEmpty ? label : '$role · $label',
-              child: Text(
-                role.isEmpty ? label : '$role · $label',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.combat(color: titleColor),
-              ),
-            ),
-            if (enemy != null) ...[
-              const SizedBox(height: 2),
-              Row(
+      ),
+    );
+    final titleRow = Row(
+      children: [
+        if (roleTag != null) ...[
+          _TargetRoleTag(label: roleTag, color: _roleTagColor(roleTag)),
+          const SizedBox(width: 4),
+        ],
+        Expanded(
+          child: minTitleWidth > 0
+              ? ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: minTitleWidth),
+                  child: title,
+                )
+              : title,
+        ),
+      ],
+    );
+
+    final trailing = hpRowTrailing;
+    Widget? hpRow;
+    if (enemy != null && hpLabel.isNotEmpty) {
+      hpRow = Row(
+        children: [
+          Expanded(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 32),
+              child: Row(
                 children: [
-                  KenneySprite(
-                    asset: KenneyAssets.enemyFightSprite(
-                      role: enemy.role,
-                      archetype: enemy.archetype,
-                      assetIndex: enemy.assetIndex,
-                      dungeonId: director.state.dungeonId,
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(1),
+                      child: LinearProgressIndicator(
+                        value: hpFrac,
+                        minHeight: 3,
+                        backgroundColor: GameTheme.equipChipBlocked,
+                        color:
+                            hpFrac > 0.35 ? GameTheme.bloodLit : GameTheme.blood,
+                      ),
                     ),
-                    size: role == 'BOSS'
-                        ? 28
-                        : (role == 'ELITE' ? 22 : 16),
                   ),
                   const SizedBox(width: 6),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(1),
-                          child: LinearProgressIndicator(
-                            value: hpFrac,
-                            minHeight: 3,
-                            backgroundColor: GameTheme.equipChipBlocked,
-                            color: hpFrac > 0.35
-                                ? GameTheme.bloodLit
-                                : GameTheme.blood,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Text(
-                              swarmPack
-                                  ? '$foeCount foes'
-                                  : (SpatialCombat.compactNumbers
-                                        ? SpatialCombat.compactCount(enemy.hp)
-                                        : '${enemy.hp}'),
-                              style: GameTheme.hint(color: GameTheme.parchmentDim),
-                            ),
-                            const Spacer(),
-                            if (!atFullHp)
-                              Text(
-                                '${(hpFrac * 100).round()}%',
-                                style: GameTheme.hint(color: GameTheme.parchmentDim),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
+                  Text(
+                    hpLabel,
+                    maxLines: 1,
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 ],
               ),
-              if (enemy.livingBombTimer > 0)
-                Text(
-                  'BOMB · ${formatCombatSeconds(enemy.livingBombTimer)}',
-                  maxLines: 1,
-                  style: GameTheme.combat(color: GameTheme.torchHot),
-                ),
-            ] else
-              Text(
-                state.isPartyDefeated
-                    ? (state.inGauntlet || state.inAnyRiftMode
-                        ? 'End → hub'
-                        : 'Retry / Hub')
-                    : _stairsHint(world),
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
-              ),
-                      if (_gateLocked(world))
-              Text(
-                GameLogic.plainPlayerChrome(state)
-                    ? 'Finish this room to go deeper'
-                    : 'Clear this room to open the door',
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
-              ),
-            if (_hasDormantAhead(world))
-              Text(
-                'More rooms ahead',
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
-              ),
-          ],
+            ),
+          ),
+          ...?trailing,
+        ],
+      );
+    } else if (enemy == null && state.isPartyDefeated) {
+      hpRow = Text(
+        state.inGauntlet || state.inAnyRiftMode ? 'End → hub' : 'Retry / Hub',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: GameTheme.hint(color: GameTheme.parchmentDim),
+      );
+    } else if (trailing != null && trailing.isNotEmpty) {
+      hpRow = Row(children: trailing);
+    }
+
+    return _stripShell(
+      context,
+      height: height,
+      edge: edge,
+      borderColor: borderColor,
+      dim: showEmpty,
+      child: _twoLineBody(title: titleRow, secondary: hpRow),
+    );
+  }
+
+  Widget _twoLineBody({required Widget title, Widget? secondary}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        title,
+        if (secondary != null) ...[
+          const SizedBox(height: 2),
+          secondary,
+        ],
+      ],
+    );
+  }
+
+  Widget _stripShell(
+    BuildContext context, {
+    required double height,
+    required double edge,
+    required Color borderColor,
+    required Widget child,
+    bool dim = false,
+  }) {
+    return KeyedSubtree(
+      key: stripKey,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(edge, 0, edge, 0),
+        child: SizedBox(
+          height: height,
+          child: Opacity(
+            opacity: dim ? 0.55 : 1,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(8, 1, 8, 1),
+              decoration: MenuChrome.hudWell(borderColor: borderColor),
+              child: child,
+            ),
+          ),
         ),
       ),
     );
@@ -310,30 +395,34 @@ class TargetCornerHud extends StatelessWidget {
     final dx = ex - leader.x;
     final dy = ey - leader.y;
     if (dx * dx + dy * dy < 1.2) return 'Stairs · here';
-    // Screen y grows down; map y grows up — flip N/S for reading.
     String horiz = dx.abs() < 0.35 ? '' : (dx > 0 ? 'E' : 'W');
     String vert = dy.abs() < 0.35 ? '' : (dy > 0 ? 'N' : 'S');
     final dir = '$vert$horiz';
     return dir.isEmpty ? 'GO stairs' : 'GO stairs · $dir';
   }
+}
 
-  static bool _gateLocked(SpatialWorld? world) {
-    if (world == null || world.awaitingExit) return false;
-    // Already fighting in an open chamber — don't nag about deeper gates.
-    final fightingHere =
-        world.enemies.any((e) => e.hp > 0 && !e.dormant);
-    if (fightingHere) return false;
-    for (final g in world.map.gates) {
-      if (!world.openGateIds.contains(g.id)) return true;
-    }
-    return false;
-  }
+class _TargetRoleTag extends StatelessWidget {
+  const _TargetRoleTag({required this.label, required this.color});
 
-  static bool _hasDormantAhead(SpatialWorld? world) {
-    if (world == null || world.awaitingExit) return false;
-    final fightingHere =
-        world.enemies.any((e) => e.hp > 0 && !e.dormant);
-    if (fightingHere) return false;
-    return world.enemies.any((e) => e.hp > 0 && e.dormant);
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: TargetCornerHud.roleTagKey,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(2),
+        border: Border.all(color: color.withValues(alpha: 0.85)),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        style: GameTheme.combat(color: color),
+      ),
+    );
   }
 }

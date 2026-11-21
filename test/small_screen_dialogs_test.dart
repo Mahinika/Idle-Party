@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/ui/shell/home/home_nav_bar.dart';
 import 'package:idle_party/core/gauntlet_pact.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
@@ -154,8 +155,8 @@ void main() {
     await tester.tap(find.text('HEROES'));
     await tester.pump();
     expect(tester.takeException(), isNull);
-    expect(find.text('CLOSE'), findsOneWidget);
-    await tester.tap(find.text('CLOSE'));
+    expect(find.bySemanticsLabel(HomeNavBar.tabSemantics('HEROES', selected: true)), findsOneWidget);
+    await tester.tap(find.text('HEROES'));
     await tester.pump();
     expect(router.route, MenuRoute.none);
     expect(tester.takeException(), isNull);
@@ -184,7 +185,7 @@ void main() {
     expect(find.text('FIGHT'), findsOneWidget);
     await tester.tap(find.text('HEROES'));
     await tester.pump();
-    expect(find.text('CLOSE'), findsOneWidget);
+    expect(find.bySemanticsLabel(HomeNavBar.tabSemantics('HEROES', selected: true)), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

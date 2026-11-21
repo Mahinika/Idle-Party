@@ -12,6 +12,7 @@ import '../../core/home_layout.dart';
 import '../../core/first_climb_coach.dart';
 import '../../core/wipe_advice.dart';
 import '../../core/wisp_gift.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -97,7 +98,7 @@ class DungeonWipePanel extends StatelessWidget {
                                           return 'Two wipes on F$cur. Farming F$safe, then back here.';
                                         }
                                         if (uncleared) {
-                                          return 'Same floor again. A second wipe farms the floor below.';
+                                          return 'RETRY tries this floor again. Two wipes here and the party farms one floor lower.';
                                         }
                                         return 'RETRY restarts F$cur. Leave ends the run.';
                                       }(),
@@ -201,6 +202,9 @@ class DungeonWipePanel extends StatelessWidget {
                                               ? 'Retreats to last cleared floor (PUSH)'
                                               : 'Restarts this floor (still PUSH)';
                                         }(),
+                                  // RETRY is the free go action; offers sit
+                                  // under it as secondary faces (polish7 P035).
+                                  style: GameButtonStyle.go,
                                   primary: true,
                                   dense: true,
                                   onPressed: director.retryAfterWipe,
@@ -361,7 +365,7 @@ class _WipeReviveAdState extends State<_WipeReviveAd> {
         label: _busy ? 'LOADING AD…' : 'REVIVE — WATCH AD',
         tip: '50% HP · same floor · once this run · wipe streak unchanged',
         style: GameButtonStyle.brown,
-        primary: true,
+        icon: UiIcon.watchAd,
         onPressed: _busy
             ? null
             : () async {
@@ -443,6 +447,8 @@ class _WipeWatchAdState extends State<_WipeWatchAd> {
           GameButton(
             label: _busy ? 'LOADING AD…' : 'WATCH AD · +1 ticket',
             style: GameButtonStyle.grey,
+            icon: UiIcon.watchAd,
+            dense: true,
             onPressed: _busy
                 ? null
                 : () async {

@@ -1,0 +1,45 @@
+# Weekly: drop stale test-* GitHub prereleases/tags and optional Firebase App Distribution uploads.
+
+name: Cleanup test builds
+
+on:
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+    inputs:
+      max_age_days:
+        description: 'Delete test builds older than this many days'
+        required: false
+        default: '14'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    env:
+      MAX_AGE_DAYS: ${{ github.event_name == 'workflow_dispatch' && inputs.max_age_days || '14' }}
+      FAD_CREDENTIALS: ${{ secrets.FIREBASE_APP_DISTRIBUTION_CREDENTIALS }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prune old test-* GitHub prereleases and tags
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash tool/ci/cleanup_old_test_prereleases.sh
+
+      - name: Skip Firebase App Distribution when unconfigured
+        if: env.FAD_CREDENTIALS == ''
+        run: |
+          echo "No FIREBASE_APP_DISTRIBUTION_CREDENTIALS; skipping Firebase release cleanup."
+          echo "Set secret FIREBASE_APP_DISTRIBUTION_CREDENTIALS (same JSON as test-apk-prerelease) to prune old FAD builds."
+
+      - name: Prune old Firebase App Distribution releases
+        if: env.FAD_CREDENTIALS != ''
+        env:
+          FIREBASE_APP_DISTRIBUTION_CREDENTIALS: ${{ secrets.FIREBASE_APP_DISTRIBUTION_CREDENTIALS }}
+        run: |
+          python3 -m pip install --quiet google-auth
+          python3 tool/ci/prune_firebase_app_distribution.py

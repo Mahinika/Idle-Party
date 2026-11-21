@@ -42,7 +42,7 @@ class _EquipHeroChip extends StatelessWidget {
                     : GameTheme.parchmentDim));
     return Semantics(
       button: true,
-      label: 'Equip on ${hero.displayRoleLabel(plainEnglish: plainEnglish)}',
+      label: 'Equip on ${hero.displayName(plainEnglish: plainEnglish)}',
       child: InkWell(
       onTap: onTap,
       child: ConstrainedBox(
@@ -71,13 +71,13 @@ class _EquipHeroChip extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    hero.displayRoleLabel(plainEnglish: plainEnglish),
+                    hero.displayName(plainEnglish: plainEnglish),
                     style: GameTheme.hint(color: GameTheme.parchment),
                   ),
                   if (isBest) ...[
                     const SizedBox(width: 3),
                     Text(
-                      'BEST',
+                      GearUpgradeCopy.bestBadgeLabel,
                       style: GameTheme.hint(color: GameTheme.torchHot),
                     ),
                   ],
@@ -102,9 +102,12 @@ class _EquipHeroChip extends StatelessWidget {
                   'Score ${GameLogic.formatDelta(cmp.powerDelta)}',
                   style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
-                if (plannedUpgrade)
+                if (plannedUpgrade && cmp.powerDelta > 0)
                   Text(
-                    'UPGRADE',
+                    GearUpgradeCopy.upgradeBadgeLabel(
+                      cmp.powerDelta,
+                      compact: GearBagBadge.needsCompact(context, cmp.powerDelta),
+                    ),
                     style: GameTheme.hint(color: GameTheme.clear),
                   ),
               ],

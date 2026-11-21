@@ -317,8 +317,32 @@ abstract final class GearBiSPlanner {
   /// One line for the piece AUTO EQUIP just wore.
   static String wornLine(List<String> names) {
     if (names.isEmpty) return '';
-    if (names.length == 1) return '${names.first} on';
-    return '${names.first} on · +${names.length - 1}';
+    if (names.length == 1) return 'Equipped: ${names.first}';
+    return 'Equipped: ${names.first} (+${names.length - 1})';
+  }
+
+  /// Lift planned score deltas for AUTO EQUIP confirmation (no new scoring).
+  static String plannedUpgradeSummary(GameState state) {
+    final plan = planBiSAssignments(state);
+    if (plan.isEmpty) return '';
+    var total = 0;
+    for (final step in plan) {
+      if (step.delta > 0) total += step.delta;
+    }
+    if (total <= 0) return '';
+    return 'Score ${_formatDelta(total)} better';
+  }
+
+  static String _formatDelta(int value) {
+    if (value > 0) return '+$value';
+    if (value < 0) return '$value';
+    return '0';
+  }
+
+  static String wornLineWithLift(List<String> names, String lift) {
+    final base = wornLine(names);
+    if (base.isEmpty || lift.isEmpty) return base;
+    return '$base · $lift';
   }
 
   static GameState autoEquipPass(GameState state) {

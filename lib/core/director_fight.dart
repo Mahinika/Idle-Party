@@ -428,19 +428,6 @@ extension GameDirectorFight on GameDirector {
     unawaited(_persistFlush());
   }
 
-  /// True while the player paused auto-walk to stairs after a clear.
-  bool get exitHoldActive => (_spatial?.exitHoldSec ?? 0) > 0;
-
-  /// Skip the stairs walk — bump the soft-lock timer so the floor finishes
-  /// on the next combat tick (matches HOLD tip / What’s New).
-  void startExitHold() {
-    final spatial = _spatial;
-    if (spatial == null || !spatial.awaitingExit) return;
-    spatial.exitHoldSec = 0;
-    spatial.exitWaitTimer = 99;
-    _directorNotify();
-  }
-
   /// Keep the cleared floor still while the away-ping card is up.
   bool pauseExitForPrompt() {
     final spatial = _spatial;
@@ -654,9 +641,26 @@ extension GameDirectorFight on GameDirector {
     _dungeonTilesReady = false;
     if (_isLoading) return;
     _awaitingWipeChoice = false;
+    final clearedExit = _spatial?.awaitingExit == true;
+    if (clearedExit &&
+        RemoteTune.firstClimbAutoContinue &&
+        GameLogic.firstBossPending(_state) &&
+        _state.highestFloorCleared >= 1 &&
+        _state.currentRoom.floorNumber < GameLogic.firstBossFloor) {
+      releaseExitPrompt();
+      travelToFloor(GameLogic.firstBossFloor);
+      showToast(
+        'Floor ${GameLogic.firstBossFloor} — the boss is next.',
+        life: 2.6,
+      );
+      _directorNotify();
+      unawaited(_persistFlush());
+      return;
+    }
     final hadSpeedBoost = AdBoost.speedActive(_state.metaDepth);
     final leaveDungeonId = _state.dungeonId;
     final leaveFloor = _state.currentRoom.floorNumber;
+    final leaveCaveName = DungeonCatalog.byId(leaveDungeonId).name;
     _state = GameLogic.ensureWeeklyContract(GameLogic.leaveDungeon(_state));
     _spatialTimer?.cancel();
     _spatialTimer = null;
@@ -673,6 +677,8 @@ extension GameDirectorFight on GameDirector {
     final payoffs = LogicNotices.takeMetaPayoffs();
     if (payoffs.isNotEmpty) {
       showToast(payoffs.join(' · '), life: 3.0);
+    } else if (clearedExit && _state.homeLayout == HomeLayout.home) {
+      showToast('$leaveCaveName cleared · back in town', life: 2.8);
     } else if (hadSpeedBoost) {
       showToast('Dungeon speed back to 1× in hub', life: 2.2);
     } else {
@@ -703,7 +709,7 @@ extension GameDirectorFight on GameDirector {
       showToast(
         _state.dungeonMode == DungeonMode.farm
             ? 'FARM — loop this floor for loot · 0 essence'
-            : 'PUSH — clear to advance · +1e clear · +2e boss',
+            : 'PUSH — clear to advance · +1 essence clear · +2 essence boss',
         life: 2.2,
       );
     }

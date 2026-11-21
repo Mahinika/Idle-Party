@@ -49,6 +49,40 @@ void main() {
     expect(WispGift.dailyCap, RemoteTune.defaultDailyCap);
   });
 
+  test('feature flags default on and can turn off', () {
+    expect(RemoteTune.firstClimbAutoContinue, isTrue);
+    expect(RemoteTune.firstClimbPlayNow, isTrue);
+    expect(RemoteTune.welcomeBackFirstReturnShort, isTrue);
+    expect(RemoteTune.townEnabled, isTrue);
+    expect(RemoteTune.townSquareActive(false), isTrue);
+    RemoteTune.apply(firstClimbAutoContinue: false);
+    expect(RemoteTune.firstClimbAutoContinue, isFalse);
+    RemoteTune.reset();
+    expect(RemoteTune.firstClimbAutoContinue, isTrue);
+    expect(RemoteTune.townEnabled, isTrue);
+    expect(RemoteTune.readBool('off', true), isFalse);
+    expect(RemoteTune.readBool(1, false), isTrue);
+    expect(
+      RemoteTune.featureFlag('0', shippedDefault: true),
+      isFalse,
+    );
+    expect(
+      RemoteTune.featureFlag(null, shippedDefault: true),
+      isTrue,
+    );
+  });
+
+  test('town_enabled defaults on and can disable town square', () {
+    expect(RemoteTune.defaultTownEnabled, isTrue);
+    expect(RemoteTune.defaults[RemoteTune.keyTownEnabled], isTrue);
+    RemoteTune.apply(townEnabled: false);
+    expect(RemoteTune.townEnabled, isFalse);
+    expect(RemoteTune.townSquareActive(false), isFalse);
+    expect(RemoteTune.townSquareActive(true), isFalse);
+    RemoteTune.reset();
+    expect(RemoteTune.townEnabled, isTrue);
+  });
+
   test('a shop id lights that row and pins it first', () {
     RemoteTune.apply(shopFeaturedId: 'supporter_qol', fromRemote: true);
 

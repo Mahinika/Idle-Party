@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -5,10 +6,12 @@ import 'package:flutter/material.dart';
 import '../../../assets/custom_assets.dart';
 import '../../../assets/kenney_assets.dart';
 import '../../../core/chase_dispatcher.dart';
+import '../../../core/first_climb_coach.dart';
 import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
 import '../../../core/hub_chase.dart';
+import '../../../core/hub_primary_cta.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
 import '../../../core/town_access.dart';
@@ -18,16 +21,19 @@ import '../../../models/town_building.dart';
 import 'town_life.dart';
 import 'town_scene.dart';
 import '../../chase_bind.dart';
+import '../../coach_pulse.dart';
 import '../../confirm_dialogs.dart';
-import '../../game_icon.dart';
+import '../../hub/hub_powerups.dart';
+import '../../first_session_tips.dart';
 import '../../game_theme.dart';
 import '../../hero_doll_sprite.dart';
 import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
+import '../../meta/farm_strength_picker.dart';
 import '../../web_click_bridge.dart';
 import '../menu_surface.dart';
 import 'director_select.dart';
-import 'fight_seam_rails.dart';
+import 'nav_clearance.dart';
 
 /// Out-of-dungeon town on [HomeShell]: party on the square, distinct
 /// buildings, one ENTER. [TownPreview] is the isolated harness.
@@ -44,9 +50,59 @@ class TownViewport extends StatefulWidget {
 class _TownViewportState extends State<TownViewport> {
   String? _lockedTitle;
   String? _lockedBody;
+  DateTime? _tapMuteUntil;
+  Timer? _tapMuteTimer;
 
   GameDirector get director => widget.director;
   MenuRouter get router => widget.router;
+
+  static const Duration _postSheetTapMute = Duration(milliseconds: 350);
+
+  @override
+  void initState() {
+    super.initState();
+    widget.router.addListener(_onRouterClosed);
+  }
+
+  @override
+  void dispose() {
+    _tapMuteTimer?.cancel();
+    widget.router.removeListener(_onRouterClosed);
+    super.dispose();
+  }
+
+  void _onRouterClosed() {
+    if (widget.router.isOpen) return;
+    final until = DateTime.now().add(_postSheetTapMute);
+    _tapMuteTimer?.cancel();
+    if (mounted) {
+      setState(() => _tapMuteUntil = until);
+    } else {
+      _tapMuteUntil = until;
+    }
+    _tapMuteTimer = Timer(_postSheetTapMute, () {
+      if (!mounted) return;
+      if (_tapMuteUntil == until) {
+        setState(() => _tapMuteUntil = null);
+      }
+    });
+  }
+
+  bool get _townTapsMuted =>
+      _tapMuteUntil != null && DateTime.now().isBefore(_tapMuteUntil!);
+
+  ChasePlan _enterDungeonPlan(GameState state, HubChase chase) {
+    final zoneId = GameLogic.recommendedDungeonId(state);
+    return ChasePlan(
+      label: HubPrimaryCta.enterDungeonLabel(
+        chase: chase,
+        chaseActionLabel: null,
+        hardmodeLevel: state.hardmodeLevel,
+      ),
+      op: ChaseOp.enter,
+      zoneId: zoneId,
+    );
+  }
 
   void _clearLocked() {
     if (_lockedTitle == null) return;
@@ -76,6 +132,8 @@ class _TownViewportState extends State<TownViewport> {
           return;
         }
         _clearLocked();
+        // The one entry to CRAFT outside the MENU grid, on purpose
+        // (Robert, audit F099): the town FORGE is the Apex station.
         router.open(MenuRoute.more, more: MoreSection.craft);
         router.pushSub();
       case TownBuildingId.market:
@@ -197,72 +255,198 @@ class _TownViewportState extends State<TownViewport> {
     final label = plan.label ?? 'ENTER';
     final cave = DungeonCatalog.byId(state.dungeonId).name;
     final al = state.ascensionLevel;
+    final primaryIsEnter =
+        plan.op == ChaseOp.enter || plan.op == ChaseOp.enterKey;
+    final zoneId = GameLogic.recommendedDungeonId(state);
+    final zoneUnlocked = ChaseDispatcher.zoneUnlocked(state, zoneId);
+    final cta = HubPrimaryCta.resolve(
+      chase: chase,
+      chaseActionLabel: plan.label,
+      hasChaseAction: plan.label != null && plan.op != ChaseOp.none,
+      unlockedSelected: zoneUnlocked,
+      hardmodeLevel: state.hardmodeLevel,
+      showKeystoneJargon: GameLogic.showKeystoneJargon(state),
+      endgameUnlocked: GameLogic.endgameUnlocked(state),
+    );
+    final enterLabel = primaryIsEnter
+        ? null
+        : (cta.secondaryLabel ??
+            (zoneUnlocked
+                ? HubPrimaryCta.enterDungeonLabel(
+                    chase: chase,
+                    chaseActionLabel: null,
+                    hardmodeLevel: state.hardmodeLevel,
+                  )
+                : null));
+    final showSecondaryEnter =
+        !primaryIsEnter && enterLabel != null && zoneUnlocked;
+    final showAscendBesideEnter = showSecondaryEnter &&
+        GameLogic.canAscend(state) &&
+        plan.op != ChaseOp.confirmAscend;
+    final showAscendBelow = !showSecondaryEnter &&
+        GameLogic.canAscend(state) &&
+        plan.op != ChaseOp.confirmAscend &&
+        plan.op != ChaseOp.enter &&
+        plan.op != ChaseOp.enterKey;
+    final enterPlan = _enterDungeonPlan(state, chase);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FightSeamRails(director: director, router: router),
+        // No quick rail in town (Robert, audit F100): the buildings are the
+        // entry points; SCROLLS / DAILY / POUCH / UPDATE moved to MENU.
         DecoratedBox(
           decoration: MenuChrome.panel(opaque: true),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+            // Under HomeShell the raised FIGHT circle rises into this card.
+            // Keep ENTER above it.
+            padding: EdgeInsets.fromLTRB(
+              10,
+              6,
+              10,
+              8 + NavClearance.of(context),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  townProgressLine(ascensionLevel: al, cave: cave),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.hint(),
-                ),
-                Text(
-                  cave,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.section(),
-                ),
-                const SizedBox(height: GameTheme.clusterGap),
-                WebClickScope(
-                  label: label,
-                  onPressed: () => runChasePlan(
-                    context: context,
-                    director: director,
-                    router: router,
-                    plan: plan,
-                    onEnterDungeon: (id) {
-                      router.close();
-                      director.enterDungeon(dungeonId: id);
-                    },
-                  ),
-                  child: GameButton(
-                    label: label,
-                    onPressed: () => runChasePlan(
-                      context: context,
-                      director: director,
-                      router: router,
-                      plan: plan,
-                      onEnterDungeon: (id) {
-                        router.close();
-                        director.enterDungeon(dungeonId: id);
-                      },
+                // Town tier and cave on one line, so the town scene keeps
+                // more height above the card (Robert, "Fixa resten" item 5).
+                Row(
+                  key: townHeaderKey,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        townProgressLine(ascensionLevel: al, cave: cave),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.hint(),
+                      ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Text(
+                        '—',
+                        style: GameTheme.hint(color: GameTheme.parchmentDim),
+                      ),
+                    ),
+                    Flexible(
+                      flex: 2,
+                      child: Text(
+                        cave,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.section(),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                // Pick FARM strength before the run (Robert, Nov 19): only
+                // when this button enters a normal cave, a floor is cleared
+                // and no KEY is dialled (a KEY run has no FARM strength).
+                if (showTownFarmPicker(state, plan)) ...[
+                  FarmStrengthPicker(director: director, compact: true),
+                  const SizedBox(height: 6),
+                ],
+                IgnorePointer(
+                  ignoring: _townTapsMuted,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // The coach says "Tap ENTER." — pulse the button it means
+                      // (audit F093).
+                      CoachPulse(
+                        key: TownEnterCoach.pulseKey,
+                        active: TownEnterCoach.active(state),
+                        child: WebClickScope(
+                          label: label,
+                          onPressed: () => runChasePlan(
+                            context: context,
+                            director: director,
+                            router: router,
+                            plan: plan,
+                            onEnterDungeon: (id) {
+                              router.close();
+                              director.enterDungeon(dungeonId: id);
+                            },
+                          ),
+                          child: GameButton(
+                            label: label,
+                            style: GameButtonStyle.go,
+                            primary: true,
+                            onPressed: () => runChasePlan(
+                              context: context,
+                              director: director,
+                              router: router,
+                              plan: plan,
+                              onEnterDungeon: (id) {
+                                router.close();
+                                director.enterDungeon(dungeonId: id);
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (showSecondaryEnter) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GameButton(
+                                label: enterLabel,
+                                style: GameButtonStyle.brown,
+                                primary: true,
+                                onPressed: () => runChasePlan(
+                                  context: context,
+                                  director: director,
+                                  router: router,
+                                  plan: enterPlan,
+                                  onEnterDungeon: (id) {
+                                    router.close();
+                                    director.enterDungeon(dungeonId: id);
+                                  },
+                                ),
+                              ),
+                            ),
+                            if (showAscendBesideEnter) ...[
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: GameButton(
+                                  label: 'ASCEND',
+                                  style: GameButtonStyle.brown,
+                                  primary: true,
+                                  onPressed: () =>
+                                      confirmAscend(context, director),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                      if (showAscendBelow) ...[
+                        const SizedBox(height: 6),
+                        GameButton(
+                          label: 'ASCEND',
+                          style: GameButtonStyle.brown,
+                          primary: true,
+                          onPressed: () => confirmAscend(context, director),
+                        ),
+                      ],
+                      if (MenuTabs.showScrolls(state)) ...[
+                        const SizedBox(height: 6),
+                        HubPowerupsFab(
+                          state: state,
+                          onOpen: () => openPowerupsSheet(context, director),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                if (GameLogic.canAscend(state) &&
-                    plan.op != ChaseOp.confirmAscend &&
-                    plan.op != ChaseOp.enter &&
-                    plan.op != ChaseOp.enterKey) ...[
-                  const SizedBox(height: 6),
-                  GameButton(
-                    label: 'ASCEND',
-                    style: GameButtonStyle.brown,
-                    dense: true,
-                    onPressed: () => confirmAscend(context, director),
-                  ),
-                ],
               ],
             ),
           ),
@@ -271,6 +455,16 @@ class _TownViewportState extends State<TownViewport> {
     );
   }
 }
+
+/// Town card header row: town tier — cave name.
+const Key townHeaderKey = ValueKey('town-card-header');
+
+/// Town ENTER shows the FARM strength picker when the button starts a
+/// normal cave run, at least one floor is cleared and KEY is +0.
+bool showTownFarmPicker(GameState state, ChasePlan plan) =>
+    plan.op == ChaseOp.enter &&
+    state.hardmodeLevel <= 0 &&
+    FarmStrengthPicker.showBeforeEnter(state);
 
 class _TownSquare extends StatelessWidget {
   const _TownSquare({
@@ -673,7 +867,9 @@ class _TownBuildingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final semantics = '${building.label}. ${building.description}';
+    final semantics = badge
+        ? '${building.label}, something waiting. ${building.description}'
+        : '${building.label}. ${building.description}';
     return WebClickScope(
       label: building.label,
       onPressed: onTap,
@@ -685,34 +881,132 @@ class _TownBuildingButton extends StatelessWidget {
         child: InkWell(
           key: ValueKey('town-${building.id.name}'),
           onTap: onTap,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.asset(
-                assetPath,
-                fit: BoxFit.contain,
-                alignment: Alignment.bottomCenter,
-                filterQuality: FilterQuality.none,
-              ),
-              if (badge)
-                Positioned(
-                  right: 2,
-                  top: 2,
-                  child: IgnorePointer(
+          child: _TownBuildingArt(
+            assetPath: assetPath,
+            badgeKey: badge ? ValueKey('town-alert-${building.id.name}') : null,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Building sprite plus its alert. The sprite is bottom-aligned "contain"
+/// inside a wider rect, so the alert is pinned to the painted roof corner,
+/// not the empty rect corner where it read as a torch (polish7 P011).
+class _TownBuildingArt extends StatefulWidget {
+  const _TownBuildingArt({required this.assetPath, this.badgeKey});
+
+  final String assetPath;
+  final Key? badgeKey;
+
+  /// Alert face and its dark contrast ring.
+  static const double alert = 22;
+  static const double ring = 28;
+
+  @override
+  State<_TownBuildingArt> createState() => _TownBuildingArtState();
+}
+
+class _TownBuildingArtState extends State<_TownBuildingArt> {
+  ImageStream? _stream;
+  late final ImageStreamListener _listener = ImageStreamListener(_onImage);
+  Size? _art;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _resolve();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TownBuildingArt oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.assetPath != widget.assetPath) {
+      _art = null;
+      _resolve();
+    }
+  }
+
+  void _resolve() {
+    final next = AssetImage(
+      widget.assetPath,
+    ).resolve(createLocalImageConfiguration(context));
+    if (next.key == _stream?.key) return;
+    _stream?.removeListener(_listener);
+    _stream = next..addListener(_listener);
+  }
+
+  void _onImage(ImageInfo info, bool _) {
+    final size = Size(
+      info.image.width.toDouble(),
+      info.image.height.toDouble(),
+    );
+    info.dispose();
+    if (mounted && size != _art) setState(() => _art = size);
+  }
+
+  @override
+  void dispose() {
+    _stream?.removeListener(_listener);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final image = Image.asset(
+      widget.assetPath,
+      fit: BoxFit.contain,
+      alignment: Alignment.bottomCenter,
+      filterQuality: FilterQuality.none,
+    );
+    final badgeKey = widget.badgeKey;
+    if (badgeKey == null) return image;
+    return LayoutBuilder(
+      builder: (context, box) {
+        final outer = Offset.zero & box.biggest;
+        var roof = outer;
+        final art = _art;
+        if (art != null && art.width > 0 && art.height > 0) {
+          final fitted = applyBoxFit(BoxFit.contain, art, box.biggest);
+          roof = Alignment.bottomCenter.inscribe(fitted.destination, outer);
+        }
+        const r = _TownBuildingArt.ring;
+        final left = (roof.right - r * 0.75).clamp(0.0, outer.width - r);
+        final top = (roof.top - r * 0.35).clamp(0.0, outer.height - r);
+        return Stack(
+          fit: StackFit.expand,
+          clipBehavior: Clip.none,
+          children: [
+            image,
+            Positioned(
+              left: left,
+              top: top,
+              width: r,
+              height: r,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: GameTheme.ink.withValues(alpha: 0.78),
+                    border: Border.all(color: GameTheme.torchHot, width: 2),
+                  ),
+                  child: Center(
                     child: Image.asset(
                       CustomAssets.townAlert,
-                      key: ValueKey('town-alert-${building.id.name}'),
-                      width: 22,
-                      height: 22,
+                      key: badgeKey,
+                      width: _TownBuildingArt.alert,
+                      height: _TownBuildingArt.alert,
                       filterQuality: FilterQuality.none,
                       excludeFromSemantics: true,
                     ),
                   ),
                 ),
-            ],
-          ),
-        ),
-      ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -750,24 +1044,13 @@ class _TownLockedNote extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                title,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GameTheme.section(),
-                              ),
-                            ),
-                            GameIconButton(
-                              key: const ValueKey('town-locked-close'),
-                              label: 'CLOSE',
-                              glyph: UiGlyph.close,
-                              onPressed: onClose,
-                            ),
-                          ],
+                        // One exit: the CLOSE button below (polish7 P002).
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.section(),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -794,14 +1077,28 @@ class _TownLockedNote extends StatelessWidget {
   }
 }
 
-/// Below the pennant tier the line names the town and the cave.
+/// When the first-session coach points at ENTER on the town card.
+abstract final class TownEnterCoach {
+  static const Key pulseKey = ValueKey('town-enter-coach');
+
+  static bool active(GameState state) {
+    if (state.inDungeon) return false;
+    final climb = FirstClimbCoach.line(state, inDungeon: false);
+    if (climb != null) return climb.contains('ENTER');
+    final tip = FirstSessionTips.active(state, inDungeon: false);
+    return tip?.target == CoachTarget.enter;
+  }
+}
+
+/// Below the pennant tier the line names the town ([cave] is shown big
+/// under it, so it is not repeated here).
 /// At the tier it keeps [TownTier.progressLine], which says banners.
 String townProgressLine({required int ascensionLevel, required String cave}) {
   if (TownTier.showPennants(ascensionLevel)) {
     return TownTier.progressLine(ascensionLevel);
   }
-  final look = ascensionLevel >= 1 ? 'Stone town' : 'Timber town';
-  return '$look · $cave';
+  // The cave name is the big line right under this one (audit F090).
+  return ascensionLevel >= 1 ? 'Stone town' : 'Timber town';
 }
 
 /// What the town square paints. Gold is not in here, so a wallet tick

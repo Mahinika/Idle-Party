@@ -17,6 +17,15 @@ Flat nav, hide-until-unlock, and ≤90 s to combat are **no longer hard rules**
 pipeline when it fits; inventing a second nav is allowed if the owner’s goal
 needs it — still use `GameTheme` / `MenuChrome` / `GameButton` / `GameIcon`.
 
+## Owner placement decisions (2026-11-18/19) — these win over the table below
+
+- **Town:** buildings are the entry points. FORGE opens CRAFT, GUILD opens QUESTS, VAULT claims / shows the vault. No quick rail in town; alert rings sit on building roofs.
+- **Dungeon / fight:** the quick rail (SCROLLS / QUESTS / VAULT / DAILY…) stays as is.
+- **MENU grid:** CRAFT and CODEX, plus SCROLLS, DAILY, POUCH, and UPDATE in town. MENU shows a red dot when one of those waits.
+- **FARM strength 1× / 2× / 4×:** picked in the KEY sheet and above ENTER on the town card (only after a floor is cleared), plus the "FARM n×" chip during a FARM run. Never in the FORGE panel.
+- **Seam toggle:** arrow only (▲ / ▼), no word label.
+- **Hero display names:** the fire mage shows as "Blaze" (saved name and ids stay "Ember") so no hero shares a word with the Embers currency.
+
 ## Where features live (placement map)
 
 Current bottom bar on the home layout: **HEROES · ESSENCE · FIGHT · MAP ·

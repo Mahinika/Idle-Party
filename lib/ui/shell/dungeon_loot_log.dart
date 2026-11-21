@@ -78,14 +78,22 @@ class _DungeonLootLogState extends State<DungeonLootLog>
     );
   }
 
+  static bool _floorClearPayoff(String line) {
+    return RegExp(r'\bF\d+ CLEAR\b').hasMatch(line) ||
+        line.startsWith('Spire F');
+  }
+
   Widget _line(String text, int index, int count, double lift) {
     final rare = _rare(text);
+    final floorClear = _floorClearPayoff(text);
+    final multiline = rare || floorClear;
     return Transform.translate(
       offset: Offset(0, lift),
       child: Text(
         text,
-        maxLines: rare ? 2 : 1,
-        overflow: rare ? TextOverflow.fade : TextOverflow.ellipsis,
+        maxLines: multiline ? 2 : 1,
+        softWrap: multiline,
+        overflow: multiline ? TextOverflow.fade : TextOverflow.ellipsis,
         style: GameTheme.readable(color: _color(index, count, rare)).copyWith(
           shadows: const [
             Shadow(

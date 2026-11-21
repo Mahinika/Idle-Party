@@ -35,8 +35,30 @@ String _compactScale(double value, String suffix) {
   return '$raw$suffix';
 }
 
+/// Short-scale suffixes past a million: M, B, T, Qa, Qi. Display only.
+const _bigSuffixes = <(double, String)>[
+  (1e18, 'Qi'),
+  (1e15, 'Qa'),
+  (1e12, 'T'),
+  (1e9, 'B'),
+  (1e6, 'M'),
+];
+
 String formatCount(int n) {
-  if (n >= 1000000) return _compactScale(n / 1000000, 'M');
+  if (n < 0) return '-${formatCount(-n)}';
+  for (var i = 0; i < _bigSuffixes.length; i++) {
+    final (scale, suffix) = _bigSuffixes[i];
+    if (n >= scale) {
+      final v = n / scale;
+      // 999.96M would round to "1000M"; step up to "1B" instead.
+      if (v >= 999.95 && i > 0) {
+        final (up, upSuffix) = _bigSuffixes[i - 1];
+        return _compactScale(n / up, upSuffix);
+      }
+      return _compactScale(v, suffix);
+    }
+  }
+  if (n >= 999950) return '1M';
   if (n >= 10000) return _compactScale(n / 1000, 'k');
   if (n >= 1000) {
     final s = n.toString();
@@ -132,9 +154,19 @@ class FlexTabs {
     if (controller.indexIsChanging) return;
     final want = ids.indexOf(selected);
     if (want >= 0 && want != controller.index) {
-      controller.index = want;
+      // Called from build: a programmatic snap must not echo back through
+      // [onChanged] (that would notify the router mid-build). The owner already
+      // knows [selected]; locked-panel fallbacks are reported post-frame.
+      _quiet = true;
+      try {
+        controller.index = want;
+      } finally {
+        _quiet = false;
+      }
     }
   }
+
+  bool _quiet = false;
 
   final TickerProvider vsync;
   final ValueChanged<int> onChanged;
@@ -162,7 +194,7 @@ class FlexTabs {
       initialIndex: initialIndex.clamp(0, length - 1),
     );
     controller.addListener(() {
-      if (!controller.indexIsChanging) onChanged(controller.index);
+      if (!_quiet && !controller.indexIsChanging) onChanged(controller.index);
     });
   }
 

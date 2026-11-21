@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
+import 'game_icon.dart';
 import 'game_theme.dart';
 import 'web_click_bridge.dart';
 
-enum GameButtonStyle { brown, grey, red, ghost }
+/// [gold]: a purchase you can afford (muted buy gold, like the price chips
+/// on FORGE / CAMP / MARKET cards). Brown stays for non-buys.
+/// brown = neutral action, gold = buy, go = start / enter / claim (amber),
+/// essence = an essence spend, grey = secondary, red = leave, ghost = quiet.
+enum GameButtonStyle { brown, grey, red, ghost, gold, go, essence }
 
 /// Action button.
 class GameButton extends StatelessWidget {
@@ -16,6 +21,7 @@ class GameButton extends StatelessWidget {
     this.primary = false,
     this.dense = false,
     this.tip,
+    this.icon,
   });
 
   final String label;
@@ -33,7 +39,11 @@ class GameButton extends StatelessWidget {
   /// Long-press / hover hint (phone + accessibility).
   final String? tip;
 
-  ({Color top, Color bottom, Color border, Color text, Color glow})
+  /// Optional asset icon before the label (e.g. the ad icon on a watch
+  /// button, audit F042). Decorative: the label carries the meaning.
+  final String? icon;
+
+  ({Color top, Color bottom, Color border, Color text, Color glow, Color edge})
   get _palette => switch (style) {
     GameButtonStyle.brown => (
       top: GameTheme.buttonBrownTop,
@@ -41,6 +51,7 @@ class GameButton extends StatelessWidget {
       border: GameTheme.borderLit.withValues(alpha: 0.75),
       text: GameTheme.parchment,
       glow: GameTheme.torch.withValues(alpha: 0.22),
+      edge: GameTheme.buyGoldEdge,
     ),
     GameButtonStyle.grey => (
       top: GameTheme.buttonGreyTop,
@@ -48,6 +59,7 @@ class GameButton extends StatelessWidget {
       border: GameTheme.border.withValues(alpha: 0.95),
       text: GameTheme.parchment,
       glow: Colors.transparent,
+      edge: GameTheme.buyGreyEdge,
     ),
     GameButtonStyle.red => (
       top: GameTheme.buttonRedTop,
@@ -55,6 +67,31 @@ class GameButton extends StatelessWidget {
       border: GameTheme.bloodLit.withValues(alpha: 0.85),
       text: GameTheme.torchHot,
       glow: GameTheme.bloodLit.withValues(alpha: 0.2),
+      edge: GameTheme.chunkyRedEdge,
+    ),
+    GameButtonStyle.gold => (
+      top: GameTheme.buyGoldTop,
+      bottom: GameTheme.buyGoldBottom,
+      border: GameTheme.buyGoldShine,
+      text: GameTheme.buyGoldText,
+      glow: GameTheme.torch.withValues(alpha: 0.22),
+      edge: GameTheme.buyGoldEdge,
+    ),
+    GameButtonStyle.go => (
+      top: GameTheme.goTop,
+      bottom: GameTheme.goBottom,
+      border: GameTheme.goShine,
+      text: GameTheme.goText,
+      glow: GameTheme.torch.withValues(alpha: 0.26),
+      edge: GameTheme.buyGoldEdge,
+    ),
+    GameButtonStyle.essence => (
+      top: GameTheme.essenceBuyTop,
+      bottom: GameTheme.essenceBuyBottom,
+      border: GameTheme.essenceBuyShine,
+      text: GameTheme.essenceBuyText,
+      glow: GameTheme.levelAccent.withValues(alpha: 0.22),
+      edge: GameTheme.essenceBuyEdge,
     ),
     GameButtonStyle.ghost => (
       top: GameTheme.panelInset.withValues(alpha: 0.55),
@@ -62,8 +99,31 @@ class GameButton extends StatelessWidget {
       border: GameTheme.border.withValues(alpha: 0.75),
       text: GameTheme.torchHot,
       glow: Colors.transparent,
+      edge: GameTheme.border.withValues(alpha: 0.75),
     ),
   };
+
+  Widget _labelWithIcon(Text text, bool enabled) {
+    final asset = icon;
+    if (asset == null) return text;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ExcludeSemantics(
+          child: Opacity(
+            opacity: enabled ? 1 : 0.5,
+            child: GameIcon.asset(asset, size: dense ? 16 : 18),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Flexible(child: text),
+      ],
+    );
+  }
+
+  /// Invisible tap margin above and below the painted face.
+  static const double _facePad = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -71,19 +131,22 @@ class GameButton extends StatelessWidget {
     final palette = _palette;
     final radius = BorderRadius.circular(GameTheme.radiusSm);
     final padH = dense ? 10.0 : 14.0;
-    final padV = dense ? 6.0 : 11.0;
+    final padV = dense ? 4.0 : 7.0;
     final fontSize = dense ? GameTheme.typeButtonDense : GameTheme.typeButton;
     final child = Padding(
       padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
-      child: Text(
-        label,
-        textAlign: TextAlign.center,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: GameTheme.button(
-          size: fontSize,
-          color: enabled ? palette.text : GameTheme.buttonDisabledText,
+      child: _labelWithIcon(
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.button(
+            size: fontSize,
+            color: enabled ? palette.text : GameTheme.buttonDisabledText,
+          ),
         ),
+        enabled,
       ),
     );
 
@@ -92,6 +155,10 @@ class GameButton extends StatelessWidget {
       child: InkWell(
         onTap: onPressed,
         borderRadius: radius,
+        // The painted face is [_facePad] shorter on each side than the tap
+        // area, so the button reads lighter and still meets 44/48 dp.
+        child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: _facePad),
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: radius,
@@ -105,32 +172,31 @@ class GameButton extends StatelessWidget {
                       GameTheme.buttonDisabledBottom,
                     ],
             ),
+            // Chunky face: dark rim, a hard drop shadow when it can be
+            // pressed, and a light top edge (see [ChunkyFace]).
             border: Border.all(
-              color: enabled
-                  ? palette.border
-                  : GameTheme.buttonDisabledBorder,
-              width: 1.2,
+              color: enabled ? palette.edge : GameTheme.border,
+              width: GameTheme.chunkyRim,
             ),
-            boxShadow: enabled
-                ? [
+            boxShadow: enabled && style != GameButtonStyle.ghost
+                ? const [
                     BoxShadow(
-                      color: palette.glow,
-                      blurRadius: 12,
-                      offset: const Offset(0, 2),
-                    ),
-                    const BoxShadow(
-                      color: GameTheme.shadowSoft,
-                      offset: Offset(0, 4),
-                      blurRadius: 8,
+                      color: GameTheme.chunkyShadow,
+                      offset: Offset(0, GameTheme.chunkyDepth),
                     ),
                   ]
                 : null,
           ),
-          child: ConstrainedBox(
+          child: _ShineEdge(
+            color: enabled && style != GameButtonStyle.ghost
+                ? palette.border
+                : null,
+            child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: dense
-                  ? GameTheme.minTouch
-                  : (primary ? GameTheme.primaryTouch : GameTheme.minTouch),
+              minHeight: (dense
+                      ? GameTheme.minTouch
+                      : (primary ? GameTheme.primaryTouch : GameTheme.minTouch)) -
+                  2 * _facePad,
             ),
             child: expanded
                 ? SizedBox(
@@ -139,6 +205,8 @@ class GameButton extends StatelessWidget {
                   )
                 : Center(child: child),
           ),
+          ),
+        ),
         ),
       ),
     );
@@ -163,6 +231,32 @@ class GameButton extends StatelessWidget {
         excludeSemantics: true,
         child: tipped,
       ),
+    );
+  }
+}
+
+/// A 2 px light line along the top inside edge. Null [color] paints none.
+class _ShineEdge extends StatelessWidget {
+  const _ShineEdge({required this.color, required this.child});
+
+  final Color? color;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color;
+    if (c == null) return child;
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          left: 3,
+          right: 3,
+          top: 1,
+          height: 1,
+          child: IgnorePointer(child: ColoredBox(color: c)),
+        ),
+      ],
     );
   }
 }

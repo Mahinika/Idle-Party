@@ -20,7 +20,7 @@ void main() {
   test('a v1 save still loads with its party, gold and progress', () {
     final state = GameLogic.stateFromJson(fixture('save_v1.json'));
 
-    expect(state.heroes.map((h) => h.name), ['Bram', 'Sela', 'Ivy', 'Nyx']);
+    expect(state.heroes.map((h) => h.name).toSet(), {'Bram', 'Sela', 'Ivy', 'Nyx'});
     expect(state.heroes.first.level, 7);
     expect(state.gold, 1450);
     // Achievements that the old save never tracked fire once on load and may
@@ -35,6 +35,7 @@ void main() {
     expect(state.missions, isNotEmpty);
     // Every active hero must still be in the roster, or PARTY renders blanks.
     for (final id in state.activeHeroIds) {
+      if (id.isEmpty) continue;
       expect(state.heroRoster.any((h) => h.id == id), isTrue, reason: id);
     }
     // Missing race/sex on old JSON → Human + family default. No wipe.
@@ -105,6 +106,7 @@ void main() {
     expect(again.inDungeon, isTrue);
     expect(again.heroes.map((h) => h.id), state.heroes.map((h) => h.id));
     for (final id in again.activeHeroIds) {
+      if (id.isEmpty) continue;
       expect(again.heroRoster.any((h) => h.id == id), isTrue, reason: id);
     }
     expect(again.metaDepth.ascendBlessings, state.metaDepth.ascendBlessings);

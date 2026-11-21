@@ -1,7 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../core/ad_rewarded.dart';
 import '../../core/build_stamp.dart';
 import '../../core/community_links.dart';
@@ -15,6 +17,7 @@ import '../../core/game_state.dart';
 import '../../core/home_layout.dart';
 import '../../core/nav_copy.dart';
 import '../../models/dungeon_zoom.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -160,23 +163,26 @@ class _SettingsOverlayState extends State<SettingsOverlay>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Tab + one line; the long rules fold (audit F084).
         Text(
           'Music, ambience, combat sound, and vibration.',
           style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
-        ShellLayout.gap(),
-        MenuChrome.sectionLabel('SOUND'),
-        ShellLayout.gap(4),
-        Text(
-          NavCopy.playerText(
-            'Mute turns everything off. Music stays on in the hub and in a cave. '
-            'It rises for a boss and marks a cleared floor. '
-            'Ambience is the soft bed underneath. SFX is combat and UI.',
-            state.homeLayout,
-          ),
-          style: GameTheme.hint(color: GameTheme.parchmentDim),
+        MenuChrome.fold(
+          title: 'How sound works',
+          children: [
+            Text(
+              NavCopy.playerText(
+                'Mute turns everything off. Music stays on in the hub and in a cave. '
+                'It rises for a boss and marks a cleared floor. '
+                'Ambience is the soft bed underneath. SFX is combat and UI.',
+                state.homeLayout,
+              ),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         _SettingsToggle(
           label: 'Mute all sound',
           value: state.soundMuted,
@@ -239,11 +245,21 @@ class _SettingsOverlayState extends State<SettingsOverlay>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // One short line; the rule folds (polish7 P038).
         Text(
-          'Text size is this slider times the phone’s own text size, '
-          'then capped at the slider’s maximum. Dungeon view is the cave camera, '
-          'not this text size.',
+          'Text size and the cave view.',
           style: GameTheme.hint(color: GameTheme.parchmentDim),
+        ),
+        MenuChrome.fold(
+          title: 'How text size works',
+          children: [
+            Text(
+              'Text size is this slider times the phone’s own text size, '
+              'then capped at the slider’s maximum. Dungeon view is the cave '
+              'camera, not this text size.',
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         MenuChrome.sectionLabel('DISPLAY'),
@@ -252,49 +268,34 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           'UI text scale',
           style: GameTheme.section(color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 6),
-        () {
-          final scaleIdx = SettingsOverlay.textPresets.indexWhere(
-            (p) => (state.uiTextScale - p.$2).abs() < 0.02,
-          );
-          return MenuChrome.segmented(
-            labels: [for (final preset in SettingsOverlay.textPresets) preset.$1],
-            selectedIndex: scaleIdx,
-            onSelect: (i) => director.setUiTextScale(SettingsOverlay.textPresets[i].$2),
-          );
-        }(),
+        // One control for one setting: the slider (polish7 P039).
         const SizedBox(height: 6),
         Builder(
           builder: (context) {
             final wide = MediaQuery.sizeOf(context).width >= 400;
-            final largeType =
-                MediaQuery.textScalerOf(context).scale(1) > 1.2;
+            final largeType = MediaQuery.textScalerOf(context).scale(1) > 1.2;
             final percent = '${(state.uiTextScale * 100).round()}%';
-            final slider = Semantics(
-              slider: true,
+            final slider = MenuChrome.slider(
               label: 'UI text scale',
-              value: '${(state.uiTextScale * 100).round()} percent',
-              child: MenuChrome.slider(
-                value: state.uiTextScale.clamp(
-                  kUiTextScaleMin,
-                  kUiTextScaleMax,
-                ),
-                min: kUiTextScaleMin,
-                max: kUiTextScaleMax,
-                divisions: 13,
-                onChanged: director.setUiTextScale,
+              value: state.uiTextScale.clamp(
+                kUiTextScaleMin,
+                kUiTextScaleMax,
               ),
+              min: kUiTextScaleMin,
+              max: kUiTextScaleMax,
+              divisions: 13,
+              onChanged: director.setUiTextScale,
             );
             if (wide || !largeType) {
               return Row(
                 children: [
                   Expanded(child: slider),
                   SizedBox(
-                    width: 40 *
-                            MediaQuery.textScalerOf(context).scale(1).clamp(
-                              1.0,
-                              2.0,
-                            ) +
+                    width:
+                        40 *
+                            MediaQuery.textScalerOf(context)
+                                .scale(1)
+                                .clamp(1.0, 2.0) +
                         12,
                     child: Text(
                       percent,
@@ -351,8 +352,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         const SizedBox(height: 8),
         _SettingsCycle(
           label: state.combatPace >= 2 ? 'Fight speed 2×' : 'Fight speed 1×',
-          hint:
-              'How fast the cave plays. Gold while you are away does not change.',
+          hint: 'How fast the cave plays. Gold while you are away does not change.',
           onCycle: director.cycleCombatPace,
         ),
         const SizedBox(height: 8),
@@ -416,11 +416,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Automatic cleanup when the run bag gets crowded.',
-          style: GameTheme.hint(color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 8),
+        // The filters carry their own one-line intro (polish7 P038).
         BagCleanupFilters(director: director),
       ],
     );
@@ -433,24 +429,6 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         Text(
           'Save, Play Games, privacy, community, updates, and device data.',
           style: GameTheme.hint(color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 8),
-        MenuChrome.sectionLabelScoped(
-          'PLAY NOTES (local)',
-          scope: MenuScope.account,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          SettingsOverlay.sessionLogHint(
-            plain: GameLogic.plainPlayerChrome(state),
-          ),
-          style: GameTheme.hint(color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 8),
-        _SettingsToggle(
-          label: 'Session log',
-          value: state.sessionTelemetryOptIn,
-          onChanged: director.setSessionTelemetryOptIn,
         ),
         if (LocalReminders.showSettingsToggle(state)) ...[
           const SizedBox(height: 16),
@@ -468,25 +446,6 @@ class _SettingsOverlayState extends State<SettingsOverlay>
             onChanged: (v) => director.setNotifyOptIn(v),
           ),
         ],
-        if (state.sessionTelemetryOptIn) ...[
-          const SizedBox(height: 8),
-          GameButton(
-            label: 'COPY LOG',
-            style: GameButtonStyle.grey,
-            onPressed: () async {
-              await Clipboard.setData(
-                ClipboardData(text: director.sessionTelemetryExport()),
-              );
-              director.showToast('Session log copied', life: 1.8);
-            },
-          ),
-          const SizedBox(height: 6),
-          GameButton(
-            label: 'CLEAR LOG',
-            style: GameButtonStyle.grey,
-            onPressed: director.clearSessionTelemetry,
-          ),
-        ],
         const SizedBox(height: 16),
         PlayGamesSection(director: director),
         if (AdRewarded.realAdsAvailable) ...[
@@ -501,6 +460,16 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           ),
         ],
         SaveTransferSection(director: director),
+        const SizedBox(height: 12),
+        GameButton(
+          label: 'SAVES',
+          tip: 'Open the title screen to continue, start, or switch saves',
+          style: GameButtonStyle.grey,
+          onPressed: () {
+            widget.onClose();
+            director.requestStartMenu();
+          },
+        ),
         const SizedBox(height: 12),
         GameButton(
           label: 'REDEEM CODE',
@@ -544,6 +513,45 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           style: GameButtonStyle.grey,
           onPressed: () => WhatsNewOverlay.show(context, director),
         ),
+        // Opt-in local log: kept, but last on ACCOUNT so the page leads
+        // with save, Play Games and community (polish7 P042).
+        const SizedBox(height: 16),
+        MenuChrome.sectionLabelScoped(
+          'PLAY NOTES (local)',
+          scope: MenuScope.account,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          SettingsOverlay.sessionLogHint(
+            plain: GameLogic.plainPlayerChrome(state),
+          ),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
+        _SettingsToggle(
+          label: 'Session log',
+          value: state.sessionTelemetryOptIn,
+          onChanged: director.setSessionTelemetryOptIn,
+        ),
+        if (state.sessionTelemetryOptIn) ...[
+          const SizedBox(height: 8),
+          GameButton(
+            label: 'COPY LOG',
+            style: GameButtonStyle.grey,
+            onPressed: () async {
+              await Clipboard.setData(
+                ClipboardData(text: director.sessionTelemetryExport()),
+              );
+              director.showToast('Session log copied', life: 1.8);
+            },
+          ),
+          const SizedBox(height: 6),
+          GameButton(
+            label: 'CLEAR LOG',
+            style: GameButtonStyle.grey,
+            onPressed: director.clearSessionTelemetry,
+          ),
+        ],
         if (BuildStamp.shortSha.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
@@ -696,6 +704,7 @@ class _VolumeSlider extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           MenuChrome.slider(
+            label: '$label volume',
             value: value.clamp(0.0, 1.0),
             min: 0,
             max: 1,
@@ -784,9 +793,11 @@ class _SettingsCycle extends StatelessWidget {
                   ],
                 ),
               ),
-              Text(
-                'TAP',
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              // A chevron, not the word "TAP" (polish7 P039).
+              const GameIcon.glyph(
+                UiGlyph.next,
+                size: 14,
+                color: GameTheme.parchmentDim,
               ),
             ],
           ),

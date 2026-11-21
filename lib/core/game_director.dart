@@ -43,6 +43,7 @@ import 'menu_alerts.dart';
 import 'meta_systems.dart';
 import 'mission_board.dart';
 import 'party_name_filter.dart';
+import 'remote_tune.dart';
 import 'pet_service.dart';
 import 'farm_intensity.dart';
 import 'pet_errand_stock.dart';
@@ -468,6 +469,10 @@ class GameDirector extends ChangeNotifier {
   /// Any of the five files has a party (title story skips when this is set).
   bool get hasAnySave => _saveSlots.any((slot) => slot.occupied);
 
+  /// Occupied slots that parsed. Corrupt files are not a playable save.
+  int get validSaveCount =>
+      _saveSlots.where((slot) => slot.occupied && !slot.corrupt).length;
+
   /// Empty slot the next clipboard import should fill, else the active file.
   int get preferredImportSlot {
     final empty = _saveSlots.indexWhere((slot) => !slot.occupied);
@@ -580,6 +585,10 @@ class GameDirector extends ChangeNotifier {
   bool get awaitingWipeChoice => _awaitingWipeChoice;
   bool get uiPaused => _uiPaused;
   bool get appPaused => _appPaused;
+
+  /// True while the 60 Hz dungeon clock is scheduled.
+  @visibleForTesting
+  bool get debugSpatialLoopRunning => _spatialTimer != null;
 
   /// Combat gold/min from the last ~2 minutes of credited dungeon gold.
   int get runGoldPerMinute => _runGoldPerMinute;
@@ -820,9 +829,10 @@ class GameDirector extends ChangeNotifier {
         _state.gearStash.isEmpty) {
       return;
     }
+    final lift = GearService.plannedAutoEquipLift(_state);
     final result = GameLogic.autoEquipBetterGearResult(_state);
     if (result.equipped <= 0) return;
-    final worn = GearService.wornLine(result.names);
+    final worn = GearService.wornLineWithLift(result.names, lift);
     if (worn.isNotEmpty) showToast(worn, life: 2.2);
     _state = result.state;
     final spatial = _spatial;
@@ -1081,6 +1091,20 @@ class GameDirector extends ChangeNotifier {
     }
     final before = _state.activeHeroIds.join(',');
     _applyUpgrade(GameLogic.setActiveParty(_state, heroIds));
+    if (_state.activeHeroIds.join(',') != before) {
+      showToast('Team updated', life: 1.6);
+    }
+  }
+
+  void setPartySlot(int slotIndex, {String? heroId}) {
+    if (_state.inDungeon) {
+      showToast('Leave dungeon to change team', life: 2);
+      return;
+    }
+    final before = _state.activeHeroIds.join(',');
+    _applyUpgrade(
+      GameLogic.setPartySlot(_state, slotIndex, heroId: heroId),
+    );
     if (_state.activeHeroIds.join(',') != before) {
       showToast('Team updated', life: 1.6);
     }
@@ -1826,7 +1850,7 @@ class GameDirector extends ChangeNotifier {
       final notices = LogicNotices.takeMetaPayoffs();
       final gained = _state.essence - before;
       final extra = notices.isEmpty ? '' : ' · ${notices.join(' · ')}';
-      showToast('Daily Vault claimed · +${gained}e$extra', life: 2.8);
+      showToast('Daily Vault claimed · +$gained essence$extra', life: 2.8);
     }
   }
 
@@ -2406,6 +2430,13 @@ class GameDirector extends ChangeNotifier {
 
   bool get pendingStartMenu => _pendingStartMenu;
 
+  /// Open the title screen from MENU without wiping the current file.
+  void requestStartMenu() {
+    if (_isLoading) return;
+    _pendingStartMenu = true;
+    _directorNotify();
+  }
+
   /// Play is up and an empty recovery slot is waiting for party setup.
   bool get pendingRecoveryNewGame => _pendingRecoveryNewGame;
 
@@ -2527,7 +2558,7 @@ class GameDirector extends ChangeNotifier {
         hero.level,
       ).where((d) => d.unlockLevel > oldLevel && d.unlockLevel <= hero.level);
       for (final ability in unlocked) {
-        bits.add('${hero.name}: ${ability.shortLabel}');
+        bits.add('${hero.shownName}: ${ability.shortLabel}');
       }
     }
     if (!leveled) return;
