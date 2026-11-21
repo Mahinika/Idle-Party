@@ -110,7 +110,13 @@ void main() {
       base,
       const Duration(days: 14),
     );
-    expect(away.state.metaDepth.comebackTier, 14);
+    // Catch-up stamps the chest from the credited window (the hub or fight
+    // offline cap). noteAbsence itself still opens the 14-day band.
+    expect(away.secondsApplied, GoldIncome.hubChestCapSec);
+    expect(
+      away.state.metaDepth.comebackTier,
+      ComebackChest.tierFor(away.secondsApplied),
+    );
     final short = OfflineProgress.applyOfflineProgress(
       base,
       const Duration(hours: 30),

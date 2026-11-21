@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- Audit fixes: away catch-up is saved if the app backgrounds again, dead pets stay down, Ascend keeps leave rewards, a failed WISP ad can be retried, DODGE and PARRY show like BLOCK, STA no longer revives the dead, a dying enemy does not swing, hub idle and the comeback chest use the offline time cap, Shield Block's extra reduction applies in melee, and a rejected save write is rolled back.
 - QA 2026-11-21: wipe scrim covers fight tools, ability-name floaters stack, the tomorrow teaser stays on the town card, and small UI fixes (MENU, party chip, shop, vault CTA, speed tip).
 - QA retest: each sheet keeps its own subtitle, loot and ability names share one lane, the equip toast clears the lantern, the hero tab keeps the level, the CC line stays in its chip, a failed audio load retries once, and layout plus audio failures are non-fatal in Crashlytics.
 - A fight save stamps the away clock, and leaving the app writes the current gold and essence before the process can be killed.

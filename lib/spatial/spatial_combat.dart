@@ -3672,6 +3672,8 @@ abstract final class SpatialCombat {
           }
         }
       }
+      // A DoT that just killed this foe ends the turn. A corpse does not swing.
+      if (enemy.hp <= 0) continue;
       final target = _focusHero(
         enemy,
         world.heroes,
@@ -4654,7 +4656,8 @@ abstract final class SpatialCombat {
 
   static int _keptPetHp(SpatialActor? prev, SpatialActor owner) {
     final body = _petBodyHp(owner);
-    if (prev == null || prev.hp <= 0 || prev.maxHp <= 1) return body;
+    if (prev == null || prev.maxHp <= 1) return body;
+    if (prev.hp <= 0) return 0;
     return math.min(prev.hp, body);
   }
 

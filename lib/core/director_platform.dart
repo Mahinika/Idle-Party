@@ -239,15 +239,19 @@ extension GameDirectorPlatform on GameDirector {
   Future<void> watchWispGiftAd() async {
     if (!wispPendingChoice) return;
     _wispChoiceOpen = true;
-    if (!AdRewarded.realAdsAvailable) {
+    final scripted = debugWispAdResult;
+    debugWispAdResult = null;
+    if (scripted == null && !AdRewarded.realAdsAvailable) {
       showToast('Ads play on the Android app', life: 2.2);
       _wispChoiceOpen = false;
       return;
     }
     showToast('Loading ad…', life: 1.4);
-    final result = await AdRewarded.showRewarded(
-      placement: AnalyticsEvents.placementWispGift,
-    );
+    final result = scripted != null
+        ? await scripted
+        : await AdRewarded.showRewarded(
+            placement: AnalyticsEvents.placementWispGift,
+          );
     _wispChoiceOpen = false;
     switch (result) {
       case AdWatchResult.rewarded:
@@ -258,10 +262,8 @@ extension GameDirectorPlatform on GameDirector {
         dismissWispPending();
       case AdWatchResult.failed:
         showToast('Ad not ready — try again in a bit', life: 2.2);
-        dismissWispPending();
       case AdWatchResult.unavailable:
         showToast('Ads play on the Android app', life: 2.2);
-        dismissWispPending();
     }
   }
 

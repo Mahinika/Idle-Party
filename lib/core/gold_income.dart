@@ -48,8 +48,9 @@ abstract final class GoldIncome {
 
   static String perMinuteLabel(int goldPerMin) => '${goldPerMin}g/min';
 
-  /// Hub sanctuary gold while the app is closed. Live ticks on the open hub
-  /// are not this chest — the player is here. Dungeon offline stays separate.
+  /// One hub gap, closed or open. A live 1-second tick stays under this.
+  /// A clock jump cannot pay more than the closed-app chest. Dungeon offline
+  /// stays on its own cap.
   static const int hubChestCapSec = 12 * 3600;
 
   /// Hub chest after SHOP Long Away.
