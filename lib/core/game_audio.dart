@@ -213,11 +213,13 @@ abstract final class GameAudio {
   /// hitch. Call [warmRemainingAssets] (unawaited) right after.
   static Future<void> init() async {
     if (_ready || _initFailed) return;
+    var engineUp = false;
     try {
       final soloud = SoLoud.instance;
       if (!soloud.isInitialized) {
         await soloud.init();
       }
+      engineUp = true;
       soloud.setMaxActiveVoiceCount(voiceCap);
       _hubAmb = await soloud.loadAsset(AudioAssets.hubAmbience);
       for (final path in AudioAssets.hubTracks) {
@@ -227,7 +229,9 @@ abstract final class GameAudio {
     } catch (e, st) {
       _initFailed = true;
       debugPrint('GameAudio.init failed: $e\n$st');
-      if (SoLoud.instance.isInitialized) {
+      // A missing native library throws on SoLoud.instance itself. Touching
+      // it again here would escape this catch and fail the boot test.
+      if (engineUp) {
         AudioFailureReport.loadFailed(AudioAssets.hubAmbience, e, st);
       }
     }
