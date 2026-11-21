@@ -54,7 +54,10 @@ class MenuSurface extends StatefulWidget {
 
 /// Home bottom nav already shows CLOSE for these tabs — skip the sheet button.
 bool _homeNavOwnsClose(MenuRoute route) => switch (route) {
-  MenuRoute.gear || MenuRoute.essence || MenuRoute.shop || MenuRoute.map => true,
+  MenuRoute.gear ||
+  MenuRoute.essence ||
+  MenuRoute.shop ||
+  MenuRoute.map => true,
   _ => false,
 };
 
@@ -202,10 +205,12 @@ class _MenuSurfaceState extends State<MenuSurface> {
   Widget build(BuildContext context) {
     final d = widget.director;
     if (router.route == MenuRoute.none) return const SizedBox.shrink();
-    final questBoard = widget.home &&
+    final questBoard =
+        widget.home &&
         router.route == MenuRoute.more &&
         router.moreSection == MoreSection.quests;
-    final homeMenuGrid = widget.home &&
+    final homeMenuGrid =
+        widget.home &&
         router.route == MenuRoute.more &&
         !router.homeAtSub &&
         !questBoard;
@@ -215,17 +220,20 @@ class _MenuSurfaceState extends State<MenuSurface> {
     final navOwnedClose = widget.home && _homeNavOwnsClose(router.route);
     // Home ESSENCE tiles: the hub is always "ESSENCE", whichever panel was
     // last open (RELICS / PETS used to retitle the same tile grid).
-    final essenceHub = widget.home &&
-        router.route == MenuRoute.essence &&
-        !router.homeAtSub;
+    final essenceHub =
+        widget.home && router.route == MenuRoute.essence && !router.homeAtSub;
     final goal = widget.home
         ? ChaseContract.goalLine(state, inDungeon: state.inDungeon)
         : null;
     String sheetSubtitle() {
+      // Each sheet names itself. The chase line stays on the town card and
+      // the fight coach, not under GEAR / SHOP / SETTINGS.
       if (homeMenuGrid) return HomeMenuGrid.hint;
       if (essenceHub) return MenuSurface.essenceHubHint;
+      final own = router.jobHintFor(state);
+      if (own.isNotEmpty) return own;
       if (goal != null && goal.isNotEmpty) return goal;
-      return router.jobHintFor(state);
+      return '';
     }
 
     return OverlayScrim(
@@ -246,53 +254,56 @@ class _MenuSurfaceState extends State<MenuSurface> {
       child: switch (router.route) {
         // Home: GEAR / BAG / MERGE / ROSTER sit under the title, not as a
         // second tab row on top of the bottom nav (audit F046).
-        MenuRoute.gear => widget.home
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _gearTabs(),
-                  Expanded(child: _inventoryDock()),
-                ],
-              )
-            : _inventoryDock(),
+        MenuRoute.gear =>
+          widget.home
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _gearTabs(),
+                    Expanded(child: _inventoryDock()),
+                  ],
+                )
+              : _inventoryDock(),
         MenuRoute.gold => GoldDock(
           director: d,
           panel: router.goldPanel,
           onPanelChanged: (panel) => router.goldPanel = panel,
         ),
         MenuRoute.shop => ShopDock(director: d, homeCompact: widget.home),
-        MenuRoute.essence => widget.home
-            ? EssenceTilesScreen(director: d, router: router)
-            : EssenceDock(
-                director: d,
-                router: router,
-                panel: router.essencePanel,
-                onPanelChanged: (panel) => router.essencePanel = panel,
-              ),
+        MenuRoute.essence =>
+          widget.home
+              ? EssenceTilesScreen(director: d, router: router)
+              : EssenceDock(
+                  director: d,
+                  router: router,
+                  panel: router.essencePanel,
+                  onPanelChanged: (panel) => router.essencePanel = panel,
+                ),
         MenuRoute.key => KeystoneSheet(director: d, router: router),
-        MenuRoute.map => widget.home
-            ? MapScreen(director: d, router: router)
-            : const SizedBox.shrink(),
-        MenuRoute.more => questBoard
-            ? SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
-                child: JobsOverlay(director: d),
-              )
-            : homeMenuGrid
-            ? HomeMenuGrid(director: d, router: router)
-            : MoreList(
-          director: d,
-          section: router.moreSection,
-          initialInfoPane: router.moreInfoPane,
-          showSectionRail: !widget.home,
-          showPatchNotes: !widget.home,
-          onSectionChanged: (sec) => router.moreSection = sec,
-          onOpenWhatsNew: () => WhatsNewOverlay.show(context, d),
-          onClose: router.close,
-        ),
+        MenuRoute.map =>
+          widget.home
+              ? MapScreen(director: d, router: router)
+              : const SizedBox.shrink(),
+        MenuRoute.more =>
+          questBoard
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                  child: JobsOverlay(director: d),
+                )
+              : homeMenuGrid
+              ? HomeMenuGrid(director: d, router: router)
+              : MoreList(
+                  director: d,
+                  section: router.moreSection,
+                  initialInfoPane: router.moreInfoPane,
+                  showSectionRail: !widget.home,
+                  showPatchNotes: !widget.home,
+                  onSectionChanged: (sec) => router.moreSection = sec,
+                  onOpenWhatsNew: () => WhatsNewOverlay.show(context, d),
+                  onClose: router.close,
+                ),
         MenuRoute.none => const SizedBox.shrink(),
       },
     );
   }
 }
-

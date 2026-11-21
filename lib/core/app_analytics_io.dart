@@ -6,6 +6,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import 'crash_report.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
     as test_env;
@@ -31,7 +32,7 @@ void armEarlyErrorBuffer() {
   final previousFlutter = FlutterError.onError;
   FlutterError.onError = (FlutterErrorDetails details) {
     if (_crashHandlersInstalled) {
-      unawaited(FirebaseCrashlytics.instance.recordFlutterFatalError(details));
+      unawaited(_recordFlutter(details, alreadyPresented: false));
       return;
     }
     previousFlutter?.call(details);
@@ -146,13 +147,9 @@ void _installCrashHandlers() {
   _flutterPending.clear();
   _platformPending.clear();
   for (final details in flutterCopy) {
-    unawaited(
-      FirebaseCrashlytics.instance.recordError(
-        details.exception,
-        details.stack,
-        fatal: true,
-      ),
-    );
+    // The early handler already presented these. recordFlutterError would
+    // present them again, so record the same fatal/non-fatal choice quietly.
+    unawaited(_recordFlutter(details, alreadyPresented: true));
   }
   for (final pending in platformCopy) {
     unawaited(
@@ -163,6 +160,25 @@ void _installCrashHandlers() {
       ),
     );
   }
+}
+
+/// Rendering overflow stays non-fatal. Other framework errors stay fatal.
+Future<void> _recordFlutter(
+  FlutterErrorDetails details, {
+  required bool alreadyPresented,
+}) {
+  final fatal = !flutterErrorIsNonFatal(details);
+  if (!alreadyPresented) {
+    return FirebaseCrashlytics.instance.recordFlutterError(
+      details,
+      fatal: fatal,
+    );
+  }
+  return FirebaseCrashlytics.instance.recordError(
+    details.exception,
+    details.stack,
+    fatal: fatal,
+  );
 }
 
 Future<void> _requestConsent() async {

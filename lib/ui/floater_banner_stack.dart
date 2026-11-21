@@ -66,6 +66,27 @@ abstract final class FloaterBannerStack {
   static const double heroHeadHeightTiles = 0.55;
   static const double heroHeadCenterUpTiles = 0.2;
 
+  /// DODGE / BLOCK / PARRY stay on the body that avoided the hit.
+  static bool isMitigation(String text) {
+    switch (text.trim().toUpperCase()) {
+      case 'DODGE':
+      case 'BLOCK':
+      case 'PARRY':
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /// Loot words, cast names, and status lines share one column above the
+  /// party. Mitigation words stay on the hero.
+  static bool usesSharedLane(String text) {
+    if (isMitigation(text)) return false;
+    final t = text.trim();
+    if (t.startsWith('ABSORB')) return true;
+    return isAbilityName(t);
+  }
+
   /// Cast names such as POWER WORD: SHIELD. Hit numbers, crits, and
   /// +g / +XP stay out so fight-hit goldens keep their authored Y.
   static bool isAbilityName(String text) {

@@ -24,6 +24,7 @@ import 'shell/dungeon_top_hud.dart';
 import 'shell/boost_ad_button.dart';
 import 'shell/home/director_select.dart';
 import 'shell/scroll_buff_stack.dart';
+import 'shell/wisp_gift_overlay.dart';
 
 /// Idle Party dungeon scene: full-bleed stage + corner HUD.
 /// Shared menu sheets + bottom bar are owned by [PlayShell], not this scene.
@@ -227,8 +228,7 @@ class _Is2ShellState extends State<Is2Shell> {
               if (!widget.homeChrome)
                 ListenableBuilder(
                   listenable: d.combatFrame,
-                  builder: (context, _) =>
-                      TargetCornerHud(director: d),
+                  builder: (context, _) => TargetCornerHud(director: d),
                 ),
               Expanded(
                 child: _Is2CombatCornerChrome(
@@ -332,10 +332,8 @@ class _Is2FightTopBarState extends State<_Is2FightTopBar> {
           DungeonTopHud(
             state: state,
             director: d,
-            onOpenSettings: () => widget.router.open(
-              MenuRoute.more,
-              more: MoreSection.settings,
-            ),
+            onOpenSettings: () =>
+                widget.router.open(MenuRoute.more, more: MoreSection.settings),
             onOpenMore: () => widget.router.open(MenuRoute.more),
             onOpenKey: MenuTabs.showKey(state)
                 ? () => widget.router.open(MenuRoute.key)
@@ -348,13 +346,23 @@ class _Is2FightTopBarState extends State<_Is2FightTopBar> {
             d.toast != null &&
             !widget.router.isOpen &&
             !d.awaitingWipeChoice)
-          SizedBox(
-            width: double.infinity,
-            child: FeedbackToast(
-              message: d.toast!,
-              kind: d.noticeKind,
-              maxLines: 2,
-              docked: true,
+          Padding(
+            padding: EdgeInsets.only(
+              top: d.isWispVisible
+                  ? WispGiftOverlay.toastTopClearance(
+                      context,
+                      hint: state.metaDepth.wispBossHold,
+                    )
+                  : 0,
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: FeedbackToast(
+                message: d.toast!,
+                kind: d.noticeKind,
+                maxLines: 2,
+                docked: true,
+              ),
             ),
           ),
       ],
@@ -441,9 +449,7 @@ class _Is2CombatCornerChromeState extends State<_Is2CombatCornerChrome> {
           if (!widget.homeChrome && widget.dpsMeterOpen)
             Positioned.fill(
               child: IgnorePointer(
-                child: ColoredBox(
-                  color: GameTheme.hudDimSoft,
-                ),
+                child: ColoredBox(color: GameTheme.hudDimSoft),
               ),
             ),
           if (!widget.homeChrome)
@@ -460,11 +466,14 @@ class _Is2CombatCornerChromeState extends State<_Is2CombatCornerChrome> {
           Positioned(
             left: 0,
             right: 0,
-            top: (widget.homeChrome
+            top:
+                (widget.homeChrome
                     ? 2 +
-                        MediaQuery.textScalerOf(context).scale(GameTheme.typeHint) *
-                            1.2 +
-                        6
+                          MediaQuery.textScalerOf(
+                                context,
+                              ).scale(GameTheme.typeHint) *
+                              1.2 +
+                          6
                     : 6) +
                 (state.keystoneRunActive ? 22 : 0),
             child: ListenableBuilder(
@@ -517,10 +526,7 @@ class _Is2CombatCornerChromeState extends State<_Is2CombatCornerChrome> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   BoostAdButton(director: d),
-                  ScrollBuffStack(
-                    meta: d.state.metaDepth,
-                    maxHeight: 168,
-                  ),
+                  ScrollBuffStack(meta: d.state.metaDepth, maxHeight: 168),
                 ],
               ),
             ),

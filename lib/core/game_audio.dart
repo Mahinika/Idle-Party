@@ -8,6 +8,7 @@ import 'package:flutter_soloud/flutter_soloud.dart';
 
 import '../models/loot.dart';
 import 'audio_assets.dart';
+import 'audio_failure_report.dart';
 import 'audio_variation_bank.dart';
 import 'combat_feel.dart';
 import 'music_playlist.dart';
@@ -46,6 +47,10 @@ abstract final class GameAudio {
 
   static bool _ready = false;
   static bool _initFailed = false;
+
+  /// Bumps when the engine is torn down so an in-flight load does not retry
+  /// against a disposed SoLoud.
+  static int _assetLoadGeneration = 0;
   static final Map<String, AudioSource> _sourcesByPath =
       <String, AudioSource>{};
   static AudioSource? _hubAmb;
@@ -222,6 +227,9 @@ abstract final class GameAudio {
     } catch (e, st) {
       _initFailed = true;
       debugPrint('GameAudio.init failed: $e\n$st');
+      if (SoLoud.instance.isInitialized) {
+        AudioFailureReport.loadFailed(AudioAssets.hubAmbience, e, st);
+      }
     }
   }
 
@@ -233,20 +241,27 @@ abstract final class GameAudio {
 
   static Future<void> _warmRemainingAssets() async {
     if (!_ready || _initFailed) return;
+    var loading = '';
     try {
       final soloud = SoLoud.instance;
       for (final bank in AudioVariationCatalog.banks.values) {
         for (final v in bank.variations) {
           if (_sourcesByPath.containsKey(v.path)) continue;
+          loading = v.path;
           _sourcesByPath[v.path] = await soloud.loadAsset(v.path);
           await Future<void>.delayed(Duration.zero);
         }
       }
+      loading = AudioAssets.resolveMusic;
       _resolveMusic ??= await soloud.loadAsset(AudioAssets.resolveMusic);
+      loading = AudioAssets.downMusic;
       _downMusic ??= await soloud.loadAsset(AudioAssets.downMusic);
       _sfxReady = true;
     } catch (e, st) {
       debugPrint('GameAudio.warmRemainingAssets failed: $e\n$st');
+      if (loading.isNotEmpty) {
+        AudioFailureReport.loadFailed(loading, e, st);
+      }
     }
   }
 
@@ -273,22 +288,61 @@ abstract final class GameAudio {
     } catch (e, st) {
       final path = AudioAssets.dungeonAmbience(mood);
       debugPrint('GameAudio mood load failed: $path: $e\n$st');
+      AudioFailureReport.loadFailed(path, e, st);
     }
   }
 
-  static Future<AudioSource?> _loadPath(String path) async {
+  static Future<AudioSource?> _loadPath(String path, {int attempt = 0}) async {
     final cached = _byPath[path];
     if (cached != null) return cached;
     if (!_ready || _initFailed) return null;
+    if (!SoLoud.instance.isInitialized) return null;
+    final generation = _assetLoadGeneration;
     try {
       final source = await SoLoud.instance.loadAsset(path);
+      if (generation != _assetLoadGeneration || !_ready) {
+        try {
+          await SoLoud.instance.disposeSource(source);
+        } catch (e, st) {
+          debugPrint('GameAudio drop stale source failed: $path: $e\n$st');
+        }
+        return null;
+      }
       _byPath[path] = source;
       return source;
     } catch (e, st) {
       debugPrint('GameAudio load failed: $path: $e\n$st');
+      // One retry. A cold start on the emulator can fail the first
+      // loadAsset of bed_dark.ogg before the engine is ready to decode,
+      // and a restart can dispose SoLoud under the in-flight load.
+      if (debugRetryAssetLoad(
+        attempt: attempt,
+        ready: _ready && !_initFailed,
+        generation: generation,
+        nowGeneration: _assetLoadGeneration,
+      )) {
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+        if (generation != _assetLoadGeneration || !_ready) return null;
+        return _loadPath(path, attempt: attempt + 1);
+      }
+      if (generation == _assetLoadGeneration) {
+        AudioFailureReport.loadFailed(path, e, st);
+      }
       return null;
     }
   }
+
+  /// True only for the first failure while this engine generation is still up.
+  @visibleForTesting
+  static bool debugRetryAssetLoad({
+    required int attempt,
+    required bool ready,
+    required int generation,
+    required int nowGeneration,
+  }) => attempt == 0 && ready && generation == nowGeneration;
+
+  @visibleForTesting
+  static int get debugAssetLoadGeneration => _assetLoadGeneration;
 
   /// Drops songs that are not part of the place the party is in.
   static Future<void> _dropUnusedTracks(Set<String> keep) async {
@@ -319,6 +373,7 @@ abstract final class GameAudio {
   }
 
   static void disposeEngine() {
+    _assetLoadGeneration++;
     if (!_ready) return;
     try {
       stopAmbience();
@@ -551,8 +606,10 @@ abstract final class GameAudio {
     if (_shouldDrop(id)) return;
     final bank = AudioVariationCatalog.banks[id];
     if (bank == null || bank.isEmpty) return;
+    var path = '';
     try {
       final variation = bank.pick(_rng, heavy: heavy);
+      path = variation.path;
       final source = _sourcesByPath[variation.path];
       if (source == null) return;
       final pitch = (variation.rollPitch(_rng) * speedMul).clamp(0.85, 1.15);
@@ -571,6 +628,7 @@ abstract final class GameAudio {
       }
     } catch (e, st) {
       debugPrint('GameAudio play failed: $e\n$st');
+      if (path.isNotEmpty) AudioFailureReport.playFailed(path, e, st);
     }
   }
 
@@ -743,6 +801,12 @@ abstract final class GameAudio {
     } catch (e, st) {
       _ambienceHandle = null;
       debugPrint('GameAudio ambience start failed: $e\n$st');
+      final path = switch (_ambience) {
+        AmbienceKind.hub => AudioAssets.hubAmbience,
+        AmbienceKind.dungeon => AudioAssets.dungeonAmbience(_score.mood),
+        AmbienceKind.none => '',
+      };
+      if (path.isNotEmpty) AudioFailureReport.playFailed(path, e, st);
     }
   }
 
@@ -796,11 +860,18 @@ abstract final class GameAudio {
       _musicHandle = null;
       _playing = MusicStem.none;
       debugPrint('GameAudio music start failed: $e\n$st');
+      final path = switch (stem) {
+        MusicStem.resolve => AudioAssets.resolveMusic,
+        MusicStem.down => AudioAssets.downMusic,
+        _ => _trackPath ?? '',
+      };
+      if (path.isNotEmpty) AudioFailureReport.playFailed(path, e, st);
     }
   }
 
   static Future<void> _ensureStem(MusicStem stem) async {
     if (!_ready) return;
+    var loading = '';
     try {
       final soloud = SoLoud.instance;
       switch (stem) {
@@ -817,14 +888,17 @@ abstract final class GameAudio {
             await _loadPath(path);
           }
         case MusicStem.resolve:
-          _resolveMusic ??= await soloud.loadAsset(AudioAssets.resolveMusic);
+          loading = AudioAssets.resolveMusic;
+          _resolveMusic ??= await soloud.loadAsset(loading);
         case MusicStem.down:
-          _downMusic ??= await soloud.loadAsset(AudioAssets.downMusic);
+          loading = AudioAssets.downMusic;
+          _downMusic ??= await soloud.loadAsset(loading);
         case MusicStem.none:
           break;
       }
     } catch (e, st) {
       debugPrint('GameAudio stem load failed: $e\n$st');
+      if (loading.isNotEmpty) AudioFailureReport.loadFailed(loading, e, st);
     }
   }
 

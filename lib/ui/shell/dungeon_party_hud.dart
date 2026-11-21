@@ -390,8 +390,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
       context,
     ).scale(1).clamp(1.0, GameTheme.typeScaleMax);
     final shortViewport = MediaQuery.sizeOf(context).height < 680;
-    final tuckPartyPad = shortViewport &&
-        textScale > GameTheme.typeScaleMax - 0.01;
+    final tuckPartyPad =
+        shortViewport && textScale > GameTheme.typeScaleMax - 0.01;
     final lineHeight = _homePartyRowHeight * textScale;
     final denseParty = heroCount >= 5;
     return Column(
@@ -512,8 +512,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     final kitActor = (selected >= 0) ? _spatialFor(world, selected) : null;
     final showSideKit =
         _kitOpen && kitHero != null && kitActor != null && kitActor.isAlive;
-    final showFlask =
-        GameLogic.canUseConsumable(state) && heroCount < 5;
+    final showFlask = GameLogic.canUseConsumable(state) && heroCount < 5;
     final coachKit = FirstSessionTips.lineFor(
       state,
       CoachTarget.kit,
@@ -1140,7 +1139,7 @@ class _HomePartyChip extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: nameStyle,
           ),
-          const SizedBox(height: 1),
+          if (cc.isEmpty) const SizedBox(height: 1),
           Row(
             children: [
               if (doll > 0) ...[
@@ -1174,20 +1173,6 @@ class _HomePartyChip extends StatelessWidget {
                   color: GameTheme.torchHot,
                 ),
               ],
-              if (cc.isNotEmpty) ...[
-                const SizedBox(width: 4),
-                Text(
-                  homeChipCcLabel(cc),
-                  key: homeChipCcKey,
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.visible,
-                  textScaler: TextScaler.noScaling,
-                  style: GameTheme.hint(
-                    color: partyCcChipColor(cc),
-                  ),
-                ),
-              ],
               const SizedBox(width: 2),
               Expanded(
                 child: ClipRRect(
@@ -1202,6 +1187,16 @@ class _HomePartyChip extends StatelessWidget {
               ),
             ],
           ),
+          if (cc.isNotEmpty)
+            Text(
+              homeChipCcLabel(cc),
+              key: homeChipCcKey,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+              textScaler: TextScaler.noScaling,
+              style: GameTheme.hint(color: partyCcChipColor(cc)),
+            ),
         ],
       ),
     );
@@ -1394,8 +1389,7 @@ class _PartyRow extends StatelessWidget {
                     spec: who,
                     level: hero.level,
                     color: GameTheme.parchment,
-                    partyRole:
-                        stripOnly ? null : partyRoleBucketFor(hero),
+                    partyRole: stripOnly ? null : partyRoleBucketFor(hero),
                     extra: _companionLine(spatial, world, hero.specId) ?? '',
                   ),
                   const SizedBox(height: 1),
@@ -1790,9 +1784,7 @@ class _InlineAbilityChip extends StatelessWidget {
     final tip = gated
         ? '${ability.tooltipMessage} — equip a shield'
         : ability.tooltipMessage;
-    final semanticsLabel = onCd
-        ? '${ability.name}, $cdText'
-        : ability.name;
+    final semanticsLabel = onCd ? '${ability.name}, $cdText' : ability.name;
     return Semantics(
       label: semanticsLabel,
       onLongPress: () {

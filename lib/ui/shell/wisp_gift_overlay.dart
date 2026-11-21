@@ -18,6 +18,15 @@ class WispGiftOverlay extends StatelessWidget {
 
   final GameDirector director;
 
+  /// How far a top-of-fight toast must sit below the lantern, including
+  /// "Tap for gold" when [hint] is on. The toast used to cover that hint
+  /// at text scale 1.45.
+  static double toastTopClearance(BuildContext context, {required bool hint}) {
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    final hintBlock = hint ? 8.0 + GameTheme.typeHint * scale * 2 : 0.0;
+    return 8 + 48 + hintBlock + 8;
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -35,7 +44,8 @@ class WispGiftOverlay extends StatelessWidget {
                 : 48.0;
             final cluster = 48.0 + (showTapHint ? 8.0 + 18.0 * scale : 0.0);
             final adTop = constraints.maxHeight - 96 - 56;
-            final overlapsAd = !constraints.hasBoundedHeight ||
+            final overlapsAd =
+                !constraints.hasBoundedHeight ||
                 constraints.maxHeight < 280 ||
                 8 + cluster > adTop;
             final clearAd = overlapsAd || scale > 1.15;
