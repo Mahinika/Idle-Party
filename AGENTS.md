@@ -42,7 +42,7 @@ clips are owned PNGs. Enemies are a separate art pass.
 A batch runs `flutter analyze lib test --no-fatal-infos` and the matching
 tests in `.cursor/rules/30-done.mdc`. CI runs `flutter test --exclude-tags sim`
 plus the Android compile on main. Do not treat that list as a command to
-build an APK. Agents may merge green PRs into `test/fight-ui-stack` only;
+build an APK. Do not merge agent PRs into `main` unless the owner says yes in that turn. The old integration branch `test/fight-ui-stack` was merged as 1.14.0 in PR #112 (2026-11-21); do not treat it as an open integration target.
 `CHANGELOG.md` at repo root is required on PRs to `main` (separate from in-game
 `ChangelogCatalog`).
 

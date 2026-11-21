@@ -112,8 +112,10 @@ turn. Check the workflow `on:` before a push. Priority is revenue.
 - **Local verify:** `flutter analyze lib test --no-fatal-infos` plus **targeted**
   tests for touched code. Do not run the full `flutter test --exclude-tags sim`
   suite locally; GitHub CI runs it.
-- **Merge to `test/fight-ui-stack`:** agents may merge their own PR when CI is
-  green. Never merge agent PRs into `main` without the owner's yes in that turn.
+- **Do not merge to `main`:** never merge agent PRs into `main` without the
+  owner's yes in that turn. The old integration branch `test/fight-ui-stack`
+  was merged as 1.14.0 in PR #112 (2026-11-21). Do not treat it as an open
+  integration target.
 - **Merge to `main`:** add a short bullet under `CHANGELOG.md` → `[Unreleased]`
   (repo root; CI enforces this). In-game What's New stays `ChangelogCatalog`.
 - **Big features:** new large surfaces and existing large ones (e.g. town) ship

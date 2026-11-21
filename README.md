@@ -6,9 +6,7 @@ Idle Party is a portrait Android idle RPG. Install from Google Play — not from
 
 **[Get it on Google Play](https://play.google.com/store/apps/details?id=com.idleparty.app)** · `com.idleparty.app`
 
-**Live on Play: 1.13.17 (243)** (released 2026-11-11). The ship number lives in `pubspec.yaml` and matches `ChangelogCatalog.currentVersion` in `lib/core/changelog.dart`. What’s New in the game is that catalog (`MORE → INFO → PATCH NOTES`).
-
-**Next candidate branch:** `test/fight-ui-stack` at **1.14.0+252** — fight UI stack ready for main, not live on Play until the owner confirms a v-tag and upload.
+**Live on Play: 1.13.17 (243)** (released 2026-11-11). **Main carries 1.14.0+252** (merged 2026-11-21, PR #112). That ship number lives in `pubspec.yaml` and matches `ChangelogCatalog.currentVersion` in `lib/core/changelog.dart`. 1.14.0 is not on Play yet — no `v*` tag and no Play upload until the owner asks. What’s New in the game is that catalog (`MENU → INFO → PATCH NOTES`).
 
 <p align="center">
   <img src="tool/art_backups/app_icon.png" alt="Idle Party app icon" width="160" />
@@ -41,12 +39,12 @@ Orientation for contributors: [docs/game-intelligence/PROJECT_ARCHITECTURE.md](d
 - **One party.** A new game starts with 3 heroes. The fourth joins at the first Ascend. A fifth slot unlocks at AL2. Ten classes, 31 specs. Race locks after New Game START.
 - **Fifteen caves.** Sandy Caverns through Mothveil Hollow. The hub map is PATH.
 - **Come back.** The cave keeps fighting while the app is closed. The hub pays gold. Welcome Back shows what the absence earned. An optional watch **doubles** that trip’s gold and essence (2×), not triple — Scroll of Rest is a separate ×3 gold ticket.
-- **Gear and gold.** GEAR wears budget upgrades (AUTO EQUIP, on by default). GOLD is the forge and the market.
-- **Endgame when every active hero is Lv100.** KEY, Gauntlet, Farm Rift, Ranked Greater Rift, and Ashen Crown. Craft Trial is under MORE → CRAFT, not a hub hunt.
+- **Gear and gold.** HEROES wears budget upgrades (AUTO EQUIP, on by default). TRAIN, CAMP, and MARKET sit under the fight. Town MARKET opens the listings.
+- **Endgame when every active hero is Lv100.** KEY, Gauntlet, Farm Rift, Ranked Greater Rift, and Ashen Crown. Craft Trial is under MENU → CRAFT, not a hub hunt.
 - **Ascend.** Hero levels, open caves, essence, relics, pets, and shop buys stay. Wallet gold, worn drops, and floor progress reset. Cap is AL20.
 - **Optional ads and shop.** Rewarded ads are opt-in. SHOP sells ad-free, Long Away, and Supporter.
 
-Tabs on the phone: GEAR, GOLD, SHOP, ESSENCE, MORE. Early on, only GEAR and MORE show. God Hand is a long-press on the fight, or the fist.
+Tabs on the phone: HEROES, ESSENCE, FIGHT, MAP, and SHOP. MENU is the top button. Early on, only HEROES and FIGHT show; ESSENCE, MAP, and SHOP appear after the first boss. God Hand is a long-press on the fight, or the fist.
 
 Next priorities: [ROADMAP.md](ROADMAP.md). The year plan is [docs/YEAR_ROADMAP.md](docs/YEAR_ROADMAP.md). Week jobs are in `docs/weeks/`.
 

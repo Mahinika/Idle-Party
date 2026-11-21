@@ -121,6 +121,22 @@ multiplies, then the product clamps. The slider max was not lowered.
 | 99 | Changed | `showFeatureSheet` and `lib/ui/shell/home/feature_sheet.dart` are deleted. No Dart references remain. Three audit notes under `docs/game-intelligence/` still name the old helper and are labeled historical. |
 | 100 | Changed | `docs/UI_THEME.md` menu checklist is text, margin, contrast, touch, and scale, plus empty copy and dialog action order. |
 
+## Later, on main — 1.14.0 (PR #112, 2026-11-21)
+
+The sweep above shipped earlier. These rows record fight-UI and town work
+that landed with 1.14.0. Verified against the merged code, not by
+re-opening the original sweep branch.
+
+| Item | Disposition | Evidence |
+|------|-------------|----------|
+| Role icons on the fight party strip | Changed | `PartyRoleIcon` in `lib/ui/party_role_icon.dart` (shield / cross / bow, semantics Tank / Healer / DPS). Wired in `_HomePartyChip` / `PartyHudSpecLine`. Five-wide strip (`heroCount >= 5`) drops the 14 px doll and uses `combatPartyStripDense`. `TextScaler.noScaling` is only on the small `L{level}` and CC hints. Tests: `test/role_icons_artifact_test.dart`, `test/fight_read_polish_test.dart`. |
+| INN roster role slots | Changed | `PartyRoleSlots` (`lib/core/party_role_slots.dart`) maps the party into fixed TANK / HEALER / DPS slots. `TeamCompositionOverlay` uses PICK / SWAP within the role; empty slots read "Empty — tap to pick"; "No Tank in party" / "No Healer in party" when those slots are vacant. INN / ROSTER still unlock at first Ascend (`TownAccess.innRosterOpen`). Tests: `test/party_role_slots_test.dart`, `test/roster_impl_artifact_test.dart`. |
+| Copilot batch A | Changed | First-climb funnel and Welcome Back clarity, goal line, repo honesty (`#105`, `9b286a65`). Tests around `test/first_climb_*`, `test/offline_progress_test.dart`, Welcome Back goldens. |
+| Copilot batch B | Changed | Upgrade previews explain why a piece is better (`gear_upgrade_copy.dart`, bag Better +score / Best). Early-cave readability (Sandy / Goblin). SCROLLS stays one tap on the fight rail / town MENU (`#106`, `568f9630`). Tests: `test/gear_upgrade_copy_test.dart`. |
+| Copilot batch C | Changed | Remote Config `town_enabled` (`RemoteTune.keyTownEnabled`, default true). When off, `HomeShell` uses fight-first rails instead of the town square (`#107`, `fd6cefc1`). Tests: `test/remote_tune_test.dart`, `test/home_shell_test.dart`. |
+
+Related polish that shipped in the same stack: Daily Run naming, town header em dash, CLAIM VAULT in town and in the cave (`#109`); HOLD skip-walk removed (`#103`); empty-cave resume fix (`#102`).
+
 ## Not applicable
 
 These are outside the sweep because the owner forbade the change, or the
