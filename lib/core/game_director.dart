@@ -463,6 +463,14 @@ class GameDirector extends ChangeNotifier {
     return _saveChain;
   }
 
+  /// Cross the 25s dungeon autosave once and wait for that commit.
+  @visibleForTesting
+  Future<bool> debugCommitDungeonAutosave() {
+    _autosaveAccum = _autosaveIntervalSec;
+    _persistIfAutosaveDue();
+    return _saveChain;
+  }
+
   /// Test hook for crash and interleaving cases.
   @visibleForTesting
   GameStorage get debugStorage => _storage;
@@ -1141,9 +1149,7 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     final before = _state.activeHeroIds.join(',');
-    _applyUpgrade(
-      GameLogic.setPartySlot(_state, slotIndex, heroId: heroId),
-    );
+    _applyUpgrade(GameLogic.setPartySlot(_state, slotIndex, heroId: heroId));
     if (_state.activeHeroIds.join(',') != before) {
       showToast('Team updated', life: 1.6);
     }

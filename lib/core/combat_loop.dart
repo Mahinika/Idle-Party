@@ -247,10 +247,7 @@ extension GameDirectorCombatLoop on GameDirector {
       _lastStashLen = _state.gearStash.length;
 
       _autosaveAccum += GameDirector._spatialDt;
-      if (_autosaveAccum >= GameDirector._autosaveIntervalSec) {
-        _autosaveAccum = 0;
-        _persist();
-      }
+      _persistIfAutosaveDue();
 
       if (result.partyWiped) {
         _spatialTimer?.cancel();
