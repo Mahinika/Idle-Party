@@ -123,16 +123,18 @@ Source: `tool/generate_town_art.py`. License: owned, same as
 `assets/custom/`. No paid packs. Deterministic (no RNG).
 `FilterQuality.none`.
 
-The stone-and-tile buildings stay. The lawn is a soft meadow: a few close
-greens in large patches, on a tile bigger than the phone, with edges that
-meet so a repeat is not a line. Cobble streets join the back doors to the
-shop roofs, and flowers and stones sit in beds beside those paths and the
-buildings. Trees are leaf clumps with blossoms and fruit. Villagers are a
-smith, a courier, and a gardener, painted on the 48×56 yard grid so a
-face, clothes, and a solid outline sit beside the party. Warm ink
-`(32, 22, 18)` and upper-left light still match the heroes. Dungeon art
-is unchanged. A guild or vault claim is a pixel spark on the building,
-not a round UI dot.
+The stone-and-tile buildings stay. The lawn is a dusk meadow: a few close
+dark greens in large patches, on a tile that repeats without a seam.
+Cobble streets join the back doors to the shop roofs, and flowers and
+stones sit in beds beside those paths and the buildings. Trees are leaf
+clumps with blossoms and fruit. Villagers are a smith, a courier, and a
+gardener, painted on the 48×56 yard grid so a face, clothes, and a solid
+outline sit beside the party. Warm ink `(32, 22, 18)` and upper-left light
+still match the heroes. The sky is plum with a low sun, windows are lamps,
+and a static vignette plus a sky mist sit over the square. Dungeon art is
+unchanged. When the next cave is Hell's Gate the square takes a light red
+wash under the name chips. A guild or vault claim is a pixel spark on the
+building, not a round UI dot.
 
 Guild is a pale stone hall. Forge, Market, and Inn keep their jobs
 (chimney and anvil, stall, jetty). Name chips paint last, on the

@@ -475,6 +475,9 @@ class _TownViewportState extends State<TownViewport> {
 /// Town card header row: town tier — cave name.
 const Key townHeaderKey = ValueKey('town-card-header');
 
+/// Red wash on the square when the next cave is Hell's Gate.
+const Key townHellWashKey = ValueKey('town-hell-wash');
+
 /// Town ENTER shows the FARM strength picker when the button starts a
 /// normal cave run, at least one floor is cleared and KEY is +0.
 bool showTownFarmPicker(GameState state, ChasePlan plan) =>
@@ -611,6 +614,20 @@ class _TownSquare extends StatelessWidget {
                 : (size.height < 380 ? 34 : 42),
           ),
         ),
+        const Positioned.fill(child: IgnorePointer(child: _TownDuskWash())),
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          height: math.max(28, layout.grassTop + 8),
+          child: const IgnorePointer(child: _TownSkyFog()),
+        ),
+        if (state.dungeonId == 'hell')
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: ColoredBox(key: townHellWashKey, color: GameTheme.townHellWash),
+            ),
+          ),
         if (TownTier.showPennants(state.ascensionLevel) && layout.grassTop > 26)
           const Positioned(
             left: 16,
@@ -771,6 +788,43 @@ class _TownSquare extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Corner darkening. One static radial fill, no blur and no ticker.
+class _TownDuskWash extends StatelessWidget {
+  const _TownDuskWash();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment(0, 0.15),
+          radius: 1.05,
+          colors: [GameTheme.townWashNone, GameTheme.townVignette],
+          stops: [0.72, 1],
+        ),
+      ),
+    );
+  }
+}
+
+/// Light plum mist over the sky band only. Static. Not a shader tick.
+class _TownSkyFog extends StatelessWidget {
+  const _TownSkyFog();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [GameTheme.townFog, GameTheme.townFogNone],
         ),
       ),
     );

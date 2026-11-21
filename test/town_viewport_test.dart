@@ -49,6 +49,10 @@ void main() {
         TownPaintToken.of(s.copyWith(ascensionLevel: 3)),
         isNot(TownPaintToken.of(s)),
       );
+      expect(
+        TownPaintToken.of(s.copyWith(dungeonId: 'hell')),
+        isNot(TownPaintToken.of(s)),
+      );
     });
   });
 
@@ -175,6 +179,27 @@ void main() {
         holdDirector = false;
       }
       router.dispose();
+    });
+
+    testWidgets('Hell\'s Gate washes the square and Sandy does not', (
+      tester,
+    ) async {
+      director = GameDirector.preview(initialState: newTown());
+      router = MenuRouter();
+      await pumpTown(tester);
+      expect(find.byKey(townHellWashKey), findsNothing);
+      final sandy = director;
+      director = GameDirector.preview(
+        initialState: newTown().copyWith(dungeonId: 'hell'),
+      );
+      await pumpTown(tester);
+      sandy.dispose();
+      expect(find.byKey(townHellWashKey), findsOneWidget);
+      expect(find.text('GUILD'), findsOneWidget);
+      expect(find.text('ENTER'), findsOneWidget);
+      await tapBuilding(tester, TownBuildingId.forge);
+      expect(find.text('CRAFT opens after the first boss.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('renders guild, forge, market, inn, vault, party, ENTER', (
