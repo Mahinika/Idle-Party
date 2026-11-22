@@ -45,12 +45,15 @@ class FirestoreFriendReferralGateway implements FriendReferralGateway {
   }) async {
     final db = await _db();
     if (db == null) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid.isEmpty) return;
     final ref = _codeRef(db, code);
     try {
       final snap = await ref.get(const GetOptions(source: Source.server));
       if (snap.exists) return;
       await ref.set({
         'ownerDevice': deviceId,
+        'ownerUid': uid,
         'claims': 0,
         'at': FieldValue.serverTimestamp(),
       });
@@ -86,68 +89,40 @@ class FirestoreFriendReferralGateway implements FriendReferralGateway {
   }) async {
     final db = await _db();
     if (db == null) return FriendClaimStatus.unavailable;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid.isEmpty) return FriendClaimStatus.unavailable;
     final codeRef = _codeRef(db, code);
     final claimRef = db.collection('friendClaims').doc(deviceId);
     try {
+      // Claim row and claims + 1 are one transaction. Separate writes fail
+      // the rules (getAfter / existsAfter), so there is no fallback.
       return await db.runTransaction((tx) async {
         final existing = await tx.get(claimRef);
         if (existing.exists) return FriendClaimStatus.duplicate;
         final codeSnap = await tx.get(codeRef);
         if (!codeSnap.exists) return FriendClaimStatus.unknownCode;
         final owner = codeSnap.data()?['ownerDevice'] as String? ?? '';
-        if (owner == deviceId) return FriendClaimStatus.self;
+        final ownerUid = codeSnap.data()?['ownerUid'] as String? ?? '';
+        if (owner == deviceId || ownerUid == uid) {
+          return FriendClaimStatus.self;
+        }
         final claims = (codeSnap.data()?['claims'] as num?)?.toInt() ?? 0;
         if (claims >= FriendReferral.maxFriends) return FriendClaimStatus.full;
-        tx.update(codeRef, {'claims': claims + 1});
+        tx.update(codeRef, {
+          'claims': claims + 1,
+          'lastClaimDevice': deviceId,
+          'lastClaimUid': uid,
+        });
         tx.set(claimRef, {
           'code': code,
           'device': deviceId,
+          'authUid': uid,
           'at': FieldValue.serverTimestamp(),
         });
         return FriendClaimStatus.accepted;
       });
     } catch (e, st) {
-      // A transaction that writes a server time often fails the rules check.
-      // The same writes one at a time still match the published rules.
       debugPrint('Friend claim transaction failed: $e\n$st');
-      return _claimApart(codeRef, claimRef, code, deviceId);
-    }
-  }
-
-  Future<FriendClaimStatus> _claimApart(
-    DocumentReference<Map<String, dynamic>> codeRef,
-    DocumentReference<Map<String, dynamic>> claimRef,
-    String code,
-    String deviceId,
-  ) async {
-    try {
-      final existing = await claimRef.get(
-        const GetOptions(source: Source.server),
-      );
-      final codeSnap = await codeRef.get(
-        const GetOptions(source: Source.server),
-      );
-      if (!codeSnap.exists) return FriendClaimStatus.unknownCode;
-      final owner = codeSnap.data()?['ownerDevice'] as String? ?? '';
-      if (owner == deviceId) return FriendClaimStatus.self;
-      final claims = (codeSnap.data()?['claims'] as num?)?.toInt() ?? 0;
-      if (existing.exists) {
-        final recorded = existing.data()?['code'] == code;
-        if (recorded && claims == 0) {
-          await codeRef.update({'claims': 1});
-        }
-        return FriendClaimStatus.duplicate;
-      }
-      if (claims >= FriendReferral.maxFriends) return FriendClaimStatus.full;
-      await claimRef.set({
-        'code': code,
-        'device': deviceId,
-        'at': FieldValue.serverTimestamp(),
-      });
-      await codeRef.update({'claims': claims + 1});
-      return FriendClaimStatus.accepted;
-    } catch (e, st) {
-      debugPrint('Friend claim failed: $e\n$st');
       return FriendClaimStatus.unavailable;
     }
   }

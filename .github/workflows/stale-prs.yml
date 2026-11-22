@@ -1,4 +1,5 @@
-# Close inactive pull requests after 14 days. Issues are untouched.
+# Mark inactive pull requests stale after 14 days, then close them
+# 7 days later. Issues are untouched.
 
 name: Stale pull requests
 
@@ -21,11 +22,11 @@ jobs:
           days-before-issue-stale: -1
           days-before-issue-close: -1
           days-before-pr-stale: 14
-          days-before-pr-close: 0
+          days-before-pr-close: 7
           stale-pr-message: >
             This pull request has had no activity for 14 days and is being marked stale.
-            It will be closed if there is no new activity.
+            It will be closed after 7 more days without activity.
           close-pr-message: >
-            Closing this pull request due to 14 days without updates.
+            Closing this pull request. It was stale, then had no activity for 7 days.
             Reopen or open a fresh PR when you are ready to continue.
           operations-per-run: 60

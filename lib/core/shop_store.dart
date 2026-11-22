@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'shop_store_stub.dart' if (dart.library.io) 'shop_store_io.dart' as impl;
 
 /// Play Billing facade for bottom-tab SHOP.
@@ -42,6 +44,14 @@ abstract final class ShopStore {
 
   /// Restore non-consumables (ad-free, supporter, Long Away, starter).
   static Future<String?> restore() => impl.restore();
+
+  /// After a clipboard import dropped pasted Play flags, ask Play again.
+  /// Calls [restore] and the past-purchase query. No-op when Billing is off.
+  static Future<void> replayAfterClipboardImport() =>
+      impl.replayAfterClipboardImport();
+
+  @visibleForTesting
+  static int get debugClipboardRestoreCalls => impl.debugClipboardRestoreCalls;
 
   static Future<void> dispose() => impl.disposeStore();
 }

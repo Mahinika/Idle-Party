@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
+
 import '../core/game_state.dart';
 import '../models/class_ability.dart';
 import '../models/combat_ratings.dart';
@@ -785,6 +787,7 @@ abstract final class AbilityEffectRunner {
             hero,
             def.coeff * (1 + dumped / 45),
             def.shortLabel,
+            healCritRng(world, hero),
           );
           return true;
         }
@@ -2358,7 +2361,14 @@ abstract final class AbilityEffectRunner {
         def.id == AbilityId.rejuvenation ||
         def.id == AbilityId.lifebloom;
     final directCoeff = isHot ? def.coeff * 0.55 : def.coeff;
-    _healLowest(world, caster, ally, directCoeff, def.shortLabel);
+    _healLowest(
+      world,
+      caster,
+      ally,
+      directCoeff,
+      def.shortLabel,
+      healCritRng(world, caster),
+    );
     if (isHot) {
       final nextHps = math.max(2.0, caster.attack * 0.14 * caster.kitHealMul);
       // Stronger (or equal) refresh owns the tick credit on the meter.
@@ -2558,6 +2568,7 @@ abstract final class AbilityEffectRunner {
     });
     var bounce = def.coeff;
     final maxTargets = living.length.clamp(1, 4);
+    final critRng = healCritRng(world, caster);
     for (var i = 0; i < maxTargets; i++) {
       final ally = living[i];
       _healLowest(
@@ -2566,6 +2577,7 @@ abstract final class AbilityEffectRunner {
         ally,
         bounce,
         def.shortLabel,
+        critRng,
         beaconPeel: false,
       );
       bounce *= 0.72;
@@ -2812,12 +2824,35 @@ abstract final class AbilityEffectRunner {
     return ally.hp / ally.effectiveMaxHp < 0.85;
   }
 
+  /// Crit rolls stay off [GameLogic.random]. That stream is combat damage,
+  /// loot, and the live-light DPS gate. A seeded fight still repeats: the
+  /// roll is the floor seed, the fight clock, and the caster.
+  @visibleForTesting
+  static math.Random healCritRng(SpatialWorld world, SpatialActor caster) {
+    final tick = (world.combatElapsed * 1000).round();
+    return math.Random(
+      Object.hash(world.map.layoutSeed, tick, caster.id, 0x4E11),
+    );
+  }
+
+  /// Test seam for the heal crit roll.
+  @visibleForTesting
+  static void debugHealLowest(
+    SpatialWorld world,
+    SpatialActor caster,
+    SpatialActor ally,
+    math.Random rng,
+  ) {
+    _healLowest(world, caster, ally, 1, 'TEST', rng, beaconPeel: false);
+  }
+
   static void _healLowest(
     SpatialWorld world,
     SpatialActor caster,
     SpatialActor ally,
     double coeff,
-    String label, {
+    String label,
+    math.Random rng, {
     bool beaconPeel = true,
   }) {
     final missing = ally.effectiveMaxHp <= 0
@@ -2826,7 +2861,7 @@ abstract final class AbilityEffectRunner {
     final healMul =
         SpecMastery.healMul(masteryView(caster), missing) * caster.kitHealMul;
     var amount = math.max(4, (_healPower(caster) * coeff * healMul).round());
-    if (caster.spellCrit > 0 && math.Random().nextInt(100) < caster.spellCrit) {
+    if (caster.spellCrit > 0 && rng.nextInt(100) < caster.spellCrit) {
       amount = math.max(4, (amount * 1.5).round());
     }
     final before = ally.hp;
