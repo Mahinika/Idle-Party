@@ -230,26 +230,64 @@ TUFT_SHAPES = (
 )
 
 
-def ground() -> Image.Image:
-    """Seamless dusk grass. Flat base brightness like 022192cb, sparse tufts only.
+def _dirt_patch_wrap(pix: Pix, cx: int, cy: int, rx: int, ry: int) -> None:
+    for dy in range(-ry, ry + 1):
+        for dx in range(-rx, rx + 1):
+            nx = dx / max(1, rx)
+            ny = dy / max(1, ry)
+            if nx * nx + ny * ny > 1:
+                continue
+            tone = 2 if ny > 0.25 else 4 if ny < -0.15 else 3
+            pix.put_wrap(cx + dx, cy + dy, DIRT[tone])
+    pix.put_wrap(cx - 2, cy + 1, GRASS[1])
+    pix.put_wrap(cx + 3, cy + 2, GRASS[2])
 
-    Two close fills (GRASS[3–4]) with rare seamless speckles — no blobs or columns.
-    """
+
+def ground() -> Image.Image:
+    """Seamless dusk lawn: gentle value drift, sparse flowers and worn patches."""
     w = h = GROUND_TILE
     pix = Pix(w, h)
-    ramp = (GRASS[3], GRASS[4], (31, 92, 23))
     for y in range(h):
         for x in range(w):
-            m = (x * 7 + y * 11) % 3
-            pix.put_wrap(x, y, ramp[m])
+            n = _noise(x, y, 32, w, h)
+            base = LAWN[int(n * 2.6) % 3]
+            if n < 0.18:
+                base = GRASS[2]
+            elif n > 0.86:
+                base = GRASS[4]
+            pix.put_wrap(x, y, base)
+    # Worn foot lines (diagonal bands), not on a grid.
+    for cx, cy, rx, ry in (
+        (30, 70, 16, 5),
+        (78, 44, 14, 4),
+        (104, 96, 12, 5),
+        (52, 112, 10, 4),
+    ):
+        _dirt_patch_wrap(pix, cx, cy, rx, ry)
     for tx, ty, shape in (
-        (37, 52, 0),
-        (91, 23, 1),
-        (64, 109, 2),
-        (17, 88, 4),
+        (19, 37, 3),
+        (47, 81, 5),
+        (73, 29, 1),
+        (101, 67, 0),
+        (115, 19, 4),
+        (28, 106, 2),
     ):
         _tuft(pix, tx, ty, TUFT_SHAPES[shape])
+    for fx, fy, kind in (
+        (41, 55, 1),
+        (88, 22, 3),
+        (14, 74, 5),
+        (97, 108, 0),
+        (62, 38, 2),
+    ):
+        _bloom_cluster(pix, fx, fy, kind)
     return pix.image()
+
+
+def _bloom_cluster(pix: Pix, x: int, y: int, kind: int) -> None:
+    _flower(pix, x, y, kind)
+    _flower(pix, x + 7, y + 3, (kind + 2) % 6)
+    _flower(pix, x + 3, y - 4, (kind + 4) % 6)
 
 
 def assert_ground(img: Image.Image) -> None:
@@ -500,17 +538,27 @@ def _cobble(pix: Pix, x: int, y: int, w: int, h: int, kind: int) -> None:
         for xx in range(inset, w - inset):
             if (xx < 2 or xx > w - 3) and (yy < 2 or yy > h - 3) and (xx + yy + kind) % 2 == 0:
                 continue
-            tone = 4 if yy < 2 or xx < 2 else 1 if yy > h - 3 else 3
-            if (xx * 3 + yy * 5 + kind) % 17 == 0:
-                tone = 5 if tone >= 3 else 0
+            if yy == 0 or xx == 0:
+                tone = min(5, len(ramp) - 1)
+            elif yy >= h - 2 or xx >= w - 2:
+                tone = 0
+            else:
+                tone = 3
+            if (xx * 3 + yy * 5 + kind) % 13 == 0:
+                tone = 2
+            if (xx * 7 + yy * 3) % 19 == 0 and yy > 1:
+                tone = 1
             pix.put(x + xx, y + yy, ramp[min(tone, len(ramp) - 1)])
-    pix.put(x + 2, y + 2, ramp[min(5, len(ramp) - 1)])
-    pix.put(x + w - 3, y + h - 3, ramp[0])
+    # Glints and chips.
+    pix.put(x + 2, y + 1, ramp[min(5, len(ramp) - 1)])
+    pix.put(x + w - 3, y + h - 2, ramp[0])
+    if (kind + w) % 5 == 0 and w > 10:
+        pix.put(x + w // 2 - 1, y + h - 1, MORTAR)
+        pix.put(x + w // 2, y + h - 2, ramp[1])
     if w > 12 and h > 8:
-        pix.put(x + w // 2, y + 3, ramp[1])
-        pix.put(x + w // 2, y + 4, ramp[0])
-        pix.put(x + 4, y + h // 2, MOSS[1])
-        pix.put(x + 5, y + h // 2, MOSS[3])
+        pix.put(x + 4, y + h - 3, MOSS[2])
+        pix.put(x + 5, y + h - 2, MOSS[3])
+        pix.put(x + w - 5, y + 2, MOSS[1])
     pix.put(x + 2, y + h, GRASS[0])
     pix.put(x + w // 2, y + h, GRASS[1])
 
@@ -729,11 +777,7 @@ def scuff() -> Image.Image:
 
 
 def contact() -> Image.Image:
-    """A broken grass edge: short blades over a gapped shadow.
-
-    Not a blurred ellipse. Empty pixels stay empty so the lawn shows
-    through. Three clumps sit where feet would, plus one pebble.
-    """
+    """Grass pressed against a wall: darker fringe and worn blades."""
     pix = Pix(64, 16)
     # Shadow runs with gaps. Dark grass, one pixel tall, then a deeper crumb.
     runs = ((2, 10), (16, 12), (32, 8), (46, 14))
@@ -741,9 +785,11 @@ def contact() -> Image.Image:
         for i in range(bw):
             if i % 5 == 3:
                 continue
+            pix.put(x + i, 11, GRASS[0])
             pix.put(x + i, 12, GRASS[1])
             if i % 2 == 0:
                 pix.put(x + i, 13, GRASS[0])
+        pix.put(x + 1, 12, LAWN[0])
         pix.put(x + 2, 13, DIRT[1])
         pix.put(x + bw - 2, 12, GRASS[3])
     # Short blades, clustered, not a wall.
