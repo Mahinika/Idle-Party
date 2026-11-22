@@ -151,7 +151,7 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await pumpBar(tester, state: seeded());
     expect(find.text('1×'), findsOneWidget);
-    expect(find.text('▸'), findsOneWidget);
+    expect(find.text('▸'), findsNothing);
   });
 
   testWidgets('MENU has a caption through 1.45 and keeps one label', (

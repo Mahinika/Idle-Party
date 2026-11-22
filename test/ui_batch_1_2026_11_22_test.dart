@@ -60,6 +60,28 @@ void main() {
   });
 
   group('home fight chrome baseline A56', () {
+    Future<GameDirector> pumpFull(WidgetTester tester) async {
+      bindA56View(tester);
+      final director = await homeShellFiveHeroFightGoldenDirector();
+      final router = MenuRouter();
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        MediaQuery(
+          data: shellGoldenMedia,
+          child: MaterialApp(
+            home: HomeShell(
+              director: director,
+              router: router,
+              onLeave: () {},
+            ),
+          ),
+        ),
+      );
+      await waitForFightChrome(tester, director);
+      await tester.pump(const Duration(milliseconds: 400));
+      return director;
+    }
+
     Future<GameDirector> pumpSplit(WidgetTester tester) async {
       bindA56View(tester);
       final director = await homeShellFightGoldenDirector();
@@ -109,6 +131,18 @@ void main() {
       expect(top.bottom, lessThanOrEqualTo(cave.height + top.top + 1));
       expect(find.byKey(TargetCornerHud.stripKey), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 400));
+      director.dispose();
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 20));
+    });
+
+    testWidgets('FULL mode cave is at least 34% of screen height', (tester) async {
+      final director = await pumpFull(tester);
+      final screen = tester.getSize(find.byType(HomeShell));
+      final cave = tester.getSize(find.byType(FightViewport));
+      final caveShare = cave.height / screen.height;
+      expect(caveShare, greaterThanOrEqualTo(0.34));
+      expect(find.byType(UpgradePanel), findsNothing);
       director.dispose();
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(milliseconds: 20));

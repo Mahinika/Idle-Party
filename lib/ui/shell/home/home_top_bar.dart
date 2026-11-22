@@ -214,44 +214,16 @@ class HomeTopBar extends StatelessWidget {
                       padding: EdgeInsets.symmetric(
                         horizontal: textScale > GameTheme.typeScaleMax ? 4 : 6,
                       ),
-                      child: textScale > GameTheme.typeScaleMax
-                          ? Text(
-                              fast ? '2×' : '1×',
-                              maxLines: 1,
-                              style: GameTheme.button(
-                                size: GameTheme.typeButtonDense,
-                                color: fast
-                                    ? ChunkyFace.textOn(ChunkyTone.orange)
-                                    : GameTheme.parchment,
-                              ),
-                            )
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ExcludeSemantics(
-                                  child: Text(
-                                    '▸',
-                                    maxLines: 1,
-                                    style: GameTheme.button(
-                                      size: GameTheme.typeButtonDense,
-                                      color: fast
-                                          ? ChunkyFace.textOn(ChunkyTone.orange)
-                                          : GameTheme.parchmentDim,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  fast ? '2×' : '1×',
-                                  maxLines: 1,
-                                  style: GameTheme.button(
-                                    size: GameTheme.typeButtonDense,
-                                    color: fast
-                                        ? ChunkyFace.textOn(ChunkyTone.orange)
-                                        : GameTheme.parchment,
-                                  ),
-                                ),
-                              ],
-                            ),
+                      child: Text(
+                        fast ? '2×' : '1×',
+                        maxLines: 1,
+                        style: GameTheme.button(
+                          size: GameTheme.typeButtonDense,
+                          color: fast
+                              ? ChunkyFace.textOn(ChunkyTone.orange)
+                              : GameTheme.parchment,
+                        ),
+                      ),
                     ),
                   ),
                 ],
