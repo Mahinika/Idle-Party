@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install the Flutter version pinned in .github/workflows/ci.yml, then
+# Install the Flutter version pinned in .flutter-version, then
 # flutter pub get. Idempotent. Used by Cursor Cloud Agent Builds
 # (.cursor/environment.json). Safe to re-run.
 set -euo pipefail
@@ -11,9 +11,9 @@ unset GIT_DIR GIT_WORK_TREE GIT_COMMON_DIR || true
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$root"
 
-pin="$(sed -n "s/.*flutter-version: *['\"]\\([^'\"]*\\)['\"].*/\\1/p" .github/workflows/ci.yml | head -n1)"
+pin="$(tr -d '[:space:]' < .flutter-version)"
 if [[ -z "$pin" ]]; then
-  echo "Could not read flutter-version from .github/workflows/ci.yml" >&2
+  echo "Could not read Flutter pin from .flutter-version" >&2
   exit 1
 fi
 

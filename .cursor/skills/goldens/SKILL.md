@@ -24,7 +24,7 @@ Do not rewrite or weaken existing golden tests.
 ## Generate and regenerate
 
 - Create and update goldens on **Linux** with the **pinned Flutter**
-  from `.github/workflows/ci.yml` (`flutter-version`, currently 3.47.9).
+  from `.flutter-version` (currently 3.47.9).
   A different OS or SDK makes pixels drift.
 - **Regenerate by running the whole golden file.** Never a single named
   test. A named test renders differently than the file run as a whole.
