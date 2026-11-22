@@ -977,6 +977,7 @@ def _trouser_leg(
     left = center_x - w // 2
     _shade_rect(pix, left, top, w, max(1, bottom - top), ramp)
     pix.rect(left + 2, top + 1, 1, max(1, bottom - top - 2), ramp[1])
+    pix.rect(left + w - 2, top + 2, 1, max(1, bottom - top - 4), ramp[0])
 
 
 def _torso(pix: Pix, x: int, y: int, w: int, h: int, ramp: list[tuple[int, int, int]]) -> None:
@@ -985,6 +986,12 @@ def _torso(pix: Pix, x: int, y: int, w: int, h: int, ramp: list[tuple[int, int, 
     pix.rect(x + w // 2 - 1, y + 2, 1, h - 3, ramp[1])
     pix.rect(x + w - 2, y + 2, 1, h - 2, ramp[0])
     pix.rect(x, y, w, 1, ramp[min(5, len(ramp) - 1)])
+    pix.rect(x, y + h - 1, w, 1, ramp[0])
+
+
+def _trim_h(pix: Pix, x: int, y: int, w: int, light: tuple[int, int, int], dark: tuple[int, int, int]) -> None:
+    pix.rect(x, y, w, 1, light)
+    pix.rect(x, y + 1, w, 1, dark)
 
 
 def _head_pixels(style: str) -> tuple[tuple[str, ...], dict[str, tuple[int, int, int]]]:
@@ -1056,6 +1063,10 @@ def _draw_head(pix: Pix, x: int, y: int, style: str) -> None:
     rows, cmap = _head_pixels(style)
     _stamp(pix, x, y, rows, cmap)
     skin = {"smith": SKIN_TAN, "courier": SKIN_LIGHT, "gardener": SKIN_WARM}[style]
+    # Eye glints on the stamped whites.
+    for ex, ey in ((x + 6, y + 3), (x + 10, y + 3)):
+        pix.put(ex, ey, (255, 252, 248))
+        pix.put(ex + 1, ey, skin[5])
     # Ears.
     pix.rect(x - 1, y + 4, 2, 3, skin[2])
     pix.rect(x + len(rows[0]) - 1, y + 4, 2, 3, skin[3])
@@ -1156,19 +1167,21 @@ def _smith(
     # Apron over the tunic, with a strap and stitches.
     _shade_rect(pix, cx - 5, 22 + bob, 11, 12, APRON)
     pix.rect(cx - 1, 17 + bob, 3, 6, APRON[2])
-    pix.rect(cx - 5, 22 + bob, 11, 1, APRON[4])
+    _trim_h(pix, cx - 5, 21 + bob, 11, APRON[4], APRON[0])
     for syy in range(24 + bob, 32 + bob, 3):
         pix.put(cx - 4, syy, APRON[0])
         pix.put(cx + 4, syy, APRON[1])
     pix.rect(cx - 2, 28 + bob, 4, 3, APRON[1])
     pix.put(cx - 1, 29 + bob, APRON[4])
-    # Belt.
-    pix.rect(cx - 6, hy - 1, 13, 2, LEATHER[1])
-    pix.rect(cx - 1, hy - 1, 3, 2, IRON[3])
-    pix.put(cx, hy - 1, IRON[5])
+    # Belt and buckle.
+    _shade_rect(pix, cx - 6, hy - 1, 13, 3, LEATHER)
+    pix.rect(cx - 1, hy, 4, 2, IRON[3])
+    pix.put(cx, hy, IRON[5])
+    pix.put(cx + 1, hy, (212, 168, 48))
     # Neckerchief.
     pix.rect(cx - 3, 16 + bob, 7, 2, (164, 36, 44))
     pix.put(cx - 2, 16 + bob, (220, 140, 130))
+    _trim_h(pix, cx - 7, 16 + bob, 15, MOSS_CLOTH[5], MOSS_CLOTH[1])
     _limb(pix, cx + 6, sy, cx + 6 + hands[1][0], sy + hands[1][1], MOSS_CLOTH, 3)
     hx = cx + 6 + hands[1][0]
     hyh = sy + hands[1][1]
@@ -1201,14 +1214,17 @@ def _courier(
     _boot(pix, cx + steps[0], 48 + bob)
     _boot(pix, cx + steps[1] - 1, 48 + bob)
     _torso(pix, cx - 6, 16 + bob, 12, 14, WOOL)
-    # Shirt and a row of buttons. The coat opening is a light wedge.
+    # Shirt, lapel wedge, gold buttons.
     pix.rect(cx - 2, 18 + bob, 4, 6, CREAM[4])
     pix.put(cx - 1, 19 + bob, CREAM[5])
+    pix.rect(cx - 6, 17 + bob, 2, 12, WOOL[5])
+    pix.rect(cx + 4, 18 + bob, 2, 10, WOOL[1])
     for by in (24, 27, 30):
         pix.rect(cx - 1, by + bob, 2, 2, (212, 168, 48))
         pix.put(cx - 1, by + bob, (255, 220, 120))
-    pix.rect(cx - 6, hy - 1, 12, 2, LEATHER[2])
-    pix.rect(cx - 1, hy - 1, 3, 2, IRON[4])
+    _shade_rect(pix, cx - 6, hy - 1, 12, 3, LEATHER)
+    pix.rect(cx - 1, hy, 4, 2, IRON[3])
+    pix.put(cx, hy, IRON[5])
     # Satchel on the trailing hip. It sways against the stride.
     sx = cx - 12 + sway
     _shade_rect(pix, sx, 24 + bob, 7, 9, LEATHER)
@@ -1246,6 +1262,7 @@ def _gardener(pix: Pix, bob: int, steps: tuple[int, int], sway: int) -> None:
     pix.rect(cx - 8, 17 + bob, 16, 1, CREAM[5])
     pix.rect(cx - 8, 21 + bob, 16, 1, CREAM[1])
     pix.put(cx - 4, 19 + bob, CREAM[4])
+    _trim_h(pix, cx - 2, 25 + bob, 8, ROSE[5], ROSE[1])
     # Skirt flares, and it sways with the step.
     top = 26 + bob
     hem = 49 + bob
