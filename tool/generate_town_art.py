@@ -1284,7 +1284,7 @@ python3 tool/generate_town_art.py
 | Ground | Dark saturated lawn, 64×64, seamless. Cobbles and flowers sit on the paths |
 | Roofs | Individual tiles. Guild slate, houses terracotta, market a folded awning |
 | Windows | Hot amber glass, wood mullions, light stays inside the frame |
-| People | Smith, courier, and gardener. Idle + 4 walk frames |
+| People | Guard, merchant, and farmer. Idle + 4 walk frames |
 | Scale | `FilterQuality.none`. Folk are authored for the 48×56 yard |
 
 ## Files
