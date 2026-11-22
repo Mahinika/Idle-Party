@@ -231,29 +231,22 @@ TUFT_SHAPES = (
 
 
 def ground() -> Image.Image:
-    """Seamless dusk grass. Three muted greens, sparse tufts only.
+    """Seamless dusk grass. Flat base brightness like 022192cb, sparse tufts only.
 
-    Base and tufts use wrapped coordinates so edges meet without a hard line.
-    Tuft centres are hashed so a 4×4 repeat is not a grid of copies.
+    Two close fills (GRASS[3–4]) with rare seamless speckles — no blobs or columns.
     """
     w = h = GROUND_TILE
     pix = Pix(w, h)
+    ramp = (GRASS[3], GRASS[4], (31, 92, 23))
     for y in range(h):
         for x in range(w):
-            n = _noise(x, y, 32, w, h)
-            if n < 0.32:
-                col = LAWN[0]
-            elif n > 0.68:
-                col = LAWN[2]
-            else:
-                col = LAWN[1]
-            pix.put_wrap(x, y, col)
-    # Four tufts at coprime offsets so a 4×4 repeat is not a grid.
+            m = (x * 7 + y * 11) % 3
+            pix.put_wrap(x, y, ramp[m])
     for tx, ty, shape in (
-        (19, 31, 0),
-        (73, 59, 1),
-        (111, 17, 2),
-        (44, 102, 3),
+        (37, 52, 0),
+        (91, 23, 1),
+        (64, 109, 2),
+        (17, 88, 4),
     ):
         _tuft(pix, tx, ty, TUFT_SHAPES[shape])
     return pix.image()
@@ -926,6 +919,20 @@ def _boot(pix: Pix, x: int, y: int) -> None:
     pix.put(x, y + 1, BOOT[3])
 
 
+def _trouser_leg(
+    pix: Pix,
+    center_x: int,
+    top: int,
+    bottom: int,
+    ramp: list[tuple[int, int, int]],
+) -> None:
+    """Five-pixel trouser columns that meet the boot width."""
+    w = 5
+    left = center_x - w // 2
+    _shade_rect(pix, left, top, w, max(1, bottom - top), ramp)
+    pix.rect(left + 2, top + 1, 1, max(1, bottom - top - 2), ramp[1])
+
+
 def _torso(pix: Pix, x: int, y: int, w: int, h: int, ramp: list[tuple[int, int, int]]) -> None:
     _shade_rect(pix, x, y, w, h, ramp)
     # Center fold and a side shadow, two pixels so they survive as shape.
@@ -1095,8 +1102,8 @@ def _smith(
     # Far arm, then legs, torso, near arm, head, hammer.
     _limb(pix, cx - 6, sy, cx - 6 + hands[0][0], sy + hands[0][1], MOSS_CLOTH, 3)
     _hand(pix, cx - 7 + hands[0][0], sy + hands[0][1], SKIN_TAN)
-    _limb(pix, cx - 4, hy, cx + steps[0], 48 + bob, LEATHER, 4)
-    _limb(pix, cx + 2, hy, cx + steps[1], 48 + bob, LEATHER, 4)
+    _trouser_leg(pix, cx + steps[0] + 2, hy, 48 + bob, LEATHER)
+    _trouser_leg(pix, cx + steps[1] + 2, hy, 48 + bob, LEATHER)
     _boot(pix, cx + steps[0], 48 + bob)
     _boot(pix, cx + steps[1] - 1, 48 + bob)
     _torso(pix, cx - 7, 16 + bob, 15, 14, MOSS_CLOTH)
@@ -1143,8 +1150,8 @@ def _courier(
     sy = 17 + bob
     _limb(pix, cx - 5, sy, cx - 5 + hands[0][0], sy + hands[0][1], WOOL, 3)
     _hand(pix, cx - 6 + hands[0][0], sy + hands[0][1], SKIN_LIGHT)
-    _limb(pix, cx - 3, hy, cx + steps[0], 48 + bob, WOOL, 3)
-    _limb(pix, cx + 2, hy, cx + steps[1], 48 + bob, WOOL, 3)
+    _trouser_leg(pix, cx + steps[0] + 2, hy, 48 + bob, WOOL)
+    _trouser_leg(pix, cx + steps[1] + 2, hy, 48 + bob, WOOL)
     _boot(pix, cx + steps[0], 48 + bob)
     _boot(pix, cx + steps[1] - 1, 48 + bob)
     _torso(pix, cx - 6, 16 + bob, 12, 14, WOOL)
@@ -1208,7 +1215,9 @@ def _gardener(pix: Pix, bob: int, steps: tuple[int, int], sway: int) -> None:
             pix.put(x, y, ROSE[tone])
     pix.rect(cx - 10 + sway, hem - 2, 20, 2, ROSE[0])
     pix.put(cx - 8 + sway, hem - 1, ROSE[4])
-    # Shoes under the hem.
+    hy = 28 + bob
+    _trouser_leg(pix, cx + steps[0] + 2, hy, 48 + bob, ROSE)
+    _trouser_leg(pix, cx + steps[1] + 2, hy, 48 + bob, ROSE)
     _boot(pix, cx + steps[0] - 2, 48 + bob)
     _boot(pix, cx + steps[1] - 1, 48 + bob)
     _limb(pix, cx + 5, sy, cx + 8, sy + 11, ROSE, 3)

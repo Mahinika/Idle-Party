@@ -9,33 +9,27 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 TOWN = ROOT / "assets" / "custom" / "town"
+HERO_ASSET = ROOT / "assets" / "custom" / "heroes" / "knight.png"
 ARTIFACTS = Path("/opt/cursor/artifacts")
 BASE_SHA = "022192cbfe5aa9210861d280c749580ee52ebcf6"
 A56_PARTY_DOLL = 40.0
 FOLK_YARD_H = A56_PARTY_DOLL * 56 / 40
 UPSCALE = 4
+NEUTRAL_BG = (40, 38, 44, 255)
 
 
 def _alpha_bbox(im: Image.Image) -> tuple[int, int, int, int] | None:
     return im.split()[3].getbbox()
 
 
-def _crop_hero(im: Image.Image) -> Image.Image:
-    """Center party hero from home shell town golden (shell_golden_harness A56)."""
-    w, h = im.size
-    # Measured on test/goldens/town/home_shell_town_a56.png — middle doll in party row.
-    boxes: dict[tuple[int, int], tuple[int, int, int, int]] = {
-        (360, 780): (120, 430, 160, 482),
-    }
-    box = boxes.get((w, h))
-    if box is None:
-        raise RuntimeError(f"no hero crop table for {w}x{h}")
-    hero = im.crop(box)
+def _load_hero(yard_h: int) -> Image.Image:
+    """Starter warrior body used by HeroDollSprite fallback (knight.png)."""
+    hero = Image.open(HERO_ASSET).convert("RGBA")
     bb = _alpha_bbox(hero)
     if bb is None:
-        raise RuntimeError("party hero crop is empty")
+        raise RuntimeError(f"empty hero asset {HERO_ASSET}")
     hero = hero.crop(bb)
-    return hero.resize((int(FOLK_YARD_H), int(FOLK_YARD_H)), Image.Resampling.NEAREST)
+    return hero.resize((yard_h, yard_h), Image.Resampling.NEAREST)
 
 
 def grass_4x4() -> None:
@@ -82,15 +76,12 @@ def folk_vs_hero() -> None:
         cell = folk.crop((0, person * 112, 96, (person + 1) * 112))
         cells.append(cell.resize((yard_w, yard_h), Image.Resampling.NEAREST))
 
-    golden = ROOT / "test" / "goldens" / "town" / "home_shell_town_a56.png"
-    if not golden.exists():
-        raise RuntimeError(f"missing {golden}")
-    hero = _crop_hero(Image.open(golden))
+    hero = _load_hero(yard_h)
 
     pad = 12
     row_h = yard_h + pad * 2
     row_w = yard_w * 3 + hero.width + pad * 5
-    row = Image.new("RGBA", (row_w, row_h), (0, 0, 0, 255))
+    row = Image.new("RGBA", (row_w, row_h), NEUTRAL_BG)
     x = pad
     for cell in cells:
         row.paste(cell, (x, pad), cell)
@@ -99,7 +90,7 @@ def folk_vs_hero() -> None:
     upscaled = row.resize((row_w * UPSCALE, row_h * UPSCALE), Image.Resampling.NEAREST)
     out = ARTIFACTS / "folk_vs_hero.png"
     upscaled.save(out)
-    print(f"wrote {out} logical {row_w}x{row_h} yard_h={yard_h}")
+    print(f"wrote {out} hero={HERO_ASSET.name} yard_h={yard_h}")
 
 
 def town_before_after() -> None:
