@@ -217,50 +217,37 @@ def _tuft(pix: Pix, x: int, y: int, blades: tuple[tuple[int, int, int], ...]) ->
 
 
 def ground() -> Image.Image:
-    """Seamless dusk grass. Hash noise base, tufts, worn dirt. No color grid.
+    """Calm seamless lawn. Three close greens, soft patches, sparse detail.
 
-    Flowers live on planting sprites. Noise cells divide 64 so the tile
-    wraps without a slab checker. Marks use put_wrap so paths stay inside
-    the period.
+    No per-pixel hash speckle (that fought building labels). Flowers and
+  rocks are rare accents only.
     """
     w = h = GROUND_TILE
     pix = Pix(w, h)
+    bases = (GRASS[3], GRASS[4], GRASS[5])
     for y in range(h):
         for x in range(w):
-            coarse = _noise(x, y, 16, w, h)
-            fine = _noise(x, y, 8, w, h)
-            micro = (_hash(x, y) & 255) / 255.0
-            # Dusk key from upper-left, broken up by noise so no row bands.
-            light = 0.18 + 0.42 * coarse + 0.28 * fine + 0.12 * micro
-            light -= 0.08 * (x + y) / max(w, h)
-            tone = band(light, len(GRASS))
-            pix.put(x, y, GRASS[tone])
-    # Sun-kissed clumps (ellipse splotches, not aligned to a grid).
-    for cx, cy, rx, ry in ((12, 10, 9, 6), (44, 8, 8, 5), (26, 30, 10, 7), (50, 44, 8, 6), (6, 48, 7, 5)):
+            patch = _noise(x, y, 32, w, h)
+            col = bases[0] if patch < 0.34 else bases[1] if patch < 0.67 else bases[2]
+            pix.put(x, y, col)
+    for cx, cy, rx, ry, lift in (
+        (14, 16, 18, 10, 6),
+        (46, 20, 14, 9, 5),
+        (28, 44, 16, 11, 4),
+    ):
         for dy in range(-ry, ry + 1):
             for dx in range(-rx, rx + 1):
                 if (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) > 1:
                     continue
-                tone = 5 if dx + dy < -2 else 6 if dx < 0 else 4
-                pix.put_wrap(cx + dx, cy + dy, GRASS[tone])
-    _tuft(pix, 10, 8, ((0, 6, 0), (2, 8, 1), (4, 5, -1)))
-    _tuft(pix, 30, 18, ((0, 5, -1), (2, 7, 0), (5, 4, 1)))
-    _tuft(pix, 48, 12, ((0, 7, 1), (2, 5, 0), (4, 6, -1)))
-    _tuft(pix, 18, 40, ((0, 6, 0), (3, 8, 1), (5, 4, -1)))
-    _tuft(pix, 42, 46, ((0, 5, 1), (2, 7, 0)))
-    _tuft(pix, 4, 28, ((0, 4, 0), (1, 6, 1), (3, 5, 0)))
-    _tuft(pix, 56, 22, ((0, 5, -1), (2, 6, 0)))
-    # Worn footpath crumbs and a mossy pebble.
-    for dx in range(14):
-        xw = (20 + dx) % w
-        pix.put(xw, 33, DIRT[1 + (dx % 3)])
-        if dx % 4 == 1:
-            pix.put(xw, 34, DIRT[2])
-    for dx in range(9):
-        xw = (47 + dx) % w
-        pix.put(xw, 27 + dx % 2, DIRT[2 if dx % 2 else 1])
-    _pebble(pix, 8, 54, 2)
-    _pebble(pix, 38, 6, 1)
+                pix.put_wrap(cx + dx, cy + dy, GRASS[min(7, lift + (1 if dx < 0 else 0))])
+    _tuft(pix, 8, 12, ((0, 5, 0), (2, 7, 1), (4, 4, -1)))
+    _tuft(pix, 36, 6, ((0, 6, 1), (2, 5, 0)))
+    _tuft(pix, 52, 48, ((0, 4, 0), (1, 6, -1)))
+    for fx, fy, kind in ((20, 8, 1), (54, 42, 3)):
+        _flower(pix, fx, fy, kind)
+    for xw in (22, 23, 24, 48, 49):
+        pix.put_wrap(xw, 30, DIRT[2])
+    _pebble(pix, 6, 50, 0)
     # Copy the opposite edge so the repeat meets on the same pixels.
     for y in range(h):
         c0 = pix.get(0, y)
@@ -965,10 +952,38 @@ def _hand(pix: Pix, x: int, y: int, skin: list[tuple[int, int, int]]) -> None:
 
 
 def _boot(pix: Pix, x: int, y: int) -> None:
-    _shade_rect(pix, x, y, 5, 4, BOOT)
-    pix.rect(x - 1, y + 3, 7, 1, BOOT[0])
-    pix.put(x + 1, y, BOOT[4])
-    pix.put(x, y + 1, BOOT[3])
+    w = 7
+    x0 = x - w // 2
+    _shade_rect(pix, x0, y, w, 4, BOOT)
+    pix.rect(x0 - 1, y + 3, w + 2, 1, BOOT[0])
+    pix.put(x0 + 2, y, BOOT[4])
+    pix.put(x0, y + 1, BOOT[3])
+    pix.put(x0 + w - 1, y + 2, BOOT[1])
+
+
+PANTS = [(34, 46, 58), (52, 68, 86), (76, 98, 118), (112, 132, 152), (152, 172, 188)]
+
+
+def _leg(pix: Pix, foot_x: int, y_top: int, y_bot: int, ramp: list[tuple[int, int, int]], width: int = 6) -> None:
+    """Trouser column. [width] is logical pixels (6 reads as 6px before cell upscale)."""
+    x0 = foot_x - width // 2
+    h = max(2, y_bot - y_top)
+    _shade_rect(pix, x0, y_top, width, h, ramp)
+    pix.rect(x0, y_top, 1, h, ramp[1])
+    pix.rect(x0 + width - 1, y_top, 1, h, ramp[0])
+    pix.rect(x0 + 1, y_top, width - 2, 1, ramp[min(5, len(ramp) - 1)])
+
+
+def _arm(pix: Pix, x0: int, y0: int, x1: int, y1: int, ramp: list[tuple[int, int, int]], width: int = 4) -> None:
+    """Short sleeve block along a segment, not a single-pixel stick."""
+    steps = max(abs(x1 - x0), abs(y1 - y0), 1)
+    half = width // 2
+    for i in range(steps + 1):
+        x = x0 + (x1 - x0) * i // steps
+        y = y0 + (y1 - y0) * i // steps
+        for k in range(width):
+            tone = 5 if k == 0 else 1 if k == width - 1 else 3
+            pix.put(x - half + k, y, ramp[min(tone, len(ramp) - 1)])
 
 
 def _torso(pix: Pix, x: int, y: int, w: int, h: int, ramp: list[tuple[int, int, int]]) -> None:
@@ -1126,7 +1141,7 @@ def _person(kind: int, frame: int) -> Pix:
     else:
         _farmer(pix, bob, steps, sway)
     pix.outline()
-    _shadow_feet(pix, [20 + steps[0], 22 + steps[1]] if kind != 2 else [18 + sway, 26 + sway])
+    _shadow_feet(pix, [20 + steps[0], 22 + steps[1]])
     return _up2(pix)
 
 
@@ -1140,41 +1155,35 @@ def _guard(
     hy = 30 + bob
     sy = 18 + bob
     tabard = [(32, 38, 54), (48, 58, 82), (72, 86, 118), (108, 124, 158), (148, 168, 196)]
-    _limb(pix, cx - 6, sy, cx - 6 + hands[0][0], sy + hands[0][1], tabard, 3)
-    _hand(pix, cx - 7 + hands[0][0], sy + hands[0][1], SKIN_TAN)
-    _limb(pix, cx - 4, hy, cx + steps[0], 48 + bob, IRON, 4)
-    _limb(pix, cx + 2, hy, cx + steps[1], 48 + bob, IRON, 4)
-    _boot(pix, cx + steps[0], 48 + bob)
-    _boot(pix, cx + steps[1] - 1, 48 + bob)
-    _torso(pix, cx - 7, 17 + bob, 15, 14, tabard)
-    _shade_rect(pix, cx - 6, 17 + bob, 13, 3, IRON)
-    pix.rect(cx - 6, 17 + bob, 13, 1, IRON[5])
-    _shade_rect(pix, cx - 5, 22 + bob, 11, 10, tabard)
-    pix.rect(cx - 5, 22 + bob, 11, 1, tabard[4])
-    for syy in range(24 + bob, 32 + bob, 4):
-        pix.put(cx - 4, syy, tabard[1])
-        pix.put(cx + 4, syy, tabard[2])
-    pix.rect(cx - 6, hy - 1, 13, 2, LEATHER[2])
+    foot_y = 45 + bob
+    _arm(pix, cx - 6, sy, cx - 6 + hands[0][0], sy + hands[0][1], tabard, 4)
+    _hand(pix, cx - 8 + hands[0][0], sy + hands[0][1], SKIN_TAN)
+    _leg(pix, cx + steps[0], hy, foot_y, PANTS, 6)
+    _leg(pix, cx + steps[1], hy, foot_y, PANTS, 6)
+    _boot(pix, cx + steps[0], foot_y)
+    _boot(pix, cx + steps[1], foot_y)
+    _torso(pix, cx - 8, 16 + bob, 16, 15, tabard)
+    _shade_rect(pix, cx - 7, 16 + bob, 14, 3, IRON)
+    pix.rect(cx - 7, 16 + bob, 14, 1, IRON[5])
+    _shade_rect(pix, cx - 6, 21 + bob, 12, 11, tabard)
+    pix.rect(cx - 6, 21 + bob, 12, 1, tabard[4])
+    pix.rect(cx - 6, hy - 1, 14, 2, LEATHER[2])
     pix.rect(cx - 1, hy - 1, 3, 2, IRON[5])
-    # Small shield on the far arm.
-    sx = cx - 11 + hands[0][0]
+    sx = cx - 12 + hands[0][0]
     syh = sy + hands[0][1] + 2
-    _shade_rect(pix, sx, syh, 5, 7, IRON)
-    pix.rect(sx, syh, 5, 1, IRON[5])
-    pix.put(sx + 2, syh + 3, (196, 168, 64))
-    _limb(pix, cx + 6, sy, cx + 6 + hands[1][0], sy + hands[1][1], tabard, 3)
+    _shade_rect(pix, sx, syh, 6, 8, IRON)
+    pix.rect(sx, syh, 6, 1, IRON[5])
+    pix.put(sx + 2, syh + 4, (196, 168, 64))
+    _arm(pix, cx + 6, sy, cx + 6 + hands[1][0], sy + hands[1][1], tabard, 4)
     hx = cx + 6 + hands[1][0]
     hyh = sy + hands[1][1]
     _hand(pix, hx, hyh, SKIN_TAN)
-    # Spear in the near hand.
-    for yy in range(hyh - 10, hyh + 12):
-        col = LEATHER[5] if yy < hyh else LEATHER[3]
-        pix.put(hx + 1, yy, col)
-        pix.put(hx + 2, yy, LEATHER[2 if yy % 3 else 4])
-    pix.rect(hx - 1, hyh - 12, 6, 3, IRON[3])
-    pix.put(hx, hyh - 12, IRON[5])
-    pix.put(hx + 3, hyh - 11, IRON[1])
-    _draw_head(pix, cx - 6, 4 + bob, "guard")
+    for yy in range(hyh - 12, hyh + 10):
+        pix.put(hx + 1, yy, LEATHER[4])
+        pix.put(hx + 2, yy, LEATHER[2])
+    pix.rect(hx, hyh - 13, 7, 3, IRON[3])
+    pix.put(hx + 1, hyh - 13, IRON[5])
+    _draw_head(pix, cx - 7, 3 + bob, "guard")
 
 
 def _merchant(
@@ -1184,41 +1193,37 @@ def _merchant(
     hands: tuple[tuple[int, int], tuple[int, int]],
     sway: int,
 ) -> None:
-    cx = 22
-    hy = 31 + bob
+    cx = 20
+    hy = 30 + bob
     sy = 18 + bob
-    _limb(pix, cx - 5, sy, cx - 5 + hands[0][0], sy + hands[0][1], WOOL, 3)
-    _hand(pix, cx - 6 + hands[0][0], sy + hands[0][1], SKIN_LIGHT)
-    _limb(pix, cx - 3, hy, cx + steps[0], 48 + bob, WOOL, 3)
-    _limb(pix, cx + 2, hy, cx + steps[1], 48 + bob, WOOL, 3)
-    _boot(pix, cx + steps[0], 48 + bob)
-    _boot(pix, cx + steps[1] - 1, 48 + bob)
-    _torso(pix, cx - 6, 17 + bob, 12, 15, WOOL)
-    # Shirt and a row of buttons. The coat opening is a light wedge.
-    pix.rect(cx - 2, 18 + bob, 4, 6, CREAM[4])
-    pix.put(cx - 1, 19 + bob, CREAM[5])
-    for by in (24, 27, 30):
+    foot_y = 45 + bob
+    trousers = [(40, 52, 76), (56, 74, 104), (82, 108, 138), (118, 142, 168), (158, 178, 198)]
+    _arm(pix, cx - 6, sy, cx - 6 + hands[0][0], sy + hands[0][1], WOOL, 4)
+    _hand(pix, cx - 8 + hands[0][0], sy + hands[0][1], SKIN_LIGHT)
+    _leg(pix, cx + steps[0], hy, foot_y, trousers, 6)
+    _leg(pix, cx + steps[1], hy, foot_y, trousers, 6)
+    _boot(pix, cx + steps[0], foot_y)
+    _boot(pix, cx + steps[1], foot_y)
+    _torso(pix, cx - 8, 16 + bob, 16, 15, WOOL)
+    pix.rect(cx - 2, 17 + bob, 4, 7, CREAM[4])
+    pix.put(cx - 1, 18 + bob, CREAM[5])
+    for by in (23, 26, 29):
         pix.rect(cx - 1, by + bob, 2, 2, (212, 168, 48))
         pix.put(cx - 1, by + bob, (255, 220, 120))
     pix.rect(cx - 6, hy - 1, 12, 2, LEATHER[2])
-    pix.rect(cx - 1, hy - 1, 3, 2, IRON[4])
-    # Satchel on the trailing hip. It sways against the stride.
     sx = cx - 12 + sway
-    _shade_rect(pix, sx, 24 + bob, 7, 9, LEATHER)
-    pix.rect(sx, 24 + bob, 7, 1, LEATHER[5])
-    pix.rect(sx + 2, 27 + bob, 3, 3, IRON[3])
-    pix.put(sx + 3, 28 + bob, IRON[5])
-    pix.rect(sx + 5, 20 + bob, 1, 6, LEATHER[1])
-    _limb(pix, cx + 5, sy, cx + 5 + hands[1][0], sy + hands[1][1], WOOL, 3)
-    _hand(pix, cx + 5 + hands[1][0], sy + hands[1][1], SKIN_LIGHT)
-    # A folded letter in the near hand on the passing frames.
+    _shade_rect(pix, sx, 23 + bob, 7, 10, LEATHER)
+    pix.rect(sx, 23 + bob, 7, 1, LEATHER[5])
+    pix.rect(sx + 5, 19 + bob, 1, 6, LEATHER[1])
+    _arm(pix, cx + 6, sy, cx + 6 + hands[1][0], sy + hands[1][1], WOOL, 4)
+    _hand(pix, cx + 6 + hands[1][0], sy + hands[1][1], SKIN_LIGHT)
     if frame_letter(hands):
-        hx = cx + 5 + hands[1][0]
+        hx = cx + 6 + hands[1][0]
         hyh = sy + hands[1][1] + 2
         pix.rect(hx, hyh, 5, 4, CREAM[5])
         pix.rect(hx, hyh + 3, 5, 1, CREAM[2])
         pix.put(hx + 1, hyh, (180, 60, 60))
-    _draw_head(pix, cx - 6, 5 + bob, "merchant")
+    _draw_head(pix, cx - 7, 3 + bob, "merchant")
 
 
 def frame_letter(hands: tuple[tuple[int, int], tuple[int, int]]) -> bool:
@@ -1226,36 +1231,30 @@ def frame_letter(hands: tuple[tuple[int, int], tuple[int, int]]) -> bool:
 
 
 def _farmer(pix: Pix, bob: int, steps: tuple[int, int], sway: int) -> None:
-    cx = 24
+    cx = 20
     sy = 18 + bob
+    hy = 30 + bob
+    foot_y = 45 + bob
     overall = [(42, 58, 38), (56, 82, 48), (78, 108, 62), (108, 136, 84), (140, 168, 108)]
-    _limb(pix, cx - 6, sy, cx - 10 + sway, sy + 12, overall, 4)
-    _hand(pix, cx - 12 + sway, sy + 12, SKIN_WARM)
-    # Hoe in the far hand.
-    hx0 = cx - 14 + sway
-    hy0 = sy + 8
-    for i in range(14):
-        pix.put(hx0, hy0 + i, LEATHER[3 + (i % 2)])
-        pix.put(hx0 + 1, hy0 + i, LEATHER[2])
-    pix.rect(hx0 - 3, hy0 + 10, 7, 2, IRON[2])
-    pix.put(hx0 - 2, hy0 + 9, IRON[4])
-    _limb(pix, cx - 3, 30 + bob, cx + steps[0], 48 + bob, overall, 4)
-    _limb(pix, cx + 2, 30 + bob, cx + steps[1], 48 + bob, overall, 4)
-    _boot(pix, cx + steps[0], 48 + bob)
-    _boot(pix, cx + steps[1] - 1, 48 + bob)
-    _torso(pix, cx - 6, 17 + bob, 13, 13, overall)
-    _shade_rect(pix, cx - 5, 22 + bob, 11, 11, APRON)
-    pix.rect(cx - 5, 22 + bob, 11, 1, APRON[4])
-    pix.rect(cx - 1, 17 + bob, 3, 6, APRON[2])
-    for syy in range(25 + bob, 33 + bob, 3):
-        pix.put(cx - 4, syy, APRON[0])
-        pix.put(cx + 4, syy, APRON[1])
-    pix.rect(cx - 6, 29 + bob, 13, 2, LEATHER[1])
-    _limb(pix, cx + 5, sy, cx + 8, sy + 11, overall, 3)
-    _hand(pix, cx + 7, sy + 11, SKIN_WARM)
-    # Small harvest basket at the hip.
-    _basket(pix, cx + 8 + sway, 26 + bob)
-    _draw_head(pix, cx - 6, 4 + bob, "farmer")
+    _arm(pix, cx - 6, sy, cx - 10 + sway, sy + 13, overall, 4)
+    _hand(pix, cx - 12 + sway, sy + 13, SKIN_WARM)
+    hx0 = cx - 15 + sway
+    for i in range(15):
+        pix.put(hx0, sy + 6 + i, LEATHER[3 + (i % 2)])
+        pix.put(hx0 + 1, sy + 6 + i, LEATHER[2])
+    pix.rect(hx0 - 3, sy + 14, 7, 2, IRON[2])
+    _leg(pix, cx + steps[0], hy, foot_y, overall, 6)
+    _leg(pix, cx + steps[1], hy, foot_y, overall, 6)
+    _boot(pix, cx + steps[0], foot_y)
+    _boot(pix, cx + steps[1], foot_y)
+    _torso(pix, cx - 8, 16 + bob, 16, 14, overall)
+    _shade_rect(pix, cx - 6, 21 + bob, 12, 12, APRON)
+    pix.rect(cx - 6, 21 + bob, 12, 1, APRON[4])
+    pix.rect(cx - 1, 16 + bob, 3, 6, APRON[2])
+    _arm(pix, cx + 6, sy, cx + 9, sy + 12, overall, 4)
+    _hand(pix, cx + 8, sy + 12, SKIN_WARM)
+    _basket(pix, cx + 7 + sway, 25 + bob)
+    _draw_head(pix, cx - 7, 3 + bob, "farmer")
 
 
 def _basket(pix: Pix, x: int, y: int) -> None:
