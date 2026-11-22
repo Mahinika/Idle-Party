@@ -515,6 +515,10 @@ class _TownSquare extends StatelessWidget {
       quality: state.vfxQuality,
       disableAnimations: MediaQuery.disableAnimationsOf(context),
     );
+    final partyDoll = layout.lane.height >= 48 && size.width >= 360
+        ? 40.0
+        : (size.height < 380 ? 34.0 : 42.0);
+    final folkYardHeight = TownFolkSheet.yardHeightForPartyDoll(partyDoll);
     final labels = <(String, Rect)>[
       (guild.label, layout.guildLabel),
       (vault.label, layout.vaultLabel),
@@ -578,6 +582,7 @@ class _TownSquare extends StatelessWidget {
                 ? layout.lane
                 : Rect.fromLTWH(8, math.max(0, size.height - 52), 120, 36),
             scale: layout.folkScale > 0 ? layout.folkScale : 1,
+            yardHeight: folkYardHeight,
           ),
         ),
         for (var i = 0; i < TownBuilding.frontRow.length; i++)
@@ -609,9 +614,7 @@ class _TownSquare extends StatelessWidget {
           height: layout.party.height,
           child: _PartyRow(
             heroes: state.heroes,
-            doll: layout.lane.height >= 48 && size.width >= 360
-                ? 40
-                : (size.height < 380 ? 34 : 42),
+            doll: partyDoll,
           ),
         ),
         const Positioned.fill(child: IgnorePointer(child: _TownDuskWash())),

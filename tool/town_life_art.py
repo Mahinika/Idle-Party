@@ -199,9 +199,8 @@ def _is_grass(c: tuple[int, int, int, int] | None) -> bool:
 # --- Lawn -----------------------------------------------------------------
 
 
-# A short period of similar tufts reads as grass. A landmark shape
-# would show the repeat. 64 keeps a phone on several periods.
-GROUND_TILE = 64
+# A longer period makes the tuft scatter less obvious at phone scale.
+GROUND_TILE = 128
 
 
 def _tuft(pix: Pix, x: int, y: int, blades: tuple[tuple[int, int, int], ...]) -> None:
@@ -221,28 +220,42 @@ def _tuft(pix: Pix, x: int, y: int, blades: tuple[tuple[int, int, int], ...]) ->
         pix.put_wrap(x + dx, y + height - 1, GRASS[1])
 
 
+TUFT_SHAPES = (
+    ((0, 5, 0), (2, 7, 1), (4, 4, -1)),
+    ((0, 6, -1), (2, 5, 0), (5, 4, 1)),
+    ((0, 5, 1), (3, 6, 0)),
+    ((1, 4, 0), (3, 8, -1), (5, 5, 1)),
+    ((0, 7, 1), (2, 4, -1), (4, 6, 0)),
+    ((0, 6, 1), (2, 8, -1)),
+)
+
+
 def ground() -> Image.Image:
     """Seamless dusk grass. Three muted greens, sparse tufts only.
 
-    No flowers, stones, or dirt crumbs on the repeat tile — those live on
-    path clumps and planting sprites. Variation comes from smooth 16px
-  lattice noise, not a visible grid. Tufts use wrapped coordinates.
+    Base and tufts use wrapped coordinates so edges meet without a hard line.
+    Tuft centres are hashed so a 4×4 repeat is not a grid of copies.
     """
     w = h = GROUND_TILE
     pix = Pix(w, h)
     for y in range(h):
         for x in range(w):
-            # Three close greens. Coefficients match at the wrap so the repeat
-            # does not form slabs or a checker at 4×4.
-            tone = (x * 7 + y * 11) % 3
-            pix.put(x, y, LAWN[tone])
-    _tuft(pix, 12, 14, ((0, 5, 0), (2, 7, 1), (4, 4, -1)))
-    _tuft(pix, 44, 22, ((0, 6, -1), (2, 5, 0), (5, 4, 1)))
-    _tuft(pix, 26, 46, ((0, 5, 1), (3, 6, 0)))
-    for y in range(h):
-        pix.put(w - 1, y, pix.get(0, y))
-    for x in range(w):
-        pix.put(x, h - 1, pix.get(x, 0))
+            n = _noise(x, y, 32, w, h)
+            if n < 0.32:
+                col = LAWN[0]
+            elif n > 0.68:
+                col = LAWN[2]
+            else:
+                col = LAWN[1]
+            pix.put_wrap(x, y, col)
+    # Four tufts at coprime offsets so a 4×4 repeat is not a grid.
+    for tx, ty, shape in (
+        (19, 31, 0),
+        (73, 59, 1),
+        (111, 17, 2),
+        (44, 102, 3),
+    ):
+        _tuft(pix, tx, ty, TUFT_SHAPES[shape])
     return pix.image()
 
 

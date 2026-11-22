@@ -8,13 +8,16 @@ import '../../../models/vfx_quality.dart';
 
 /// Folk sheet from `tool/town_life_art.py` (96×112 cells).
 ///
-/// Each cell is a 48×56 drawing doubled, so [displayW] and [displayH]
-/// keep a face, clothes, and a solid outline beside the party dolls (~40px on A56).
+/// Each cell is a 48×56 drawing doubled. [yardHeightForPartyDoll] matches the
+/// painted hero row height (A56 goldens measure ~56px when the party doll is 40).
 abstract final class TownFolkSheet {
   static const cellW = 96;
   static const cellH = 112;
-  static const displayH = 40.0;
-  static const displayW = displayH * cellW / cellH;
+  static const displayW = 48.0;
+  static const displayH = 56.0;
+
+  /// Same yard scale as [_PartyRow] on this viewport.
+  static double yardHeightForPartyDoll(double partyDoll) => partyDoll * 56 / 40;
   static const frames = 5;
   static const people = 3;
   static const loop = Duration(milliseconds: 4800);
@@ -111,11 +114,15 @@ class TownFolkLayer extends StatefulWidget {
     required this.motion,
     required this.lane,
     required this.scale,
+    required this.yardHeight,
   });
 
   final bool motion;
   final Rect lane;
   final int scale;
+
+  /// Logical height in px, from [TownFolkSheet.yardHeightForPartyDoll].
+  final double yardHeight;
 
   @override
   State<TownFolkLayer> createState() => _TownFolkLayerState();
@@ -206,6 +213,7 @@ class _TownFolkLayerState extends State<TownFolkLayer>
             sheet: _sheet,
             lane: widget.lane,
             scale: widget.scale,
+            yardHeight: widget.yardHeight,
             clock: _clock,
           ),
           child: const SizedBox.expand(),
@@ -220,12 +228,14 @@ class _FolkPainter extends CustomPainter {
     required this.sheet,
     required this.lane,
     required this.scale,
+    required this.yardHeight,
     required this.clock,
   }) : super(repaint: clock);
 
   final ui.Image? sheet;
   final Rect lane;
   final int scale;
+  final double yardHeight;
   final AnimationController? clock;
 
   @override
@@ -237,9 +247,9 @@ class _FolkPainter extends CustomPainter {
     final moving = clock?.isAnimating ?? false;
     final t = clock?.value ?? 0;
     final frames = townFolkFrames(t, moving: moving);
-    // Nearest-neighbor down to the party. Shrink further only on a short yard.
-    var spriteW = TownFolkSheet.displayW * scale;
-    var spriteH = TownFolkSheet.displayH * scale;
+    // Nearest-neighbor to the party row height. Shrink only on a short yard.
+    var spriteH = yardHeight;
+    var spriteW = yardHeight * TownFolkSheet.cellW / TownFolkSheet.cellH;
     final maxH = lane.height - 1;
     if (spriteH > maxH) {
       final fit = maxH / spriteH;
@@ -283,5 +293,6 @@ class _FolkPainter extends CustomPainter {
       oldDelegate.sheet != sheet ||
       oldDelegate.lane != lane ||
       oldDelegate.scale != scale ||
+      oldDelegate.yardHeight != yardHeight ||
       oldDelegate.clock != clock;
 }
