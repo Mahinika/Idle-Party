@@ -121,6 +121,8 @@ void main() {
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townPath));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townApproach));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townFolk));
+      expect(CustomAssets.townAssetPaths, contains(CustomAssets.townCritters));
+      expect(CustomAssets.townAssetPaths, contains(CustomAssets.townYardProps));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townTreeRound));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townTreeTall));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townFlowers));
