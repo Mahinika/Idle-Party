@@ -78,6 +78,7 @@ class TargetCornerHud extends StatelessWidget {
     this.edgeInset = true,
     this.minTitleWidth = 0,
     this.hpRowTrailing,
+    this.plateKicker,
   });
 
   final GameDirector director;
@@ -90,6 +91,9 @@ class TargetCornerHud extends StatelessWidget {
 
   /// Floor badge, DPS pill, and quest chip on the HP row (line 2).
   final List<Widget>? hpRowTrailing;
+
+  /// Home fight: zone, room, and gate count from the old place line.
+  final String? plateKicker;
 
   /// Enemy name on the target strip (line 1).
   static const Key titleKey = ValueKey('target-corner-title');
@@ -186,6 +190,8 @@ class TargetCornerHud extends StatelessWidget {
   Widget build(BuildContext context) {
     final world = director.spatial;
     final state = director.state;
+    final kickerLine = plateKicker ?? '';
+    final showKicker = kickerLine.isNotEmpty;
     final height = targetStripHeight(MediaQuery.textScalerOf(context));
     final edge = edgeInset ? GameTheme.edgeGap : 0.0;
     final enemy = _focusEnemy(world, director);
@@ -217,11 +223,6 @@ class TargetCornerHud extends StatelessWidget {
     }
 
     final showEmpty = enemy == null && !wiped && !awaitingExit;
-    final label = wiped
-        ? 'WIPED'
-        : enemy == null
-        ? (awaitingExit ? 'CLEAR' : '—')
-        : enemy.name.toUpperCase();
     final roleTag = wiped || enemy == null
         ? null
         : _roleTagLabel(role: enemy.role, archetype: enemy.archetype);
@@ -245,11 +246,19 @@ class TargetCornerHud extends StatelessWidget {
     final bombBit = !wiped && enemy != null && enemy.livingBombTimer > 0
         ? ' · BOMB ${formatCombatSeconds(enemy.livingBombTimer)}'
         : '';
-    final nameLine = '$label$bombBit';
+    final nameLine = wiped
+        ? 'WIPED$bombBit'
+        : enemy == null
+        ? (awaitingExit ? 'CLEAR' : '—')
+        : swarmPack && foeCount > 1
+        ? '${enemy.name} ×$foeCount$bombBit'
+        : '${enemy.name.toUpperCase()}$bombBit';
     final hpLabel = wiped || enemy == null
         ? ''
         : swarmPack
-        ? '$foeCount foes'
+        ? (SpatialCombat.compactNumbers
+              ? SpatialCombat.compactCount(enemy.hp)
+              : '${enemy.hp}')
         : (SpatialCombat.compactNumbers
               ? SpatialCombat.compactCount(enemy.hp)
               : '${enemy.hp}');
@@ -291,6 +300,19 @@ class TargetCornerHud extends StatelessWidget {
     if (!wiped && enemy != null && hpLabel.isNotEmpty) {
       hpRow = Row(
         children: [
+          if (showKicker) ...[
+            Flexible(
+              flex: 2,
+              fit: FlexFit.loose,
+              child: Text(
+                kickerLine,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
           Expanded(
             child: ConstrainedBox(
               constraints: const BoxConstraints(minWidth: 32),
@@ -324,6 +346,13 @@ class TargetCornerHud extends StatelessWidget {
     } else if (wiped) {
       hpRow = Text(
         state.inGauntlet || state.inAnyRiftMode ? 'End → hub' : 'Retry / Hub',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: GameTheme.hint(color: GameTheme.parchmentDim),
+      );
+    } else if (showKicker) {
+      hpRow = Text(
+        kickerLine,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: GameTheme.hint(color: GameTheme.parchmentDim),

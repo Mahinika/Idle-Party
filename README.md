@@ -17,7 +17,7 @@ Idle Party is a portrait Android idle RPG. Install from Google Play — not from
 Current phone frames from the test suite (`360×780`):
 
 <p align="center">
-  <img src="test/goldens/after/fight_a56.png" alt="Fight on Samsung A56" width="220" />
+  <img src="test/goldens/after/home_shell_fight_a56.png" alt="Home fight on Samsung A56 (5 heroes)" width="220" />
   <img src="test/goldens/after/home_shell_split_a56.png" alt="Home shell on A56" width="220" />
   <img src="test/goldens/after/welcome_back_a56.png" alt="Welcome Back on A56" width="220" />
 </p>

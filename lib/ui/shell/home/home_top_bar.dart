@@ -97,6 +97,11 @@ class HomeTopBar extends StatelessWidget {
     final chase = showBarGoal
         ? NavCopy.playerText(goal, HomeLayout.home)
         : '';
+    // Split fight: the plate kicker already names the zone and gate job.
+    final suppressDungeonChase = compactTop &&
+        state.inDungeon &&
+        !state.isPartyDefeated &&
+        !director.awaitingWipeChoice;
     final third = _third(context, state, route, essencePanel);
     final perMin = GoldIncome.hubGoldPerMinute(state);
     final fast = state.combatPace >= 2;
@@ -314,7 +319,9 @@ class HomeTopBar extends StatelessWidget {
                 textScale: textScale,
                 onFloorTap: () => showFloorJumpSheet(context, director),
               ),
-              if (chase.isNotEmpty && textScale <= GameTheme.typeScaleMax) ...[
+              if (chase.isNotEmpty &&
+                  !suppressDungeonChase &&
+                  textScale <= GameTheme.typeScaleMax) ...[
                 SizedBox(height: textScale > 1.4 ? 0 : 1),
                 Text(
                   chase,
@@ -539,6 +546,14 @@ class _DungeonTargetRow extends StatelessWidget {
               director: director,
               edgeInset: false,
               hpRowTrailing: trailing,
+              plateKicker: state.isPartyDefeated ||
+                      director.awaitingWipeChoice ||
+                      director.spatial == null
+                  ? null
+                  : homeFightPlateKicker(
+                      state: state,
+                      director: director,
+                    ),
             ),
           );
         },
