@@ -763,8 +763,11 @@ void main() {
           ),
         );
         await t.pump();
-        expect(find.text('UNAVAILABLE'), findsNothing);
+        expect(find.text('UNAVAILABLE'), findsWidgets);
+        expect(find.text(ShopDock.needsPlay), findsNothing);
         expect(find.text(ShopDock.noPrice), findsNothing);
+        expect(find.text('Cinder pouch'), findsNothing);
+        expect(find.text('Season pass premium'), findsNothing);
         expect(find.textContaining('Waiting for Play billing'), findsNothing);
         // The plain line sits in the one-row banner, with RETRY beside it.
         if (ShopDock.goldenTestPriceLabel.isEmpty) {

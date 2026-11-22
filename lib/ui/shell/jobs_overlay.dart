@@ -35,7 +35,7 @@ class JobsOverlay extends StatelessWidget {
     required int rerollsLeft,
   }) {
     if (adFree) return 'REROLL · FREE ($rerollsLeft left)';
-    return 'NEW GOAL';
+    return 'NEW GOAL · AD';
   }
 
   static String rerollAdLine() => 'Swap for a new goal after a short ad.';
