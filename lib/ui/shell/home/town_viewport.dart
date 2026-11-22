@@ -18,6 +18,7 @@ import '../../../core/town_access.dart';
 import '../../../models/dungeon_def.dart';
 import '../../../models/hero.dart';
 import '../../../models/town_building.dart';
+import 'town_ambient.dart';
 import 'town_life.dart';
 import 'town_scene.dart';
 import '../../chase_bind.dart';
@@ -572,6 +573,16 @@ class _TownSquare extends StatelessWidget {
               fit: BoxFit.contain,
               align: Alignment.bottomCenter,
             ),
+        Positioned.fill(
+          child: TownAmbientLayer(
+            motion: townAmbientMotionEnabled(
+              quality: state.vfxQuality,
+              disableAnimations: MediaQuery.disableAnimationsOf(context),
+            ),
+            layout: layout,
+            size: size,
+          ),
+        ),
         _building(layout.guild, guild, guild.assetPath(tier)),
         _building(layout.vault, vault, vaultPath),
         _sprite(layout.well, CustomAssets.townWell),

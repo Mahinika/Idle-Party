@@ -1371,6 +1371,8 @@ def main() -> int:
         ("pennants.png", life_art.pennants()),
         ("lanterns.png", life_art.lanterns()),
         ("folk.png", generate_folk()),
+        ("critters.png", life_art.critters()),
+        ("yard_props.png", life_art.yard_props()),
         ("alert.png", life_art.alert()),
         ("well.png", generate_well()),
         ("vault_shut.png", generate_vault(False)),

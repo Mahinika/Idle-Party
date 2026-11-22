@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TOWN = ROOT / "assets" / "custom" / "town"
 HERO_ASSET = ROOT / "assets" / "custom" / "heroes" / "knight.png"
 ARTIFACTS = Path("/opt/cursor/artifacts")
-BASE_SHA = "022192cbfe5aa9210861d280c749580ee52ebcf6"
+BASE_SHA = "87f626ddea05f189acec359637972b948fcf826e"
 A56_PARTY_DOLL = 40.0
 FOLK_YARD_H = A56_PARTY_DOLL * 56 / 40
 UPSCALE = 4
@@ -56,6 +56,17 @@ def grass_4x4() -> None:
     print(f"wrote {out} tile={w}")
 
 
+def grass_closeup_4x() -> None:
+    tile = Image.open(TOWN / "ground.png").convert("RGBA")
+    big = tile.resize(
+        (tile.width * UPSCALE * 2, tile.height * UPSCALE * 2),
+        Image.Resampling.NEAREST,
+    )
+    out = ARTIFACTS / "grass_closeup_4x.png"
+    big.save(out)
+    print(f"wrote {out}")
+
+
 def folk_sheet_4x() -> None:
     folk = Image.open(TOWN / "folk.png").convert("RGBA")
     big = folk.resize(
@@ -93,6 +104,25 @@ def folk_vs_hero() -> None:
     print(f"wrote {out} hero={HERO_ASSET.name} yard_h={yard_h}")
 
 
+def stone_house_closeup() -> None:
+    """Inn facade + path strip for stone/roof depth check."""
+    inn = Image.open(TOWN / "inn_t1.png").convert("RGBA")
+    path = Image.open(TOWN / "path.png").convert("RGBA")
+    crop_w, crop_h = 120, 110
+    sheet = Image.new("RGBA", (crop_w, crop_h), (28, 26, 32, 255))
+    inn_part = inn.crop((0, 18, crop_w, min(inn.height, 18 + crop_h - 28)))
+    sheet.paste(inn_part, (0, 0), inn_part)
+    path_strip = path.crop((40, 0, 180, 36))
+    sheet.paste(path_strip, (8, crop_h - 40), path_strip)
+    contact = Image.open(TOWN / "contact.png").convert("RGBA")
+    contact_small = contact.resize((80, 16), Image.Resampling.NEAREST)
+    sheet.paste(contact_small, (30, crop_h - 48), contact_small)
+    big = sheet.resize((crop_w * UPSCALE, crop_h * UPSCALE), Image.Resampling.NEAREST)
+    out = ARTIFACTS / "stone_house_closeup.png"
+    big.save(out)
+    print(f"wrote {out}")
+
+
 def town_before_after() -> None:
     golden_after = ROOT / "test" / "goldens" / "town" / "town_preview_a56.png"
     if not golden_after.exists():
@@ -122,8 +152,10 @@ def town_before_after() -> None:
 
 def main() -> int:
     grass_4x4()
+    grass_closeup_4x()
     folk_sheet_4x()
     folk_vs_hero()
+    stone_house_closeup()
     town_before_after()
     return 0
 
