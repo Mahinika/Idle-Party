@@ -92,6 +92,7 @@ void main() {
         bossVictories: 1,
         highestFloorCleared: 2,
         ascensionLevel: 1,
+        vfxQuality: VfxQuality.minimal,
       ),
     );
     final router = MenuRouter();

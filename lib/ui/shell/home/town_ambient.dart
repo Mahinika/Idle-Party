@@ -10,8 +10,8 @@ import 'town_scene.dart';
 
 /// Small yard animals from `tool/town_life_art.py` (48×40 cells).
 abstract final class TownCritterSheet {
-  static const cellW = 48.0;
-  static const cellH = 40.0;
+  static const cellW = 56.0;
+  static const cellH = 48.0;
   static const frames = 4;
   static const kinds = 3;
   static const loop = Duration(milliseconds: 3200);
@@ -280,7 +280,7 @@ class _AmbientPainter extends CustomPainter {
     if (sheet == null) return;
     final lane = layout.lane;
     if (lane.width < 40 || lane.height < 16) return;
-    final spriteW = 32.0;
+    final spriteW = 42.0;
     final spriteH = spriteW * TownCritterSheet.cellH / TownCritterSheet.cellW;
     final t = clock?.value ?? 0;
     final marks = townCritterMarks(t, moving: moving);

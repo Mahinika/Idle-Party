@@ -624,10 +624,17 @@ def chimney(pix: Pix, x: int, y: int, h: int) -> None:
 
 
 def smoke(pix: Pix, x: int, y: int) -> None:
-    puffs = ((0, 0, 3), (2, -3, 2), (1, -4, 3), (4, -7, 2), (3, -8, 3), (6, -12, 1), (5, -13, 2))
+    """Soft chimney plume. Stays outside the ink outline."""
+    puffs = (
+        (0, 0, 4), (1, -2, 3), (3, -4, 4), (2, -7, 3),
+        (5, -10, 3), (4, -14, 4), (7, -18, 3), (6, -22, 2),
+    )
     for dx, dy, n in puffs:
         for k in range(n):
-            pix.put(x + dx + (k % 2), y + dy, CLOUD[2 if k == 0 else 3])
+            tone = CLOUD[3] if k == 0 else CLOUD[2] if dy > -6 else CLOUD[1]
+            pix.put(x + dx + (k % 2), y + dy, tone)
+            if dy < -4:
+                pix.put(x + dx + 2, y + dy + 1, (88, 84, 96))
             pix.put(x + dx + 1, y + dy + 1, CLOUD[1])
 
 
@@ -724,6 +731,8 @@ def generate_forge(tier: int) -> Image.Image:
         if tier == 1:
             beam(pix, 56, 82, 3, 48)
     gable(pix, (60, 34), (16, 84), (104, 82), TILE)
+    pix.rect(26, 82, 68, 2, STONE[0])
+    pix.rect(28, 84, 64, 1, (28, 22, 20))
     chimney(pix, 86, 16, 58)
     # Forge mouth: brick reveal, coals, flame.
     pix.rect(40, 96, 28, 34, (92, 42, 32))
@@ -832,6 +841,8 @@ def generate_inn(tier: int) -> Image.Image:
     # Jetty shadow on the stone.
     pix.rect(34, 100, 52, 2, STONE[0])
     gable(pix, (60, 22), (12, 70), (110, 66), TILE)
+    pix.rect(24, 68, 72, 2, PLASTER[1])
+    pix.rect(26, 70, 68, 1, (36, 30, 28))
     chimney(pix, 88, 8, 52)
     door(pix, 52, 112, 16, 28, arch=True)
     window(pix, 30, 74, 12, 14, curtains=True)
@@ -1249,18 +1260,22 @@ def generate_backdrop() -> Image.Image:
     pix.rect(200, 140, 10, 6, STONE[3])
     gable(pix, (205, 132), (198, 142), (214, 142), TILE)
     birds = (
-        (88, 48, 0),
-        (142, 38, 1),
-        (198, 52, 0),
-        (254, 42, 1),
-        (312, 58, 0),
+        (72, 44, 0),
+        (128, 36, 1),
+        (198, 50, 0),
+        (268, 40, 1),
+        (318, 54, 0),
     )
     for bx, by, flip in birds:
-        wing = -1 if flip else 1
-        pix.put(bx, by, (48, 44, 56))
-        pix.put(bx + wing, by - 1, (62, 58, 72))
-        pix.put(bx - wing, by, (38, 34, 46))
-        pix.put(bx, by + 1, (32, 28, 40))
+        wing = -2 if flip else 2
+        body = (42, 38, 52)
+        pix.put(bx, by, body)
+        pix.put(bx + 1, by, (58, 54, 68))
+        pix.put(bx + wing, by - 1, (72, 70, 84))
+        pix.put(bx - wing, by, (72, 70, 84))
+        pix.put(bx + wing - 1, by - 2, (88, 86, 98))
+        pix.put(bx - wing + 1, by - 2, (88, 86, 98))
+        pix.put(bx, by + 1, (28, 24, 36))
     # The same dusk greens as the lawn tile. 120 divides 360.
     for y in range(176, 200):
         for x in range(360):
