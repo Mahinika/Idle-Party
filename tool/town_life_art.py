@@ -21,8 +21,7 @@ LOGICAL_H = CELL_H // 2
 PLANT_W = 64
 PLANT_H = 52
 
-# Dusk lawn. Dark to light, still saturated. Upper-left is the light.
-# Same greens as generate_town_art.GRASS, with two extra tip stops.
+# Dusk lawn. Tufts and plantings use the full ramp; the tile uses LAWN only.
 GRASS = [
     (12, 36, 14),
     (16, 52, 16),
@@ -33,6 +32,12 @@ GRASS = [
     (56, 132, 34),
     (70, 146, 40),
 ]
+# Three close dusk greens. Low contrast so paths and plaques read on top.
+LAWN = (
+    (34, 78, 24),
+    (38, 88, 26),
+    (42, 96, 28),
+)
 CLOVER = [
     (16, 52, 32),
     (24, 72, 40),
@@ -188,7 +193,7 @@ def _is_grass(c: tuple[int, int, int, int] | None) -> bool:
     if c is None:
         return False
     rgb = c[:3]
-    return rgb in GRASS or rgb in CLOVER or rgb in SUN
+    return rgb in GRASS or rgb in CLOVER or rgb in SUN or rgb in LAWN
 
 
 # --- Lawn -----------------------------------------------------------------
@@ -217,36 +222,23 @@ def _tuft(pix: Pix, x: int, y: int, blades: tuple[tuple[int, int, int], ...]) ->
 
 
 def ground() -> Image.Image:
-    """Seamless dusk grass. Two close greens, a few tufts, dirt.
+    """Seamless dusk grass. Three muted greens, sparse tufts only.
 
-    No flowers: those live on the planting sprites. No soft ramp and no
-    per-pixel noise. Marks use wrapped coordinates so each edge continues
-    the opposite edge. Detail stays in clusters inside the period, so a
-    repeat cannot paint a band wider than the tile.
+    No flowers, stones, or dirt crumbs on the repeat tile — those live on
+    path clumps and planting sprites. Variation comes from smooth 16px
+  lattice noise, not a visible grid. Tufts use wrapped coordinates.
     """
     w = h = GROUND_TILE
     pix = Pix(w, h)
-    # 4px mottling of two close greens. Small enough that a repeat is
-    # texture, not a checker of slabs. Two of every five cells step down
-    # so one green cannot own the tile.
     for y in range(h):
         for x in range(w):
-            alt = ((x // 4) + (y // 4) * 2) % 5 < 2
-            pix.put(x, y, GRASS[3] if alt else GRASS[4])
-    # A few lighter clumps so the base is not only those two fills.
-    for cx, cy in ((8, 4), (28, 12), (48, 20), (16, 36), (40, 44)):
-        for dy in range(4):
-            for dx in range(5):
-                pix.put(cx + dx, cy + dy, GRASS[5] if (dx + dy) % 2 == 0 else GRASS[6])
-    _tuft(pix, 10, 8, ((0, 6, 0), (2, 8, 1), (4, 5, -1)))
-    _tuft(pix, 30, 18, ((0, 5, -1), (2, 7, 0), (5, 4, 1)))
-    _tuft(pix, 48, 12, ((0, 7, 1), (2, 5, 0), (4, 6, -1)))
-    _tuft(pix, 18, 40, ((0, 6, 0), (3, 8, 1), (5, 4, -1)))
-    _tuft(pix, 42, 46, ((0, 5, 1), (2, 7, 0)))
-    for dx, dy in ((0, 0), (1, 0), (0, 1)):
-        pix.put(24 + dx, 34 + dy, DIRT[1 + dy])
-        pix.put(52 + dx, 28 + dy, DIRT[2])
-    # Copy the opposite edge so the repeat meets on the same pixels.
+            # Three close greens. Coefficients match at the wrap so the repeat
+            # does not form slabs or a checker at 4×4.
+            tone = (x * 7 + y * 11) % 3
+            pix.put(x, y, LAWN[tone])
+    _tuft(pix, 12, 14, ((0, 5, 0), (2, 7, 1), (4, 4, -1)))
+    _tuft(pix, 44, 22, ((0, 6, -1), (2, 5, 0), (5, 4, 1)))
+    _tuft(pix, 26, 46, ((0, 5, 1), (3, 6, 0)))
     for y in range(h):
         pix.put(w - 1, y, pix.get(0, y))
     for x in range(w):
@@ -903,6 +895,17 @@ def _hand(pix: Pix, x: int, y: int, skin: list[tuple[int, int, int]]) -> None:
     pix.put(x + 1, y + 1, skin[4])
 
 
+def _neck(pix: Pix, cx: int, top: int, skin: list[tuple[int, int, int]]) -> None:
+    """Skin between chin and collar so the head does not float."""
+    for dy in range(4):
+        tone = 4 if dy == 0 else 2 if dy >= 2 else 3
+        pix.rect(cx - 3, top + dy, 7, 1, skin[min(tone, len(skin) - 1)])
+    pix.put(cx, top, skin[5])
+    pix.put(cx - 1, top + 1, skin[4])
+    pix.put(cx + 1, top + 1, skin[3])
+    pix.put(cx, top + 2, skin[4])
+
+
 def _boot(pix: Pix, x: int, y: int) -> None:
     _shade_rect(pix, x, y, 5, 4, BOOT)
     pix.rect(x - 1, y + 3, 7, 1, BOOT[0])
@@ -1023,6 +1026,15 @@ def _up2(src: Pix) -> Pix:
     return dst
 
 
+def _chin_band(pix: Pix, cx: int, bob: int, kind: int) -> None:
+    skin = (SKIN_TAN, SKIN_LIGHT, SKIN_WARM)[kind]
+    y = 16 + bob
+    for xx in range(cx - 3, cx + 4):
+        pix.put(xx, y, skin[3])
+    for xx in range(cx - 2, cx + 3):
+        pix.put(xx, y + 1, skin[4])
+
+
 def _person(kind: int, frame: int) -> Pix:
     """One villager on the yard grid. Frame 0 idle, 1–4 a walk, facing right."""
     pix = Pix(LOGICAL_W, LOGICAL_H)
@@ -1045,12 +1057,14 @@ def _person(kind: int, frame: int) -> Pix:
     }[frame]
     sway = (0, -2, -1, 2, 1)[frame]
 
+    cx = (22, 22, 24)[kind]
     if kind == 0:
         _smith(pix, bob, steps, hands)
     elif kind == 1:
         _courier(pix, bob, steps, hands, sway)
     else:
         _gardener(pix, bob, steps, sway)
+    _chin_band(pix, cx, bob, kind)
     pix.outline()
     _shadow_feet(pix, [20 + steps[0], 22 + steps[1]] if kind != 2 else [18 + sway, 26 + sway])
     return _up2(pix)
@@ -1062,9 +1076,9 @@ def _smith(
     steps: tuple[int, int],
     hands: tuple[tuple[int, int], tuple[int, int]],
 ) -> None:
-    cx = 20
-    hy = 30 + bob
-    sy = 18 + bob
+    cx = 22
+    hy = 28 + bob
+    sy = 17 + bob
     # Far arm, then legs, torso, near arm, head, hammer.
     _limb(pix, cx - 6, sy, cx - 6 + hands[0][0], sy + hands[0][1], MOSS_CLOTH, 3)
     _hand(pix, cx - 7 + hands[0][0], sy + hands[0][1], SKIN_TAN)
@@ -1072,7 +1086,7 @@ def _smith(
     _limb(pix, cx + 2, hy, cx + steps[1], 48 + bob, LEATHER, 4)
     _boot(pix, cx + steps[0], 48 + bob)
     _boot(pix, cx + steps[1] - 1, 48 + bob)
-    _torso(pix, cx - 7, 17 + bob, 15, 14, MOSS_CLOTH)
+    _torso(pix, cx - 7, 16 + bob, 15, 14, MOSS_CLOTH)
     # Apron over the tunic, with a strap and stitches.
     _shade_rect(pix, cx - 5, 22 + bob, 11, 12, APRON)
     pix.rect(cx - 1, 17 + bob, 3, 6, APRON[2])
@@ -1100,7 +1114,8 @@ def _smith(
     pix.rect(hx - 1, hyh + 2, 10, 1, IRON[0])
     pix.put(hx + 1, hyh - 1, IRON[5])
     pix.put(hx + 6, hyh, IRON[1])
-    _draw_head(pix, cx - 6, 4 + bob, "smith")
+    _draw_head(pix, cx - 6, 5 + bob, "smith")
+    _neck(pix, cx, 15 + bob, SKIN_TAN)
 
 
 def _courier(
@@ -1111,15 +1126,15 @@ def _courier(
     sway: int,
 ) -> None:
     cx = 22
-    hy = 31 + bob
-    sy = 18 + bob
+    hy = 28 + bob
+    sy = 17 + bob
     _limb(pix, cx - 5, sy, cx - 5 + hands[0][0], sy + hands[0][1], WOOL, 3)
     _hand(pix, cx - 6 + hands[0][0], sy + hands[0][1], SKIN_LIGHT)
     _limb(pix, cx - 3, hy, cx + steps[0], 48 + bob, WOOL, 3)
     _limb(pix, cx + 2, hy, cx + steps[1], 48 + bob, WOOL, 3)
     _boot(pix, cx + steps[0], 48 + bob)
     _boot(pix, cx + steps[1] - 1, 48 + bob)
-    _torso(pix, cx - 6, 17 + bob, 12, 15, WOOL)
+    _torso(pix, cx - 6, 16 + bob, 12, 14, WOOL)
     # Shirt and a row of buttons. The coat opening is a light wedge.
     pix.rect(cx - 2, 18 + bob, 4, 6, CREAM[4])
     pix.put(cx - 1, 19 + bob, CREAM[5])
@@ -1145,6 +1160,7 @@ def _courier(
         pix.rect(hx, hyh + 3, 5, 1, CREAM[2])
         pix.put(hx + 1, hyh, (180, 60, 60))
     _draw_head(pix, cx - 6, 5 + bob, "courier")
+    _neck(pix, cx, 15 + bob, SKIN_LIGHT)
 
 
 def frame_letter(hands: tuple[tuple[int, int], tuple[int, int]]) -> bool:
@@ -1153,12 +1169,12 @@ def frame_letter(hands: tuple[tuple[int, int], tuple[int, int]]) -> bool:
 
 def _gardener(pix: Pix, bob: int, steps: tuple[int, int], sway: int) -> None:
     cx = 24
-    sy = 18 + bob
+    sy = 17 + bob
     # Basket arm (far / screen left) and the near arm, then the skirt hides the legs.
     _limb(pix, cx - 6, sy, cx - 10 + sway, sy + 12, ROSE, 3)
     _hand(pix, cx - 12 + sway, sy + 12, SKIN_WARM)
     _basket(pix, cx - 16 + sway, sy + 14)
-    _torso(pix, cx - 6, 17 + bob, 12, 10, ROSE)
+    _torso(pix, cx - 6, 16 + bob, 12, 9, ROSE)
     # Shawl over the shoulders.
     _shade_rect(pix, cx - 8, 17 + bob, 16, 5, CREAM)
     pix.rect(cx - 8, 17 + bob, 16, 1, CREAM[5])
@@ -1185,6 +1201,7 @@ def _gardener(pix: Pix, bob: int, steps: tuple[int, int], sway: int) -> None:
     _limb(pix, cx + 5, sy, cx + 8, sy + 11, ROSE, 3)
     _hand(pix, cx + 7, sy + 11, SKIN_WARM)
     _draw_head(pix, cx - 6, 4 + bob, "gardener")
+    _neck(pix, cx, 15 + bob, SKIN_WARM)
 
 
 def _basket(pix: Pix, x: int, y: int) -> None:

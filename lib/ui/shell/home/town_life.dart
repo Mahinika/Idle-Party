@@ -9,12 +9,12 @@ import '../../../models/vfx_quality.dart';
 /// Folk sheet from `tool/town_life_art.py` (96×112 cells).
 ///
 /// Each cell is a 48×56 drawing doubled, so [displayW] and [displayH]
-/// keep a face, clothes, and a solid outline beside the 42px party.
+/// keep a face, clothes, and a solid outline beside the party dolls (~40px on A56).
 abstract final class TownFolkSheet {
   static const cellW = 96;
   static const cellH = 112;
-  static const displayW = 48.0;
-  static const displayH = 56.0;
+  static const displayH = 40.0;
+  static const displayW = displayH * cellW / cellH;
   static const frames = 5;
   static const people = 3;
   static const loop = Duration(milliseconds: 4800);
