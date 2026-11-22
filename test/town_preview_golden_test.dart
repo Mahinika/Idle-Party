@@ -92,7 +92,6 @@ void main() {
         bossVictories: 1,
         highestFloorCleared: 2,
         ascensionLevel: 1,
-        vfxQuality: VfxQuality.minimal,
       ),
     );
     final router = MenuRouter();
@@ -101,9 +100,12 @@ void main() {
     final key = GlobalKey();
     await tester.pumpWidget(
       shellGoldenScaffold(
-        RepaintBoundary(
-          key: key,
-          child: TownPreview(director: director, router: router),
+        MediaQuery(
+          data: shellGoldenMedia.copyWith(disableAnimations: true),
+          child: RepaintBoundary(
+            key: key,
+            child: TownPreview(director: director, router: router),
+          ),
         ),
       ),
     );

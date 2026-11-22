@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- Town lawn QA round 4: calmer grass weave, mortared cobble paths, yard critters and chimney smoke in preview goldens, folk shading pass.
 - UI batch 2: BIG/LIST fight toggle, FULL stays after first TRAIN buy, plain speed chip, shortfall on forge buy faces, 640px rail icons, FULL cave ≥34% layout check, and reduce-motion for fight presentation only.
 - SHOP and ads copy: 24h featured Ad-free → Delver's Kit, unlisted Cinder/season rows hidden until Play prices, season pass and CAMP/Welcome Back clarity, hub WATCH ticket removed (SCROLLS stays), quest reroll labeled AD, reinstall pouch analytics placement.
 - Arena review: heal crits repeat for the same floor and clock without moving damage rolls, portrait stays locked, a cancelled Play update opens the listing, a failed slot migration retries, quest dates follow the game clock, clipboard import keeps this device's Play purchases, purchase ids are never forgotten, friend claims count in one write, and Android backup does not copy the local save.

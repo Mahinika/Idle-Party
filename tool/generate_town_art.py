@@ -624,18 +624,19 @@ def chimney(pix: Pix, x: int, y: int, h: int) -> None:
 
 
 def smoke(pix: Pix, x: int, y: int) -> None:
-    """Soft chimney plume. Stays outside the ink outline."""
+    """Soft chimney plume. Light grey so it reads at dusk."""
     puffs = (
-        (0, 0, 4), (1, -2, 3), (3, -4, 4), (2, -7, 3),
-        (5, -10, 3), (4, -14, 4), (7, -18, 3), (6, -22, 2),
+        (0, 0, 4), (1, -2, 4), (2, -5, 4), (3, -8, 4),
+        (5, -12, 3), (4, -16, 4), (7, -20, 3), (6, -24, 3),
+        (8, -28, 2), (7, -32, 2),
     )
     for dx, dy, n in puffs:
         for k in range(n):
-            tone = CLOUD[3] if k == 0 else CLOUD[2] if dy > -6 else CLOUD[1]
+            tone = (156, 152, 164) if k == 0 and dy > -8 else (124, 118, 132)
+            if dy < -14:
+                tone = (96, 92, 108)
             pix.put(x + dx + (k % 2), y + dy, tone)
-            if dy < -4:
-                pix.put(x + dx + 2, y + dy + 1, (88, 84, 96))
-            pix.put(x + dx + 1, y + dy + 1, CLOUD[1])
+            pix.put(x + dx + 1, y + dy + 1, (78, 74, 88))
 
 
 def step(pix: Pix, x: int, y: int, w: int, h: int) -> None:
@@ -1268,14 +1269,14 @@ def generate_backdrop() -> Image.Image:
     )
     for bx, by, flip in birds:
         wing = -2 if flip else 2
-        body = (42, 38, 52)
+        body = (32, 28, 40)
         pix.put(bx, by, body)
-        pix.put(bx + 1, by, (58, 54, 68))
-        pix.put(bx + wing, by - 1, (72, 70, 84))
-        pix.put(bx - wing, by, (72, 70, 84))
-        pix.put(bx + wing - 1, by - 2, (88, 86, 98))
-        pix.put(bx - wing + 1, by - 2, (88, 86, 98))
-        pix.put(bx, by + 1, (28, 24, 36))
+        pix.put(bx + 1, by, (48, 44, 56))
+        pix.put(bx + wing, by - 1, (64, 62, 74))
+        pix.put(bx - wing, by, (64, 62, 74))
+        pix.put(bx + wing - 1, by - 2, (82, 80, 92))
+        pix.put(bx - wing + 1, by - 2, (82, 80, 92))
+        pix.put(bx, by + 1, (20, 16, 26))
     # The same dusk greens as the lawn tile. 120 divides 360.
     for y in range(176, 200):
         for x in range(360):

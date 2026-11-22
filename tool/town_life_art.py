@@ -207,7 +207,7 @@ def selective_outline(pix: Pix) -> None:
             r = min(t[0] for t in rgb)
             g = min(t[1] for t in rgb)
             b = min(t[2] for t in rgb)
-            pending.append((x, y, (max(0, r - 40), max(0, g - 44), max(0, b - 36), 255)))
+            pending.append((x, y, (max(0, r - 52), max(0, g - 56), max(0, b - 48), 255)))
     for x, y, ink in pending:
         pix.put(x, y, ink)
 
@@ -267,8 +267,13 @@ def _gentle_worn_wrap(pix: Pix, cx: int, cy: int, rx: int, ry: int) -> None:
             pix.put_wrap(cx + dx, cy + dy, col)
 
 
+def _bloom_cluster(pix: Pix, x: int, y: int, kind: int) -> None:
+    _flower(pix, x, y, kind)
+    _flower(pix, x + 6, y + 2, (kind + 2) % 6)
+
+
 def ground() -> Image.Image:
-    """Calm dusk lawn like 87f626dd. Light drift only; no brown or dark blobs."""
+    """Calm lawn: 87f626dd weave plus at most one step lighter (no noise bands)."""
     w = h = GROUND_TILE
     pix = Pix(w, h)
     ramp = (GRASS[3], GRASS[4], (31, 92, 23))
@@ -276,15 +281,16 @@ def ground() -> Image.Image:
         for x in range(w):
             m = (x * 7 + y * 11) % 3
             col = ramp[m]
-            n = _noise(x, y, 64, w, h)
-            if n > 0.78:
-                col = GRASS[4]
+            if m == 1 and (_hash(x, y) % 19) == 0:
+                col = ramp[2]
+            elif m == 0 and (_hash(x, y) % 31) == 0:
+                col = ramp[1]
             pix.put_wrap(x, y, col)
-    # A few soft worn hints (irregular placement; not brown ovals).
     for cx, cy, rx, ry in (
         (41, 94, 9, 4),
         (82, 118, 7, 3),
         (109, 46, 8, 3),
+        (24, 62, 7, 3),
     ):
         _gentle_worn_wrap(pix, cx, cy, rx, ry)
     for tx, ty, shape in (
@@ -294,8 +300,17 @@ def ground() -> Image.Image:
         (17, 88, 4),
     ):
         _tuft(pix, tx, ty, TUFT_SHAPES[shape])
-    for fx, fy, kind in ((58, 71, 2), (24, 39, 4), (96, 17, 1)):
-        _flower(pix, fx, fy, kind)
+    for fx, fy, kind in (
+        (22, 41, 1),
+        (48, 18, 4),
+        (71, 88, 0),
+        (93, 31, 3),
+        (14, 74, 5),
+        (105, 102, 2),
+        (38, 112, 1),
+        (88, 67, 4),
+    ):
+        _bloom_cluster(pix, fx, fy, kind)
     return pix.image()
 
 
@@ -399,7 +414,7 @@ def _flower(pix: Pix, x: int, y: int, kind: int) -> None:
     pix.put_wrap(x, y + 3, GRASS[0])
 
 
-MORTAR = (22, 40, 20)
+MORTAR = (58, 49, 40)  # #3a3128 path mortar
 
 
 def _mortar(pix: Pix) -> None:
@@ -529,52 +544,42 @@ def approach() -> Image.Image:
 
 
 def _cobble(pix: Pix, x: int, y: int, w: int, h: int, kind: int) -> None:
-    ramp = (STONE, STONE_GREY, DIRT)[kind % 3]
-    # DIRT is shorter; cobbles of kind 2 use the warm dirt ramp as sandstone.
+    """One stone on mortar. Gaps between cobbles stay #3a3128."""
+    ramp = (STONE, STONE_GREY, STONE)[kind % 3]
     if kind % 3 == 2:
         ramp = (
-            (120, 86, 52),
-            (156, 116, 72),
-            (188, 148, 100),
-            (214, 178, 132),
-            (232, 204, 164),
-            (246, 226, 196),
+            (98, 78, 58),
+            (128, 102, 78),
+            (158, 128, 102),
+            (188, 158, 128),
+            (218, 188, 158),
+            (238, 210, 182),
         )
     for yy in range(h):
-        inset = 1 if yy == 0 or yy == h - 1 else 0
-        if kind == 1 and yy < 2:
-            inset = 2
-        for xx in range(inset, w - inset):
-            if (xx < 2 or xx > w - 3) and (yy < 2 or yy > h - 3) and (xx + yy + kind) % 2 == 0:
-                pix.put(x + xx, y + yy, MORTAR)
-                continue
-            if yy == 0 or xx == 0:
-                tone = min(5, len(ramp) - 1)
-            elif yy >= h - 2 or xx >= w - 2:
-                tone = 0
-            else:
-                tone = 3
-            if (xx * 3 + yy * 5 + kind) % 13 == 0:
-                tone = 2
-            if (xx * 7 + yy * 3) % 19 == 0 and yy > 1:
-                tone = 1
-            pix.put(x + xx, y + yy, ramp[min(tone, len(ramp) - 1)])
-    # Glints and chips.
-    pix.put(x + 2, y + 1, ramp[min(5, len(ramp) - 1)])
-    pix.put(x + w - 3, y + h - 2, ramp[0])
-    if (kind + w) % 5 == 0 and w > 10:
-        pix.put(x + w // 2 - 1, y + h - 1, MORTAR)
-        pix.put(x + w // 2, y + h - 2, ramp[1])
-    if w > 12 and h > 8:
-        pix.put(x + 4, y + h - 3, MOSS[2])
-        pix.put(x + 5, y + h - 2, MOSS[3])
-        pix.put(x + w - 5, y + 2, MOSS[1])
-    if w > 8 and (kind + x) % 3 == 0:
-        pix.put(x + 3, y + 2, ramp[0])
-        pix.put(x + 4, y + 1, MORTAR)
-    for mx in (x + 2, x + w - 4):
-        pix.put(mx, y + h - 1, MORTAR)
-        pix.put(mx, y + h, MORTAR)
+        for xx in range(w):
+            pix.put(x + xx, y + yy, MORTAR)
+    if w < 4 or h < 4:
+        return
+    for yy in range(1, h - 1):
+        for xx in range(1, w - 1):
+            tone = 2 + ((xx * 5 + yy * 7 + kind * 3) % 3)
+            if (xx * 11 + yy * 13) % 17 == 0:
+                tone = max(1, tone - 1)
+            if (xx * 7 + yy * 5) % 23 == 0:
+                tone = min(5, tone + 1)
+            if yy == 1:
+                tone = min(5, tone + 1)
+            elif yy == h - 2:
+                tone = max(0, tone - 2)
+            elif xx == w - 2:
+                tone = max(0, tone - 1)
+            pix.put(x + xx, y + yy, ramp[tone])
+    if (kind + x) % 2 == 0:
+        pix.put(x + 1, y + 1, MORTAR)
+        pix.put(x + w - 2, y + h - 2, MORTAR)
+    if w > 10 and (kind + y) % 3 == 0:
+        pix.put(x + 2, y + h - 2, MOSS[2])
+        pix.put(x + w - 3, y + 2, MOSS[1])
 
 
 def worn() -> Image.Image:
@@ -1082,6 +1087,7 @@ def _draw_head(pix: Pix, x: int, y: int, style: str) -> None:
     # Eye glints on the stamped whites.
     for ex, ey in ((x + 6, y + 3), (x + 10, y + 3)):
         pix.put(ex, ey, (255, 252, 248))
+        pix.put(ex + 1, ey - 1, (255, 255, 255))
         pix.put(ex + 1, ey, skin[5])
     # Ears.
     pix.rect(x - 1, y + 4, 2, 3, skin[2])
@@ -1234,6 +1240,9 @@ def _courier(
     _boot(pix, cx + steps[0], 48 + bob)
     _boot(pix, cx + steps[1] - 1, 48 + bob)
     _torso(pix, cx - 6, 16 + bob, 12, 14, WOOL)
+    for fy in (20, 24, 28):
+        pix.put(cx - 1, fy + bob, WOOL[1])
+        pix.put(cx + 2, fy + bob, WOOL[0])
     # Shirt, lapel wedge, gold buttons.
     pix.rect(cx - 2, 18 + bob, 4, 6, CREAM[4])
     pix.put(cx - 1, 19 + bob, CREAM[5])

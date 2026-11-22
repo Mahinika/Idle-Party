@@ -53,21 +53,35 @@ int _critterColumn(double t) {
       TownCritterSheet.frames;
 }
 
+/// Shared freeze phase for goldens (folk + critters idle pose).
+const double townGoldenFreezePhase = 0.3125;
+
 List<TownCritterMark> townCritterMarks(double t, {required bool moving}) {
+  final phase = moving ? t : townGoldenFreezePhase;
   if (!moving) {
     return const [
-      TownCritterMark(kind: 0, u: 0.16, v: 0.62, flip: false, column: 0),
-      TownCritterMark(kind: 1, u: 0.68, v: 0.38, flip: true, column: 0),
-      TownCritterMark(kind: 2, u: 0.42, v: 0.78, flip: false, column: 0),
+      TownCritterMark(kind: 0, u: 0.22, v: 0.55, flip: false, column: 0),
+      TownCritterMark(kind: 0, u: 0.38, v: 0.62, flip: true, column: 0),
+      TownCritterMark(kind: 1, u: 0.58, v: 0.48, flip: false, column: 0),
     ];
   }
-  final col = _critterColumn(t);
-  final colB = _critterColumn(t + 0.31);
-  final colC = _critterColumn(t + 0.57);
+  final colB = _critterColumn(phase + 0.31);
   return [
-    TownCritterMark(kind: 0, u: 0.14 + 0.04 * math.sin(t * math.pi * 2), v: 0.62, flip: t >= 0.5, column: col),
-    TownCritterMark(kind: 1, u: 0.7, v: 0.36, flip: true, column: colB),
-    TownCritterMark(kind: 2, u: 0.38, v: 0.8, flip: false, column: colC),
+    TownCritterMark(
+      kind: 0,
+      u: 0.22 + 0.03 * math.sin(phase * math.pi * 2),
+      v: 0.55,
+      flip: phase >= 0.5,
+      column: _critterColumn(phase),
+    ),
+    TownCritterMark(kind: 0, u: 0.38, v: 0.62, flip: true, column: colB),
+    TownCritterMark(
+      kind: 1,
+      u: 0.58,
+      v: 0.48,
+      flip: false,
+      column: _critterColumn(phase + 0.57),
+    ),
   ];
 }
 
@@ -131,11 +145,15 @@ class TownAmbientLayer extends StatefulWidget {
     required this.motion,
     required this.layout,
     required this.size,
+    this.drawProps = true,
+    this.drawCritters = true,
   });
 
   final bool motion;
   final TownSceneLayout layout;
   final Size size;
+  final bool drawProps;
+  final bool drawCritters;
 
   @override
   State<TownAmbientLayer> createState() => _TownAmbientLayerState();
@@ -242,6 +260,8 @@ class _TownAmbientLayerState extends State<TownAmbientLayer>
             size: widget.size,
             clock: _clock,
             moving: _allowMotion,
+            drawProps: widget.drawProps,
+            drawCritters: widget.drawCritters,
           ),
           child: const SizedBox.expand(),
         ),
@@ -258,6 +278,8 @@ class _AmbientPainter extends CustomPainter {
     required this.size,
     required this.clock,
     required this.moving,
+    required this.drawProps,
+    required this.drawCritters,
   }) : super(repaint: clock);
 
   final ui.Image? critters;
@@ -266,16 +288,19 @@ class _AmbientPainter extends CustomPainter {
   final Size size;
   final AnimationController? clock;
   final bool moving;
+  final bool drawProps;
+  final bool drawCritters;
 
   @override
   void paint(Canvas canvas, Size canvasSize) {
     final paint = Paint()..filterQuality = FilterQuality.none;
     final propImage = props;
-    if (propImage != null) {
+    if (drawProps && propImage != null) {
       for (final mark in townYardProps(layout, size)) {
         canvas.drawImageRect(propImage, mark.src, mark.dst, paint);
       }
     }
+    if (!drawCritters) return;
     final sheet = critters;
     if (sheet == null) return;
     final lane = layout.lane;
@@ -322,5 +347,7 @@ class _AmbientPainter extends CustomPainter {
       oldDelegate.props != props ||
       oldDelegate.layout != layout ||
       oldDelegate.clock != clock ||
-      oldDelegate.moving != moving;
+      oldDelegate.moving != moving ||
+      oldDelegate.drawProps != drawProps ||
+      oldDelegate.drawCritters != drawCritters;
 }
