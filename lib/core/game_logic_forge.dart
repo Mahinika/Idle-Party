@@ -189,12 +189,19 @@ GameState _gameLogicForgeApplyUpgrade( GameState state, { required PartyUpgradeT
     case PartyUpgradeType.vitality:
       final nextVit = state.vitalityBonus + GameLogic.forgeVitalityGain;
       final probe = state.copyWith(vitalityBonus: nextVit);
-      final healedHeroes = state.heroes
-          .map(
-            (hero) =>
-                hero.copyWith(currentHp: probe.effectiveHeroMaxHp(hero)),
-          )
-          .toList();
+      final healedHeroes = [
+        for (final hero in state.heroes)
+          hero.copyWith(
+            currentHp: hero.currentHp <= 0
+                ? 0
+                : min(
+                    probe.effectiveHeroMaxHp(hero),
+                    hero.currentHp +
+                        probe.effectiveHeroMaxHp(hero) -
+                        state.effectiveHeroMaxHp(hero),
+                  ),
+          ),
+      ];
       return state.copyWith(
         vitalityBonus: nextVit,
         heroes: healedHeroes,

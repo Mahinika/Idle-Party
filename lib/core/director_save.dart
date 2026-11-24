@@ -151,17 +151,41 @@ extension GameDirectorSave on GameDirector {
         ? FunnelAnalytics.onNewInstall(_state, clock)
         : FunnelAnalytics.onExistingSession(_state, clock);
     _applyFunnelTick(tick, persist: false);
+    // Resume past midnight updates days_since_install without a new
+    // session_start. Firebase already logs session_start.
+    _syncMeasurementUser();
   }
 
   void _noteAppColdStart() {
     if (_appColdStartLogged) return;
     _appColdStartLogged = true;
-    final days = AnalyticsEvents.daysSinceInstallMs(
-      _state.metaDepth.funnelInstallMs,
-      DateTime.now(),
-    );
+    final now = DateTime.now();
+    final days =
+        OnboardingFunnel.daysSince(now) ??
+        AnalyticsEvents.daysSinceInstallMs(
+          _state.metaDepth.funnelInstallMs,
+          now,
+        );
     unawaited(AppAnalytics.appColdStart(daysSinceInstall: days));
+    _syncMeasurementUser();
     _syncMeasurementContext();
+  }
+
+  void _syncMeasurementUser() {
+    final now = DateTime.now();
+    unawaited(
+      AppAnalytics.syncMeasurementUser(
+        installCohort: OnboardingFunnel.cohortUtc(),
+        daysSinceInstall: OnboardingFunnel.daysSince(now),
+        adFree: _state.metaDepth.adFree,
+        seasonPass: _state.metaDepth.paidSeasonPass,
+      ),
+    );
+  }
+
+  void _noteFreshInstallLaunch() {
+    unawaited(AppAnalytics.logOnboardingOnce(OnboardingFunnel.launch));
+    _syncMeasurementUser();
   }
 
   void _syncMeasurementContext() {
@@ -610,9 +634,12 @@ extension GameDirectorSave on GameDirector {
       if (seconds >= 15) {
         unawaited(AppAnalytics.sessionLength(seconds));
       }
-      _flushHubIdle();
       _pauseBackgroundLoops();
       _syncHubIdleTimer();
+      // A pause during catch-up must not stamp or save the pre-credit wallet.
+      final inflight = _awayCreditDone?.future;
+      if (inflight != null) await inflight;
+      _flushHubIdle();
       await _persistFlush();
       unawaited(_syncAwayReminders(backgrounded: true));
     } else {
@@ -671,6 +698,8 @@ extension GameDirectorSave on GameDirector {
       if (elapsed.inSeconds >= GameDirector._awayCreditMinSec) {
         _welcomeBackAdGranted = false;
         _awayCreditInFlight = true;
+        final done = Completer<void>();
+        _awayCreditDone = done;
         final epoch = _saveEpoch;
         final base = _state;
         try {
@@ -697,6 +726,8 @@ extension GameDirectorSave on GameDirector {
           _directorNotify();
         } finally {
           _awayCreditInFlight = false;
+          if (!done.isCompleted) done.complete();
+          if (identical(_awayCreditDone, done)) _awayCreditDone = null;
         }
       }
     }
@@ -768,13 +799,14 @@ extension GameDirectorSave on GameDirector {
     final now = DateTime.now();
     final seconds = now.difference(_state.lastUpdated).inSeconds;
     if (seconds < 1) return;
+    final capped = _cappedHubIdleSeconds(seconds);
     final beforeGold = _state.gold;
     final beforeEssence = _state.essence;
     _state = GoldIncome.applyHubIdle(
       _state,
-      seconds,
+      capped,
     ).copyWith(lastUpdated: now);
-    _autosaveAccum += seconds.toDouble();
+    _autosaveAccum += capped.toDouble();
     _persistIfAutosaveDue();
     if (_state.gold != beforeGold || _state.essence != beforeEssence) {
       _directorNotify();
@@ -795,12 +827,20 @@ extension GameDirectorSave on GameDirector {
     }
     _state = GoldIncome.applyHubIdle(
       _state,
-      seconds,
+      _cappedHubIdleSeconds(seconds),
     ).copyWith(lastUpdated: now);
+  }
+
+  /// One hub gap uses the closed-app chest cap. A 1-second tick stays under it.
+  int _cappedHubIdleSeconds(int seconds) {
+    final cap = GoldIncome.hubChestCapSecFor(_state);
+    if (seconds > cap) return cap;
+    return seconds;
   }
 
   Future<void> boot({bool deferCombatLoop = false}) async {
     _funnelSessionReadyMs = DateTime.now().millisecondsSinceEpoch;
+    await OnboardingFunnel.load();
     try {
       await _storage.listSlots();
       final legacyUnassigned = await SaveSwap.migrateLegacyGlobalJournal(
@@ -903,12 +943,14 @@ extension GameDirectorSave on GameDirector {
           if (_durableSaveBlocked) {
             // Leave the loaded bytes alone. Play stays behind the recovery gate.
           } else if (_hasExistingSave) {
+            OnboardingFunnel.backfillSilently();
             _notePlaySession();
             _noteAppColdStart();
             _noteFunnelSession(newInstall: false);
             await _persistFlush();
           } else {
             _notePlaySession();
+            _noteFreshInstallLaunch();
           }
           _saveSlots = await _storage.listSlots();
           _activeSlot = _storage.activeSlotIndex;
@@ -1004,11 +1046,9 @@ extension GameDirectorSave on GameDirector {
           );
           if (offline.welcomeBackAdOffer) {
             unawaited(AppAnalytics.welcomeBackAdOffer());
-            unawaited(
-              AdRewarded.prepareOffer(
-                placement: AnalyticsEvents.placementWelcomeBack,
-              ),
-            );
+            // Preload only. The card logs rewarded_offer once when the
+            // button is built, so this path does not send a second offer.
+            unawaited(AdRewarded.prepareOffer());
           }
         }
         // The cave opens the same Welcome Back card. A toast would cover it.

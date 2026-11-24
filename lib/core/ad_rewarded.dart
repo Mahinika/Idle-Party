@@ -2,6 +2,8 @@ import 'ad_rewarded_stub.dart'
     if (dart.library.io) 'ad_rewarded_io.dart'
     as impl;
 
+import 'game_audio.dart';
+
 enum AdWatchResult { rewarded, skipped, failed, unavailable, busy }
 
 /// A preloaded rewarded ad older than this is discarded and loaded again.
@@ -64,15 +66,20 @@ abstract final class AdRewarded {
 
   /// One ad at a time. A second tap while the first is loading or showing
   /// returns [AdWatchResult.busy] and must not grant a reward.
+  ///
+  /// After a real show, bed music is restored. A busy tap does not, because
+  /// the first ad is still on screen.
   static Future<AdWatchResult> showRewarded({required String placement}) {
     if (_inFlight > 0) return Future<AdWatchResult>.value(AdWatchResult.busy);
     _inFlight++;
     try {
       return _showRewarded(placement: placement).whenComplete(() {
         _inFlight--;
+        GameAudio.resyncAfterInterrupt();
       });
     } catch (error) {
       _inFlight--;
+      GameAudio.resyncAfterInterrupt();
       return Future<AdWatchResult>.error(error);
     }
   }

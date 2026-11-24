@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/ad_free_nudge.dart';
+import '../../core/ad_rewarded.dart';
+import '../../core/analytics_events.dart';
 import '../../core/build_stamp.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
@@ -79,11 +83,35 @@ class SanctuaryOverlay extends StatefulWidget {
     return (points / softAt).clamp(0.0, 1.0);
   }
 
-  static String watchFreeLabel(GameState state) =>
-      state.metaDepth.adFree ? 'Free level' : 'Watch · free level';
+  static String _trackShortName(String track) => switch (track) {
+    'gold' => 'Gold',
+    'power' => 'Power',
+    'vitality' => 'Vitality',
+    'defense' => 'Defense',
+    'xp' => 'XP',
+    _ => track,
+  };
+
+  static String watchFreeLabel(GameState state) {
+    final track = _trackShortName(GameLogic.recommendedSanctuaryTrack(state));
+    if (state.metaDepth.adFree) {
+      final left =
+          GameLogic.campAdDailyCap - GameLogic.campAdClaimsToday(state);
+      if (left > 0) return 'Free $track level · $left left today';
+      return 'Free $track level';
+    }
+    return 'Watch · free $track level';
+  }
 
   /// Caption beside the compact free-level button at large text.
-  static const String watchFreeCaption = 'Free CAMP level';
+  static String watchFreeCaption(GameState state) {
+    final track = _trackShortName(GameLogic.recommendedSanctuaryTrack(state));
+    final left =
+        GameLogic.campAdDailyCap - GameLogic.campAdClaimsToday(state);
+    if (left > 0) return 'Free $track level · $left left today';
+    return 'Free $track level';
+  }
+
   static const watchFreeCaptionKey = ValueKey('camp-watch-caption');
 
   @override
@@ -107,6 +135,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
   };
   bool _nudgeLatched = false;
   bool _impressionQueued = false;
+  bool _campOfferNoted = false;
 
   GameDirector get director => widget.director;
 
@@ -155,9 +184,19 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
 
   bool get _compactPrice => widget.inlineUnderFight || widget.expandedTrackList;
 
+  void _noteCampOffer(GameState state) {
+    if (_campOfferNoted || state.metaDepth.adFree) return;
+    if (!SanctuaryOverlay.watchFreeReady(state)) return;
+    _campOfferNoted = true;
+    unawaited(
+      AdRewarded.prepareOffer(placement: AnalyticsEvents.placementCampAd),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = director.state;
+    _noteCampOffer(state);
     final campOpen = MenuTabs.showCamp(state);
     if (widget.inlineUnderFight || widget.expandedTrackList) {
       return _scrollableTrackBody(state, campOpen);
@@ -301,7 +340,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
                   Expanded(
                     child: ExcludeSemantics(
                       child: Text(
-                        SanctuaryOverlay.watchFreeCaption,
+                        SanctuaryOverlay.watchFreeCaption(state),
                         key: SanctuaryOverlay.watchFreeCaptionKey,
                         maxLines: 2,
                         style: GameTheme.hint(color: GameTheme.parchmentDim),

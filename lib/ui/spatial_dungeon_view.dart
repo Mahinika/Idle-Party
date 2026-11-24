@@ -43,6 +43,7 @@ import '../assets/kenney_assets.dart';
 import 'decoded_image_cache.dart';
 import 'dungeon_art_warmup.dart';
 import 'dungeon_environment.dart';
+import 'fight_presentation.dart';
 import 'game_theme.dart';
 import 'kenney_sprite.dart';
 import 'shell/offline_banner.dart';
@@ -873,6 +874,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                   1.0,
                                 );
                               }
+                              final presentationCalm =
+                                  fightPresentationCalm(context);
                               final frame = widget.director.visualFrame;
                               final advanced = _easeVisualFrame == null
                                   ? 0
@@ -959,6 +962,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                 visualFrame: widget.director.visualFrame,
                                 floorEpoch: epoch,
                                 layer: layer,
+                                presentationCalm: presentationCalm,
                               );
                               final mapSize = Size(
                                 constraints.maxWidth,

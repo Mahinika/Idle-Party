@@ -141,6 +141,9 @@ Future<void> showOfflineProgressDialog(
   final canBuy = gainLine.contains(GameLogic.returnCanBuy);
   final campBuy = gainLine.contains(GameLogic.returnCampBuy);
   final showCheckIn = checkInLine.isNotEmpty && !canBuy;
+  final longAwayUpsell = summary != null &&
+      summary.hubChestStopped &&
+      !rewardState.metaDepth.shopLongAway;
   final openGold = canSpend &&
       MenuTabs.showGold(rewardState) &&
       canBuy &&
@@ -255,6 +258,39 @@ Future<void> showOfflineProgressDialog(
             Text(
               chestLine,
               style: GameTheme.readable(color: GameTheme.torchHot),
+            ),
+          ],
+          if (longAwayUpsell) ...[
+            const SizedBox(height: 6),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: ShellLayout.hint(
+                    'Chest filled at 12h. Long Away fills 24h.',
+                    maxLines: 2,
+                  ),
+                ),
+                if (canSpend)
+                  GameButton(
+                    label: 'SHOP',
+                    style: GameButtonStyle.ghost,
+                    expanded: false,
+                    dense: true,
+                    onPressed: () {
+                      director.claimReturnRewards();
+                      director.dismissOfflineSummary();
+                      Navigator.pop(ctx);
+                      if (home) {
+                        menu.open(MenuRoute.shop);
+                      } else if (nav != null) {
+                        nav.router.open(MenuRoute.shop);
+                      } else {
+                        menu.open(MenuRoute.shop);
+                      }
+                    },
+                  ),
+              ],
             ),
           ],
           if (petLine.isNotEmpty) ...[

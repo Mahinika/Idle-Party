@@ -25,7 +25,8 @@ does not run on a tag. A release AAB packages native debug
 symbols (`debugSymbolLevel FULL`). Do not pass `--obfuscate`. In-app update gate, hub **GET
 UPDATE**, and the rating ask are in `docs/PLAY_STORE.md`. Play
 Games and Firebase are there and in `docs/PRIVACY.md`. Event names
-are in `docs/ANALYTICS.md`.
+are in `docs/ANALYTICS.md`. The install funnel to build in Firebase is
+`docs/analytics.md`.
 
 **Legal:** owned `assets/custom/` only. No foreign dumps, sprites, audio, or
 decompiled code. See `.cursor/rules/00-locks.mdc`.
@@ -52,7 +53,7 @@ Sideload test APKs stay in `.github/workflows/test-apk-prerelease.yml`
 (`v*` or `workflow_dispatch`). Do not start either unless the owner asks in
 that turn. A source push of `cursor/**` runs CI only.
 Cloud agent Builds use `.cursor/environment.json`, which runs
-`tool/ci/install_flutter_pinned.sh` (Flutter pin from `ci.yml`, then
+`tool/ci/install_flutter_pinned.sh` (Flutter pin from `.flutter-version`, then
 `flutter pub get`).
 Share-fast: `flutter test test/class_balance_share_fast_test.dart`.
 New UI goldens: skill `goldens`, helper `test/widget_golden.dart`. Regenerate a whole file on Linux with the CI Flutter pin.

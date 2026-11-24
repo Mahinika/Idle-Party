@@ -16,7 +16,8 @@ Agents do **not** run the full non-sim suite locally unless the batch touches br
 ## Goldens
 
 - Phone reference: Samsung A56 logical **360×780** (`a56-playtest` skill).
-- Regenerate on **Linux** with the CI Flutter pin (`tool/ci/install_flutter_pinned.sh`).
+- Regenerate on **Linux** with the CI Flutter pin (`.flutter-version`, installed by `tool/ci/install_flutter_pinned.sh`).
+- Friend-claim rules: `tool/firestore_rules_test/README.md` (Firestore emulator, not part of `flutter test`).
 - Widget harness: `test/widget_golden.dart`.
 - Fight / shell / Welcome Back examples live under `test/goldens/after/` and `test/goldens/before/`.
 

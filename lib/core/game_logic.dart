@@ -2460,17 +2460,18 @@ class GameLogic {
     final loaded = saveVersionOf(json) <= 1
         ? _migrateV1(json)
         : _backfillLifetimeGold(GameState.fromJson(json));
+    final clock = _clock().toUtc();
     final rebuildQuests = MissionBoard.needsQuestBoardRebuild(loaded.missions);
     var next = loaded.missions.isNotEmpty && !rebuildQuests
         ? loaded
         : loaded.copyWith(
             missions: createMissionBoardFor(loaded),
             metaDepth: loaded.metaDepth.copyWith(
-              dailyQuestDate: MetaSystems.dailyDateKey(DateTime.now().toUtc()),
-              questWeekKey: isoWeekKey(DateTime.now().toUtc()),
+              dailyQuestDate: MetaSystems.dailyDateKey(clock),
+              questWeekKey: isoWeekKey(clock),
             ),
           );
-    next = MissionBoard.ensureDailyQuest(next);
+    next = MissionBoard.ensureDailyQuest(next, now: clock);
     if (next.ascensionLevel > 0) {
       next = next.copyWith(rogueUnlocked: true);
     }

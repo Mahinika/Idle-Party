@@ -78,11 +78,14 @@ class _FightSeamRailsState extends State<FightSeamRails> {
     );
   }
 
+  static const double shortViewportMax = 640;
+
   @override
   Widget build(BuildContext context) {
     final state = widget.director.state;
     final entries = FightSeamRails.visibleEntries(state, widget.director);
     if (entries.isEmpty) return const SizedBox.shrink();
+    final shortHeight = MediaQuery.sizeOf(context).height <= shortViewportMax;
     final scale = MediaQuery.textScalerOf(
       context,
     ).scale(1).clamp(1.0, GameTheme.typeScaleMax);
@@ -98,6 +101,9 @@ class _FightSeamRailsState extends State<FightSeamRails> {
         height: slot,
         child: LayoutBuilder(
           builder: (context, constraints) {
+            if (shortHeight) {
+              return _iconOnlyRow(entries, state);
+            }
             if (_stackedFits(context, entries, state, constraints.maxWidth)) {
               return _stackedRow(entries, state);
             }
@@ -151,6 +157,24 @@ class _FightSeamRailsState extends State<FightSeamRails> {
     final slot =
         (width - _pad * 2 - _gap * (entries.length - 1)) / entries.length;
     return slot >= GameTheme.minTouch && widest + 8 <= slot;
+  }
+
+  Widget _iconOnlyRow(List<HomeEntry> entries, GameState state) {
+    return ListView.separated(
+      controller: _scroll,
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: _pad),
+      itemCount: entries.length,
+      separatorBuilder: (context, index) => const SizedBox(width: _gap),
+      itemBuilder: (context, i) => RailButton(
+        entry: entries[i],
+        state: state,
+        director: widget.director,
+        router: widget.router,
+        compact: true,
+        iconOnly: true,
+      ),
+    );
   }
 
   Widget _stackedRow(List<HomeEntry> entries, GameState state) {

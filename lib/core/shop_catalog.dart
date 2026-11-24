@@ -83,6 +83,13 @@ abstract final class ShopCatalog {
     'season_pass_premium',
   };
 
+  /// Always listed on SHOP once unlocked. Play may still owe a price line.
+  static const Set<String> shelfAlwaysIds = {
+    'ad_free',
+    'long_away',
+    'supporter_qol',
+  };
+
   static const List<ShopCatalogItem> offered = [
     ShopCatalogItem(
       id: 'perm_scroll_atk',
@@ -182,7 +189,8 @@ abstract final class ShopCatalog {
       description:
           'Permanent — hides SCROLLS ads and every WATCH AD button. '
           '+2 Ad Tickets once, one free ticket each day, '
-          'WISP bonus gold without watching, and free Daily or Side quest rerolls.',
+          'WISP bonus gold without watching, three free CAMP levels each day, '
+          'and free Daily or Side quest rerolls.',
       kind: ShopOfferKind.adFree,
       boostHours: 0,
       oneTime: true,
@@ -217,7 +225,8 @@ abstract final class ShopCatalog {
       id: 'season_pass_premium',
       name: 'Season pass premium',
       description:
-          'Extra essence and +5 Cinders on each month-pass claim. Free track unchanged.',
+          'One-time unlock. Every month-pass claim gives +50% essence '
+          'and +5 Cinders. Not a subscription.',
       kind: ShopOfferKind.seasonPass,
       oneTime: true,
     ),
@@ -278,10 +287,11 @@ abstract final class ShopCatalog {
 
   static bool _onShelf(ShopCatalogItem item, Set<String> listed) {
     if (item.kind == ShopOfferKind.boostHours) return false;
-    if (playChargeableIds.contains(item.id)) return true;
-    if (item.kind == ShopOfferKind.permScroll ||
-        item.kind == ShopOfferKind.cinders ||
-        item.kind == ShopOfferKind.seasonPass) {
+    if (shelfAlwaysIds.contains(item.id)) return true;
+    if (item.id == 'cinder_pouch' || item.id == 'season_pass_premium') {
+      return listed.contains(item.id);
+    }
+    if (item.kind == ShopOfferKind.permScroll) {
       return listed.contains(item.id);
     }
     return false;

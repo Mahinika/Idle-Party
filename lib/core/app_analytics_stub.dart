@@ -17,4 +17,6 @@ Future<void> syncConsent() async {}
 
 Future<void> logEvent(String name, [Map<String, Object>? params]) async {}
 
+Future<void> setUserProperty(String name, String value) async {}
+
 void syncCrashContext({required String zoneId, required String appVersion}) {}

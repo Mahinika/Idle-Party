@@ -629,9 +629,7 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.monthGoal,
       title: 'Claim ${month.name}',
-      detail:
-          'Month pass ready · +${month.essenceReward}e · '
-          '${LocalSeasonCatalog.monthProgressLabel(state, month)}.',
+      detail: _monthPassClaimDetail(state, month),
       progressLabel: LocalSeasonCatalog.monthProgressLabel(state, month),
       urgency: HubChaseUrgency.ready,
     );
@@ -701,6 +699,16 @@ class HubChase {
           '+${month.essenceReward}e.';
     }
     return 'Finish the month pass for +${month.essenceReward}e.';
+  }
+
+  static String _monthPassClaimDetail(GameState state, LocalSeasonMonth month) {
+    final progress = LocalSeasonCatalog.monthProgressLabel(state, month);
+    if (state.metaDepth.paidSeasonPass) {
+      final essence = (month.essenceReward * 1.5).round();
+      return 'Month pass ready · +${essence}e · +5 Cinders · $progress.';
+    }
+    return 'Month pass ready · +${month.essenceReward}e · $progress. '
+        'Premium: +50% essence and +5 Cinders — open SHOP.';
   }
 
   /// Next KEY after endgame unlock, until preferred key hits the campaign stop.

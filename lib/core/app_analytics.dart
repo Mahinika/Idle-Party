@@ -1,8 +1,10 @@
 import 'analytics_events.dart';
+import 'analytics_guard.dart';
 import 'app_analytics_stub.dart'
     if (dart.library.io) 'app_analytics_io.dart'
     as impl;
 import 'debug_play_log.dart';
+import 'onboarding_funnel.dart';
 
 /// Soft Firebase Analytics facade. No-op on web / tests / missing config.
 abstract final class AppAnalytics {
@@ -42,9 +44,60 @@ abstract final class AppAnalytics {
     String name, [
     Map<String, Object>? params,
   ]) async {
-    debugSink?.call(name, params);
-    DebugPlayLog.funnel(name, params);
-    await impl.logEvent(name, params);
+    final stepped = OnboardingFunnel.attachStep(name, params);
+    final safeName = AnalyticsGuard.eventName(name);
+    final safeParams = AnalyticsGuard.params(stepped);
+    debugSink?.call(safeName ?? name, safeParams);
+    DebugPlayLog.funnel(safeName ?? name, safeParams);
+    if (safeName == null || AnalyticsGuard.isReserved(safeName)) return;
+    await impl.logEvent(safeName, safeParams);
+  }
+
+  /// Once per install. No-op after the prefs flag is set.
+  static Future<void> logOnboardingOnce(
+    String name, [
+    Map<String, Object>? params,
+  ]) async {
+    final step = OnboardingFunnel.claim(name);
+    if (step == null) return;
+    await logEvent(name, <String, Object>{...?params, 'step_index': step});
+  }
+
+  /// Cohort, days since install, ad-free, season pass, and build mode.
+  /// Firebase collects `first_open` and `session_start` itself.
+  static Future<void> syncMeasurementUser({
+    String? installCohort,
+    int? daysSinceInstall,
+    required bool adFree,
+    required bool seasonPass,
+  }) async {
+    if (installCohort != null) {
+      await setUserProperty(AnalyticsEvents.propInstallCohort, installCohort);
+    }
+    if (daysSinceInstall != null && daysSinceInstall >= 0) {
+      await setUserProperty(
+        AnalyticsEvents.propDaysSinceInstall,
+        '$daysSinceInstall',
+      );
+    }
+    await setUserProperty(
+      AnalyticsEvents.propAdFree,
+      adFree ? 'true' : 'false',
+    );
+    await setUserProperty(
+      AnalyticsEvents.propSeasonPass,
+      seasonPass ? 'true' : 'false',
+    );
+    await setUserProperty(
+      AnalyticsEvents.propBuildMode,
+      AnalyticsGuard.buildMode(),
+    );
+  }
+
+  static Future<void> setUserProperty(String name, String value) async {
+    final safe = AnalyticsGuard.userProperty(name, value);
+    if (safe == null) return;
+    await impl.setUserProperty(safe.name, safe.value);
   }
 
   /// Process boot after a save is loaded (not each resume from background).
@@ -118,8 +171,13 @@ abstract final class AppAnalytics {
   static Future<void> rewardedSkip(String placement) =>
       logEvent(AnalyticsEvents.rewardedSkip, {'placement': placement});
 
-  static Future<void> rewardedLoadFail(String placement) =>
-      logEvent(AnalyticsEvents.rewardedLoadFail, {'placement': placement});
+  static Future<void> rewardedLoadFail(
+    String placement, {
+    String reason = 'load',
+  }) => logEvent(AnalyticsEvents.rewardedLoadFail, {
+    'placement': placement,
+    'reason': reason,
+  });
 
   /// SHOP tab opened. One event per visit.
   static Future<void> storeView() => logEvent('store_view');
@@ -140,6 +198,16 @@ abstract final class AppAnalytics {
 
   static Future<void> storePurchaseCancel(String productId) =>
       logEvent(AnalyticsEvents.storePurchaseCancel, {'product_id': productId});
+
+  /// The sheet never opened, Play returned an error, or the grant did not save.
+  /// User cancel stays [storePurchaseCancel]. Prices are unchanged.
+  static Future<void> storePurchaseFail(
+    String productId, {
+    required String reason,
+  }) => logEvent(AnalyticsEvents.storePurchaseFail, {
+    'product_id': productId,
+    'reason': reason,
+  });
 
   /// A new Play purchase granted. Restores are not purchases.
   ///

@@ -159,6 +159,38 @@ void main() {
     await expectShellGolden(tester, find.byType(Scaffold), 'hub_scrolls_a56.png');
   });
 
+  testWidgets('home shell fight golden A56 (5 heroes)', (tester) async {
+    bindA56View(tester);
+    final director = await homeShellFiveHeroFightGoldenDirector();
+    var live = true;
+    addTearDown(() {
+      if (live) director.dispose();
+    });
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: key,
+        child: shellGoldenScaffold(
+          HomeShell(director: director, router: router, onLeave: () {}),
+        ),
+      ),
+    );
+    await waitForFightChrome(tester, director);
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(tester.takeException(), isNull);
+    await expectShellGolden(
+      tester,
+      find.byKey(key),
+      'home_shell_fight_a56.png',
+    );
+    director.dispose();
+    live = false;
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 20));
+  });
+
   testWidgets('home shell SPLIT golden A56', (tester) async {
     bindA56View(tester);
     final director = await homeShellFightGoldenDirector();
@@ -620,7 +652,7 @@ void main() {
     );
     await pumpGoldenFrames(tester);
     expect(
-      find.text("Prospector's Bundle"),
+      find.text('Ad-free welcome'),
       findsOneWidget,
     );
   });

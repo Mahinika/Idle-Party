@@ -77,7 +77,7 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
     if (_sdkReady && _ready == null) await _preload(placement: placement);
   });
   if (!_sdkReady) {
-    unawaited(AppAnalytics.rewardedLoadFail(placement));
+    unawaited(AppAnalytics.rewardedLoadFail(placement, reason: 'not_ready'));
     return AdWatchResult.failed;
   }
   var ad = takeFreshRewardedPreload<RewardedAd>(
@@ -90,7 +90,7 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
   _readyAt = null;
   ad ??= await _loadAd(placement: placement);
   if (ad == null) {
-    unawaited(AppAnalytics.rewardedLoadFail(placement));
+    // _loadAd already reported this failure.
     return AdWatchResult.failed;
   }
 
@@ -110,7 +110,7 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
       debugPrint('rewarded ad failed to show: $error');
       closed.dispose();
       if (!finished.isCompleted) {
-        unawaited(AppAnalytics.rewardedLoadFail(placement));
+        unawaited(AppAnalytics.rewardedLoadFail(placement, reason: 'show'));
         finished.complete(AdWatchResult.failed);
       }
     },
@@ -126,7 +126,7 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
   } catch (e, st) {
     debugPrint('rewarded ad show failed: $e\n$st');
     ad.dispose();
-    unawaited(AppAnalytics.rewardedLoadFail(placement));
+    unawaited(AppAnalytics.rewardedLoadFail(placement, reason: 'show'));
     unawaited(_preload(placement: placement));
     return AdWatchResult.failed;
   }
@@ -137,6 +137,11 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
       onTimeout: () {
         debugPrint('rewarded ad dismiss timed out');
         ad?.dispose();
+        if (!earned) {
+          unawaited(
+            AppAnalytics.rewardedLoadFail(placement, reason: 'timeout'),
+          );
+        }
         return earned ? AdWatchResult.rewarded : AdWatchResult.failed;
       },
     );
@@ -209,14 +214,24 @@ Future<void> _requestConsent({required bool askConsent}) async {
 
 Future<void> _preload({String? placement}) async {
   if (_ready != null || !_sdkReady) return;
-  final ad = await _loadAd(placement: placement);
+  final ad = await _loadAd(placement: placement, failReason: 'preload');
   if (ad == null) return;
   _ready = ad;
   _readyAt = DateTime.now();
 }
 
-Future<RewardedAd?> _loadAd({String? placement}) async {
+Future<RewardedAd?> _loadAd({
+  String? placement,
+  String failReason = 'load',
+}) async {
   final loaded = Completer<RewardedAd?>();
+  var reported = false;
+  void report(String reason) {
+    if (reported || placement == null) return;
+    reported = true;
+    unawaited(AppAnalytics.rewardedLoadFail(placement, reason: reason));
+  }
+
   await RewardedAd.load(
     adUnitId: AdConfig.rewardedUnitId,
     request: const AdRequest(),
@@ -226,9 +241,7 @@ Future<RewardedAd?> _loadAd({String? placement}) async {
       },
       onAdFailedToLoad: (error) {
         debugPrint('rewarded ad load failed: $error');
-        if (placement != null) {
-          unawaited(AppAnalytics.rewardedLoadFail(placement));
-        }
+        report(failReason);
         if (!loaded.isCompleted) loaded.complete(null);
       },
     ),
@@ -237,6 +250,7 @@ Future<RewardedAd?> _loadAd({String? placement}) async {
     const Duration(seconds: 20),
     onTimeout: () {
       debugPrint('rewarded ad load timed out');
+      report('timeout');
       return null;
     },
   );

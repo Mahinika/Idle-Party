@@ -241,15 +241,19 @@ extension GameDirectorPlatform on GameDirector {
   Future<void> watchWispGiftAd() async {
     if (!wispPendingChoice) return;
     _wispChoiceOpen = true;
-    if (!AdRewarded.realAdsAvailable) {
+    final scripted = debugWispAdResult;
+    debugWispAdResult = null;
+    if (scripted == null && !AdRewarded.realAdsAvailable) {
       showToast('Ads play on the Android app', life: 2.2);
       _wispChoiceOpen = false;
       return;
     }
     showToast('Loading ad…', life: 1.4);
-    final result = await AdRewarded.showRewarded(
-      placement: AnalyticsEvents.placementWispGift,
-    );
+    final result = scripted != null
+        ? await scripted
+        : await AdRewarded.showRewarded(
+            placement: AnalyticsEvents.placementWispGift,
+          );
     _wispChoiceOpen = false;
     switch (result) {
       case AdWatchResult.rewarded:
@@ -260,12 +264,10 @@ extension GameDirectorPlatform on GameDirector {
         dismissWispPending();
       case AdWatchResult.failed:
         showToast('Ad not ready — try again in a bit', life: 2.2);
-        dismissWispPending();
       case AdWatchResult.busy:
         showToast('Ad already playing', life: 1.6);
       case AdWatchResult.unavailable:
         showToast('Ads play on the Android app', life: 2.2);
-        dismissWispPending();
     }
   }
 
@@ -365,9 +367,11 @@ extension GameDirectorPlatform on GameDirector {
         }
         return false;
       }
-      final kept = PlayGamesScores.withKeptOwnership(
-        chosen: imported,
-        other: _state,
+      // Clipboard JSON does not carry Play ownership. Device flags stay,
+      // then Play is asked to restore purchases onto this party.
+      final kept = PlayGamesScores.clipboardImport(
+        imported: imported,
+        device: _state,
       );
       final next = _stampCloudClock(GameLogic.ensureRogueHero(kept));
       final saved = await _storage.save(next);
@@ -392,6 +396,7 @@ extension GameDirectorPlatform on GameDirector {
       }
       _rememberActiveSummary();
       _directorNotify();
+      await ShopStore.replayAfterClipboardImport();
       return true;
     });
   }
@@ -1043,7 +1048,7 @@ extension GameDirectorPlatform on GameDirector {
     showToast('Loading ad…', life: 1.4);
     try {
       final result = await AdRewarded.showRewarded(
-        placement: AnalyticsEvents.placementWelcomeBack,
+        placement: AnalyticsEvents.placementReinstallPouch,
       );
       switch (result) {
         case AdWatchResult.rewarded:

@@ -5,10 +5,15 @@ on:
     branches: [main, master, 'cursor/**', 'release/**']
   pull_request:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   changelog-main:
     if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,24 +26,35 @@ jobs:
           # Three-dot is the merge-base. A branch behind main still has to
           # change CHANGELOG.md itself. A merge commit as head still diffs
           # only what that head added since the branches split.
-          if git diff --name-only "$base...$head" | grep -qx CHANGELOG.md; then
+          # pull_request checkout is the merge commit. Diff that tree only
+          # when the head SHA is not readable as its own commit in this clone.
+          if ! changed="$(git diff --name-only "$base...$head" 2>/dev/null)"; then
+            changed="$(git diff --name-only "$base" HEAD)"
+          fi
+          if printf '%s\n' "$changed" | grep -qx CHANGELOG.md; then
             echo "CHANGELOG.md updated."
           else
             echo "Pull requests targeting main must update CHANGELOG.md with a short entry." >&2
+            printf '%s\n' "$changed" >&2
             exit 1
           fi
 
   analyze-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Read Flutter pin
+        id: flutter-pin
+        run: echo "version=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_OUTPUT"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: '3.47.9'
+          flutter-version: ${{ steps.flutter-pin.outputs.version }}
           cache: true
 
       - name: Set up Python
@@ -66,6 +82,7 @@ jobs:
   # Compiles the Play snapshot channel. Does not assemble or upload an APK.
   compile-kotlin:
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,11 +93,15 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Read Flutter pin
+        id: flutter-pin
+        run: echo "version=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_OUTPUT"
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: '3.47.9'
+          flutter-version: ${{ steps.flutter-pin.outputs.version }}
           cache: true
 
       - name: Android platform

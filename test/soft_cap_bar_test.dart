@@ -68,6 +68,6 @@ void main() {
     expect(bar.height, 4);
     final fill = tester.getRect(find.byType(FractionallySizedBox));
     expect(fill.width, closeTo(50, 0.5));
-    expect(find.bySemanticsLabel('Soft cap 25%'), findsOneWidget);
+    expect(find.bySemanticsLabel('Level soft cap 25%'), findsOneWidget);
   });
 }

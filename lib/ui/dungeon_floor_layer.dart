@@ -906,7 +906,9 @@ extension _DungeonFloorLayer on _TileRoomPainter {
       if (d.kind != FloorDecalKind.starlight) continue;
       final c = center(d.x + d.w / 2, d.y + d.h / 2);
       if (!_inView(d.x + 0.5, d.y + 0.5, pad: 4)) continue;
-      final breathe = 0.85 + 0.15 * math.sin(visualFrame * 0.015);
+      final breathe = presentationCalm
+          ? 1.0
+          : 0.85 + 0.15 * math.sin(visualFrame * 0.015);
       _StarShaft.blit(
         canvas,
         c.translate(0, -tile * 2),

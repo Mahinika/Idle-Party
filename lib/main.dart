@@ -41,9 +41,12 @@ Future<void> _bootFirebase() async {
   BootClock.mark('remoteTune');
 }
 
-void main() {
+Future<void> main() async {
   BootClock.mark('main');
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations(const [
+    DeviceOrientation.portraitUp,
+  ]);
   AppMemory.configureImageCache();
   // Press Start 2P, VT323, and Cinzel are in assets/fonts/. No runtime fetch.
   GoogleFonts.config.allowRuntimeFetching = false;

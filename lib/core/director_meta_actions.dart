@@ -45,6 +45,11 @@ extension GameDirectorMetaActions on GameDirector {
       ),
     );
     GameAudio.forgeUp();
+    unawaited(
+      AppAnalytics.logOnboardingOnce(OnboardingFunnel.firstCraft, {
+        'slot': slot.name,
+      }),
+    );
     final equippedOnHero = _state.heroes.any(
       (h) => h.equipped.values.any((g) => g.id == pieceId),
     );
@@ -183,10 +188,7 @@ extension GameDirectorMetaActions on GameDirector {
         life: 2.8,
       );
     } else {
-      showToast(
-        '$title: +${goldReward}g +$essenceReward essence',
-        life: 2.6,
-      );
+      showToast('$title: +${goldReward}g +$essenceReward essence', life: 2.6);
     }
   }
 

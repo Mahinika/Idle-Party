@@ -9,39 +9,85 @@ service cloud.firestore {
       return code.matches('^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$');
     }
 
+    function friendCodePath(code) {
+      return /databases/$(database)/documents/friendCodes/$(code);
+    }
+
+    function friendClaimPath(device) {
+      return /databases/$(database)/documents/friendClaims/$(device);
+    }
+
+    // ownerDevice stays the 64-char install hash. Existing codes store that,
+    // not a Firebase uid (anonymous uids are shorter). New codes also store
+    // ownerUid == request.auth.uid so the creator cannot claim their own
+    // code with a different device string. friendClaims doc ids stay the
+    // install hash so an existing claim still dedupes. New claims must set
+    // authUid == request.auth.uid. A claim create and the claims + 1 update
+    // have to land in the same transaction (getAfter / existsAfter).
+
     match /friendCodes/{code} {
       allow get: if signedIn() && friendCodeId(code);
       allow list: if false;
       allow create: if signedIn()
         && friendCodeId(code)
-        && request.resource.data.keys().hasOnly(['ownerDevice', 'claims', 'at'])
+        && request.resource.data.keys().hasOnly([
+          'ownerDevice', 'ownerUid', 'claims', 'at'
+        ])
         && request.resource.data.claims == 0
         && request.resource.data.ownerDevice is string
         && request.resource.data.ownerDevice.size() == 64
+        && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.at == request.time;
       allow update: if signedIn()
         && request.resource.data.ownerDevice == resource.data.ownerDevice
         && request.resource.data.claims == resource.data.claims + 1
         && request.resource.data.claims <= 30
-        && (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claims'])
-          || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claims', 'at'])
-        );
+        && request.resource.data.lastClaimDevice is string
+        && request.resource.data.lastClaimDevice.size() == 64
+        && request.resource.data.lastClaimUid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['claims', 'lastClaimDevice', 'lastClaimUid'])
+        && !exists(friendClaimPath(request.resource.data.lastClaimDevice))
+        && existsAfter(friendClaimPath(request.resource.data.lastClaimDevice))
+        && getAfter(friendClaimPath(request.resource.data.lastClaimDevice))
+          .data.code == code
+        && getAfter(friendClaimPath(request.resource.data.lastClaimDevice))
+          .data.device == request.resource.data.lastClaimDevice
+        && getAfter(friendClaimPath(request.resource.data.lastClaimDevice))
+          .data.authUid == request.auth.uid;
       allow delete: if false;
     }
 
     match /friendClaims/{device} {
-      allow get: if signedIn() && device.size() == 64;
+      // New rows are readable by the auth uid that created them. Rows written
+      // before authUid existed stay readable so a returning install still
+      // sees its own duplicate. Those legacy ids are 64-char hashes, not uids.
+      allow get: if signedIn() && (
+        resource.data.authUid == request.auth.uid
+        || !resource.data.keys().hasAny(['authUid'])
+      );
       allow list: if false;
       allow create: if signedIn()
         && device.size() == 64
-        && request.resource.data.keys().hasOnly(['code', 'device', 'at'])
+        && request.resource.data.keys().hasOnly(['code', 'device', 'authUid', 'at'])
         && request.resource.data.device == device
+        && request.resource.data.authUid == request.auth.uid
         && request.resource.data.code is string
         && friendCodeId(request.resource.data.code)
-        && exists(/databases/$(database)/documents/friendCodes/$(request.resource.data.code))
-        && get(/databases/$(database)/documents/friendCodes/$(request.resource.data.code)).data.ownerDevice != device
-        && get(/databases/$(database)/documents/friendCodes/$(request.resource.data.code)).data.claims < 30;
+        && exists(friendCodePath(request.resource.data.code))
+        && get(friendCodePath(request.resource.data.code)).data.ownerDevice != device
+        && (
+          !get(friendCodePath(request.resource.data.code)).data.keys().hasAny(['ownerUid'])
+          || get(friendCodePath(request.resource.data.code)).data.ownerUid != request.auth.uid
+        )
+        && getAfter(friendCodePath(request.resource.data.code)).data.claims
+          == get(friendCodePath(request.resource.data.code)).data.claims + 1
+        && getAfter(friendCodePath(request.resource.data.code)).data.claims <= 30
+        && getAfter(friendCodePath(request.resource.data.code)).data.ownerDevice
+          == get(friendCodePath(request.resource.data.code)).data.ownerDevice
+        && getAfter(friendCodePath(request.resource.data.code)).data.lastClaimDevice == device
+        && getAfter(friendCodePath(request.resource.data.code)).data.lastClaimUid
+          == request.auth.uid;
       allow update, delete: if false;
     }
   }

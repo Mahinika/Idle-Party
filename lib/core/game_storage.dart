@@ -280,9 +280,17 @@ class SharedPreferencesGameStorage implements GameStorage {
         final rawV1 = prefs.getString(_legacySaveKey);
         final raw = (rawV2 != null && rawV2.isNotEmpty) ? rawV2 : rawV1;
         if (raw != null && raw.isNotEmpty) {
-          await prefs.setString(_slotKey(0), raw);
-          await prefs.setInt(_activeKey, 0);
+          final wroteSlot = await prefs.setString(_slotKey(0), raw);
+          final wroteActive = await prefs.setInt(_activeKey, 0);
+          // A false commit must not mark the phone migrated. The next boot
+          // still sees the legacy blob and tries the copy again.
+          if (!wroteSlot || !wroteActive) return;
         }
+      } else if (prefs.getInt(_activeKey) == null) {
+        // The slot string landed and the active index did not. Retry that
+        // write before calling the phone migrated.
+        final wroteActive = await prefs.setInt(_activeKey, 0);
+        if (!wroteActive) return;
       }
       await prefs.setBool(_slotsReadyKey, true);
     }
@@ -554,11 +562,43 @@ class SharedPreferencesGameStorage implements GameStorage {
   Future<bool> writeActiveRaw(String json) async {
     final prefs = await _prefs;
     await _prepare(prefs);
-    final slotOk = await prefs.setString(_slotKey(_active), json);
+    final slotKey = _slotKey(_active);
+    final previous = prefs.getString(slotKey);
+    final slotOk = await prefs.setString(slotKey, json);
+    if (!slotOk) {
+      // The map already holds the rejected bytes. Put the previous party
+      // back before any later commit flushes the whole map.
+      try {
+        if (previous == null) {
+          await prefs.remove(slotKey);
+        } else {
+          await prefs.setString(slotKey, previous);
+        }
+      } catch (error, stack) {
+        debugPrint(
+          'writeActiveRaw restore after a false commit failed: $error\n$stack',
+        );
+      }
+      return false;
+    }
+    final previousMirror = prefs.getString(_saveKey);
     final mirrorOk = await prefs.setString(_saveKey, json);
-    if (!slotOk || !mirrorOk) return false;
+    if (!mirrorOk) {
+      try {
+        if (previousMirror == null) {
+          await prefs.remove(_saveKey);
+        } else {
+          await prefs.setString(_saveKey, previousMirror);
+        }
+      } catch (error, stack) {
+        debugPrint(
+          'writeActiveRaw mirror restore after a false commit failed: $error\n$stack',
+        );
+      }
+      return false;
+    }
     await prefs.reload();
-    return prefs.getString(_slotKey(_active)) == json &&
+    return prefs.getString(slotKey) == json &&
         prefs.getString(_saveKey) == json;
   }
 
