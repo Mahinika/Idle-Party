@@ -8,8 +8,6 @@ import 'spell_vfx_palette.dart';
 
 /// Anticipation / travel / impact motion on ability contact sheets (paint-only).
 abstract final class AbilityShowcaseMotion {
-  static final Path _path = Path();
-
   static void paintPhase(
     Canvas canvas, {
     required Rect tileRect,
