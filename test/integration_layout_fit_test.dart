@@ -10,10 +10,11 @@ import 'package:idle_party/ui/meta/offline_welcome.dart';
 import 'package:idle_party/ui/shell/craft_overlay.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
 import 'package:idle_party/ui/shell/wipe_overlay.dart';
+import 'package:idle_party/ui/theme.dart';
 
 /// Combined UI on a short phone. Safe area is 44 top / 34 bottom.
 void main() {
-  const scales = <double>[1, 1.4, 2];
+  final scales = <double>[1, GameTheme.typeScaleMax, 2];
 
   void bindPhone(WidgetTester tester, double scale) {
     tester.view.devicePixelRatio = 2;
@@ -31,7 +32,7 @@ void main() {
     tester.platformDispatcher.clearTextScaleFactorTestValue();
   }
 
-  testWidgets('nav and first-climb line fit 360x640 at scale 1, 1.4, and 2', (
+  testWidgets('nav and first-climb line fit 360x640 at scale 1, 1.45, and 2', (
     tester,
   ) async {
     final state = GameLogic.enterDungeon(
@@ -59,7 +60,7 @@ void main() {
     }
   });
 
-  testWidgets('CRAFT fits 360x640 at scale 1, 1.4, and 2', (tester) async {
+  testWidgets('CRAFT fits 360x640 at scale 1, 1.45, and 2', (tester) async {
     final director = GameDirector.preview(
       initialState: GameLogic.createInitialState(
         now: DateTime(2026, 11, 7),
@@ -81,7 +82,7 @@ void main() {
     director.dispose();
   });
 
-  testWidgets('Welcome Back fits 360x640 at scale 1, 1.4, and 2', (
+  testWidgets('Welcome Back fits 360x640 at scale 1, 1.45, and 2', (
     tester,
   ) async {
     final state = GameLogic.createInitialState(now: DateTime(2026, 11, 7));
@@ -128,7 +129,7 @@ void main() {
     }
   });
 
-  testWidgets('wipe actions fit 360x640 at scale 1, 1.4, and 2', (
+  testWidgets('wipe actions fit 360x640 at scale 1, 1.45, and 2', (
     tester,
   ) async {
     final state = GameLogic.enterDungeon(
