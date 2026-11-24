@@ -63,9 +63,8 @@ void main() {
       a100TestHome('F021/F022 FULL: panel arrow and buy dots $tag', (t) async {
         await a100Pump(t, size, scale, full: true);
         await a100Settle(t);
-        // The seam toggle is an arrow now (Robert), no word labels.
         final seam = find.byType(FightFieldControls);
-        for (final word in ['BIG VIEW', 'BIG', 'FORGE', 'TALL']) {
+        for (final word in ['BIG VIEW', 'FORGE', 'TALL']) {
           expect(
             find.descendant(of: seam, matching: find.text(word)),
             findsNothing,
@@ -73,14 +72,14 @@ void main() {
           );
         }
         expect(
-          find.descendant(of: seam, matching: find.text('▲')),
+          find.descendant(of: seam, matching: find.text('LIST')),
           findsOneWidget,
         );
         expect(find.byKey(MenuChrome.segmentDotKey(0)), findsOneWidget);
         expect(t.takeException(), isNull);
       });
 
-      a100TestHome('seam arrow: ▲ grows the upgrade panel, ▼ shrinks $tag', (
+      a100TestHome('seam LIST/BIG toggles upgrade panel height $tag', (
         t,
       ) async {
         final (director, _) = await a100Pump(
@@ -93,18 +92,15 @@ void main() {
         await a100Settle(t);
         final h = t.ensureSemantics();
         final face = find.byKey(FightFieldControls.panelToggleFaceKey);
-        // FULL = big fight, only the FORGE/CAMP/MARKET row: ▲ expands.
         expect(director.state.homePanelFull, isTrue);
         expect(find.byType(UpgradePanel), findsNothing);
         expect(
-          find.descendant(of: face, matching: find.text('▲')),
+          find.descendant(of: face, matching: find.text('LIST')),
           findsOneWidget,
         );
-        expect(find.bySemanticsLabel('Expand upgrades'), findsOneWidget);
-        expect(find.byTooltip('Expand upgrades'), findsOneWidget);
+        expect(find.byTooltip('LIST — show upgrade list'), findsOneWidget);
         final r = t.getRect(face);
-        expect(r.width, closeTo(r.height, 2.01), reason: 'square-ish face');
-        expect(r.width, lessThanOrEqualTo(GameTheme.minTouch));
+        expect(r.width, greaterThanOrEqualTo(GameTheme.minTouch - 0.01));
         final hit = t.getRect(
           find.ancestor(of: face, matching: find.byType(InkWell)).first,
         );
@@ -114,15 +110,13 @@ void main() {
 
         await t.tap(face);
         await a100Settle(t);
-        // SPLIT = the upgrade list under the fight: ▼ shrinks it back.
         expect(director.state.homePanelFull, isFalse);
         expect(find.byType(UpgradePanel), findsOneWidget);
         expect(
-          find.descendant(of: face, matching: find.text('▼')),
+          find.descendant(of: face, matching: find.text('BIG')),
           findsOneWidget,
         );
-        expect(find.bySemanticsLabel('Show big fight view'), findsOneWidget);
-        expect(find.byTooltip('Show big fight view'), findsOneWidget);
+        expect(find.byTooltip('BIG — show big fight view'), findsOneWidget);
 
         await t.tap(face);
         await a100Settle(t);

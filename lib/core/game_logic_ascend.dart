@@ -94,11 +94,6 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
       : 0;
   final bestStreak = max(state.metaDepth.bestAscendStreak, streak);
   final streakEssence = MetaSystems.ascendStreakEssence(state);
-  final preservedEssence =
-      state.essence +
-      GameLogic.ascendEssenceReward(nextLevel) +
-      milestoneBonus +
-      streakEssence;
   final legacyGain = (nextLevel ~/ 5) - (state.ascensionLevel ~/ 5);
   final titles = List<String>.from(state.metaDepth.titles);
   for (final entry in AscendTitles.byAl.entries) {
@@ -117,24 +112,29 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
     for (final s in HeroSpecs.starterUnlocked) s.name,
     HeroSpecs.ascendUnlockSpec.name,
   }.toList();
-  final nextMeta = state.metaDepth.copyWith(
+
+  var base = _applyPrestigeRunWipe(GameLogic.leaveDungeon(state));
+  final preservedEssence =
+      base.essence +
+      GameLogic.ascendEssenceReward(nextLevel) +
+      milestoneBonus +
+      streakEssence;
+  final nextMeta = base.metaDepth.copyWith(
     ascendStreak: streak,
     bestAscendStreak: bestStreak,
-    lifetimeAscends: state.metaDepth.lifetimeAscends + 1,
+    lifetimeAscends: base.metaDepth.lifetimeAscends + 1,
     titles: titles,
-    legacyPoints: state.metaDepth.legacyPoints + legacyGain,
+    legacyPoints: base.metaDepth.legacyPoints + legacyGain,
     heirloomAlBonus: nextLevel ~/ 5,
     zoneTrophies: trophies,
     noWipeAscendReady: true,
     unlockedSpecs: unlockedSpecs,
-    ascendBlessings: state.metaDepth.ascendBlessings + 1,
+    ascendBlessings: base.metaDepth.ascendBlessings + 1,
     dailyQuestDate: MetaSystems.dailyDateKey(clock),
     questWeekKey: GameLogic.isoWeekKey(clock),
     freshPrestige: true,
-    embers: state.metaDepth.embers + 4 + nextLevel,
+    embers: base.metaDepth.embers + 4 + nextLevel,
   );
-
-  var base = _applyPrestigeRunWipe(GameLogic.leaveDungeon(state));
 
   var preservedRoster = List<PartyHero>.from(base.heroRoster);
   if (!preservedRoster.any((h) => h.specId == HeroSpecs.ascendUnlockSpec)) {

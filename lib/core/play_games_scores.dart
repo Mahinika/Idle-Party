@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'coupon_codes.dart';
 import 'game_state.dart';
 import 'keystone.dart';
 import 'party_name_filter.dart';
@@ -212,6 +213,48 @@ abstract final class PlayGamesScores {
         shopBagBonusSlots: max(a.shopBagBonusSlots, b.shopBagBonusSlots),
         shopPermScrolls: (a.shopPermScrolls | b.shopPermScrolls).clamp(0, 127),
         grantedShopPurchaseIds: List<String>.unmodifiable(ids),
+        redeemedCoupons: List<String>.unmodifiable(coupons),
+      ),
+    );
+  }
+
+  /// Clipboard import. [imported] supplies the party. Play-backed ownership
+  /// stays on [device] (this phone), then the caller asks Play to restore
+  /// real purchases. A pasted file must not grant ad-free, Long Away, the
+  /// season pass, the Cinder pouch flag, bag slots, or purchase ids.
+  ///
+  /// FOREVERSCROLLS is a local coupon, not a Play SKU. If [imported] records
+  /// that redemption, its `shopPermScrolls` bits are kept (OR the device
+  /// bits) and the coupon id stays on the save. Without that redemption,
+  /// `shopPermScrolls` is the device value only. Cloud saves of the same
+  /// account still use [withKeptOwnership] and are not stripped.
+  static GameState clipboardImport({
+    required GameState imported,
+    required GameState device,
+  }) {
+    final incoming = imported.metaDepth;
+    final local = device.metaDepth;
+    final coupon = CouponCodes.foreverScrolls;
+    final importedCoupon = incoming.redeemedCoupons.contains(coupon);
+    final coupons = <String>[
+      ...local.redeemedCoupons,
+      if (importedCoupon && !local.redeemedCoupons.contains(coupon)) coupon,
+    ];
+    final perm = importedCoupon
+        ? (local.shopPermScrolls | incoming.shopPermScrolls).clamp(0, 127)
+        : local.shopPermScrolls;
+    return imported.copyWith(
+      metaDepth: incoming.copyWith(
+        adFree: local.adFree,
+        paidSeasonPass: local.paidSeasonPass,
+        shopLongAway: local.shopLongAway,
+        shopStarterClaimed: local.shopStarterClaimed,
+        cinderPouchDoubled: local.cinderPouchDoubled,
+        shopBagBonusSlots: local.shopBagBonusSlots,
+        shopPermScrolls: perm,
+        grantedShopPurchaseIds: List<String>.unmodifiable(
+          local.grantedShopPurchaseIds,
+        ),
         redeemedCoupons: List<String>.unmodifiable(coupons),
       ),
     );

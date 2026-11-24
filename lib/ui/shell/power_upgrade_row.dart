@@ -166,7 +166,7 @@ class PowerUpgradeRow extends StatelessWidget {
                     if (detail != null)
                       Text(
                         detail!,
-                        style: GameTheme.hint(color: GameTheme.torchHot),
+                        style: GameTheme.readable(color: GameTheme.torchHot),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -247,6 +247,8 @@ class PowerUpgradePriceChip extends StatelessWidget {
     this.primary = false,
     this.quantity,
     this.essence = false,
+    this.caption,
+    this.footnote,
   });
 
   final String label;
@@ -258,6 +260,12 @@ class PowerUpgradePriceChip extends StatelessWidget {
 
   /// Buys per tap. Null hides the badge.
   final int? quantity;
+
+  /// Shortfall or affordance line on the buy column (readable, not hint).
+  final String? caption;
+
+  /// Run rate or other secondary line under [caption].
+  final String? footnote;
 
   /// Room above the face for the ×N badge.
   static const double badgeLift = 7;
@@ -273,6 +281,8 @@ class PowerUpgradePriceChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
     final q = quantity;
+    final captionLine = caption;
+    final footnoteLine = footnote;
     final face = ChunkyFace(
       tone: !enabled
           ? ChunkyTone.grey
@@ -281,17 +291,30 @@ class PowerUpgradePriceChip extends StatelessWidget {
       highlight: primary && enabled,
       minWidth: minFaceWidth,
       minHeight: GameTheme.chunkyFace,
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      child: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: GameTheme.button(
-          size: GameTheme.typeBody,
-          color: !enabled
-              ? GameTheme.buyGreyText
-              : (essence ? GameTheme.essenceBuyText : GameTheme.buyGoldText),
-        ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.readable(
+              color: !enabled
+                  ? GameTheme.buyGreyText
+                  : (essence ? GameTheme.essenceBuyText : GameTheme.buyGoldText),
+            ),
+          ),
+          if (captionLine != null)
+            Text(
+              captionLine,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: GameTheme.readable(color: GameTheme.torchHot),
+            ),
+        ],
       ),
     );
     return WebClickScope(
@@ -313,19 +336,36 @@ class PowerUpgradePriceChip extends StatelessWidget {
               minHeight: minTapHeight,
               child: Padding(
                 padding: const EdgeInsets.only(top: badgeLift),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    face,
-                    // ×1 is what the selector already says; the badge only
-                    // speaks when one tap buys more than once.
-                    if (q != null && q > 1 && enabled)
-                      Positioned(
-                        top: -badgeLift - 1,
-                        right: -3,
-                        child: QtyBadge(quantity: q),
+                child: SizedBox(
+                  width: minTapWidth,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        face,
+                        if (q != null && q > 1 && enabled)
+                          Positioned(
+                            top: -badgeLift - 1,
+                            right: -3,
+                            child: QtyBadge(quantity: q),
+                          ),
+                      ],
+                    ),
+                    if (footnoteLine != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 1),
+                        child: Text(
+                          footnoteLine,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: GameTheme.readable(color: GameTheme.parchmentDim),
+                        ),
                       ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -376,7 +416,7 @@ class SoftCapBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final v = value.clamp(0.0, 1.0);
     return Semantics(
-      label: 'Soft cap ${(v * 100).round()}%',
+      label: 'Level soft cap ${(v * 100).round()}%',
       excludeSemantics: true,
       child: Container(
         height: 4,

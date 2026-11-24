@@ -167,7 +167,7 @@ void main() {
     }
   });
 
-  group('P027 the target card never covers the floor line', () {
+  group('P027 home fight place line lives on the plate kicker', () {
     for (final size in _sizes) {
       for (final scale in _scales) {
         for (final maxed in [false, true]) {
@@ -188,21 +188,21 @@ void main() {
                 await t.pump(const Duration(milliseconds: 150));
               }
               final title = find.byKey(TargetCornerHud.titleKey);
-              final line = find.byWidgetPredicate(
+              final overlay = find.byWidgetPredicate(
                 (w) => w is Text && (w.data ?? '').startsWith('F1 ·'),
               );
-              if (title.evaluate().isEmpty || line.evaluate().isEmpty) {
-                fail('fight HUD not drawn: title/line missing');
+              if (title.evaluate().isEmpty) {
+                fail('fight HUD not drawn: target title missing');
               }
-              final card = t.getRect(find.byKey(TargetCornerHud.stripKey));
-              for (final e in line.evaluate()) {
-                final r = t.getRect(find.byWidget(e.widget));
-                expect(
-                  _overlaps(card, r),
-                  isFalse,
-                  reason: 'card $card line $r',
-                );
-              }
+              expect(overlay, findsNothing);
+              final strip = find.byKey(TargetCornerHud.stripKey);
+              final kicker = find.descendant(
+                of: strip,
+                matching: find.byWidgetPredicate(
+                  (w) => w is Text && (w.data ?? '').contains('Sandy'),
+                ),
+              );
+              expect(kicker, findsOneWidget);
             },
           );
         }
@@ -763,8 +763,11 @@ void main() {
           ),
         );
         await t.pump();
-        expect(find.text('UNAVAILABLE'), findsNothing);
+        expect(find.text('UNAVAILABLE'), findsWidgets);
+        expect(find.text(ShopDock.needsPlay), findsNothing);
         expect(find.text(ShopDock.noPrice), findsNothing);
+        expect(find.text('Cinder pouch'), findsNothing);
+        expect(find.text('Season pass premium'), findsNothing);
         expect(find.textContaining('Waiting for Play billing'), findsNothing);
         // The plain line sits in the one-row banner, with RETRY beside it.
         if (ShopDock.goldenTestPriceLabel.isEmpty) {

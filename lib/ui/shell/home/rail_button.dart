@@ -22,6 +22,7 @@ class RailButton extends StatelessWidget {
     this.compact = false,
     this.listCard = false,
     this.stacked = false,
+    this.iconOnly = false,
   });
 
   final HomeEntry entry;
@@ -39,6 +40,9 @@ class RailButton extends StatelessWidget {
   /// The fight seam uses it when the inline chips do not fit (large text).
   final bool stacked;
 
+  /// Short fight height: icon + badge dot, label in semantics only.
+  final bool iconOnly;
+
   @override
   Widget build(BuildContext context) {
     if (!entry.visible(state, director)) return const SizedBox.shrink();
@@ -46,6 +50,55 @@ class RailButton extends StatelessWidget {
     final badge = entry.badge(state);
     final spoken = entry.accessibilityLabel ?? entry.label;
     if (compact) {
+      if (iconOnly) {
+        final semanticsLabel = badge ? '$spoken, ready' : spoken;
+        return WebClickScope(
+          label: spoken,
+          onPressed: () => entry.open(context, director, router),
+          child: Semantics(
+            button: true,
+            label: semanticsLabel,
+            child: Material(
+              color: GameTheme.panelInset.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              child: InkWell(
+                onTap: () => entry.open(context, director, router),
+                borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  constraints: const BoxConstraints(
+                    minWidth: GameTheme.minTouch,
+                    minHeight: GameTheme.minTouch,
+                  ),
+                  alignment: Alignment.center,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      GameIcon.asset(
+                        entry.icon,
+                        size: GameTheme.iconNav,
+                      ),
+                      if (badge)
+                        Positioned(
+                          right: -2,
+                          top: -2,
+                          child: Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: GameTheme.hudHpDamage,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
       // A short count rides the icon corner, so the label never cuts it off
       // at 1.45 ("SCROLLS…", polish7 P029). Longer timers stay inline.
       final pip =

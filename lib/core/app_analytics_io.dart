@@ -6,6 +6,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import 'analytics_guard.dart';
 import 'crash_report.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
@@ -24,6 +25,7 @@ bool _crashHandlersInstalled = false;
 FirebaseAnalytics? _analytics;
 final List<FlutterErrorDetails> _flutterPending = <FlutterErrorDetails>[];
 final List<(Object, StackTrace?)> _platformPending = <(Object, StackTrace?)>[];
+final Map<String, String> _userProps = <String, String>{};
 
 /// Holds Dart errors until [init] attaches Crashlytics. No platform call.
 void armEarlyErrorBuffer() {
@@ -61,9 +63,6 @@ void debugResetEarlyErrorBuffer() {
   _platformPending.clear();
 }
 
-/// Firebase auto-collects these; logging them manually is rejected.
-const Set<String> _reservedEventNames = <String>{'first_open'};
-
 Future<void> init() async {
   if (!_androidLive || _ready) return;
   try {
@@ -77,6 +76,7 @@ Future<void> init() async {
     _installCrashHandlers();
     await syncConsent();
     _ready = true;
+    await _flushUserProps();
     debugPrint('Firebase Analytics ready');
   } catch (e, st) {
     // Missing google-services.json / Firebase project → stay quiet.
@@ -113,13 +113,43 @@ Future<void> syncConsent() async {
 }
 
 Future<void> logEvent(String name, [Map<String, Object>? params]) async {
-  if (_reservedEventNames.contains(name)) return;
+  if (!AnalyticsGuard.shouldSend(name)) return;
   final analytics = _analytics;
   if (analytics == null) return;
   try {
-    await analytics.logEvent(name: name, parameters: params);
+    await analytics.logEvent(
+      name: name,
+      parameters: AnalyticsGuard.params(params),
+    );
   } catch (e, st) {
     debugPrint('Firebase Analytics logEvent($name) failed: $e\n$st');
+  }
+}
+
+Future<void> setUserProperty(String name, String value) async {
+  final safe = AnalyticsGuard.userProperty(name, value);
+  if (safe == null) return;
+  _userProps[safe.name] = safe.value;
+  final analytics = _analytics;
+  if (analytics == null) return;
+  try {
+    await analytics.setUserProperty(name: safe.name, value: safe.value);
+  } catch (e, st) {
+    debugPrint('Firebase Analytics user property ${safe.name} failed: $e\n$st');
+  }
+}
+
+Future<void> _flushUserProps() async {
+  final analytics = _analytics;
+  if (analytics == null || _userProps.isEmpty) return;
+  for (final entry in _userProps.entries) {
+    try {
+      await analytics.setUserProperty(name: entry.key, value: entry.value);
+    } catch (e, st) {
+      debugPrint(
+        'Firebase Analytics user property ${entry.key} failed: $e\n$st',
+      );
+    }
   }
 }
 

@@ -66,7 +66,7 @@ String _packJobBit(SpatialWorld? world) {
   if (awake.isEmpty && sleep <= 0) {
     return room != null ? ' · $room' : _floorMoodBit(world);
   }
-  final next = sleep > 0 ? ' · $sleep next' : '';
+  final next = sleep > 0 ? ' · $sleep to the gate' : '';
   if (awake.isEmpty) {
     return room != null ? ' · $room$next' : '${_floorMoodBit(world)}$next';
   }
@@ -109,6 +109,67 @@ String _keyAffixBit(GameState state) {
   }
   final names = state.keystoneRunAffixes.map(Keystone.label).join('/');
   return ' · $names';
+}
+
+String _zoneShortWord(String dungeonName) {
+  final parts = dungeonName.split(RegExp(r"[\s']+"));
+  final word = parts.firstWhere(
+    (p) => p.isNotEmpty,
+    orElse: () => dungeonName,
+  );
+  return word.length > 10 ? word.substring(0, 10) : word;
+}
+
+/// Home target-strip kicker: the old place line minus the floor badge (F#).
+String homeFightPlateKicker({
+  required GameState state,
+  required GameDirector director,
+}) {
+  final world = director.spatial;
+  final floor = state.currentRoom.floorNumber;
+  final dungeonName =
+      GameLogic.dungeonNames[state.dungeonId] ?? state.dungeonId;
+  final zoneShort = _zoneShortWord(dungeonName);
+  final jargon = GameLogic.showKeystoneJargon(state);
+  final keyBit = !jargon
+      ? ''
+      : state.keystoneRunActive
+      ? ' · KEY +${state.keystoneRunLevel}'
+      : (state.hardmodeLevel > 0 ? ' · KEY +${state.hardmodeLevel}' : '');
+  final awaitingExit = world?.awaitingExit == true;
+  final partyDown = state.isPartyDefeated || director.awaitingWipeChoice;
+  if (partyDown) {
+    return state.inGauntlet || state.inAnyRiftMode
+        ? 'WIPED · End → hub'
+        : 'WIPED · Retry / Hub';
+  }
+  if (awaitingExit) {
+    return '$zoneShort · GO stairs';
+  }
+  if (state.inGauntlet) {
+    String? bossName;
+    for (final e in state.enemies) {
+      if (e.role == EnemyRole.boss && !e.isDefeated) {
+        bossName = e.name;
+        break;
+      }
+    }
+    var line = GauntletAnomalies.climbPlaceLine(
+      floor,
+      liveBossName: bossName,
+    );
+    final pact = GauntletPacts.parse(state.gauntletPact);
+    if (pact != null) line = '$line · ${GauntletPacts.title(pact)}';
+    return line;
+  }
+  if (state.inRift) return Rift.roomLine(state.riftTier);
+  if (state.inGreaterRift) return GreaterRift.roomLine(state.grTier);
+  if (state.inWorldBoss) {
+    return AshenCrown.kitByDungeonId(state.dungeonId).roomLine;
+  }
+  final bossBit = _firstBossBit(state, floor);
+  final fightBit = bossBit.isNotEmpty ? bossBit : _packJobBit(world);
+  return '$zoneShort$keyBit$fightBit';
 }
 
 /// Drop a one-glyph prefix (`↻ FARM` → `FARM`) so the classic row fits.
@@ -437,14 +498,7 @@ class DungeonTopHud extends StatelessWidget {
     final keyTimerLabel = state.keystoneRunActive
         ? Keystone.formatTimer(state.keystoneTimerMs)
         : null;
-    final zoneShort = () {
-      final parts = dungeonName.split(RegExp(r"[\s']+"));
-      final word = parts.firstWhere(
-        (p) => p.isNotEmpty,
-        orElse: () => dungeonName,
-      );
-      return word.length > 10 ? word.substring(0, 10) : word;
-    }();
+    final zoneShort = _zoneShortWord(dungeonName);
     final awaitingExit = director.spatial?.awaitingExit == true;
     final partyLine = state.isPartyDefeated || awaitingExit
         ? null

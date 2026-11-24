@@ -8,7 +8,16 @@ import '../core/menu_alerts.dart';
 import '../core/remote_tune.dart';
 
 /// Where a one-line coach hint lives (the real control, not a GOT IT card).
-enum CoachTarget { enter, godhand, farmPush, kit, gear, gold, essence }
+enum CoachTarget {
+  enter,
+  godhand,
+  farmPush,
+  fightLayout,
+  kit,
+  gear,
+  gold,
+  essence,
+}
 
 /// Active first-session nudge: one short line on [target].
 class CoachHint {
@@ -59,6 +68,11 @@ class FirstSessionTips extends StatelessWidget {
       body: FirstSessionTips.farmPushPlain,
     ),
     (
+      id: 'fight_layout',
+      title: 'BIG / LIST',
+      body: 'LIST shows upgrades under the fight. BIG fills the cave.',
+    ),
+    (
       id: 'kit_abilities',
       title: 'Abilities',
       body: 'Tap a hero — abilities open beside the strip.',
@@ -85,6 +99,7 @@ class FirstSessionTips extends StatelessWidget {
     'hub_enter': CoachTarget.enter,
     'godhand': CoachTarget.godhand,
     'farm_push': CoachTarget.farmPush,
+    'fight_layout': CoachTarget.fightLayout,
     'kit_abilities': CoachTarget.kit,
     'bag': CoachTarget.gear,
     'forge': CoachTarget.gold,
@@ -125,6 +140,7 @@ class FirstSessionTips extends StatelessWidget {
       CoachTarget.enter => 'Tap ENTER.',
       CoachTarget.godhand => hint.line,
       CoachTarget.farmPush => hint.line,
+      CoachTarget.fightLayout => 'LIST shows upgrades. BIG is the tall fight.',
       CoachTarget.kit => 'Tap a hero.',
     };
   }
@@ -195,6 +211,15 @@ class FirstSessionTips extends StatelessWidget {
       }
       if (tip.id == 'farm_push') {
         if (!inDungeon || !porch) continue;
+        return tip.id;
+      }
+      if (tip.id == 'fight_layout') {
+        if (!inDungeon ||
+            s.homeLayout != HomeLayout.home ||
+            !porch ||
+            !s.homePanelFull) {
+          continue;
+        }
         return tip.id;
       }
       if (tip.id == 'kit_abilities') {

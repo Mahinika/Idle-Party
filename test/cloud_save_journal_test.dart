@@ -1009,7 +1009,9 @@ void main() {
 
       final storage = SharedPreferencesGameStorage(preferences: prefs);
       expect(await storage.writeActiveRaw('NEW-SLOT'), isFalse);
-      expect(prefs.getString('idle_party_save_slot_0'), 'NEW-SLOT');
+      // A raw setString leaves the rejected bytes in the cache (probe above).
+      // writeActiveRaw rolls that cache back, and the disk still has the party.
+      expect(prefs.getString('idle_party_save_slot_0'), 'OLD');
       await storage.reloadDurable();
       expect(await storage.loadActiveRaw(), 'OLD');
     });

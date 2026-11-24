@@ -18,6 +18,20 @@ abstract final class AnalyticsEvents {
   static const storeProductView = 'store_product_view';
   static const storePurchaseStart = 'store_purchase_start';
   static const storePurchaseCancel = 'store_purchase_cancel';
+  static const storePurchaseFail = 'store_purchase_fail';
+
+  /// User properties. Names stay within the 24-character Firebase limit.
+  static const propInstallCohort = 'install_cohort';
+  static const propDaysSinceInstall = 'days_since_install';
+  static const propAdFree = 'ad_free';
+  static const propSeasonPass = 'season_pass';
+  static const propBuildMode = 'build_mode';
+
+  /// Play Billing's user-cancel response is code 1, often on an error status.
+  static bool billingUserCanceled(String code) {
+    final lower = code.toLowerCase();
+    return lower == '1' || lower.contains('usercancel');
+  }
 
   /// SCROLLS or CAMP Ad-free line. Once per save. Not a buy sheet.
   static const adFreeNudgeView = 'ad_free_nudge_view';
@@ -43,6 +57,7 @@ abstract final class AnalyticsEvents {
   };
 
   static const placementWelcomeBack = 'welcome_back';
+  static const placementReinstallPouch = 'reinstall_pouch';
   static const placementWispGift = 'wisp_gift';
   static const placementPowerups = 'powerups';
   static const placementCampAd = 'camp_ad';

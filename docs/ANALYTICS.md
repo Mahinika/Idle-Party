@@ -36,6 +36,8 @@ is the Monetization row. Do not add those two amounts together.
 ## Event plan
 
 Full catalog with params: [analytics_events.md](analytics_events.md).
+The install funnel, user properties, and the Firebase explorations to
+create: [analytics.md](analytics.md).
 
 Firebase also auto-collects `first_open`, `session_start`, and engagement
 time when collection is on. The app does not log `first_open` itself
@@ -44,18 +46,22 @@ of the chain has an install day.
 
 | Moment | Event | When |
 |---|---|---|
+| First launch | `onboarding_launch` | Once per install, prefs. `step_index` 1. Not `first_open` (Firebase owns that). |
 | First open | `first_open` | Firebase automatic. Not sent by our code. |
 | Tutorial | `boot_intro_shown`, `start_menu_shown`, `new_game_shown`, `new_game_confirmed` | Once per install, before a save exists. |
 | Playable | `app_ready` | Once, when a new game is ready. |
-| First fight | `first_enter`, `time_to_combat` | Once. `seconds` on `time_to_combat`. `first_enter` also carries `seconds_to_combat` and `dungeon_id`. |
-| First gold | `first_reward` | Once. |
-| First boss | `first_boss` | Once, the first boss clear on that install. |
+| First fight | `first_enter`, `time_to_combat` | Per save. The install funnel adds `step_index` 2 on the first `first_enter` only. `seconds` on `time_to_combat`. `first_enter` also carries `seconds_to_combat` and `dungeon_id`. |
+| First TRAIN | `first_upgrade` | First forge gold spend. Per save. `step_index` 3 on the first one this install. |
+| First gold | `first_reward` | Once per save. |
+| First boss | `first_boss` | Once per save. `step_index` 4 on the first one this install. |
+| First craft | `first_craft` | Once per install, the first successful Apex craft. `step_index` 5. `slot` is the equipment slot. |
 | Next day | `d1_return` | Once, the first later UTC day. |
-| Welcome Back shown | `welcome_back` | Every return card. `where` is `hub` or `dungeon`, plus `seconds` and `gold`. |
+| Welcome Back shown | `welcome_back` | Every return card. `where` is `hub` or `dungeon`, plus `seconds` and `gold`. The first card on an install also has `step_index` 6. |
 | Ad offered | `welcome_back_ad_offer` | The watch button is on that card. Hidden before the first boss, when gold is already ×3, and for ad-free or Forever Rest. |
 | Ad watched | `welcome_back_ad` | The watch finished and gold was granted. `gold` is the extra amount. |
 | SHOP viewed | `store_view` | Each time SHOP is opened. |
 | Purchase | `store_purchase` | A new Play grant. `product_id`, plus `value` and `currency` when Play has listed that pack. Restores are not purchases. |
+| Purchase failed | `store_purchase_fail` | Sheet did not open (`sheet_unavailable`), Play error (`play_error`), or the grant did not save (`save_failed`). A user cancel stays `store_purchase_cancel`. |
 | Ascend | `ascend` | `from_al`, `to_al`. |
 | Session length | `session_length` | App goes to the background after at least 15 seconds in the foreground. `seconds` is that stint. |
 
@@ -68,7 +74,7 @@ These were already in the app. Same consent gate.
 | `enter_dungeon` | Enter. `dungeon_id`, `key_level`, `floor`. |
 | `leave_dungeon` | Leave. `dungeon_id`, `floor`. |
 | `party_wipe` | Wipe. `dungeon_id`, `floor`, `streak`. |
-| `wipe_revive_ad` | Rewarded revive after wipe. `dungeon_id`, `floor`, `gauntlet` (bool). |
+| `wipe_revive_ad` | Rewarded revive after wipe. `dungeon_id`, `floor`, `gauntlet` (0/1). |
 | `scroll_well_free` | Free Well step. `step` (1). |
 | `scroll_well_ad` | Well ad step. `step` (2 or 3). |
 | `wipe_revive_cinders` | Cinder revive after wipe. `dungeon_id`, `floor`, `gauntlet`, `cost`. |
