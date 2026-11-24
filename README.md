@@ -51,8 +51,11 @@ Next priorities: [ROADMAP.md](ROADMAP.md). The year plan is [docs/YEAR_ROADMAP.m
 ## Build, run, test
 
 Portrait Android is the product. Web is a fallback, not a release.
+Flutter **3.47.9** is pinned in `.flutter-version`. Cloud agents and a fresh
+machine install that SDK with `tool/ci/install_flutter_pinned.sh`.
 
 ```bash
+bash tool/ci/install_flutter_pinned.sh
 flutter pub get
 flutter analyze lib test --no-fatal-infos
 ```

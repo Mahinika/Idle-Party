@@ -29,6 +29,35 @@ void main() {
     expect(gradle, isNot(contains('!idleTestPackage')));
   });
 
+  test('Flutter 3.47.9 is read from .flutter-version', () {
+    final pin = File('.flutter-version').readAsStringSync().trim();
+    expect(pin, '3.47.9');
+    final install = File('tool/ci/install_flutter_pinned.sh').readAsStringSync();
+    expect(install, contains('.flutter-version'));
+    expect(install, isNot(contains('flutter-version:')));
+    const workflows = <String>[
+      '.github/workflows/ci.yml',
+      '.github/workflows/build-apk.yml',
+      '.github/workflows/sim-nightly.yml',
+      '.github/workflows/test-apk-prerelease.yml',
+      '.github/workflows/emulator-smoke.yml',
+    ];
+    for (final path in workflows) {
+      final yaml = File(path).readAsStringSync();
+      expect(yaml, contains('.flutter-version'), reason: path);
+      expect(yaml, contains('steps.flutter-pin.outputs.version'), reason: path);
+      expect(yaml, isNot(contains("flutter-version: '3.47.9'")), reason: path);
+    }
+    final ci = File('.github/workflows/ci.yml').readAsStringSync();
+    expect(ci, contains('cancel-in-progress: true'));
+    expect(ci, contains('timeout-minutes: 45'));
+    expect(ci, contains('timeout-minutes: 40'));
+    expect(ci, contains('timeout-minutes: 10'));
+    final stale = File('.github/workflows/stale-prs.yml').readAsStringSync();
+    expect(stale, contains('days-before-pr-close: 7'));
+    expect(stale, isNot(contains('days-before-pr-close: 0')));
+  });
+
   test('release Play workflow stays a default APK plus AAB', () {
     final yaml = File('.github/workflows/build-apk.yml')
         .readAsStringSync()

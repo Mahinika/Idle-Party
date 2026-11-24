@@ -279,9 +279,17 @@ class SharedPreferencesGameStorage implements GameStorage {
         final rawV1 = prefs.getString(_legacySaveKey);
         final raw = (rawV2 != null && rawV2.isNotEmpty) ? rawV2 : rawV1;
         if (raw != null && raw.isNotEmpty) {
-          await prefs.setString(_slotKey(0), raw);
-          await prefs.setInt(_activeKey, 0);
+          final wroteSlot = await prefs.setString(_slotKey(0), raw);
+          final wroteActive = await prefs.setInt(_activeKey, 0);
+          // A false commit must not mark the phone migrated. The next boot
+          // still sees the legacy blob and tries the copy again.
+          if (!wroteSlot || !wroteActive) return;
         }
+      } else if (prefs.getInt(_activeKey) == null) {
+        // The slot string landed and the active index did not. Retry that
+        // write before calling the phone migrated.
+        final wroteActive = await prefs.setInt(_activeKey, 0);
+        if (!wroteActive) return;
       }
       await prefs.setBool(_slotsReadyKey, true);
     }
