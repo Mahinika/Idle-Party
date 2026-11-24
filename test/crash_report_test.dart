@@ -30,6 +30,29 @@ void main() {
       expect(
         flutterErrorIsNonFatal(
           FlutterErrorDetails(
+            exception: Exception(
+              'A RenderFlex overflowed by 160.00 pixels on the bottom.',
+            ),
+            library: 'widgets library',
+          ),
+        ),
+        isTrue,
+        reason: 'wipe-retry dialog vertical overflow (Crashlytics 1.13.17)',
+      );
+      expect(
+        flutterErrorIsNonFatal(
+          FlutterErrorDetails(
+            exception: Exception(
+              'A RenderFlex overflowed by 6.3 pixels on the right.',
+            ),
+            library: 'rendering library',
+          ),
+        ),
+        isTrue,
+      );
+      expect(
+        flutterErrorIsNonFatal(
+          FlutterErrorDetails(
             exception: StateError('boot'),
             library: 'widgets library',
           ),

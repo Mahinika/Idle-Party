@@ -52,6 +52,33 @@ void main() {
     expect(director.toast, isNull);
     director.dispose();
   });
+
+  testWidgets('duplicate notifies during build coalesce to one frame', (
+    tester,
+  ) async {
+    final director = GameDirector.preview();
+    addTearDown(director.dispose);
+    var buildCount = 0;
+    final errors = await _captureBuildErrors(tester, () async {
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: AnimatedBuilder(
+            animation: director,
+            builder: (context, _) {
+              buildCount++;
+              director.setDungeonTilesReady(buildCount.isOdd);
+              director.setDungeonTilesReady(!buildCount.isOdd);
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+      await tester.pump();
+    });
+    expect(errors, isEmpty);
+    expect(buildCount, greaterThan(0));
+  });
 }
 
 Future<List<String>> _captureBuildErrors(
