@@ -1,10 +1,12 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
 import '../models/class_ability.dart';
 import '../spatial/spatial_combat.dart';
 import 'ability_vfx_paint.dart';
+import 'spell_vfx_palette.dart';
 
 /// Shared spell burst / ground / bolt silhouettes for dungeon paint and VFX sheets.
 abstract final class SpellShapePaint {
@@ -57,10 +59,16 @@ abstract final class SpellShapePaint {
         kind == SpatialBurstKind.flame ||
         kind == SpatialBurstKind.cross ||
         kind == SpatialBurstKind.poison ||
-        kind == SpatialBurstKind.skull) {
+        kind == SpatialBurstKind.skull ||
+        kind == SpatialBurstKind.summon ||
+        kind == SpatialBurstKind.pillar) {
       paintTypedBurst(canvas, burst, tile, centerAt);
     } else {
       _paintDiscBurst(canvas, burst, tile, centerAt);
+    }
+    if (burst.paintId == AbilityId.powerWordBarrier ||
+        burst.paintId == AbilityId.ironbark) {
+      _paintDomeShell(canvas, burst, tile, centerAt);
     }
     if (burst.crisp) {
       final crispAlpha = (burst.life / SpellVfx.bigImpactLife).clamp(0.0, 1.0);
@@ -88,27 +96,56 @@ abstract final class SpellShapePaint {
       math.max(3.4, tile * 0.13),
       cap: StrokeCap.round,
     );
+    final ramp = _rampForBurst(burst, color);
     switch (burst.kind) {
       case SpatialBurstKind.beam:
         final end = burst.x2 != null && burst.y2 != null
             ? centerAt(burst.x2!, burst.y2!)
             : Offset(c.dx, c.dy - r * 2.4);
-        _paintZigBeam(canvas, c, end, r, alpha, color, ink, tile);
+        _paintZigBeam(canvas, c, end, r, alpha, ramp, ink, tile, burst.paintId);
       case SpatialBurstKind.rain:
-        _paintRain(canvas, c, r, alpha, color, tile);
+        if (burst.paintId == AbilityId.meteor) {
+          _paintMeteorStrike(canvas, c, r, alpha, ramp, tile);
+        } else {
+          _paintRain(canvas, c, r, alpha, ramp, tile);
+        }
       case SpatialBurstKind.shards:
-        _paintShards(canvas, c, r, alpha, color);
+        _paintShards(canvas, c, r, alpha, ramp);
       case SpatialBurstKind.flame:
-        _paintFlamePetals(canvas, c, r, alpha, color);
+        _paintFlamePetals(canvas, c, r, alpha, ramp);
       case SpatialBurstKind.cross:
-        _paintCross(canvas, c, r, alpha, color, ink, tile);
+        _paintCross(canvas, c, r, alpha, ramp, ink, tile);
       case SpatialBurstKind.poison:
-        _paintPoisonDrips(canvas, c, r, alpha, color);
+        _paintPoisonDrips(canvas, c, r, alpha, ramp);
       case SpatialBurstKind.skull:
-        _paintSkull(canvas, c, r, alpha, color, tile);
+        _paintShadowSwirl(canvas, c, r, alpha, ramp, tile);
+      case SpatialBurstKind.summon:
+        _paintSummonRise(canvas, c, r, alpha, ramp, tile, burst.paintId);
+      case SpatialBurstKind.pillar:
+        _paintLightPillar(canvas, c, r, alpha, ramp, tile, burst.paintId);
       default:
         break;
     }
+    SpellVfxLayers.impactSparks(canvas, c, r * 0.55, ramp, alpha * 0.85);
+  }
+
+  static SpellSchoolRamp _rampForBurst(SpatialBurst burst, Color fallback) {
+    if (burst.paintId != null) {
+      final def = ClassKits.defFor(burst.paintId!);
+      if (def != null) {
+        return SpellSchoolRamp.forStyle(def.boltStyle ?? SpellBoltStyle.weapon);
+      }
+    }
+    return SpellSchoolRamp.forStyle(_styleFromArgb(fallback));
+  }
+
+  static SpellBoltStyle _styleFromArgb(Color c) {
+    final v = c.toARGB32();
+    if (v & 0x00FF0000 > 0x00C00000) return SpellBoltStyle.fire;
+    if (v & 0x0000FFFF > 0x0000C0C0) return SpellBoltStyle.frost;
+    if (v & 0x00FF00FF > 0x00C000C0) return SpellBoltStyle.arcane;
+    if (v & 0x00FFFFFF > 0x00F0F0E0) return SpellBoltStyle.holy;
+    return SpellBoltStyle.shadow;
   }
 
   static void paintGroundDisc(
@@ -238,8 +275,22 @@ abstract final class SpellShapePaint {
       x2: kind == SpatialBurstKind.beam ? 0 : null,
       y2: kind == SpatialBurstKind.beam ? -2.4 : null,
       crisp: SpellVfx.isBig(id),
+      paintId: id,
     );
     paintWorldBurst(canvas, burst, tile, at);
+
+    if (id == AbilityId.meteor) {
+      paintGroundDisc(
+        canvas,
+        at(0, 0.62),
+        tile * 1.25,
+        const Color(0xFF5A2818),
+        0.82,
+        tile,
+        SpatialGroundFxKind.fire,
+        1.6,
+      );
+    }
 
     if (def.vfx?.groundDisc == true) {
       final gkind = SpellVfx.groundKindFor(style: style, id: id);
@@ -253,6 +304,10 @@ abstract final class SpellShapePaint {
         gkind,
         1.2,
       );
+    }
+
+    if (id == AbilityId.entanglingRoots) {
+      _paintVineTendrils(canvas, at(0, 0.35), tile * 1.35, 0.85);
     }
 
     if (def.effect == AbilityEffectKind.damage ||
@@ -646,8 +701,17 @@ abstract final class SpellShapePaint {
     final alpha = (burst.life / 0.55).clamp(0.0, 1.0);
     final c = centerAt(burst.x, burst.y);
     final r = tile * burst.radius * (0.55 + (1 - alpha) * 0.7);
-    canvas.drawCircle(c, r, _strokeC(const Color(0xCC100C08).withValues(alpha: alpha), math.max(4.2, tile * 0.2)));
-    canvas.drawCircle(c, r, _strokeC(Color(burst.argb).withValues(alpha: alpha * 0.95), math.max(2.4, tile * 0.11)));
+    final ramp = _rampForBurst(burst, Color(burst.argb));
+    SpellVfxLayers.softGlow(canvas, c, r, ramp, alpha * 0.55);
+    for (var i = 0; i < 3; i++) {
+      final rr = r * (0.92 - i * 0.14);
+      canvas.drawCircle(
+        c,
+        rr,
+        _strokeC(ramp.lerp(0.2 + i * 0.25).withValues(alpha: alpha * (0.95 - i * 0.15)), math.max(3.6 - i * 0.6, tile * 0.11)),
+      );
+    }
+    canvas.drawCircle(c, r * 0.35, _fillC(ramp.hot.withValues(alpha: alpha * 0.75)));
   }
 
   static void _paintCone(
@@ -725,27 +789,53 @@ abstract final class SpellShapePaint {
     Offset end,
     double r,
     double alpha,
-    Color color,
+    SpellSchoolRamp ramp,
     Paint ink,
     double tile,
+    AbilityId? id,
   ) {
+    final chain = id == AbilityId.arcaneBarrage ||
+        id == AbilityId.chainLightning ||
+        id == AbilityId.crashLightning ||
+        id == AbilityId.bindingShot;
+    if (!chain) {
+      SpellVfxLayers.taperBeam(canvas, c, end, ramp, alpha, tile);
+      return;
+    }
     final dx = end.dx - c.dx;
     final dy = end.dy - c.dy;
     final len = math.sqrt(dx * dx + dy * dy) + 0.001;
     final nx = -dy / len;
     final ny = dx / len;
-    final zig = _path
-      ..reset()
-      ..moveTo(c.dx, c.dy);
-    for (var i = 1; i <= 4; i++) {
-      final t = i / 5;
-      final side = (i.isOdd ? 1.0 : -1.0) * r * 0.42;
+    final zig = _path..reset()..moveTo(c.dx, c.dy);
+    for (var i = 1; i <= 5; i++) {
+      final t = i / 6;
+      final side = (i.isOdd ? 1.0 : -1.0) * r * (chain ? 0.55 : 0.42);
       zig.lineTo(c.dx + dx * t + nx * side, c.dy + dy * t + ny * side);
     }
     zig.lineTo(end.dx, end.dy);
     canvas.drawPath(zig, ink);
-    canvas.drawPath(zig, _strokeC(color.withValues(alpha: alpha * 0.95), math.max(2.4, tile * 0.09), cap: StrokeCap.round, join: StrokeJoin.round));
-    canvas.drawCircle(end, r * 0.42, _fillC(Colors.white.withValues(alpha: alpha)));
+    canvas.drawPath(
+      zig,
+      _strokeC(ramp.bright.withValues(alpha: alpha * 0.95), math.max(2.8, tile * 0.1), cap: StrokeCap.round, join: StrokeJoin.round),
+    );
+    canvas.drawPath(
+      zig,
+      _strokeC(ramp.hot.withValues(alpha: alpha * 0.9), math.max(1.2, tile * 0.045), cap: StrokeCap.round, join: StrokeJoin.round),
+    );
+    if (chain) {
+      for (var b = 0; b < 3; b++) {
+        final t = 0.25 + b * 0.22;
+        final px = c.dx + dx * t;
+        final py = c.dy + dy * t;
+        canvas.drawLine(
+          Offset(px, py),
+          Offset(px + nx * r * 0.35, py + ny * r * 0.35),
+          _strokeC(ramp.light.withValues(alpha: alpha * 0.8), math.max(1.6, tile * 0.05), cap: StrokeCap.round),
+        );
+      }
+    }
+    canvas.drawCircle(end, r * 0.38, _fillC(ramp.hot.withValues(alpha: alpha)));
   }
 
   static void _paintRain(
@@ -753,19 +843,47 @@ abstract final class SpellShapePaint {
     Offset c,
     double r,
     double alpha,
-    Color color,
+    SpellSchoolRamp ramp,
     double tile,
   ) {
-    for (var i = 0; i < 8; i++) {
-      final a = i * 0.85;
-      final ox = math.cos(a) * r * 0.75;
+    SpellVfxLayers.softGlow(canvas, c, r * 0.85, ramp, alpha * 0.35);
+    for (var i = 0; i < 9; i++) {
+      final a = i * 0.74;
+      final ox = math.cos(a) * r * 0.8;
       final oy = math.sin(a) * r * 0.35;
-      final fall = (1 - alpha) * r * 0.7;
-      final a0 = Offset(c.dx + ox, c.dy + oy - r * 1.05 + fall);
-      final a1 = Offset(c.dx + ox, c.dy + oy - r * 0.12 + fall);
-      canvas.drawLine(a0, a1, _strokeC(const Color(0xCC100C08).withValues(alpha: alpha), math.max(3.0, tile * 0.1), cap: StrokeCap.round));
-      canvas.drawLine(a0, a1, _strokeC(color.withValues(alpha: alpha), math.max(1.6, tile * 0.055), cap: StrokeCap.round));
+      final fall = (1 - alpha) * r * 0.85;
+      final trail = Offset(c.dx + ox - r * 0.08, c.dy + oy - r * 0.55 + fall);
+      final tip = Offset(c.dx + ox, c.dy + oy - r * 1.15 + fall);
+      canvas.drawLine(trail, tip, _strokeC(ramp.ink.withValues(alpha: alpha * 0.7), math.max(2.8, tile * 0.09), cap: StrokeCap.round));
+      canvas.drawLine(trail, tip, _strokeC(ramp.light.withValues(alpha: alpha * 0.92), math.max(1.4, tile * 0.05), cap: StrokeCap.round));
+      canvas.drawCircle(tip, math.max(1.5, tile * 0.05), _fillC(ramp.bright.withValues(alpha: alpha)));
     }
+  }
+
+  static void _paintMeteorStrike(
+    Canvas canvas,
+    Offset c,
+    double r,
+    double alpha,
+    SpellSchoolRamp ramp,
+    double tile,
+  ) {
+    final rock = Rect.fromCenter(
+      center: Offset(c.dx + r * 0.1, c.dy - r * 0.65),
+      width: r * 1.15,
+      height: r * 0.85,
+    );
+    canvas.drawOval(rock.inflate(r * 0.08), _fillC(ramp.ink.withValues(alpha: alpha * 0.85)));
+    canvas.drawOval(rock, _fillC(const Color(0xFF6A5048).withValues(alpha: alpha)));
+    canvas.drawOval(rock.deflate(r * 0.12), _fillC(const Color(0xFF9A7868).withValues(alpha: alpha * 0.9)));
+    for (var i = 0; i < 6; i++) {
+      canvas.drawLine(
+        Offset(c.dx - r * 0.35, c.dy - r * (0.2 + i * 0.14)),
+        Offset(c.dx + r * 0.5, c.dy + r * (0.5 + i * 0.18)),
+        _strokeC(ramp.mid.withValues(alpha: alpha * (0.85 - i * 0.1)), math.max(2.0, tile * 0.07)),
+      );
+    }
+    _paintRain(canvas, c.translate(0, r * 0.45), r * 0.65, alpha * 0.75, ramp, tile);
   }
 
   static void _paintShards(
@@ -773,8 +891,9 @@ abstract final class SpellShapePaint {
     Offset c,
     double r,
     double alpha,
-    Color color,
+    SpellSchoolRamp ramp,
   ) {
+    SpellVfxLayers.softGlow(canvas, c, r, ramp, alpha * 0.4);
     for (var i = 0; i < 6; i++) {
       final a = i * math.pi / 3 + (1 - alpha) * 0.4;
       final p = _path
@@ -783,12 +902,14 @@ abstract final class SpellShapePaint {
         ..lineTo(c.dx + math.cos(a + 0.28) * r * 0.22, c.dy + math.sin(a + 0.28) * r * 0.22)
         ..lineTo(c.dx + math.cos(a - 0.28) * r * 0.22, c.dy + math.sin(a - 0.28) * r * 0.22)
         ..close();
-      canvas.drawPath(p, _fillC(const Color(0xDD100C08).withValues(alpha: alpha)));
-      canvas.drawPath(p, _fillC(color.withValues(alpha: alpha)));
+      canvas.drawPath(p, _fillC(ramp.ink.withValues(alpha: alpha * 0.75)));
+      canvas.drawPath(p, _fillC(ramp.lerp(0.35 + i * 0.08).withValues(alpha: alpha)));
+      canvas.drawPath(p, _strokeC(ramp.hot.withValues(alpha: alpha * 0.65), math.max(1.2, r * 0.04)));
     }
   }
 
-  static void _paintFlamePetals(Canvas canvas, Offset c, double r, double alpha, Color color) {
+  static void _paintFlamePetals(Canvas canvas, Offset c, double r, double alpha, SpellSchoolRamp ramp) {
+    SpellVfxLayers.softGlow(canvas, c, r, ramp, alpha * 0.55);
     for (var i = 0; i < 5; i++) {
       final a = -1.15 + i * 0.55 + (1 - alpha) * 0.2;
       final lift = r * 0.35 * (1 - alpha);
@@ -807,7 +928,8 @@ abstract final class SpellShapePaint {
           c.dx,
           c.dy + r * 0.15,
         );
-      canvas.drawPath(p, _fillC(color.withValues(alpha: alpha * 0.88)));
+      canvas.drawPath(p, _fillC(ramp.mid.withValues(alpha: alpha * 0.75)));
+      canvas.drawPath(p, _fillC(ramp.bright.withValues(alpha: alpha * 0.92)));
     }
   }
 
@@ -816,41 +938,260 @@ abstract final class SpellShapePaint {
     Offset c,
     double r,
     double alpha,
-    Color color,
+    SpellSchoolRamp ramp,
     Paint ink,
     double tile,
   ) {
     final arm = r * 1.15;
+    SpellVfxLayers.softGlow(canvas, c, arm, ramp, alpha * 0.45);
     canvas.drawLine(Offset(c.dx, c.dy - arm), Offset(c.dx, c.dy + arm * 0.55), ink);
     canvas.drawLine(Offset(c.dx - arm * 0.75, c.dy - arm * 0.12), Offset(c.dx + arm * 0.75, c.dy - arm * 0.12), ink);
-    final holy = _strokeC(color.withValues(alpha: alpha), math.max(2.4, tile * 0.1), cap: StrokeCap.round);
-    canvas.drawLine(Offset(c.dx, c.dy - arm), Offset(c.dx, c.dy + arm * 0.55), holy);
-    canvas.drawLine(Offset(c.dx - arm * 0.75, c.dy - arm * 0.12), Offset(c.dx + arm * 0.75, c.dy - arm * 0.12), holy);
+    final mid = _strokeC(ramp.mid.withValues(alpha: alpha * 0.85), math.max(4.0, tile * 0.14), cap: StrokeCap.round);
+    final hot = _strokeC(ramp.hot.withValues(alpha: alpha), math.max(2.0, tile * 0.07), cap: StrokeCap.round);
+    canvas.drawLine(Offset(c.dx, c.dy - arm), Offset(c.dx, c.dy + arm * 0.55), mid);
+    canvas.drawLine(Offset(c.dx - arm * 0.75, c.dy - arm * 0.12), Offset(c.dx + arm * 0.75, c.dy - arm * 0.12), mid);
+    canvas.drawLine(Offset(c.dx, c.dy - arm * 0.92), Offset(c.dx, c.dy + arm * 0.35), hot);
+    canvas.drawLine(Offset(c.dx - arm * 0.62, c.dy - arm * 0.12), Offset(c.dx + arm * 0.62, c.dy - arm * 0.12), hot);
   }
 
-  static void _paintPoisonDrips(Canvas canvas, Offset c, double r, double alpha, Color color) {
+  static void _paintPoisonDrips(Canvas canvas, Offset c, double r, double alpha, SpellSchoolRamp ramp) {
+    SpellVfxLayers.softGlow(canvas, c, r * 0.75, ramp, alpha * 0.35);
     for (var i = 0; i < 5; i++) {
       final a = -0.4 + i * 0.55;
       final fall = r * 0.45 * (1 - alpha);
       final drip = Offset(c.dx + math.sin(a) * r * 0.55, c.dy + math.cos(a) * r * 0.15 + fall);
-      canvas.drawOval(Rect.fromCenter(center: drip, width: r * 0.24, height: r * 0.5), _fillC(color.withValues(alpha: alpha * 0.9)));
+      canvas.drawOval(Rect.fromCenter(center: drip, width: r * 0.24, height: r * 0.5), _fillC(ramp.mid.withValues(alpha: alpha * 0.8)));
+      canvas.drawOval(Rect.fromCenter(center: drip.translate(0, -r * 0.08), width: r * 0.16, height: r * 0.22), _fillC(ramp.bright.withValues(alpha: alpha * 0.9)));
     }
   }
 
-  static void _paintSkull(Canvas canvas, Offset c, double r, double alpha, Color color, double tile) {
-    final head = Rect.fromCenter(center: Offset(c.dx, c.dy - r * 0.08), width: r * 1.55, height: r * 1.7);
-    canvas.drawOval(head.inflate(r * 0.08), _fillC(const Color(0xDD100C08).withValues(alpha: alpha)));
-    canvas.drawOval(head, _fillC(color.withValues(alpha: alpha * 0.92)));
-    canvas.drawCircle(Offset(c.dx - r * 0.3, c.dy - r * 0.18), r * 0.2, _fillC(const Color(0xFF100C08).withValues(alpha: alpha)));
-    canvas.drawCircle(Offset(c.dx + r * 0.3, c.dy - r * 0.18), r * 0.2, _fillC(const Color(0xFF100C08).withValues(alpha: alpha)));
-    canvas.drawArc(
-      Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.32), width: r * 0.72, height: r * 0.42),
-      0.25,
-      math.pi - 0.5,
-      false,
-      _strokeC(const Color(0xEE100C08).withValues(alpha: alpha), math.max(2, tile * 0.07)),
-    );
+  static void _paintShadowSwirl(Canvas canvas, Offset c, double r, double alpha, SpellSchoolRamp ramp, double tile) {
+    SpellVfxLayers.softGlow(canvas, c, r, ramp, alpha * 0.55);
+    for (var i = 0; i < 3; i++) {
+      canvas.drawArc(
+        Rect.fromCircle(center: c, radius: r * (0.55 + i * 0.22)),
+        -0.4 + i * 0.4,
+        2.6,
+        false,
+        _strokeC(ramp.mid.withValues(alpha: alpha * (0.9 - i * 0.15)), math.max(2.6, tile * 0.1), cap: StrokeCap.round),
+      );
+    }
+    canvas.drawCircle(c, r * 0.25, _fillC(ramp.hot.withValues(alpha: alpha * 0.8)));
   }
+
+  static void _paintLightPillar(
+    Canvas canvas,
+    Offset c,
+    double r,
+    double alpha,
+    SpellSchoolRamp ramp,
+    double tile,
+    AbilityId? id,
+  ) {
+    final h = r * 2.6;
+    final w = r * 0.55;
+    final rect = Rect.fromCenter(center: Offset(c.dx, c.dy - h * 0.15), width: w, height: h);
+    SpellVfxLayers.softGlow(canvas, rect.center, h * 0.45, ramp, alpha * 0.65);
+    final gradient = ui.Gradient.linear(
+      rect.topCenter,
+      rect.bottomCenter,
+      [
+        ramp.hot.withValues(alpha: alpha * 0.15),
+        ramp.bright.withValues(alpha: alpha * 0.55),
+        ramp.mid.withValues(alpha: alpha * 0.85),
+        ramp.hot.withValues(alpha: alpha * 0.35),
+      ],
+      const [0.0, 0.32, 0.72, 1.0],
+    );
+    canvas.drawRect(rect, Paint()..shader = gradient);
+    canvas.drawRect(
+      Rect.fromCenter(center: rect.center, width: w * 0.35, height: h * 0.92),
+      Paint()..color = ramp.hot.withValues(alpha: alpha * 0.85),
+    );
+    if (id == AbilityId.soulFireDemo) {
+      canvas.drawRect(
+        rect.inflate(r * 0.08),
+        _strokeC(const Color(0xFF70FF40).withValues(alpha: alpha * 0.45), math.max(1.4, tile * 0.05)),
+      );
+    }
+  }
+
+  static void _paintSummonRise(
+    Canvas canvas,
+    Offset c,
+    double r,
+    double alpha,
+    SpellSchoolRamp ramp,
+    double tile,
+    AbilityId? id,
+  ) {
+    SpellVfxLayers.softGlow(canvas, c, r, ramp, alpha * 0.5);
+    final motif = switch (id) {
+      AbilityId.shadowfiendDisc || AbilityId.shadowfiendShadow => _SummonMotif.shadowWolf,
+      AbilityId.fireElemental => _SummonMotif.fireElemental,
+      AbilityId.summonInfernal => _SummonMotif.infernal,
+      AbilityId.callDreadstalkers => _SummonMotif.felImp,
+      AbilityId.forceOfNature => _SummonMotif.treant,
+      AbilityId.stampede => _SummonMotif.stampede,
+      _ => _SummonMotif.spark,
+    };
+    _drawSummonMotif(canvas, c, r, alpha, ramp, motif, tile);
+  }
+
+  static void _drawSummonMotif(
+    Canvas canvas,
+    Offset c,
+    double r,
+    double alpha,
+    SpellSchoolRamp ramp,
+    _SummonMotif motif,
+    double tile,
+  ) {
+    final ink = ramp.ink.withValues(alpha: alpha);
+    final body = ramp.mid.withValues(alpha: alpha);
+    final edge = ramp.bright.withValues(alpha: alpha);
+    switch (motif) {
+      case _SummonMotif.shadowWolf:
+        final path = _path
+          ..reset()
+          ..moveTo(c.dx - r * 0.85, c.dy + r * 0.35)
+          ..lineTo(c.dx - r * 0.35, c.dy - r * 0.15)
+          ..lineTo(c.dx - r * 0.05, c.dy - r * 0.55)
+          ..lineTo(c.dx + r * 0.35, c.dy - r * 0.25)
+          ..lineTo(c.dx + r * 0.95, c.dy + r * 0.15)
+          ..lineTo(c.dx + r * 0.55, c.dy + r * 0.42)
+          ..lineTo(c.dx, c.dy + r * 0.28)
+          ..close();
+        canvas.drawPath(path, _fillC(ink));
+        canvas.drawPath(path, _strokeC(edge, math.max(1.6, tile * 0.06)));
+        canvas.drawPath(
+          _path
+            ..reset()
+            ..moveTo(c.dx - r * 0.72, c.dy + r * 0.05)
+            ..lineTo(c.dx - r * 0.95, c.dy - r * 0.35)
+            ..lineTo(c.dx - r * 0.55, c.dy - r * 0.2),
+          _strokeC(edge, math.max(1.2, tile * 0.045), cap: StrokeCap.round),
+        );
+      case _SummonMotif.fireElemental:
+        canvas.drawOval(Rect.fromCenter(center: c, width: r * 1.1, height: r * 1.45), _fillC(body));
+        canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy - r * 0.62), width: r * 0.75, height: r * 0.62), _fillC(edge));
+        for (var i = -1; i <= 1; i++) {
+          canvas.drawOval(
+            Rect.fromCenter(center: Offset(c.dx + i * r * 0.42, c.dy + r * 0.55), width: r * 0.35, height: r * 0.22),
+            _fillC(ramp.bright.withValues(alpha: alpha * 0.8)),
+          );
+        }
+      case _SummonMotif.infernal:
+        canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.25), width: r * 1.35, height: r * 1.05), _fillC(const Color(0xFF301810).withValues(alpha: alpha)));
+        final horn = _path
+          ..reset()
+          ..moveTo(c.dx - r * 0.35, c.dy - r * 0.35)
+          ..lineTo(c.dx - r * 0.55, c.dy - r * 0.95)
+          ..lineTo(c.dx - r * 0.15, c.dy - r * 0.45);
+        canvas.drawPath(horn, _fillC(const Color(0xFF6A3820).withValues(alpha: alpha)));
+        canvas.drawPath(horn, _strokeC(const Color(0xFFFF5820).withValues(alpha: alpha * 0.85), math.max(1.6, tile * 0.05)));
+        canvas.drawPath(
+          _path
+            ..reset()
+            ..moveTo(c.dx + r * 0.35, c.dy - r * 0.35)
+            ..lineTo(c.dx + r * 0.55, c.dy - r * 0.95)
+            ..lineTo(c.dx + r * 0.15, c.dy - r * 0.45),
+          _fillC(const Color(0xFF6A3820).withValues(alpha: alpha)),
+        );
+        for (var i = 0; i < 4; i++) {
+          canvas.drawLine(
+            Offset(c.dx - r * 0.5 + i * r * 0.28, c.dy + r * 0.45),
+            Offset(c.dx - r * 0.2 + i * r * 0.32, c.dy + r * 0.95),
+            _strokeC(const Color(0xFFFF4010).withValues(alpha: alpha * 0.75), math.max(1.5, tile * 0.05)),
+          );
+        }
+      case _SummonMotif.felImp:
+        canvas.drawOval(Rect.fromCenter(center: c, width: r * 0.75, height: r * 0.95), _fillC(body));
+        final wing = _path
+          ..reset()
+          ..moveTo(c.dx - r * 0.25, c.dy - r * 0.1)
+          ..lineTo(c.dx - r * 0.85, c.dy - r * 0.35)
+          ..lineTo(c.dx - r * 0.35, c.dy + r * 0.2);
+        canvas.drawPath(wing, _fillC(ramp.shadowMid(alpha)));
+        canvas.drawPath(
+          _path
+            ..reset()
+            ..moveTo(c.dx + r * 0.25, c.dy - r * 0.1)
+            ..lineTo(c.dx + r * 0.85, c.dy - r * 0.35)
+            ..lineTo(c.dx + r * 0.35, c.dy + r * 0.2),
+          _fillC(ramp.shadowMid(alpha)),
+        );
+        canvas.drawLine(Offset(c.dx, c.dy - r * 0.52), Offset(c.dx, c.dy - r * 0.82), _strokeC(edge, math.max(1.2, tile * 0.05)));
+      case _SummonMotif.treant:
+        canvas.drawRect(Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.1), width: r * 0.55, height: r * 1.05), _fillC(const Color(0xFF4A3020).withValues(alpha: alpha)));
+        canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy - r * 0.42), width: r * 1.2, height: r * 0.95), _fillC(body));
+        for (var i = -2; i <= 2; i++) {
+          canvas.drawOval(
+            Rect.fromCenter(center: Offset(c.dx + i * r * 0.28, c.dy - r * 0.65), width: r * 0.42, height: r * 0.28),
+            _fillC(edge),
+          );
+        }
+      case _SummonMotif.stampede:
+        for (var i = 0; i < 3; i++) {
+          final ox = (i - 1) * r * 0.55;
+          canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + ox, c.dy + r * 0.15), width: r * 0.85, height: r * 0.55), _fillC(const Color(0xFF6A5040).withValues(alpha: alpha)));
+          canvas.drawOval(Rect.fromCenter(center: Offset(c.dx + ox + r * 0.25, c.dy - r * 0.25), width: r * 0.55, height: r * 0.45), _fillC(const Color(0xFF8A7058).withValues(alpha: alpha)));
+        }
+      case _SummonMotif.spark:
+        canvas.drawCircle(c, r * 0.45, _fillC(edge));
+    }
+  }
+
+  static void _paintDomeShell(
+    Canvas canvas,
+    SpatialBurst burst,
+    double tile,
+    Offset Function(double, double) centerAt,
+  ) {
+    final alpha = (burst.life / 0.55).clamp(0.0, 1.0);
+    final c = centerAt(burst.x, burst.y);
+    final r = tile * burst.radius * 1.05;
+    final ramp = _rampForBurst(burst, Color(burst.argb));
+    final dome = _path
+      ..reset()
+      ..addArc(Rect.fromCircle(center: c.translate(0, r * 0.15), radius: r), math.pi, math.pi);
+    canvas.drawPath(dome, _fillC(ramp.light.withValues(alpha: alpha * 0.22)));
+    canvas.drawPath(dome, _strokeC(ramp.bright.withValues(alpha: alpha * 0.85), math.max(2.4, tile * 0.09)));
+    canvas.drawPath(dome, _strokeC(ramp.hot.withValues(alpha: alpha * 0.55), math.max(1.0, tile * 0.04)));
+  }
+
+  static void _paintVineTendrils(Canvas canvas, Offset c, double r, double alpha) {
+    for (var i = 0; i < 4; i++) {
+      final vine = _path
+        ..reset()
+        ..moveTo(c.dx + (i - 2) * r * 0.18, c.dy + r * 0.35)
+        ..quadraticBezierTo(
+          c.dx + (i - 1.5) * r * 0.42,
+          c.dy - r * 0.15,
+          c.dx + (i - 1) * r * 0.55,
+          c.dy - r * 0.55,
+        );
+      canvas.drawPath(vine, _strokeC(const Color(0xFF2E6A38).withValues(alpha: alpha * 0.9), math.max(2.2, r * 0.06), cap: StrokeCap.round));
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(c.dx + (i - 1) * r * 0.5, c.dy - r * 0.58), width: r * 0.22, height: r * 0.14),
+        _fillC(const Color(0xFF78D070).withValues(alpha: alpha)),
+      );
+    }
+  }
+}
+
+enum _SummonMotif {
+  shadowWolf,
+  fireElemental,
+  infernal,
+  felImp,
+  treant,
+  stampede,
+  spark,
+}
+
+extension on SpellSchoolRamp {
+  Color shadowMid(double alpha) => Color.lerp(mid, rim, 0.35)!.withValues(alpha: alpha);
 }
 
 enum _BoltShape {

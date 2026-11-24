@@ -3,9 +3,17 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/models/class_ability.dart';
+import 'package:idle_party/models/vfx_quality.dart';
+import 'package:idle_party/spatial/spatial_combat.dart';
+import 'package:idle_party/ui/theme.dart';
+import 'package:idle_party/ui/spatial_dungeon_view.dart';
 import 'package:idle_party/ui/spell_shape_paint.dart';
+
+import 'shell_golden_harness.dart';
 
 // Keep in sync with test/abilities_61_test.dart
 const _newIds = <AbilityId>[
@@ -72,8 +80,21 @@ const _newIds = <AbilityId>[
   AbilityId.entanglingRoots,
 ];
 
+const _compareSix = <({AbilityId id, Rect v3Sample})>[
+  (id: AbilityId.meteor, v3Sample: Rect.fromLTWH(96, 520, 128, 128)),
+  (id: AbilityId.holyFire, v3Sample: Rect.fromLTWH(96, 920, 128, 128)),
+  (id: AbilityId.arcaneBarrage, v3Sample: Rect.fromLTWH(96, 1320, 128, 128)),
+  (id: AbilityId.frozenOrb, v3Sample: Rect.fromLTWH(96, 1720, 128, 128)),
+  (id: AbilityId.powerWordBarrier, v3Sample: Rect.fromLTWH(96, 2120, 128, 128)),
+  (id: AbilityId.summonInfernal, v3Sample: Rect.fromLTWH(96, 2520, 128, 128)),
+];
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    await ensureShellGoldenFonts();
+  });
 
   test('61 abilities contact sheet uses SpellShapePaint', () async {
     expect(_newIds.length, 61);
@@ -87,6 +108,8 @@ void main() {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     _paintDungeonBackdrop(canvas, Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()));
+
+    final labelStyle = GameTheme.body(size: 11, color: const Color(0xFFE8D8C8));
 
     for (var i = 0; i < _newIds.length; i++) {
       final id = _newIds[i];
@@ -105,22 +128,16 @@ void main() {
       );
       SpellShapePaint.paintAbilityShowcase(canvas, tileRect: rect, def: def);
       final tp = TextPainter(
-        text: TextSpan(
-          text: def.name,
-          style: const TextStyle(color: Color(0xFFE8D8C8), fontSize: 11),
-        ),
+        text: TextSpan(text: def.name, style: labelStyle),
         textDirection: TextDirection.ltr,
         maxLines: 2,
         ellipsis: '…',
       )..layout(maxWidth: tileW - 8);
-      tp.paint(
-        canvas,
-        Offset(col * tileW + 4, row * tileH + tileH - 28),
-      );
+      tp.paint(canvas, Offset(col * tileW + 4, row * tileH + tileH - 30));
     }
 
     final bytes = await _pngFromRecorder(recorder, w, h);
-    expect(bytes.lengthInBytes, greaterThan(8000));
+    expect(bytes.lengthInBytes, greaterThan(12000));
 
     if (Platform.environment['RENDER_ABILITIES_61'] == '1') {
       final dir = Directory('docs/design/abilities-61/rendered');
@@ -129,81 +146,196 @@ void main() {
     }
   });
 
-  test('in-context fight frames show several new spell shapes', () async {
-    const scenes = <({String file, List<AbilityId> picks})>[
-      (
-        file: 'fight_mage_elemental.png',
-        picks: [
-          AbilityId.meteor,
-          AbilityId.arcaneBarrage,
-          AbilityId.frozenOrb,
-          AbilityId.prismaticBarrier,
-        ],
-      ),
-      (
-        file: 'fight_hunter_holy.png',
-        picks: [
-          AbilityId.stampede,
-          AbilityId.killShotMm,
-          AbilityId.bindingShot,
-          AbilityId.holyFire,
-        ],
-      ),
-      (
-        file: 'fight_mixed_endgame.png',
-        picks: [
-          AbilityId.crashLightning,
-          AbilityId.summonInfernal,
-          AbilityId.entanglingRoots,
-          AbilityId.starsurge,
-          AbilityId.secretTechnique,
-        ],
-      ),
-      (
-        file: 'fight_tank_support.png',
-        picks: [
-          AbilityId.dieByTheSword,
-          AbilityId.colossusSmash,
-          AbilityId.powerWordBarrier,
-          AbilityId.empowerRuneWeapon,
-        ],
-      ),
-    ];
+  test('v3 reference vs in-game for 6 key spells', () async {
+    const rowH = 196.0;
+    const w = 420;
+    final h = (_compareSix.length * rowH).round();
+  final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    canvas.drawRect(Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()), Paint()..color = const Color(0xFF100C14));
 
-    const w = 1080;
-    const h = 2340;
-
-    if (Platform.environment['RENDER_ABILITIES_61'] == '1') {
-      final dir = Directory('docs/design/abilities-61/rendered');
-      dir.createSync(recursive: true);
-      for (final scene in scenes) {
-        final recorder = ui.PictureRecorder();
-        final canvas = Canvas(recorder);
-        _paintFightFrame(canvas, Size(w.toDouble(), h.toDouble()));
-        final placements = _scatterPlacements(scene.picks.length, w, h);
-        for (var i = 0; i < scene.picks.length; i++) {
-          final def = ClassKits.defFor(scene.picks[i])!;
-          final rect = Rect.fromCenter(
-            center: placements[i],
-            width: 220,
-            height: 200,
-          );
-          SpellShapePaint.paintAbilityShowcase(canvas, tileRect: rect, def: def);
-        }
-        final bytes = await _pngFromRecorder(recorder, w, h);
-        File('${dir.path}/${scene.file}').writeAsBytesSync(bytes);
-      }
+    ui.Image? ref;
+    final refPath = 'docs/design/abilities-61/sheet_v3.png';
+    if (await File(refPath).exists()) {
+      final codec = await ui.instantiateImageCodec(await File(refPath).readAsBytes());
+      ref = (await codec.getNextFrame()).image;
     }
 
-    expect(scenes.length, 4);
+    for (var i = 0; i < _compareSix.length; i++) {
+      final row = _compareSix[i];
+      final y = i * rowH;
+      canvas.drawRect(Rect.fromLTWH(0, y, w.toDouble(), rowH), Paint()..color = const Color(0xFF1A1420));
+      if (ref != null) {
+        canvas.drawImageRect(
+          ref,
+          row.v3Sample,
+          Rect.fromLTWH(12, y + 18, 160, 160),
+          Paint(),
+        );
+      }
+      final def = ClassKits.defFor(row.id)!;
+      SpellShapePaint.paintAbilityShowcase(
+        canvas,
+        tileRect: Rect.fromLTWH(220, y + 18, 160, 160),
+        def: def,
+      );
+      final tp = TextPainter(
+        text: TextSpan(text: def.name, style: GameTheme.body(size: 11)),
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: w - 16);
+      tp.paint(canvas, Offset(12, y + rowH - 22));
+    }
+
+    final bytes = await _pngFromRecorder(recorder, w, h);
+    expect(bytes.lengthInBytes, greaterThan(8000));
+    if (Platform.environment['RENDER_ABILITIES_61'] == '1') {
+      File('docs/design/abilities-61/rendered/compare_v3_vs_game_6.png').writeAsBytesSync(bytes);
+    }
   });
+
+  const scenes = <({String file, List<AbilityId> picks})>[
+    (
+      file: 'fight_mage_elemental.png',
+      picks: [
+        AbilityId.meteor,
+        AbilityId.arcaneBarrage,
+        AbilityId.frozenOrb,
+        AbilityId.fireElemental,
+      ],
+    ),
+    (
+      file: 'fight_hunter_holy.png',
+      picks: [
+        AbilityId.stampede,
+        AbilityId.killShotMm,
+        AbilityId.bindingShot,
+        AbilityId.holyFire,
+      ],
+    ),
+    (
+      file: 'fight_mixed_endgame.png',
+      picks: [
+        AbilityId.crashLightning,
+        AbilityId.summonInfernal,
+        AbilityId.entanglingRoots,
+        AbilityId.starsurge,
+        AbilityId.secretTechnique,
+      ],
+    ),
+    (
+      file: 'fight_tank_support.png',
+      picks: [
+        AbilityId.dieByTheSword,
+        AbilityId.powerWordBarrier,
+        AbilityId.ironbark,
+        AbilityId.shadowfiendDisc,
+      ],
+    ),
+  ];
+
+  for (final scene in scenes) {
+    testWidgets('in-context ${scene.file}', (tester) async {
+      debugHoldFloorBake();
+      bindA56View(tester);
+      final director = await fightHitGoldenDirector(vfx: VfxQuality.full);
+      var directorLive = true;
+      addTearDown(() {
+        if (directorLive) director.dispose();
+      });
+      _stageAbilities61Vfx(director, scene.picks);
+      final key = GlobalKey();
+      await tester.pumpWidget(
+        shellGoldenScaffold(
+          RepaintBoundary(
+            key: key,
+            child: SizedBox(
+              width: 360,
+              height: 620,
+              child: SpatialDungeonView(director: director),
+            ),
+          ),
+        ),
+      );
+      await _waitForFightRender(tester, director);
+      expect(tester.takeException(), isNull);
+
+      if (Platform.environment['RENDER_ABILITIES_61'] == '1') {
+        final bytes = await _capturePng(tester, key);
+        final dir = Directory('docs/design/abilities-61/rendered');
+        dir.createSync(recursive: true);
+        File('${dir.path}/${scene.file}').writeAsBytesSync(bytes);
+      }
+
+      directorLive = false;
+      director.dispose();
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+}
+
+void _stageAbilities61Vfx(GameDirector director, List<AbilityId> ids) {
+  final world = director.spatial;
+  if (world == null) return;
+  world.reducedVfx = false;
+  world.spawnPersistentVfx = true;
+  final foes = world.enemies.where((e) => e.hp > 0).toList();
+  if (foes.isEmpty) return;
+  for (var i = 0; i < ids.length; i++) {
+    final id = ids[i];
+    final def = ClassKits.defFor(id)!;
+    final foe = foes[i % foes.length];
+    final style = def.boltStyle ?? SpellBoltStyle.weapon;
+    final x = foe.x + (i % 3 - 1) * 0.55;
+    final y = foe.y + (i ~/ 3) * 0.35;
+    SpellVfx.spawnImpact(
+      world,
+      x: x,
+      y: y,
+      style: style,
+      id: id,
+      shape: def.aoeShape,
+      radius: SpellVfx.isBig(id) ? 0.95 : 0.72,
+    );
+    if (def.vfx?.groundDisc == true) {
+      final gkind = SpellVfx.groundKindFor(style: style, id: id);
+      SpatialCombat.spawnGroundFx(
+        world,
+        x: x,
+        y: y + 0.35,
+        argb: def.vfx?.groundArgb ?? SpatialCombat.burstArgbForStyle(style),
+        radius: 1.4,
+        life: 4.2,
+        kind: gkind,
+      );
+    }
+    final hero = world.heroes.firstWhere((h) => !h.isPet && h.hp > 0);
+    if (def.effect == AbilityEffectKind.damage || def.effect == AbilityEffectKind.aoe) {
+      SpatialCombat.addProjectile(
+        world,
+        SpatialCombat.spellBolt(
+          from: hero,
+          to: foe,
+          damage: 12,
+          style: style,
+          label: def.shortLabel,
+        )..delay = 0,
+      );
+    }
+    if (world.bursts.isNotEmpty) {
+      world.bursts.last.life = 0.32;
+    }
+  }
+}
+
+Future<Uint8List> _capturePng(WidgetTester tester, GlobalKey key) async {
+  final boundary = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
+  final image = await tester.runAsync(() => boundary.toImage(pixelRatio: 3));
+  final data = await image!.toByteData(format: ui.ImageByteFormat.png);
+  return data!.buffer.asUint8List();
 }
 
 void _paintDungeonBackdrop(Canvas canvas, Rect full) {
-  canvas.drawRect(
-    full,
-    Paint()..color = const Color(0xFF141018),
-  );
+  canvas.drawRect(full, Paint()..color = const Color(0xFF141018));
   const step = 32.0;
   final grid = Paint()
     ..color = const Color(0xFF2A2030)
@@ -216,37 +348,17 @@ void _paintDungeonBackdrop(Canvas canvas, Rect full) {
   }
 }
 
-void _paintFightFrame(Canvas canvas, Size size) {
-  final rect = Offset.zero & size;
-  canvas.drawRect(rect, Paint()..color = const Color(0xFF0E0A10));
-  final floor = Paint()..color = const Color(0xFF1E1618);
-  canvas.drawRect(Rect.fromLTWH(0, size.height * 0.55, size.width, size.height * 0.45), floor);
-  final vignette = Paint()
-    ..shader = ui.Gradient.radial(
-      Offset(size.width * 0.5, size.height * 0.35),
-      size.width * 0.55,
-      [
-        const Color(0x33403020),
-        const Color(0x00000000),
-      ],
-    );
-  canvas.drawRect(rect, vignette);
+Future<void> _waitForFightRender(WidgetTester tester, GameDirector director) async {
+  for (var i = 0; i < 60; i++) {
+    await tester.pump(const Duration(milliseconds: 40));
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 25)));
+    if (director.dungeonTilesReady) break;
+    expect(tester.takeException(), isNull);
+  }
+  await tester.pump(const Duration(milliseconds: 320));
 }
 
-List<Offset> _scatterPlacements(int n, int w, int h) {
-  final xs = [0.28, 0.72, 0.38, 0.62, 0.5];
-  final ys = [0.32, 0.38, 0.52, 0.48, 0.42];
-  return List.generate(
-    n,
-    (i) => Offset(w * xs[i % xs.length], h * ys[i % ys.length]),
-  );
-}
-
-Future<Uint8List> _pngFromRecorder(
-  ui.PictureRecorder recorder,
-  int w,
-  int h,
-) async {
+Future<Uint8List> _pngFromRecorder(ui.PictureRecorder recorder, int w, int h) async {
   final image = await recorder.endRecording().toImage(w, h);
   final data = await image.toByteData(format: ui.ImageByteFormat.png);
   return data!.buffer.asUint8List();
