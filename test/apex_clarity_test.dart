@@ -7,6 +7,7 @@ import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/offline_progress.dart';
 import 'package:idle_party/core/save_swap.dart';
 import 'package:idle_party/models/apex_craft.dart';
+import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
@@ -28,6 +29,56 @@ void main() {
     expect(state.metaDepth.apexTargetProgress, 40);
     expect(state.metaDepth.apexTargetMatId, 'shard_sandy');
     expect(state.metaDepth.apexCraftSlot, 'weapon');
+  });
+
+  test('boss clear saves default craft goal and ticks the meter before CRAFT opens', () {
+    var state = _fresh().copyWith(bossVictories: 1);
+    expect(state.metaDepth.apexCraftClassId, isEmpty);
+    state = state.copyWith(
+      dungeonMode: DungeonMode.push,
+      inDungeon: true,
+      dungeonId: 'sandy',
+    );
+    final before = state.metaDepth.apexTargetProgress;
+    state = GameLogic.grantBossCraftMats(state, clearedBoss: true);
+    expect(state.metaDepth.apexCraftClassId, 'warrior');
+    expect(state.metaDepth.apexCraftRoleTag, 'tank');
+    expect(state.metaDepth.apexCraftSlot, 'weapon');
+    expect(state.metaDepth.apexTargetProgress, greaterThan(before));
+  });
+
+  test('use auto target keeps the meter when auto still points at slag', () {
+    var state = _goal(progress: 55, mat: ApexCraft.slagId);
+    final mats = _pile(40)..remove(ApexCraft.slagId);
+    state = state.copyWith(craftMaterials: mats);
+    state = GameLogic.clearApexTargetMatOverride(state);
+    expect(state.metaDepth.apexTargetMatId, isEmpty);
+    expect(GameLogic.resolveApexTargetMatId(state), ApexCraft.slagId);
+    expect(state.metaDepth.apexTargetProgress, 55);
+  });
+
+  test('craft sheet uses the highest rank among vault duplicates', () {
+    final low = _blade(rank: 1);
+    final high = _blade(rank: 3);
+    final state = _fresh().copyWith(
+      bossVictories: 1,
+      apexVault: [low, high],
+      metaDepth: const MetaDepthState(
+        apexCraftClassId: 'warrior',
+        apexCraftRoleTag: 'tank',
+        apexCraftSlot: 'weapon',
+      ),
+    );
+    final owned = ApexForge.findOwnedApex(
+      state,
+      ApexCraft.pieceId(
+        classId: HeroClassId.warrior,
+        role: SpecRoleTag.tank,
+        slot: EquipmentSlot.weapon,
+      ),
+    );
+    expect(owned?.apexRank, 3);
+    expect(GameLogic.canUpgradeApex(state, owned!.id), isFalse);
   });
 
   test('pinning the auto target keeps progress; a different mat resets it', () {

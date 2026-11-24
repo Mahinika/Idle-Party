@@ -16,6 +16,8 @@ enum HeroRole { warrior, healer, mage, rogue }
 /// Paper-doll undertunic race (Cataclysm playable set — no Pandaren).
 /// Every family × race × sex has an authored clip; the doll never falls
 /// back to Kenney for a missing race body.
+///
+/// Races are cosmetic only: they do not change stats, damage, or rewards.
 enum HeroRace {
   human,
   dwarf,
@@ -29,6 +31,10 @@ enum HeroRace {
   troll,
   bloodElf,
   goblin;
+
+  /// Shown on the New Game race tab and lock dialog.
+  static const pickerSummary =
+      'Cosmetic only. No stat bonus. Spec sets abilities. Locks after START.';
 
   String get assetKey => switch (this) {
     HeroRace.human => 'human',

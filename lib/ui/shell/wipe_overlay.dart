@@ -50,7 +50,8 @@ class DungeonWipePanel extends StatelessWidget {
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: 320,
-                maxHeight: MediaQuery.sizeOf(context).height -
+                maxHeight:
+                    MediaQuery.sizeOf(context).height -
                     MediaQuery.paddingOf(context).vertical -
                     32,
               ),
@@ -85,16 +86,15 @@ class DungeonWipePanel extends StatelessWidget {
                                     : farm
                                     ? 'RETRY restarts F${state.currentRoom.floorNumber}. Leave ends the run.'
                                     : () {
-                                        final cur = state.currentRoom.floorNumber;
+                                        final cur =
+                                            state.currentRoom.floorNumber;
                                         final uncleared =
                                             cur > state.highestFloorCleared;
                                         if (uncleared &&
                                             state.wipeStreakCount >=
                                                 GameLogic.pushWipesBeforeFarm) {
-                                          final safe = state.highestFloorCleared.clamp(
-                                            1,
-                                            999,
-                                          );
+                                          final safe = state.highestFloorCleared
+                                              .clamp(1, 999);
                                           return 'Two wipes on F$cur. Farming F$safe, then back here.';
                                         }
                                         if (uncleared) {
@@ -104,24 +104,31 @@ class DungeonWipePanel extends StatelessWidget {
                                       }(),
                                 maxLines: 4,
                               ),
-                              if (FirstClimbCoach.wipeLine(state) case final climb?) ...[
+                              if (FirstClimbCoach.wipeLine(state)
+                                  case final climb?) ...[
                                 ShellLayout.gap(4),
                                 ShellLayout.hint(climb, maxLines: 2),
                               ],
                               if (dailyEcho) ...[
                                 ShellLayout.gap(4),
-                                ShellLayout.hint('Claim needs a clear', maxLines: 1),
+                                ShellLayout.hint(
+                                  'Claim needs a clear',
+                                  maxLines: 1,
+                                ),
                               ],
                               if (modeLine != null) ...[
                                 ShellLayout.gap(4),
                                 ShellLayout.hint(modeLine, maxLines: 2),
                               ],
-                              if (WispGift.wipeNextLanternLine(state) case final wispLine?) ...[
+                              if (WispGift.wipeNextLanternLine(state)
+                                  case final wispLine?) ...[
                                 ShellLayout.gap(4),
                                 Text(
                                   wispLine,
                                   textAlign: TextAlign.center,
-                                  style: GameTheme.hint(color: GameTheme.torchHot),
+                                  style: GameTheme.hint(
+                                    color: GameTheme.torchHot,
+                                  ),
                                 ),
                               ],
                               if (state.wipeAdviceLine.isNotEmpty) ...[
@@ -133,7 +140,9 @@ class DungeonWipePanel extends StatelessWidget {
                                     Text(
                                       state.wipeAdviceLine,
                                       textAlign: TextAlign.center,
-                                      style: GameTheme.readable(color: GameTheme.torchHot),
+                                      style: GameTheme.readable(
+                                        color: GameTheme.torchHot,
+                                      ),
                                     ),
                                     if (!plain)
                                       if (WipeAdvice.shownScanLine(
@@ -149,16 +158,22 @@ class DungeonWipePanel extends StatelessWidget {
                                         Text(
                                           scan,
                                           textAlign: TextAlign.center,
-                                          style: GameTheme.hint(color: GameTheme.parchmentDim),
+                                          style: GameTheme.hint(
+                                            color: GameTheme.parchmentDim,
+                                          ),
                                         ),
                                       ],
-                                    if (WipeAdvice.hubHintFor(state.wipeAdviceLine)
+                                    if (WipeAdvice.hubHintFor(
+                                          state.wipeAdviceLine,
+                                        )
                                         case final hint?) ...[
                                       const SizedBox(height: 4),
                                       Text(
                                         hint,
                                         textAlign: TextAlign.center,
-                                        style: GameTheme.section(color: GameTheme.parchmentDim),
+                                        style: GameTheme.section(
+                                          color: GameTheme.parchmentDim,
+                                        ),
                                       ),
                                     ],
                                   ],
@@ -169,7 +184,9 @@ class DungeonWipePanel extends StatelessWidget {
                                 Text(
                                   'After RETRY: ${WipeAdvice.godHandHintFor(state)!}',
                                   textAlign: TextAlign.center,
-                                  style: GameTheme.section(color: GameTheme.mossLit),
+                                  style: GameTheme.section(
+                                    color: GameTheme.mossLit,
+                                  ),
                                 ),
                               ],
                               const SizedBox(height: 10),
@@ -179,11 +196,10 @@ class DungeonWipePanel extends StatelessWidget {
                                   label: (farm || dailyEcho)
                                       ? 'RETRY FLOOR'
                                       : () {
-                                          final safe = state.highestFloorCleared.clamp(
-                                            1,
-                                            999,
-                                          );
-                                          final cur = state.currentRoom.floorNumber;
+                                          final safe = state.highestFloorCleared
+                                              .clamp(1, 999);
+                                          final cur =
+                                              state.currentRoom.floorNumber;
                                           return safe < cur
                                               ? 'RETRY → F$safe'
                                               : 'RETRY FLOOR';
@@ -193,11 +209,10 @@ class DungeonWipePanel extends StatelessWidget {
                                       : (farm || dailyEcho)
                                       ? 'Restarts this floor'
                                       : () {
-                                          final safe = state.highestFloorCleared.clamp(
-                                            1,
-                                            999,
-                                          );
-                                          final cur = state.currentRoom.floorNumber;
+                                          final safe = state.highestFloorCleared
+                                              .clamp(1, 999);
+                                          final cur =
+                                              state.currentRoom.floorNumber;
                                           return safe < cur
                                               ? 'Retreats to last cleared floor (PUSH)'
                                               : 'Restarts this floor (still PUSH)';
@@ -219,8 +234,7 @@ class DungeonWipePanel extends StatelessWidget {
                                           GameLogic.maxGearStashFor(state)
                                       ? 'SELL JUNK'
                                       : 'SELL JUNK (near full)',
-                                  tip:
-                                      'Clears weak drops so new loot can fit',
+                                  tip: 'Clears weak drops so new loot can fit',
                                   style: GameButtonStyle.grey,
                                   dense: true,
                                   onPressed: director.cleanBagJunk,
@@ -251,8 +265,7 @@ class DungeonWipePanel extends StatelessWidget {
   Widget _buildHubSection(GameState state) {
     final fixLabel = WipeAdvice.hubCtaLabelFor(state.wipeAdviceLine);
     final fixNav = WipeAdvice.hubNavFor(state.wipeAdviceLine);
-    final leaveLabel =
-        state.homeLayout == HomeLayout.home ? 'LEAVE' : 'HUB';
+    final leaveLabel = state.homeLayout == HomeLayout.home ? 'LEAVE' : 'HUB';
     if (fixLabel == null) {
       return GameButton(
         label: leaveLabel,
@@ -349,7 +362,9 @@ class _WipeReviveAdState extends State<_WipeReviveAd> {
     super.initState();
     if (GameLogic.canWipeReviveAd(widget.director.state) &&
         !widget.director.state.metaDepth.adFree) {
-      unawaited(AdRewarded.prepareOffer());
+      unawaited(
+        AdRewarded.prepareOffer(placement: AnalyticsEvents.placementWipeRevive),
+      );
     }
   }
 
@@ -422,9 +437,7 @@ class _WipeWatchAdState extends State<_WipeWatchAd> {
     super.initState();
     if (!widget.director.state.metaDepth.adFree) {
       unawaited(
-        AdRewarded.prepareOffer(
-          placement: AnalyticsEvents.placementWipeRetry,
-        ),
+        AdRewarded.prepareOffer(placement: AnalyticsEvents.placementWipeRetry),
       );
     }
   }

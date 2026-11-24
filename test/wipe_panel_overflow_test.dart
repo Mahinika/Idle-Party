@@ -99,13 +99,13 @@ void main() {
     return state.copyWith(lastUpdated: DateTime.now());
   }
 
-  void bindPhone(WidgetTester tester) {
+  void bindPhone(WidgetTester tester, {double textScale = 2}) {
     tester.view.devicePixelRatio = 2;
     tester.view.physicalSize = const Size(720, 1280);
     // 44 / 34 logical px. View padding is physical pixels.
     tester.view.viewPadding = const FakeViewPadding(top: 88, bottom: 68);
     tester.view.padding = const FakeViewPadding(top: 88, bottom: 68);
-    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    tester.platformDispatcher.textScaleFactorTestValue = textScale;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetViewPadding);
@@ -123,8 +123,9 @@ void main() {
     WidgetTester tester,
     GameState state, {
     int countdown = 0,
+    double textScale = 2,
   }) async {
-    bindPhone(tester);
+    bindPhone(tester, textScale: textScale);
     final director = GameDirector.preview(initialState: state);
     liveDirectors.add(director);
     addTearDown(() => finish(director));
@@ -150,7 +151,7 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(
       tester.platformDispatcher.textScaleFactor,
-      2,
+      textScale,
       reason: 'text scale must come from the test view, not a dead MediaQuery',
     );
     final padding = MediaQueryData.fromView(tester.view).padding;
@@ -206,6 +207,24 @@ void main() {
     expect(action(reviveCinderLabel), findsOneWidget);
     expect(action(ticketAdLabel), findsOneWidget);
   }
+
+  testWidgets(
+    'wipe-retry offer fits 360x640 at typeScaleMax without overflow',
+    (tester) async {
+      final state = sevenActionCave();
+      final director = await pumpPanel(
+        tester,
+        state,
+        countdown: 3,
+        textScale: GameTheme.typeScaleMax,
+      );
+      await expandWhy(tester, state.wipeAdviceLine);
+      expectSeven(tester);
+      expect(action(ticketAdLabel), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      finish(director);
+    },
+  );
 
   testWidgets(
     'normal cave shows all seven actions together at 360x640 scale 2',
