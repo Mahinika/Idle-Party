@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/ad_free_nudge.dart';
+import '../../core/ad_rewarded.dart';
+import '../../core/analytics_events.dart';
 import '../../core/build_stamp.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
@@ -131,6 +135,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
   };
   bool _nudgeLatched = false;
   bool _impressionQueued = false;
+  bool _campOfferNoted = false;
 
   GameDirector get director => widget.director;
 
@@ -179,9 +184,19 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
 
   bool get _compactPrice => widget.inlineUnderFight || widget.expandedTrackList;
 
+  void _noteCampOffer(GameState state) {
+    if (_campOfferNoted || state.metaDepth.adFree) return;
+    if (!SanctuaryOverlay.watchFreeReady(state)) return;
+    _campOfferNoted = true;
+    unawaited(
+      AdRewarded.prepareOffer(placement: AnalyticsEvents.placementCampAd),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = director.state;
+    _noteCampOffer(state);
     final campOpen = MenuTabs.showCamp(state);
     if (widget.inlineUnderFight || widget.expandedTrackList) {
       return _scrollableTrackBody(state, campOpen);
