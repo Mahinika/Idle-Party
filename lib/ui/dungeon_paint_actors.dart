@@ -455,11 +455,13 @@ extension _DungeonPaintActors on _TileRoomPainter {
             frame: visualFrame,
           ),
         );
-        final walkPhase = HeroAnimController.walkPhase(
-          visualFrame,
-          offset: (hero.partyIndex ?? idx) * 0.37,
-          pace: FightReadPace.pace.toDouble(),
-        );
+        final walkPhase = presentationCalm
+            ? 0.0
+            : HeroAnimController.walkPhase(
+                visualFrame,
+                offset: (hero.partyIndex ?? idx) * 0.37,
+                pace: FightReadPace.pace.toDouble(),
+              );
         var anim = HeroAnimController.snapshot(signals, walkPhase: walkPhase);
         if (anim.kind == HeroAnimKind.hit) {
           final flinch = switch (BodyFamilyCatalog.familyFor(partyHero)) {

@@ -134,7 +134,11 @@ class _PlayShellState extends State<PlayShell> {
       CoachTarget.gear || CoachTarget.kit => MenuRoute.gear,
       CoachTarget.gold => MenuRoute.gold,
       CoachTarget.essence => MenuRoute.essence,
-      CoachTarget.enter || CoachTarget.godhand || CoachTarget.farmPush => null,
+      CoachTarget.enter ||
+      CoachTarget.godhand ||
+      CoachTarget.farmPush ||
+      CoachTarget.fightLayout =>
+        null,
     };
     if (route == null) return (null, null);
     return (route, hint.line);

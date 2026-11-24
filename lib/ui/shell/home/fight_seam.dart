@@ -7,6 +7,7 @@ import '../../../core/game_state.dart';
 import '../../../core/menu_router.dart';
 import '../../../models/dungeon_mode.dart';
 import '../../chunky_face.dart';
+import '../../coach_pulse.dart';
 import '../../first_session_tips.dart';
 import '../../game_theme.dart';
 import '../../kenney_button.dart';
@@ -90,10 +91,9 @@ class FightFieldControls extends StatelessWidget {
   /// row) and SPLIT (the upgrade list under the fight). Arrow only; it
   /// points where the upgrade panel moves (Robert).
   static const panelToggleFaceKey = ValueKey('fight-seam-panel-toggle');
-  static const String expandUpgradesLabel = 'Expand upgrades';
-  static const String bigFightLabel = 'Show big fight view';
-  static const double arrowEm = GameTheme.chunkyFace;
-  static String panelToggleGlyph({required bool full}) => full ? '▲' : '▼';
+  static const String expandUpgradesLabel = 'LIST — show upgrade list';
+  static const String bigFightLabel = 'BIG — show big fight view';
+  static String panelToggleFaceText({required bool full}) => full ? 'LIST' : 'BIG';
   static String panelToggleLabel({required bool full}) =>
       full ? expandUpgradesLabel : bigFightLabel;
 
@@ -117,6 +117,11 @@ class FightFieldControls extends StatelessWidget {
     final osScale = WidgetsBinding.instance.platformDispatcher.textScaleFactor;
     final seamFitsExtras = osScale <= GameTheme.typeScaleMax;
     final full = state.homePanelFull;
+    final layoutCoach = FirstSessionTips.lineFor(
+      state,
+      CoachTarget.fightLayout,
+      inDungeon: true,
+    );
     final showFarmChip = FarmIntensity.applies(state);
     final wiped = director.awaitingWipeChoice;
     return DecoratedBox(
@@ -278,37 +283,36 @@ class FightFieldControls extends StatelessWidget {
                 // No second MENU here: the top bar's MENU is one tap away
                 // (polish7 P028).
                 const SizedBox(width: 4),
-                // Arrow only: where the upgrade panel goes on tap. FULL is
-                // the big fight with just the FORGE/CAMP/MARKET row, so ▲
-                // grows the panel; SPLIT shows the list, so ▼ shrinks it.
-                Tooltip(
-                  message: FightFieldControls.panelToggleLabel(full: full),
-                  excludeFromSemantics: true,
-                  child: _seamTap(
-                    label: FightFieldControls.panelToggleLabel(full: full),
-                    onTap: () => director.setHomePanelFull(!full),
-                    child: ChunkyFace(
-                      key: FightFieldControls.panelToggleFaceKey,
-                      tone: ChunkyTone.stone,
-                      minHeight: GameTheme.chunkyFace,
-                      padding: EdgeInsets.zero,
-                      child: SizedBox.square(
-                        dimension: GameTheme.chunkyFace,
-                        child: Center(
-                          child: ExcludeSemantics(
-                            child: Text(
-                              FightFieldControls.panelToggleGlyph(full: full),
-                              textScaler: TextScaler.noScaling,
-                              // IdleArrows draws ▲/▼ at about a third of
-                              // the em, so the em fills the face.
-                              style:
-                                  GameTheme.readable(
-                                    color: GameTheme.torchHot,
-                                  ).copyWith(
-                                    fontSize: FightFieldControls.arrowEm,
-                                    height: 1,
-                                  ),
-                            ),
+                CoachPulse(
+                  active: layoutCoach != null,
+                  child: Tooltip(
+                    message: FightFieldControls.panelToggleLabel(full: full),
+                    excludeFromSemantics: true,
+                    child: _seamTap(
+                      label: FightFieldControls.panelToggleLabel(full: full),
+                      onTap: () {
+                        director.setHomePanelFull(!full);
+                        if (layoutCoach != null) {
+                          director.dismissTip('fight_layout');
+                        }
+                      },
+                      child: SizedBox(
+                        width: GameTheme.minTouch,
+                        height: GameTheme.chunkyFace,
+                        child: ChunkyFace(
+                          key: FightFieldControls.panelToggleFaceKey,
+                          tone: ChunkyTone.stone,
+                          minWidth: 0,
+                          minHeight: GameTheme.chunkyFace,
+                          padding: EdgeInsets.zero,
+                          child: Text(
+                            FightFieldControls.panelToggleFaceText(full: full),
+                            maxLines: 1,
+                            overflow: TextOverflow.clip,
+                            textScaler: TextScaler.noScaling,
+                            style: GameTheme.readable(
+                              color: GameTheme.torchHot,
+                            ).copyWith(fontSize: 11, height: 1),
                           ),
                         ),
                       ),

@@ -104,11 +104,7 @@ extension GameDirectorForge on GameDirector {
     GameState updated, {
     required bool hadForgeBefore,
   }) {
-    if (hadForgeBefore ||
-        _state.homeLayout != HomeLayout.home ||
-        !_state.homePanelFull) {
-      return updated;
-    }
-    return updated.copyWith(homePanelFull: false);
+    // Robert 2026-11-22: first TRAIN buy keeps FULL; LIST is opt-in via seam.
+    return updated;
   }
 }
