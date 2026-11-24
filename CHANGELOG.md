@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- Play review: race picker says cosmetic-only (no stat bonuses), and music bed resyncs after ads or dead voice handles via `MusicPlaybackPlan`.
 - QA 2026-11-21: wipe scrim covers fight tools, ability-name floaters stack, the tomorrow teaser stays on the town card, and small UI fixes (MENU, party chip, shop, vault CTA, speed tip).
 - QA retest: each sheet keeps its own subtitle, loot and ability names share one lane, the equip toast clears the lantern, the hero tab keeps the level, the CC line stays in its chip, a failed audio load retries once, and layout plus audio failures are non-fatal in Crashlytics.
 - A fight save stamps the away clock, and leaving the app writes the current gold and essence before the process can be killed.

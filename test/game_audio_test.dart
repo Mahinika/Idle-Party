@@ -9,6 +9,7 @@ import 'package:idle_party/core/combat_feel.dart';
 import 'package:idle_party/core/game_audio.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/music_playlist.dart';
+import 'package:idle_party/core/music_playback_plan.dart';
 import 'package:idle_party/core/music_score.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/enemy.dart';
@@ -498,6 +499,22 @@ void main() {
     expect(offline.pendingAudioCues, isEmpty);
     final silent = SpatialCombat.step(offline, state, dt: 0.05);
     expect(silent.audioCues, isEmpty);
+  });
+
+  test('music playback plan marks missing handle as out of sync', () {
+    final score = MusicScore();
+    score.setPlace(MusicPlace.hub, DateTime.utc(2026, 11, 24));
+    expect(
+      MusicPlaybackPlan.musicMatches(
+        score: score,
+        playing: MusicStem.hub,
+        musicHandleLive: false,
+        audibleMood: ZoneMood.warm,
+        muted: false,
+        musicVolume: GameAudio.musicVolume,
+      ),
+      isFalse,
+    );
   });
 
   test('new save defaults use softer audio mix', () {

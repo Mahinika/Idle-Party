@@ -139,7 +139,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
         builder: (ctx) => MenuChrome.dialog(
           title: 'Lock race?',
           content: Text(
-            'Race is the hero\'s look and locks after START. '
+            '${HeroRace.pickerSummary} '
             'You can still change specialization later.',
             style: GameTheme.readable(color: GameTheme.parchmentDim),
           ),
@@ -395,7 +395,9 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                   child: _tab == _PartyEditTab.raceTab
                       ? Padding(
                           padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                          child: Column(
+                          child: RepaintBoundary(
+                            key: const Key('party-picker-race-panel'),
+                            child: Column(
                             children: [
                               Row(
                                 children: [
@@ -426,8 +428,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                                   compact: true,
                                   title: 'RACE',
                                   columns: 4,
-                                  hint:
-                                      'Look only. Specialization sets the abilities. Race locks after START.',
+                                  hint: HeroRace.pickerSummary,
                                   dollFor: (race) => _previewHero(
                                     _slots[_activeSlot] ??
                                         HeroSpecs.starterUnlocked.first,
@@ -439,6 +440,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                                 ),
                               ),
                             ],
+                            ),
                           ),
                         )
                       : Column(
