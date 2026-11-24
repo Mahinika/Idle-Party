@@ -28,6 +28,14 @@ void main() {
       Navigator.of(t.element(wb.first)).pop();
       await a100Settle(t);
     }
+    // A hub fixture stamped months ago used to open the comeback card, which
+    // held this slot. Catch-up now credits the offline cap, under three days,
+    // so the one-time ping ask is the card on top of KEY.
+    final later = find.text('LATER');
+    if (later.evaluate().isNotEmpty) {
+      await t.tap(later);
+      await a100Settle(t);
+    }
   }
 
   test('copy names the tiers, the payoff and the limits', () {

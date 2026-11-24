@@ -183,6 +183,10 @@ class GameDirector extends ChangeNotifier {
   @visibleForTesting
   Future<void>? debugAwayCreditPause;
 
+  /// Test seam. The next WISP watch uses this result and does not load an ad.
+  @visibleForTesting
+  Future<AdWatchResult>? debugWispAdResult;
+
   CloudRead get lastCloudRead => _lastCloudRead;
 
   /// True when a cloud restore kept the previous device file.
@@ -280,6 +284,10 @@ class GameDirector extends ChangeNotifier {
   /// Resume is replaying the gap. Combat and hub idle wait so they cannot
   /// spend the same seconds twice.
   bool _awayCreditInFlight = false;
+
+  /// Completes after the in-flight catch-up has been written into [_state].
+  /// A pause waits for this before it stamps the clock or saves.
+  Completer<void>? _awayCreditDone;
 
   /// One Welcome Back card watches once. A new absence clears it.
   bool _welcomeBackAdBusy = false;

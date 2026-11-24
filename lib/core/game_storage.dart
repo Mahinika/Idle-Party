@@ -550,11 +550,43 @@ class SharedPreferencesGameStorage implements GameStorage {
   Future<bool> writeActiveRaw(String json) async {
     final prefs = await _prefs;
     await _prepare(prefs);
-    final slotOk = await prefs.setString(_slotKey(_active), json);
+    final slotKey = _slotKey(_active);
+    final previous = prefs.getString(slotKey);
+    final slotOk = await prefs.setString(slotKey, json);
+    if (!slotOk) {
+      // The map already holds the rejected bytes. Put the previous party
+      // back before any later commit flushes the whole map.
+      try {
+        if (previous == null) {
+          await prefs.remove(slotKey);
+        } else {
+          await prefs.setString(slotKey, previous);
+        }
+      } catch (error, stack) {
+        debugPrint(
+          'writeActiveRaw restore after a false commit failed: $error\n$stack',
+        );
+      }
+      return false;
+    }
+    final previousMirror = prefs.getString(_saveKey);
     final mirrorOk = await prefs.setString(_saveKey, json);
-    if (!slotOk || !mirrorOk) return false;
+    if (!mirrorOk) {
+      try {
+        if (previousMirror == null) {
+          await prefs.remove(_saveKey);
+        } else {
+          await prefs.setString(_saveKey, previousMirror);
+        }
+      } catch (error, stack) {
+        debugPrint(
+          'writeActiveRaw mirror restore after a false commit failed: $error\n$stack',
+        );
+      }
+      return false;
+    }
     await prefs.reload();
-    return prefs.getString(_slotKey(_active)) == json &&
+    return prefs.getString(slotKey) == json &&
         prefs.getString(_saveKey) == json;
   }
 
