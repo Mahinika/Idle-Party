@@ -53,7 +53,7 @@ once-per-install funnel in [`lib/core/funnel_analytics.dart`](../lib/core/funnel
 | `rewarded_skip` | `placement` | Dismissed before reward. |
 | `rewarded_load_fail` | `placement` | SDK load/show failed. |
 
-Placements: `welcome_back`, `wisp_gift`, `powerups`, `scroll_well`, `quest_reroll`, `wipe_retry`, `wipe_revive`.
+Placements: `welcome_back`, `reinstall_pouch`, `wisp_gift`, `powerups`, `camp_ad`, `scroll_well`, `quest_reroll`, `wipe_retry`, `wipe_revive`.
 
 | Event | Params | When |
 |---|---|---|

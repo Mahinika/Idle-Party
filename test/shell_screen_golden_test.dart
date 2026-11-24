@@ -620,7 +620,7 @@ void main() {
     );
     await pumpGoldenFrames(tester);
     expect(
-      find.text("Prospector's Bundle"),
+      find.text('Ad-free welcome'),
       findsOneWidget,
     );
   });

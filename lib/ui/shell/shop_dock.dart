@@ -48,6 +48,10 @@ class ShopDock extends StatefulWidget {
   @visibleForTesting
   static String goldenTestPriceLabel = '';
 
+  @visibleForTesting
+  static String rowTag(ShopCatalogItem item, {bool cinderPouchDoubled = false}) =>
+      _ShopRow.tag(item, cinderPouchDoubled: cinderPouchDoubled);
+
   final GameDirector director;
 
   /// Home sheet: one pick + expand (matches SPLIT forge).
@@ -57,8 +61,10 @@ class ShopDock extends StatefulWidget {
     required bool showEssence,
     HomeLayout layout = HomeLayout.classic,
   }) => NavCopy.playerText(
-    'Ad-free, Long Away, and Supporter are Google Play packs. '
-        'Bag and pets are not sold here.',
+    'SCROLLS tickets live on the hub. This shelf lists Ad-free welcome, '
+        'Long Away, and Delver\'s Kit (Supporter). Cinder pouch and '
+        'Season pass premium appear when Play lists them. Bag and pets are '
+        'not sold here.',
     layout,
   );
 
@@ -69,7 +75,8 @@ class ShopDock extends StatefulWidget {
     final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
     final raw =
         'Free tickets are SCROLLS on the hub. '
-        'Ad-free, Long Away, and Supporter are here. '
+        'Ad-free welcome, Long Away, and Delver\'s Kit are here. '
+        'Cinder pouch and Season pass premium join when Play lists them. '
         'Gold is under GOLD.$essenceBit';
     return NavCopy.playerText(raw, layout);
   }
@@ -82,7 +89,8 @@ class ShopDock extends StatefulWidget {
     final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
     final raw =
         'Free tickets are SCROLLS on the hub. '
-        'Ad-free, Long Away, and Supporter are here. '
+        'Ad-free welcome, Long Away, and Delver\'s Kit are here. '
+        'Cinder pouch and Season pass premium join when Play lists them. '
         'Bag space and pet errands use gold or Cinders in GEAR'
         '${showEssence ? ' and ESSENCE' : ''} — not real money. '
         'Gold is under GOLD.$essenceBit';
@@ -267,7 +275,8 @@ class _ShopDockState extends State<ShopDock> {
             priceLabel: _priceLabel(featured),
             available:
                 _priceReady(featured) ||
-                ShopCatalog.playChargeableIds.contains(featured.id),
+                ShopCatalog.shelfAlwaysIds.contains(featured.id),
+            cinderPouchDoubled: state.metaDepth.cinderPouchDoubled,
             compact: false,
             featuredPrimary: true,
             titleOverride: ShopHubOffer.featuredTitle(featured),
@@ -325,6 +334,7 @@ class _ShopDockState extends State<ShopDock> {
                 owned: ShopBilling.isOwned(state, catalog[i]),
                 priceLabel: _priceLabel(catalog[i]),
                 available: _priceReady(catalog[i]),
+                cinderPouchDoubled: state.metaDepth.cinderPouchDoubled,
                 compact:
                     catalog[i].kind == ShopOfferKind.permScroll &&
                     catalog[i].permMask != AdBoost.permAll,
@@ -378,6 +388,7 @@ class _ShopRow extends StatelessWidget {
     this.titleOverride,
     this.featuredPrimary = false,
     this.layout = HomeLayout.classic,
+    this.cinderPouchDoubled = false,
   });
 
   final ShopCatalogItem item;
@@ -389,6 +400,7 @@ class _ShopRow extends StatelessWidget {
   final String? titleOverride;
   final bool featuredPrimary;
   final HomeLayout layout;
+  final bool cinderPouchDoubled;
 
   static String? assetFor(ShopCatalogItem item) {
     if (item.permMask == AdBoost.permAll) return UiIcon.star;
@@ -418,7 +430,7 @@ class _ShopRow extends StatelessWidget {
     return item.name;
   }
 
-  static String tag(ShopCatalogItem item) {
+  static String tag(ShopCatalogItem item, {bool cinderPouchDoubled = false}) {
     return switch (item.kind) {
       ShopOfferKind.boostHours =>
         '+${item.boostHours}h${item.oneTime ? ' · once' : ''}',
@@ -426,7 +438,9 @@ class _ShopRow extends StatelessWidget {
       ShopOfferKind.longAway => '16h cave · 24h chest · once',
       ShopOfferKind.supporterQol =>
         '+${item.bagSlots} bag · +${item.boostHours}h · once',
-      ShopOfferKind.cinders => '${item.cinderGrant} Cinders',
+      ShopOfferKind.cinders => cinderPouchDoubled
+          ? '8 Cinders'
+          : 'First buy ×2 (16)',
       ShopOfferKind.seasonPass => 'month pass · once',
       ShopOfferKind.permScroll =>
         item.permMask == AdBoost.permAll
@@ -436,7 +450,7 @@ class _ShopRow extends StatelessWidget {
   }
 
   static String _permEffect(int mask) => switch (mask) {
-    AdBoost.permAtk => '+${AdBoost.attackPercent}% AP',
+    AdBoost.permAtk => '+${AdBoost.attackPercent}% ATK',
     AdBoost.permGold => '×${AdBoost.goldMul} gold',
     AdBoost.permXp => '+${AdBoost.xpPercent}% XP',
     AdBoost.permMove => '+${AdBoost.movePercent}% walk',
@@ -505,7 +519,7 @@ class _ShopRow extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              tag(item),
+              tag(item, cinderPouchDoubled: cinderPouchDoubled),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: GameTheme.hint(color: GameTheme.mossLit),
@@ -520,17 +534,7 @@ class _ShopRow extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 8),
-            // Not on Play yet: a quiet note, not a dead grey button. The
-            // offer itself stays listed (polish7 P058).
-            if (!owned && !available)
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  ShopDock.needsPlay,
-                  style: GameTheme.hint(color: GameTheme.parchmentDim),
-                ),
-              )
-            else if (featuredPrimary && canBuy)
+            if (featuredPrimary && canBuy)
               GameButton(
                 label: buyLabel,
                 style: GameButtonStyle.brown,

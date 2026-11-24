@@ -1029,7 +1029,7 @@ extension GameDirectorPlatform on GameDirector {
     showToast('Loading ad…', life: 1.4);
     try {
       final result = await AdRewarded.showRewarded(
-        placement: AnalyticsEvents.placementWelcomeBack,
+        placement: AnalyticsEvents.placementReinstallPouch,
       );
       switch (result) {
         case AdWatchResult.rewarded:
