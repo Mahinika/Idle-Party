@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- UI batch 1: fight HUD clarity, contrast, and chrome baseline.
 - SHOP and ads copy: 24h featured Ad-free → Delver's Kit, unlisted Cinder/season rows hidden until Play prices, season pass and CAMP/Welcome Back clarity, hub WATCH ticket removed (SCROLLS stays), quest reroll labeled AD, reinstall pouch analytics placement.
 - Arena review: heal crits repeat for the same floor and clock without moving damage rolls, portrait stays locked, a cancelled Play update opens the listing, a failed slot migration retries, quest dates follow the game clock, clipboard import keeps this device's Play purchases, purchase ids are never forgotten, friend claims count in one write, and Android backup does not copy the local save.
 - Audit fixes: away catch-up is saved if the app backgrounds again, dead pets stay down, Ascend keeps leave rewards, a failed WISP ad can be retried, DODGE and PARRY show like BLOCK, STA no longer revives the dead, a dying enemy does not swing, hub idle and the comeback chest use the offline time cap, Shield Block's extra reduction applies in melee, and a rejected save write is rolled back.

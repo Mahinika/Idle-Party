@@ -14,6 +14,8 @@ import 'package:idle_party/ui/meta/offline_welcome.dart';
 import 'package:idle_party/ui/confirm_dialogs.dart';
 import 'package:idle_party/ui/theme.dart';
 
+import 'support/role_icons_fight_harness.dart';
+
 /// Fixed clock for stable goldens.
 final DateTime shellGoldenNow = DateTime.utc(2026, 8, 22, 14);
 
@@ -296,6 +298,14 @@ Future<GameDirector> homeShellFightGoldenDirector() async {
     await _bootFightQuiet(director);
     return director;
   });
+}
+
+/// Five heroes on the home fight seam — README fight thumbnail.
+Future<GameDirector> homeShellFiveHeroFightGoldenDirector() async {
+  final state = await roleIconsArtifactFightState();
+  final director = GameDirector.preview(initialState: state);
+  await _bootFightQuiet(director);
+  return director;
 }
 
 Future<GameDirector> fightGoldenDirector() async {

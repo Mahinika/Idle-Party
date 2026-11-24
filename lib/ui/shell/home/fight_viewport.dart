@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/game_director.dart';
 import '../../../core/menu_router.dart';
 import '../../is2_shell.dart';
-import '../dungeon_top_hud.dart';
 import 'fight_seam.dart';
 import 'home_fight_tools.dart';
 
@@ -36,22 +35,6 @@ class FightViewport extends StatelessWidget {
           onLeaveDungeon: onLeave,
           homeChrome: true,
           extraBottomInset: controls ? FightFieldControls.cameraReserve : 0,
-        ),
-        Positioned(
-          left: 8,
-          top: 2,
-          right: 78,
-          child: ListenableBuilder(
-            listenable: director,
-            builder: (context, _) => DungeonTopHud(
-              state: director.state,
-              director: director,
-              placeLineOnly: true,
-              placeLineDps: false,
-              onOpenSettings: () {},
-              onOpenContracts: () {},
-            ),
-          ),
         ),
         HomeFightTools(
           director: director,
