@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- **Abilities-61 VFX (pass 2):** per-ability showcase signatures, motion phases (charge/smear/impact), 6-frame anim strips under `docs/design/abilities-61/rendered/anim/`, ffmpeg GIF script, and centered in-fight staging.
 - **Abilities-61:** every hero spec reaches 11 kit abilities (Protection stays 13; Blood and Guardian unchanged) — 61 new spells with v3-layered `SpellShapePaint` / `SpellVfxLayers` (summon silhouettes, pillars, domes, meteor scorch), in-context A56 fight renders + v3 comparison sheet under `docs/design/abilities-61/rendered/`, labeled traveling bolts, fallback mechanics where proposals needed new engine work, and regression tests for catalog counts, legacy coeffs, saves, and combat resolution.
 - Play review: race picker says cosmetic-only (no stat bonuses), and music bed resyncs after ads or dead voice handles via `MusicPlaybackPlan`.
 - Analytics: once-per-install onboarding steps (prefs, not the save), install cohort and ad-free / season pass user properties, and separate Play purchase fail vs cancel. No price or reward change.

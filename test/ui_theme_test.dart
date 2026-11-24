@@ -23,6 +23,7 @@ void main() {
     'dungeon_paint_projectiles.dart',
     'ability_vfx_paint.dart',
     'spell_shape_paint.dart',
+    'ability_showcase_motion.dart',
     'spell_vfx_palette.dart',
     'dungeon_paint_spell_fx.dart',
     'hero_doll_sprite.dart',
