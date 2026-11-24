@@ -63,6 +63,25 @@ extension _DungeonPaintProjectiles on _TileRoomPainter {
       canvas.translate(c.dx, c.dy);
       canvas.rotate(angle);
 
+      if (SpellShapePaint.paintCustomTravelingBolt(
+        canvas,
+        label: p.label,
+        style: p.style,
+        color: color,
+        thick: thick,
+        len: len,
+        angle: 0,
+        showTrails: showTrails,
+      )) {
+        AbilityVfxPaint.paintBoltAllegiance(
+          canvas,
+          hero: p.team == SpatialTeam.hero,
+          thick: thick,
+        );
+        canvas.restore();
+        continue;
+      }
+
       void drawTrailBolt() {
         if (!showTrails) {
           // Lite/Minimal: short bright slash nub — readable on phone.

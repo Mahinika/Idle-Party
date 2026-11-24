@@ -3,11 +3,11 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/models/class_ability.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
+import 'package:idle_party/ui/spell_shape_paint.dart';
 
-const _newIds = [
+const _newIds = <AbilityId>[
   AbilityId.meteor,
   AbilityId.frozenOrb,
   AbilityId.arcaneBarrage,
@@ -22,13 +22,12 @@ const _newIds = [
 ];
 
 void main() {
-  test('abilities-61 VFX contact sheet renders distinct burst kinds', () async {
-    final world = _world();
-    final cell = 72.0;
-    final cols = 4;
+  test('sample abilities painted via SpellShapePaint (not flat circles)', () async {
+    const cell = 168.0;
+    const cols = 4;
     final rows = (_newIds.length / cols).ceil();
     final w = cell * cols;
-    final h = cell * rows + 40;
+    final h = cell * rows;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     canvas.drawRect(
@@ -38,23 +37,23 @@ void main() {
     for (var i = 0; i < _newIds.length; i++) {
       final id = _newIds[i];
       final def = ClassKits.defFor(id)!;
-      final style = def.boltStyle ?? SpellBoltStyle.fire;
-      final cx = (i % cols) * cell + cell / 2;
-      final cy = (i ~/ cols) * cell + cell / 2 + 20;
-      SpellVfx.spawnImpact(
-        world,
-        x: 0.5 + i * 0.35,
-        y: 1.0,
-        style: style,
-        id: id,
+      final kind = SpellVfx.burstKindFor(
+        style: def.boltStyle ?? SpellBoltStyle.fire,
         shape: def.aoeShape,
-        radius: 0.75,
+        id: id,
       );
-      canvas.drawCircle(
-        Offset(cx, cy),
-        22,
-        Paint()..color = Color(SpatialCombat.burstArgbForStyle(style)),
+      expect(
+        kind,
+        isNot(SpatialBurstKind.blast),
+        reason: '$id should have a shaped burst, not generic blast disc',
       );
+      final rect = Rect.fromLTWH(
+        (i % cols) * cell + 8,
+        (i ~/ cols) * cell + 8,
+        cell - 16,
+        cell - 16,
+      );
+      SpellShapePaint.paintAbilityShowcase(canvas, tileRect: rect, def: def);
     }
     final image = await recorder.endRecording().toImage(w.toInt(), h.toInt());
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -63,16 +62,6 @@ void main() {
       File(out).writeAsBytesSync(bytes!.buffer.asUint8List());
     }
     expect(bytes, isNotNull);
-    expect(bytes!.lengthInBytes, greaterThan(500));
+    expect(bytes!.lengthInBytes, greaterThan(2000));
   });
-}
-
-SpatialWorld _world() {
-  final state = GameLogic.createInitialState(now: DateTime(2026, 11, 24));
-  final entered = GameLogic.enterDungeon(state, dungeonId: 'sandy');
-  final world = SpatialCombat.build(entered);
-  world.reducedVfx = false;
-  world.spawnPersistentVfx = true;
-  world.bursts.clear();
-  return world;
 }

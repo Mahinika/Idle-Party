@@ -8,7 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
-- **Abilities-61:** every hero spec reaches 11 kit abilities (Protection stays 13; Blood and Guardian unchanged) — 61 new spells with distinct painted VFX, fallback mechanics where proposals needed new engine work, and regression tests for catalog counts, legacy coeffs, saves, and combat resolution.
+- **Abilities-61:** every hero spec reaches 11 kit abilities (Protection stays 13; Blood and Guardian unchanged) — 61 new spells with distinct painted VFX, shared `SpellShapePaint` burst/ground/bolt painters, labeled traveling bolts for new casts, golden contact sheet + fight renders under `docs/design/abilities-61/rendered/`, fallback mechanics where proposals needed new engine work, and regression tests for catalog counts, legacy coeffs, saves, and combat resolution.
 - Play review: race picker says cosmetic-only (no stat bonuses), and music bed resyncs after ads or dead voice handles via `MusicPlaybackPlan`.
 - Analytics: once-per-install onboarding steps (prefs, not the save), install cohort and ad-free / season pass user properties, and separate Play purchase fail vs cancel. No price or reward change.
 - Apex audit (2026-11-24): boss clears save the default craft goal before CRAFT opens, “Use auto target” keeps meter progress when auto still names the same mat, duplicate vault copies show the highest rank in the sheet, plus regression coverage for goal/meter toasts, vault bag cap, bag-only upgrades, legacy duplicates, and boss material payoff lines.
