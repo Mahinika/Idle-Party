@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- Apex audit (2026-11-24): boss clears save the default craft goal before CRAFT opens, “Use auto target” keeps meter progress when auto still names the same mat, duplicate vault copies show the highest rank in the sheet, plus regression coverage for goal/meter toasts, vault bag cap, bag-only upgrades, legacy duplicates, and boss material payoff lines.
 - UI batch 2: BIG/LIST fight toggle, FULL stays after first TRAIN buy, plain speed chip, shortfall on forge buy faces, 640px rail icons, FULL cave ≥34% layout check, and reduce-motion for fight presentation only.
 - SHOP and ads copy: 24h featured Ad-free → Delver's Kit, unlisted Cinder/season rows hidden until Play prices, season pass and CAMP/Welcome Back clarity, hub WATCH ticket removed (SCROLLS stays), quest reroll labeled AD, reinstall pouch analytics placement.
 - Arena review: heal crits repeat for the same floor and clock without moving damage rolls, portrait stays locked, a cancelled Play update opens the listing, a failed slot migration retries, quest dates follow the game clock, clipboard import keeps this device's Play purchases, purchase ids are never forgotten, friend claims count in one write, and Android backup does not copy the local save.
