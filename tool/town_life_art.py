@@ -300,17 +300,6 @@ def ground() -> Image.Image:
         (17, 88, 4),
     ):
         _tuft(pix, tx, ty, TUFT_SHAPES[shape])
-    for fx, fy, kind in (
-        (22, 41, 1),
-        (48, 18, 4),
-        (71, 88, 0),
-        (93, 31, 3),
-        (14, 74, 5),
-        (105, 102, 2),
-        (38, 112, 1),
-        (88, 67, 4),
-    ):
-        _bloom_cluster(pix, fx, fy, kind)
     return pix.image()
 
 
@@ -1333,77 +1322,6 @@ def _basket(pix: Pix, x: int, y: int) -> None:
     pix.put(x + 8, y - 1, (255, 214, 80))
     pix.put(x + 4, y - 3, GRASS[5])
     pix.put(x + 6, y - 3, GRASS[6])
-
-
-CRITTER_W = 56
-CRITTER_H = 48
-CRITTER_FRAMES = 4
-CRITTER_KINDS = 3
-
-
-FEATHER = [(180, 140, 96), (210, 168, 120), (236, 206, 164), (255, 236, 210)]
-FUR_TAN = [(72, 48, 32), (102, 70, 48), (132, 92, 62), (162, 112, 78), (196, 140, 96)]
-FUR_DARK = [(36, 24, 18), (60, 40, 28), (88, 60, 42), (118, 80, 56), (148, 104, 72)]
-LEG_YELLOW = [(160, 120, 48), (196, 152, 64), (230, 188, 88), (246, 214, 120)]
-
-
-def _critter_chicken(pix: Pix, frame: int) -> None:
-    bob = (0, -1, 0, 1)[frame]
-    leg = (0, 1, 2, 1)[frame]
-    y = 14 + bob
-    _shade_rect(pix, 8, y - 4, 14, 9, FEATHER)
-    pix.put(18, y - 5, (255, 96, 48))
-    pix.put(19, y - 6, (255, 180, 64))
-    _shade_rect(pix, 8 + leg, y + 3, 3, 8, LEG_YELLOW)
-    _shade_rect(pix, 18 - leg, y + 3, 3, 8, LEG_YELLOW)
-    pix.put(12, y - 5, (240, 220, 200))
-
-
-def _critter_cat(pix: Pix, frame: int) -> None:
-    tail = (0, 1, 2, 1)[frame]
-    y = 14
-    _shade_rect(pix, 8, y, 14, 10, FUR_TAN)
-    pix.put(6, y - 2, (88, 68, 52))
-    pix.put(22, y + tail, (72, 52, 40))
-    pix.put(23, y + tail + 1, (72, 52, 40))
-    pix.put(11, y + 2, (24, 16, 12))
-    pix.put(16, y + 2, (24, 16, 12))
-    pix.put(12, y + 3, (240, 236, 220))
-    pix.put(10, y - 3, (96, 72, 56))
-    pix.put(20, y - 3, (96, 72, 56))
-
-
-def _critter_dog(pix: Pix, frame: int) -> None:
-    step = (0, 2, 0, -2)[frame]
-    y = 13
-    _shade_rect(pix, 6, y, 16, 11, FUR_TAN)
-    _shade_rect(pix, 2, y + 2, 6, 9, FUR_DARK)
-    pix.put(5, y - 2, (142, 96, 60))
-    pix.put(12, y + 2, (24, 16, 12))
-    pix.put(16, y + 2, (24, 16, 12))
-    _shade_rect(pix, 10 + step, y + 9, 4, 6, FUR_DARK)
-    _shade_rect(pix, 18 - step, y + 9, 4, 6, FUR_DARK)
-    pix.put(22, y + 4 + step, (164, 108, 72))
-
-
-def _critter_cell(kind: int, frame: int) -> Pix:
-    pix = Pix(CRITTER_W // 2, CRITTER_H // 2)
-    if kind == 0:
-        _critter_chicken(pix, frame)
-    elif kind == 1:
-        _critter_cat(pix, frame)
-    else:
-        _critter_dog(pix, frame)
-    selective_outline(pix)
-    return _up2(pix)
-
-
-def critters() -> Image.Image:
-    sheet = Pix(CRITTER_W * CRITTER_FRAMES, CRITTER_H * CRITTER_KINDS)
-    for kind in range(CRITTER_KINDS):
-        for frame in range(CRITTER_FRAMES):
-            sheet.blit(_critter_cell(kind, frame), frame * CRITTER_W, kind * CRITTER_H)
-    return sheet.image()
 
 
 def yard_props() -> Image.Image:

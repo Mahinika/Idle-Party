@@ -1189,10 +1189,6 @@ def generate_tree_tall() -> Image.Image:
     return pix.image()
 
 
-def generate_flowers() -> Image.Image:
-    return life_art.flowers()
-
-
 def generate_ground() -> Image.Image:
     return life_art.ground()
 
@@ -1333,7 +1329,7 @@ python3 tool/generate_town_art.py
 |------|--------|
 | Ink (32, 22, 18), 1 px contour | Same warm ink as the heroes |
 | Light | Dusk. Upper-left key, plum sky, warm horizon, lamp windows |
-| Ground | Dark saturated lawn, 128×128, seamless. Cobbles and flowers sit on the paths |
+| Ground | Dark saturated lawn, 128×128, seamless tufts. Cobble flower beds stay on path tiles only |
 | Roofs | Individual tiles. Guild slate, houses terracotta, market a folded awning |
 | Windows | Hot amber glass, wood mullions, light stays inside the frame |
 | People | Smith, courier, and gardener. Idle + 4 walk frames |
@@ -1349,7 +1345,7 @@ python3 tool/generate_town_art.py
 | approach.png | Cobble spur, 36×192, mortar meets at the wrap |
 | alert.png | Claim spark on guild and vault |
 | tree_round.png / tree_tall.png | Leaf clumps, blossoms, fruit |
-| flowers.png / shrub.png / wild.png / herbs.png | Four different plantings |
+| shrub.png / wild.png / herbs.png | Edge plantings |
 | meadow.png / thicket.png / scuff.png | Unique lawn clumps, placed once |
 | worn.png | Small worn patch for a doorway |
 | contact.png | Dark grass under a building |
@@ -1374,7 +1370,6 @@ def main() -> int:
         ("approach.png", life_art.approach()),
         ("tree_round.png", generate_tree_round()),
         ("tree_tall.png", generate_tree_tall()),
-        ("flowers.png", generate_flowers()),
         ("shrub.png", life_art.shrub()),
         ("wild.png", life_art.wild()),
         ("herbs.png", life_art.herbs()),
@@ -1387,7 +1382,6 @@ def main() -> int:
         ("pennants.png", life_art.pennants()),
         ("lanterns.png", life_art.lanterns()),
         ("folk.png", generate_folk()),
-        ("critters.png", life_art.critters()),
         ("yard_props.png", life_art.yard_props()),
         ("alert.png", life_art.alert()),
         ("well.png", generate_well()),
@@ -1420,7 +1414,6 @@ def main() -> int:
     paste(preview, by_name["worn.png"], (20, 430))
     paste(preview, by_name["worn.png"], (150, 436))
     paste(preview, by_name["worn.png"], (270, 428))
-    paste(preview, by_name["flowers.png"], (8, 250))
     paste(preview, by_name["shrub.png"], (300, 246))
     paste(preview, by_name["tree_round.png"], (0, 200))
     paste(preview, by_name["tree_tall.png"], (312, 188))

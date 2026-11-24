@@ -575,13 +575,8 @@ class _TownSquare extends StatelessWidget {
             ),
         Positioned.fill(
           child: TownAmbientLayer(
-            motion: townAmbientMotionEnabled(
-              quality: state.vfxQuality,
-              disableAnimations: MediaQuery.disableAnimationsOf(context),
-            ),
             layout: layout,
             size: size,
-            drawCritters: false,
           ),
         ),
         _building(layout.guild, guild, guild.assetPath(tier)),
@@ -611,17 +606,6 @@ class _TownSquare extends StatelessWidget {
               fit: BoxFit.contain,
               align: Alignment.bottomCenter,
             ),
-        Positioned.fill(
-          child: TownAmbientLayer(
-            motion: townAmbientMotionEnabled(
-              quality: state.vfxQuality,
-              disableAnimations: MediaQuery.disableAnimationsOf(context),
-            ),
-            layout: layout,
-            size: size,
-            drawProps: false,
-          ),
-        ),
         if (TownTier.showArcade(state.ascensionLevel))
           Positioned(
             left: layout.doorPath.left + 16,
@@ -754,7 +738,7 @@ class _TownSquare extends StatelessWidget {
       'meadow' => CustomAssets.townMeadow,
       'thicket' => CustomAssets.townThicket,
       'scuff' => CustomAssets.townScuff,
-      _ => CustomAssets.townFlowers,
+      _ => CustomAssets.townShrub,
     };
   }
 

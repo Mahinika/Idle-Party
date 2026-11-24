@@ -117,15 +117,13 @@ void main() {
 
   group('CustomAssets town files', () {
     test('every town asset exists on disk', () {
-      expect(CustomAssets.townAssetPaths.length, 37);
+      expect(CustomAssets.townAssetPaths.length, 35);
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townPath));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townApproach));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townFolk));
-      expect(CustomAssets.townAssetPaths, contains(CustomAssets.townCritters));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townYardProps));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townTreeRound));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townTreeTall));
-      expect(CustomAssets.townAssetPaths, contains(CustomAssets.townFlowers));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townNameplate));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townPennants));
       expect(CustomAssets.townAssetPaths, contains(CustomAssets.townLanterns));

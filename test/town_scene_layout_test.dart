@@ -130,7 +130,7 @@ void main() {
     expectPacked(const Size(320, 300), wantFolk: false);
   });
 
-  test('yard critters and props sit off labels at A56', () {
+  test('yard props sit off labels at A56', () {
     final layout = TownSceneLayout.pack(const Size(360, 780));
     final props = townYardProps(layout, const Size(360, 780));
     expect(props, isNotEmpty);
@@ -148,9 +148,6 @@ void main() {
         );
       }
     }
-    final still = townCritterMarks(0.33, moving: false);
-    expect(still.every((m) => m.column == 0), isTrue);
-    expect(townCritterMarks(0, moving: false), townCritterMarks(0, moving: false));
   });
 
   test('folk poses are deterministic and idle when motion is off', () {
