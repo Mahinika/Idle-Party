@@ -84,7 +84,8 @@ abstract final class SpellVfx {
     AbilityId.starfall ||
     AbilityId.holyWrath ||
     AbilityId.bladestorm ||
-    AbilityId.deathCoil => true,
+    AbilityId.deathCoil ||
+        AbilityId.meteor => true,
     _ => false,
   };
 
@@ -258,6 +259,53 @@ abstract final class SpellVfx {
     AbilityId.feralThrash ||
     AbilityId.guardianThrash => SpatialBurstKind.slash,
     AbilityId.shockwave => SpatialBurstKind.cone,
+    AbilityId.colossusSmash => SpatialBurstKind.cone,
+    AbilityId.executeFury => SpatialBurstKind.slash,
+    AbilityId.piercingHowl => SpatialBurstKind.ring,
+    AbilityId.lightOfDawn => SpatialBurstKind.cross,
+    AbilityId.hammerOfJusticeHoly => SpatialBurstKind.cross,
+    AbilityId.consecrationRet => SpatialBurstKind.cross,
+    AbilityId.hammerOfJusticeRet => SpatialBurstKind.cross,
+    AbilityId.killShotBm => SpatialBurstKind.rain,
+    AbilityId.claw => SpatialBurstKind.slash,
+    AbilityId.killShotMm => SpatialBurstKind.beam,
+    AbilityId.bindingShot => SpatialBurstKind.beam,
+    AbilityId.wildfireBomb => SpatialBurstKind.flame,
+    AbilityId.harpoonSurvival => SpatialBurstKind.beam,
+    AbilityId.kidneyShotAssa => SpatialBurstKind.slash,
+    AbilityId.crimsonVial => SpatialBurstKind.poison,
+    AbilityId.adrenalineRush => SpatialBurstKind.slash,
+    AbilityId.revealingStrike => SpatialBurstKind.slash,
+    AbilityId.secretTechnique => SpatialBurstKind.slash,
+    AbilityId.powerWordBarrier => SpatialBurstKind.cross,
+    AbilityId.halo => SpatialBurstKind.cross,
+    AbilityId.shadowfiendDisc => SpatialBurstKind.skull,
+    AbilityId.holyFire => SpatialBurstKind.cross,
+    AbilityId.holyWordSanctify => SpatialBurstKind.cross,
+    AbilityId.shadowWordDeath => SpatialBurstKind.skull,
+    AbilityId.shadowfiendShadow => SpatialBurstKind.skull,
+    AbilityId.frozenOrb => SpatialBurstKind.shards,
+    AbilityId.breathOfSindragosa => SpatialBurstKind.shards,
+    AbilityId.empowerRuneWeapon => SpatialBurstKind.shards,
+    AbilityId.soulReaper => SpatialBurstKind.skull,
+    AbilityId.darkTransformation => SpatialBurstKind.skull,
+    AbilityId.fireElemental => SpatialBurstKind.flame,
+    AbilityId.crashLightning => SpatialBurstKind.beam,
+    AbilityId.healingTideTotem => SpatialBurstKind.leaf,
+    AbilityId.earthbindTotem => SpatialBurstKind.leaf,
+    AbilityId.arcaneBarrage => SpatialBurstKind.beam,
+    AbilityId.meteor => SpatialBurstKind.flame,
+    AbilityId.frostMageConeOfCold => SpatialBurstKind.shards,
+    AbilityId.darkSoul => SpatialBurstKind.skull,
+    AbilityId.howlOfTerror => SpatialBurstKind.skull,
+    AbilityId.callDreadstalkers => SpatialBurstKind.skull,
+    AbilityId.soulFireDemo => SpatialBurstKind.flame,
+    AbilityId.summonInfernal => SpatialBurstKind.flame,
+    AbilityId.shadowburn => SpatialBurstKind.skull,
+    AbilityId.starsurge => SpatialBurstKind.beam,
+    AbilityId.forceOfNature => SpatialBurstKind.leaf,
+    AbilityId.maim => SpatialBurstKind.slash,
+    AbilityId.entanglingRoots => SpatialBurstKind.leaf,
     _ => null,
   };
 
@@ -302,6 +350,18 @@ abstract final class SpellVfx {
     AbilityId.fanOfKnivesCombat ||
     AbilityId.feralThrash ||
     AbilityId.guardianThrash => SpatialGroundFxKind.steel,
+    AbilityId.consecrationRet => SpatialGroundFxKind.holy,
+    AbilityId.bindingShot => SpatialGroundFxKind.disc,
+    AbilityId.wildfireBomb => SpatialGroundFxKind.fire,
+    AbilityId.secretTechnique => SpatialGroundFxKind.shadow,
+    AbilityId.halo => SpatialGroundFxKind.holy,
+    AbilityId.holyWordSanctify => SpatialGroundFxKind.holy,
+    AbilityId.frozenOrb => SpatialGroundFxKind.frost,
+    AbilityId.healingTideTotem => SpatialGroundFxKind.nature,
+    AbilityId.earthbindTotem => SpatialGroundFxKind.nature,
+    AbilityId.meteor => SpatialGroundFxKind.fire,
+    AbilityId.summonInfernal => SpatialGroundFxKind.fire,
+    AbilityId.entanglingRoots => SpatialGroundFxKind.nature,
     _ => null,
   };
 }
