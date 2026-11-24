@@ -80,12 +80,17 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Read Flutter pin
+        if: steps.apk.outputs.built == 'true'
+        id: flutter-pin
+        run: echo "version=$(tr -d '[:space:]' < .flutter-version)" >> "$GITHUB_OUTPUT"
+
       - name: Set up Flutter
         if: steps.apk.outputs.built == 'true'
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: '3.47.9'
+          flutter-version: ${{ steps.flutter-pin.outputs.version }}
           cache: true
 
       - name: Build x86_64 test APK from tag

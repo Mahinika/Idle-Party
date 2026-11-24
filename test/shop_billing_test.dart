@@ -129,8 +129,6 @@ void main() {
       expect(ShopCatalog.shelf().map((e) => e.id), [
         'ad_free',
         'long_away',
-        'cinder_pouch',
-        'season_pass_premium',
         'supporter_qol',
       ]);
       expect(
@@ -154,6 +152,7 @@ void main() {
             'perm_scroll_atk',
             'starter_boost_6h',
             'cinder_pouch',
+            'season_pass_premium',
             'ad_free',
           },
         ).map((e) => e.id),
@@ -345,15 +344,13 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.textContaining('Google Play packs'), findsOneWidget);
+      expect(find.textContaining('Delver\'s Kit'), findsOneWidget);
       expect(find.textContaining('not sold here'), findsOneWidget);
 
       final scroll = find.byType(Scrollable).first;
       for (final label in [
         'Ad-free welcome',
         'Long Away',
-        'Cinder pouch',
-        'Season pass premium',
         'Supporter pack',
       ]) {
         await tester.scrollUntilVisible(
@@ -363,9 +360,10 @@ void main() {
         );
         expect(find.text(label), findsOneWidget);
       }
-      // polish7 P058: a note, not a dead UNAVAILABLE button.
-      expect(find.text('UNAVAILABLE'), findsNothing);
-      expect(find.text(ShopDock.needsPlay), findsWidgets);
+      expect(find.text('Cinder pouch'), findsNothing);
+      expect(find.text('Season pass premium'), findsNothing);
+      expect(find.text('UNAVAILABLE'), findsWidgets);
+      expect(find.text(ShopDock.needsPlay), findsNothing);
       expect(find.text(ShopDock.noPrice), findsNothing);
       expect(find.text('BUY'), findsNothing);
       expect(find.textContaining('\$'), findsNothing);
@@ -379,9 +377,6 @@ void main() {
       expect(find.text('RESTORE'), findsOneWidget);
       expect(find.text('REDEEM CODE'), findsOneWidget);
 
-      await tester.tap(find.text(ShopDock.needsPlay).first);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
       expect(director.state.metaDepth.adFree, isFalse);
       expect(director.state.metaDepth.shopLongAway, isFalse);
       expect(director.state.metaDepth.shopBagBonusSlots, 0);

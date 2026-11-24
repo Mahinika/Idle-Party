@@ -17,7 +17,7 @@ Idle Party is a portrait Android idle RPG. Install from Google Play — not from
 Current phone frames from the test suite (`360×780`):
 
 <p align="center">
-  <img src="test/goldens/after/fight_a56.png" alt="Fight on Samsung A56" width="220" />
+  <img src="test/goldens/after/home_shell_fight_a56.png" alt="Home fight on Samsung A56 (5 heroes)" width="220" />
   <img src="test/goldens/after/home_shell_split_a56.png" alt="Home shell on A56" width="220" />
   <img src="test/goldens/after/welcome_back_a56.png" alt="Welcome Back on A56" width="220" />
 </p>
@@ -51,8 +51,11 @@ Next priorities: [ROADMAP.md](ROADMAP.md). The year plan is [docs/YEAR_ROADMAP.m
 ## Build, run, test
 
 Portrait Android is the product. Web is a fallback, not a release.
+Flutter **3.47.9** is pinned in `.flutter-version`. Cloud agents and a fresh
+machine install that SDK with `tool/ci/install_flutter_pinned.sh`.
 
 ```bash
+bash tool/ci/install_flutter_pinned.sh
 flutter pub get
 flutter analyze lib test --no-fatal-infos
 ```

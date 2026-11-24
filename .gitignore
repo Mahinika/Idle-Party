@@ -165,3 +165,19 @@ IdleSword*
 # Emulator shots from tool/adb_see.py. sessionStart deletes images older than 3 days.
 /playshots/
 
+node_modules/
+tool/firestore_rules_test/.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Competitor research may keep a short note. No screenshot, log, or dump files.
+docs/competitor_research/**/*.png
+docs/competitor_research/**/*.jpg
+docs/competitor_research/**/*.jpeg
+docs/competitor_research/**/*.webp
+docs/competitor_research/**/*.gif
+docs/competitor_research/**/*.log
+docs/competitor_research/**/*.txt
+docs/competitor_research/**/logcat*
+docs/competitor_research/**/screens/
+

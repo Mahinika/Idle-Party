@@ -151,6 +151,17 @@ Future<String?> restore() async {
   }
 }
 
+/// Clipboard import keeps this device's Play flags, then this runs so a
+/// real purchase can be granted again. Counts even when Billing is off.
+@visibleForTesting
+int debugClipboardRestoreCalls = 0;
+
+Future<void> replayAfterClipboardImport() async {
+  debugClipboardRestoreCalls++;
+  await restore();
+  await _recoverUnfinishedPurchases();
+}
+
 /// Unacknowledged consumables survive a process death. Grant them, save,
 /// then consume. Play does not return a purchase after it is consumed.
 Future<void> _recoverUnfinishedPurchases() async {

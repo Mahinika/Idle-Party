@@ -97,6 +97,11 @@ class HomeTopBar extends StatelessWidget {
     final chase = showBarGoal
         ? NavCopy.playerText(goal, HomeLayout.home)
         : '';
+    // Split fight: the plate kicker already names the zone and gate job.
+    final suppressDungeonChase = compactTop &&
+        state.inDungeon &&
+        !state.isPartyDefeated &&
+        !director.awaitingWipeChoice;
     final third = _third(context, state, route, essencePanel);
     final perMin = GoldIncome.hubGoldPerMinute(state);
     final fast = state.combatPace >= 2;
@@ -209,44 +214,16 @@ class HomeTopBar extends StatelessWidget {
                       padding: EdgeInsets.symmetric(
                         horizontal: textScale > GameTheme.typeScaleMax ? 4 : 6,
                       ),
-                      child: textScale > GameTheme.typeScaleMax
-                          ? Text(
-                              fast ? '2×' : '1×',
-                              maxLines: 1,
-                              style: GameTheme.button(
-                                size: GameTheme.typeButtonDense,
-                                color: fast
-                                    ? ChunkyFace.textOn(ChunkyTone.orange)
-                                    : GameTheme.parchment,
-                              ),
-                            )
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ExcludeSemantics(
-                                  child: Text(
-                                    '▸',
-                                    maxLines: 1,
-                                    style: GameTheme.button(
-                                      size: GameTheme.typeButtonDense,
-                                      color: fast
-                                          ? ChunkyFace.textOn(ChunkyTone.orange)
-                                          : GameTheme.parchmentDim,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  fast ? '2×' : '1×',
-                                  maxLines: 1,
-                                  style: GameTheme.button(
-                                    size: GameTheme.typeButtonDense,
-                                    color: fast
-                                        ? ChunkyFace.textOn(ChunkyTone.orange)
-                                        : GameTheme.parchment,
-                                  ),
-                                ),
-                              ],
-                            ),
+                      child: Text(
+                        fast ? '2×' : '1×',
+                        maxLines: 1,
+                        style: GameTheme.button(
+                          size: GameTheme.typeButtonDense,
+                          color: fast
+                              ? ChunkyFace.textOn(ChunkyTone.orange)
+                              : GameTheme.parchment,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -314,7 +291,9 @@ class HomeTopBar extends StatelessWidget {
                 textScale: textScale,
                 onFloorTap: () => showFloorJumpSheet(context, director),
               ),
-              if (chase.isNotEmpty && textScale <= GameTheme.typeScaleMax) ...[
+              if (chase.isNotEmpty &&
+                  !suppressDungeonChase &&
+                  textScale <= GameTheme.typeScaleMax) ...[
                 SizedBox(height: textScale > 1.4 ? 0 : 1),
                 Text(
                   chase,
@@ -539,6 +518,14 @@ class _DungeonTargetRow extends StatelessWidget {
               director: director,
               edgeInset: false,
               hpRowTrailing: trailing,
+              plateKicker: state.isPartyDefeated ||
+                      director.awaitingWipeChoice ||
+                      director.spatial == null
+                  ? null
+                  : homeFightPlateKicker(
+                      state: state,
+                      director: director,
+                    ),
             ),
           );
         },

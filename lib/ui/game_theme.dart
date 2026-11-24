@@ -109,7 +109,7 @@ abstract final class GameTheme {
 
   /// Menu sheet surfaces (alpha baked so overlays stay `const`).
   static const Color scrim = Color(0xE00B0709);
-  static const Color card = Color(0xB81C1318);
+  static const Color card = Color(0xCC1C1318);
   static const Color cardRaised = Color(0xCC291D23);
   static const Color sheet = Color(0xF01C1318);
   static const Color tooltipSheet = Color(0xF0140C08);

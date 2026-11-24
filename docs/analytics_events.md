@@ -74,7 +74,7 @@ list is marked done and emits nothing.
 | `rewarded_skip` | `placement` | Dismissed before reward. |
 | `rewarded_load_fail` | `placement`, `reason` (`preload`, `load`, `show`, `not_ready`, `timeout`) | One failure. A preload fail is not a second event. |
 
-Placements: `welcome_back`, `wisp_gift`, `powerups`, `camp_ad`, `scroll_well`, `quest_reroll`, `wipe_retry`, `wipe_revive`.
+Placements: `welcome_back`, `reinstall_pouch`, `wisp_gift`, `powerups`, `camp_ad`, `scroll_well`, `quest_reroll`, `wipe_retry`, `wipe_revive`.
 
 | Event | Params | When |
 |---|---|---|

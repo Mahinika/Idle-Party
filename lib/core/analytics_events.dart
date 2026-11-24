@@ -57,6 +57,7 @@ abstract final class AnalyticsEvents {
   };
 
   static const placementWelcomeBack = 'welcome_back';
+  static const placementReinstallPouch = 'reinstall_pouch';
   static const placementWispGift = 'wisp_gift';
   static const placementPowerups = 'powerups';
   static const placementCampAd = 'camp_ad';

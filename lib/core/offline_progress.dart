@@ -303,8 +303,8 @@ abstract final class OfflineProgress {
     bool autoEnteredCave = false,
     bool awayGoldMultiplied = false,
   }) {
-    final awayForChest = secondsAway > 0 ? secondsAway : seconds;
-    final noted = ComebackChest.noteAbsence(progressed, awayForChest);
+    // The chest uses the credited window, the same cap as the gold.
+    final noted = ComebackChest.noteAbsence(progressed, seconds);
     // Entering the last cave clears the hub KEY dial so the absence is not
     // a keystone. Put the dial back; the next manual enter starts the key.
     final keptDial = autoEnteredCave

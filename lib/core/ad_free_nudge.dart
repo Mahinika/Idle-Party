@@ -20,7 +20,8 @@ abstract final class AdFreeNudge {
   /// Same Play product as the SHOP row.
   static const String productId = 'ad_free';
 
-  static const String line = 'Tired of ads? Ad-free is a one-time purchase';
+  static const String line =
+      'Tired of ads? Ad-free hides every video and gives a free ticket each day';
 
   /// Play returned [productId], this binary is a sideload QA APK, or a
   /// debug build is proving the CAMP row on a phone.

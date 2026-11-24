@@ -44,7 +44,6 @@ import 'hub/hub_endgame_map.dart';
 import 'hub/hub_header.dart';
 import 'hub/hub_powerups.dart';
 import 'hub/hub_ranks.dart';
-import 'shell/boost_ad_button.dart';
 import 'shell/scroll_buff_stack.dart';
 import 'hub/hub_today_card.dart';
 import 'hub/hub_world_map.dart';
@@ -988,14 +987,6 @@ class _HubScreenState extends State<HubScreen>
                                         crossAxisAlignment:
                                             CrossAxisAlignment.end,
                                         children: [
-                                          DecoratedBox(
-                                            decoration: MenuChrome.hudWell(
-                                              borderColor: GameTheme.borderLit,
-                                            ),
-                                            child: BoostAdButton(
-                                              director: director,
-                                            ),
-                                          ),
                                           ScrollBuffStack(
                                             meta: state.metaDepth,
                                             maxHeight: 88,

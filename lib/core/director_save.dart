@@ -634,9 +634,12 @@ extension GameDirectorSave on GameDirector {
       if (seconds >= 15) {
         unawaited(AppAnalytics.sessionLength(seconds));
       }
-      _flushHubIdle();
       _pauseBackgroundLoops();
       _syncHubIdleTimer();
+      // A pause during catch-up must not stamp or save the pre-credit wallet.
+      final inflight = _awayCreditDone?.future;
+      if (inflight != null) await inflight;
+      _flushHubIdle();
       await _persistFlush();
       unawaited(_syncAwayReminders(backgrounded: true));
     } else {
@@ -695,6 +698,8 @@ extension GameDirectorSave on GameDirector {
       if (elapsed.inSeconds >= GameDirector._awayCreditMinSec) {
         _welcomeBackAdGranted = false;
         _awayCreditInFlight = true;
+        final done = Completer<void>();
+        _awayCreditDone = done;
         final epoch = _saveEpoch;
         final base = _state;
         try {
@@ -721,6 +726,8 @@ extension GameDirectorSave on GameDirector {
           _directorNotify();
         } finally {
           _awayCreditInFlight = false;
+          if (!done.isCompleted) done.complete();
+          if (identical(_awayCreditDone, done)) _awayCreditDone = null;
         }
       }
     }
@@ -792,13 +799,14 @@ extension GameDirectorSave on GameDirector {
     final now = DateTime.now();
     final seconds = now.difference(_state.lastUpdated).inSeconds;
     if (seconds < 1) return;
+    final capped = _cappedHubIdleSeconds(seconds);
     final beforeGold = _state.gold;
     final beforeEssence = _state.essence;
     _state = GoldIncome.applyHubIdle(
       _state,
-      seconds,
+      capped,
     ).copyWith(lastUpdated: now);
-    _autosaveAccum += seconds.toDouble();
+    _autosaveAccum += capped.toDouble();
     _persistIfAutosaveDue();
     if (_state.gold != beforeGold || _state.essence != beforeEssence) {
       _directorNotify();
@@ -819,8 +827,15 @@ extension GameDirectorSave on GameDirector {
     }
     _state = GoldIncome.applyHubIdle(
       _state,
-      seconds,
+      _cappedHubIdleSeconds(seconds),
     ).copyWith(lastUpdated: now);
+  }
+
+  /// One hub gap uses the closed-app chest cap. A 1-second tick stays under it.
+  int _cappedHubIdleSeconds(int seconds) {
+    final cap = GoldIncome.hubChestCapSecFor(_state);
+    if (seconds > cap) return cap;
+    return seconds;
   }
 
   Future<void> boot({bool deferCombatLoop = false}) async {

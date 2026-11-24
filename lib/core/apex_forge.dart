@@ -198,9 +198,28 @@ abstract final class ApexForge {
     }
 
     // Target-material meter (deterministic progress; RNG/pity still run above).
+    next = _ensureDefaultCraftGoal(next);
     next = _tickTargetMeter(next, farm: farm);
 
     return next.copyWith(craftPity: pity, lastUpdated: DateTime.now());
+  }
+
+  /// Persist the party default goal so boss clears fill the meter before CRAFT opens.
+  static GameState _ensureDefaultCraftGoal(GameState state) {
+    if (craftGoalFromState(state) != null) return state;
+    if (GameLogic.plainPlayerChrome(state) || state.heroes.isEmpty) return state;
+    final h = state.heroes.first;
+    final classId = h.spec.classId;
+    final role = h.spec.roleTag;
+    if (!ApexCraft.isValidPair(classId, role)) return state;
+    final slot =
+        nextSlotForPair(state, classId, role) ?? EquipmentSlot.weapon;
+    return setApexCraftGoal(
+      state,
+      classId: classId,
+      role: role,
+      slot: slot,
+    );
   }
 
   /// Zone-shard recipe pool grants a real named shard (current dungeon when
@@ -304,10 +323,16 @@ abstract final class ApexForge {
 
   static GameState clearApexTargetMatOverride(GameState state) {
     if (state.metaDepth.apexTargetMatId.isEmpty) return state;
-    return state.copyWith(
-      metaDepth: state.metaDepth.copyWith(
-        apexTargetMatId: '',
-        apexTargetProgress: 0,
+    final pinned = state.metaDepth.apexTargetMatId;
+    final progress = state.metaDepth.apexTargetProgress;
+    final cleared = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(apexTargetMatId: ''),
+    );
+    final autoTarget = resolveTargetMatId(cleared);
+    final keepProgress = autoTarget != null && autoTarget == pinned;
+    return cleared.copyWith(
+      metaDepth: cleared.metaDepth.copyWith(
+        apexTargetProgress: keepProgress ? progress : 0,
       ),
       lastUpdated: DateTime.now(),
     );
@@ -533,13 +558,28 @@ abstract final class ApexForge {
         if (item.id == itemId && item.isApex) return item;
       }
     }
+    EquipmentItem? best;
+    void consider(EquipmentItem item) {
+      if (!item.isApex || item.id != itemId) return;
+      if (best == null || _apexItemRankOrder(item, best!) < 0) {
+        best = item;
+      }
+    }
+
     for (final item in state.apexVault) {
-      if (item.id == itemId && item.isApex) return item;
+      consider(item);
     }
     for (final item in state.gearStash) {
-      if (item.id == itemId && item.isApex) return item;
+      consider(item);
     }
-    return null;
+    return best;
+  }
+
+  /// Lower sorts first: higher rank, then higher item level.
+  static int _apexItemRankOrder(EquipmentItem a, EquipmentItem b) {
+    final rank = b.apexRank.compareTo(a.apexRank);
+    if (rank != 0) return rank;
+    return b.itemLevel.compareTo(a.itemLevel);
   }
 
   /// Positive craft-material counts gained between two saves.
