@@ -1,6 +1,8 @@
 import 'ad_rewarded_stub.dart'
     if (dart.library.io) 'ad_rewarded_io.dart' as impl;
 
+import 'game_audio.dart';
+
 enum AdWatchResult { rewarded, skipped, failed, unavailable }
 
 /// Optional rewarded ads. No-op on web / tests / non-Android.
@@ -20,8 +22,13 @@ abstract final class AdRewarded {
 
   static Future<void> warmup() => impl.warmup();
 
-  static Future<AdWatchResult> showRewarded({required String placement}) =>
-      impl.showRewarded(placement: placement);
+  static Future<AdWatchResult> showRewarded({required String placement}) async {
+    try {
+      return await impl.showRewarded(placement: placement);
+    } finally {
+      GameAudio.resyncAfterInterrupt();
+    }
+  }
 
   /// SETTINGS → AD PRIVACY. Lets EU players change or withdraw AdMob consent.
   static Future<void> showPrivacyOptions() => impl.showPrivacyOptions();

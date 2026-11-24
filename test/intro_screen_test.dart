@@ -387,12 +387,7 @@ void main() {
     await tester.tap(find.text('N.ELF').first);
     await tester.pump();
     expect(find.textContaining('Race for WALL'), findsOneWidget);
-    expect(
-      find.text(
-        'Look only. Specialization sets the abilities. Race locks after START.',
-      ),
-      findsOneWidget,
-    );
+    expect(find.text(HeroRace.pickerSummary), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), 'Moon Guard');
     await tester.ensureVisible(find.text('START'));
@@ -401,7 +396,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
     expect(find.text('Lock race?'), findsOneWidget);
     expect(
-      find.textContaining('Race is the hero\'s look and locks after START.'),
+      find.textContaining(
+        'You can still change specialization later',
+      ),
       findsOneWidget,
     );
     await tester.tap(find.widgetWithText(GameButton, 'START').last);
