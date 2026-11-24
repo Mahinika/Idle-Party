@@ -5,6 +5,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/billing_client_wrappers.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 
+import 'analytics_events.dart';
 import 'app_analytics.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
@@ -195,6 +196,11 @@ Future<void> _handlePurchases(
   }
 }
 
+/// Play often reports a dismissed sheet as an error, not [PurchaseStatus.canceled].
+bool _billingUserCanceled(PurchaseDetails purchase) {
+  return AnalyticsEvents.billingUserCanceled(purchase.error?.code ?? '');
+}
+
 String _settleKey(PurchaseDetails purchase) {
   final id = _purchaseKey(purchase);
   if (id.isNotEmpty) return id;
@@ -218,7 +224,16 @@ Future<void> _settlePurchase(
       _onMessage?.call(
         purchase.error?.message ?? 'Purchase canceled or failed.',
       );
-      unawaited(AppAnalytics.storePurchaseCancel(purchase.productID));
+      if (_billingUserCanceled(purchase)) {
+        unawaited(AppAnalytics.storePurchaseCancel(purchase.productID));
+      } else {
+        unawaited(
+          AppAnalytics.storePurchaseFail(
+            purchase.productID,
+            reason: 'play_error',
+          ),
+        );
+      }
       if (purchase.pendingCompletePurchase) {
         await InAppPurchase.instance.completePurchase(purchase);
       }
@@ -232,15 +247,16 @@ Future<void> _settlePurchase(
       final item = ShopCatalog.byId[purchase.productID];
       final purchaseId = _purchaseKey(purchase);
       var saved = true;
+      final countsAsRestore = ShopBilling.countsAsExistingPurchase(
+        fromPastQuery: fromPastQuery,
+        statusRestored: purchase.status == PurchaseStatus.restored,
+      );
       if (item != null && _onGranted != null) {
         try {
           saved = await _onGranted!(
             productId: purchase.productID,
             purchaseId: purchaseId,
-            restored: ShopBilling.countsAsExistingPurchase(
-              fromPastQuery: fromPastQuery,
-              statusRestored: purchase.status == PurchaseStatus.restored,
-            ),
+            restored: countsAsRestore,
             recovered: fromPastQuery,
           );
         } catch (e, st) {
@@ -248,7 +264,17 @@ Future<void> _settlePurchase(
           saved = false;
         }
       }
-      if (!saved) return;
+      if (!saved) {
+        if (!countsAsRestore) {
+          unawaited(
+            AppAnalytics.storePurchaseFail(
+              purchase.productID,
+              reason: 'save_failed',
+            ),
+          );
+        }
+        return;
+      }
       if (item != null && item.isConsumable) {
         await _consumePurchase(purchase);
       } else if (purchase.pendingCompletePurchase) {

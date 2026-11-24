@@ -9,7 +9,8 @@ import 'app_analytics.dart';
 import 'remote_tune_boot.dart';
 import 'immersive_ui.dart';
 import 'flutter_test_env_stub.dart'
-    if (dart.library.io) 'flutter_test_env_io.dart' as test_env;
+    if (dart.library.io) 'flutter_test_env_io.dart'
+    as test_env;
 
 bool get realAdsAvailable {
   if (test_env.inFlutterTestProcess()) return false;
@@ -73,14 +74,14 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
     if (_sdkReady && _ready == null) await _preload(placement: placement);
   });
   if (!_sdkReady) {
-    unawaited(AppAnalytics.rewardedLoadFail(placement));
+    unawaited(AppAnalytics.rewardedLoadFail(placement, reason: 'not_ready'));
     return AdWatchResult.failed;
   }
   var ad = _ready;
   _ready = null;
   ad ??= await _loadAd(placement: placement);
   if (ad == null) {
-    unawaited(AppAnalytics.rewardedLoadFail(placement));
+    // _loadAd already reported this failure.
     return AdWatchResult.failed;
   }
 
@@ -100,7 +101,7 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
       debugPrint('rewarded ad failed to show: $error');
       closed.dispose();
       if (!finished.isCompleted) {
-        unawaited(AppAnalytics.rewardedLoadFail(placement));
+        unawaited(AppAnalytics.rewardedLoadFail(placement, reason: 'show'));
         finished.complete(AdWatchResult.failed);
       }
     },
@@ -110,15 +111,13 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
     await ad.show(
       onUserEarnedReward: (AdWithoutView adView, RewardItem reward) {
         earned = true;
-        debugPrint(
-          'rewarded ad earned: ${reward.amount} ${reward.type}',
-        );
+        debugPrint('rewarded ad earned: ${reward.amount} ${reward.type}');
       },
     );
   } catch (e, st) {
     debugPrint('rewarded ad show failed: $e\n$st');
     ad.dispose();
-    unawaited(AppAnalytics.rewardedLoadFail(placement));
+    unawaited(AppAnalytics.rewardedLoadFail(placement, reason: 'show'));
     unawaited(_preload(placement: placement));
     return AdWatchResult.failed;
   }
@@ -129,6 +128,11 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
       onTimeout: () {
         debugPrint('rewarded ad dismiss timed out');
         ad?.dispose();
+        if (!earned) {
+          unawaited(
+            AppAnalytics.rewardedLoadFail(placement, reason: 'timeout'),
+          );
+        }
         return earned ? AdWatchResult.rewarded : AdWatchResult.failed;
       },
     );
@@ -194,11 +198,21 @@ Future<void> _requestConsent({required bool askConsent}) async {
 
 Future<void> _preload({String? placement}) async {
   if (_ready != null || !_sdkReady) return;
-  _ready = await _loadAd(placement: placement);
+  _ready = await _loadAd(placement: placement, failReason: 'preload');
 }
 
-Future<RewardedAd?> _loadAd({String? placement}) async {
+Future<RewardedAd?> _loadAd({
+  String? placement,
+  String failReason = 'load',
+}) async {
   final loaded = Completer<RewardedAd?>();
+  var reported = false;
+  void report(String reason) {
+    if (reported || placement == null) return;
+    reported = true;
+    unawaited(AppAnalytics.rewardedLoadFail(placement, reason: reason));
+  }
+
   await RewardedAd.load(
     adUnitId: AdConfig.rewardedUnitId,
     request: const AdRequest(),
@@ -208,15 +222,17 @@ Future<RewardedAd?> _loadAd({String? placement}) async {
       },
       onAdFailedToLoad: (error) {
         debugPrint('rewarded ad load failed: $error');
-        if (placement != null) {
-          unawaited(AppAnalytics.rewardedLoadFail(placement));
-        }
+        report(failReason);
         if (!loaded.isCompleted) loaded.complete(null);
       },
     ),
   );
-  return loaded.future.timeout(const Duration(seconds: 20), onTimeout: () {
-    debugPrint('rewarded ad load timed out');
-    return null;
-  });
+  return loaded.future.timeout(
+    const Duration(seconds: 20),
+    onTimeout: () {
+      debugPrint('rewarded ad load timed out');
+      report('timeout');
+      return null;
+    },
+  );
 }

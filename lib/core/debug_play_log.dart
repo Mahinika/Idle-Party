@@ -35,13 +35,17 @@ abstract final class DebugPlayLog {
     'start_menu_shown',
     'new_game_shown',
     'new_game_confirmed',
+    'onboarding_launch',
     'first_open',
     'app_ready',
     'first_enter',
+    'first_upgrade',
+    'first_craft',
     'time_to_combat',
     'first_reward',
     'first_boss',
     'd1_return',
+    'welcome_back',
     'offline_gold',
     'offline_hold',
     'party_wipe',
@@ -55,9 +59,7 @@ abstract final class DebugPlayLog {
       event('funnel', name);
       return;
     }
-    final bits = [
-      for (final e in params.entries) '${e.key}=${e.value}',
-    ];
+    final bits = [for (final e in params.entries) '${e.key}=${e.value}'];
     event('funnel', '$name ${bits.join(' ')}');
   }
 
@@ -95,16 +97,8 @@ abstract final class DebugPlayLog {
         after.wipeAdviceLine.isNotEmpty) {
       bits.add('wipe "${after.wipeAdviceLine}"');
     }
-    add(
-      'clearedF',
-      before.highestFloorCleared,
-      after.highestFloorCleared,
-    );
-    add(
-      'clearedZ',
-      before.highestDungeonCleared,
-      after.highestDungeonCleared,
-    );
+    add('clearedF', before.highestFloorCleared, after.highestFloorCleared);
+    add('clearedZ', before.highestDungeonCleared, after.highestDungeonCleared);
 
     if (bits.isEmpty) return null;
     final goldOnly = bits.length == 1 && bits.first.startsWith('gold ');
