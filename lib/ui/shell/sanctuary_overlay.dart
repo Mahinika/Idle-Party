@@ -79,11 +79,35 @@ class SanctuaryOverlay extends StatefulWidget {
     return (points / softAt).clamp(0.0, 1.0);
   }
 
-  static String watchFreeLabel(GameState state) =>
-      state.metaDepth.adFree ? 'Free level' : 'Watch · free level';
+  static String _trackShortName(String track) => switch (track) {
+    'gold' => 'Gold',
+    'power' => 'Power',
+    'vitality' => 'Vitality',
+    'defense' => 'Defense',
+    'xp' => 'XP',
+    _ => track,
+  };
+
+  static String watchFreeLabel(GameState state) {
+    final track = _trackShortName(GameLogic.recommendedSanctuaryTrack(state));
+    if (state.metaDepth.adFree) {
+      final left =
+          GameLogic.campAdDailyCap - GameLogic.campAdClaimsToday(state);
+      if (left > 0) return 'Free $track level · $left left today';
+      return 'Free $track level';
+    }
+    return 'Watch · free $track level';
+  }
 
   /// Caption beside the compact free-level button at large text.
-  static const String watchFreeCaption = 'Free CAMP level';
+  static String watchFreeCaption(GameState state) {
+    final track = _trackShortName(GameLogic.recommendedSanctuaryTrack(state));
+    final left =
+        GameLogic.campAdDailyCap - GameLogic.campAdClaimsToday(state);
+    if (left > 0) return 'Free $track level · $left left today';
+    return 'Free $track level';
+  }
+
   static const watchFreeCaptionKey = ValueKey('camp-watch-caption');
 
   @override
@@ -301,7 +325,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
                   Expanded(
                     child: ExcludeSemantics(
                       child: Text(
-                        SanctuaryOverlay.watchFreeCaption,
+                        SanctuaryOverlay.watchFreeCaption(state),
                         key: SanctuaryOverlay.watchFreeCaptionKey,
                         maxLines: 2,
                         style: GameTheme.hint(color: GameTheme.parchmentDim),

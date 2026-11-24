@@ -1,0 +1,13 @@
+{
+  "name": "idle-party-firestore-rules-test",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "firebase emulators:exec --config ../../firebase.json --only firestore --project demo-idle-party \"node test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.2.0",
+    "firebase-tools": "^13.29.1"
+  }
+}

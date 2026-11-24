@@ -88,8 +88,6 @@ abstract final class ShopBilling {
     required bool statusRestored,
   }) => fromPastQuery || statusRestored;
 
-  static const int grantedPurchaseIdCap = 64;
-
   static bool alreadyGranted(GameState state, String purchaseId) {
     final id = purchaseId.trim();
     if (id.isEmpty) return false;
@@ -131,12 +129,10 @@ abstract final class ShopBilling {
     if (id.isEmpty) return granted;
     final ids = <String>[...granted.metaDepth.grantedShopPurchaseIds];
     if (!ids.contains(id)) ids.add(id);
-    final trimmed = ids.length > grantedPurchaseIdCap
-        ? ids.sublist(ids.length - grantedPurchaseIdCap)
-        : ids;
+    // Keep every id. Dropping the oldest let an unconsumed purchase grant again.
     return granted.copyWith(
       metaDepth: granted.metaDepth.copyWith(
-        grantedShopPurchaseIds: List<String>.unmodifiable(trimmed),
+        grantedShopPurchaseIds: List<String>.unmodifiable(ids),
       ),
     );
   }

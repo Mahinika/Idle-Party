@@ -49,16 +49,24 @@ abstract final class ShopHubOffer {
     return 'SHOP offer · ${hours}h left';
   }
 
-  static ShopCatalogItem? featuredItem(GameState state, {DateTime? now}) {
+  static ShopCatalogItem? featuredItem(
+    GameState state, {
+    DateTime? now,
+    bool? playListsAdFree,
+  }) {
     if (!windowOpen(state, now: now)) return null;
-    if (!state.metaDepth.shopStarterClaimed) {
-      return ShopCatalog.byId['starter_boost_6h'];
+    final adFree = ShopCatalog.byId['ad_free'];
+    final supporter = ShopCatalog.byId['supporter_qol'];
+    if (adFree == null || supporter == null) return null;
+    if (!ShopBilling.isOwned(state, adFree)) {
+      final listed = playListsAdFree ??
+          (ShopStore.storeAvailable && ShopStore.storeLists(adFree.id));
+      if (listed) return adFree;
     }
-    return ShopCatalog.byId['supporter_qol'];
+    return supporter;
   }
 
   static String featuredTitle(ShopCatalogItem item) {
-    if (item.id == 'starter_boost_6h') return "Prospector's Bundle";
     if (item.id == 'supporter_qol') return "Delver's Kit";
     return item.name;
   }

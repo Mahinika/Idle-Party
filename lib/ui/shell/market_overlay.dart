@@ -472,14 +472,15 @@ class _MarketOverlayState extends State<MarketOverlay> {
               : null,
           subtitle: subtitle,
           gainNext: next,
-          detail: canBuy
-              ? null
-              : 'Need ${formatGold(listing.priceGold - state.gold)} more',
+          detail: null,
           trailing: ExcludeSemantics(
             child: PowerUpgradePriceChip(
               label: price,
               primary: showUpgradeBadge,
               onPressed: canBuy ? buy : null,
+              caption: canBuy
+                  ? null
+                  : 'Need ${formatGold(listing.priceGold - state.gold)} more',
             ),
           ),
         ),

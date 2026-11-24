@@ -23,6 +23,12 @@ Future<String?> buy(String productId) async =>
 
 Future<String?> restore() async => 'Play Billing needs a Play Store install.';
 
+int debugClipboardRestoreCalls = 0;
+
+Future<void> replayAfterClipboardImport() async {
+  debugClipboardRestoreCalls++;
+}
+
 Future<void> refreshProducts() async {}
 
 Future<void> disposeStore() async {}

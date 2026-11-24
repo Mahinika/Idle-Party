@@ -33,6 +33,7 @@ class _TileRoomPainter extends CustomPainter {
     required this.visualFrame,
     required this.floorEpoch,
     required this.layer,
+    this.presentationCalm = false,
   });
 
   final SpatialWorld world;
@@ -64,11 +65,13 @@ class _TileRoomPainter extends CustomPainter {
   final int visualFrame;
   final int floorEpoch;
   final _DungeonPaintLayer layer;
+  final bool presentationCalm;
 
   bool get reducedVfx => vfxQuality.reduced;
   bool get showAuras => vfxQuality.showActorAuras;
   bool get showGuide => vfxQuality.showGuideAndPulse;
-  bool get showBursts => vfxQuality.showBurstsAndFloaters;
+  bool get showBursts =>
+      !presentationCalm && vfxQuality.showBurstsAndFloaters;
   bool get showPriorityFloaters => vfxQuality.showPriorityFloaters;
   bool get showGround => vfxQuality.showGroundFx;
   bool get showTrails => vfxQuality.showProjectileTrails;
@@ -407,7 +410,7 @@ class _TileRoomPainter extends CustomPainter {
 
     for (final loot in world.groundLoot) {
       if (!_inView(loot.x, loot.y)) continue;
-      final bob = math.sin(loot.age * 9) * 0.12;
+      final bob = presentationCalm ? 0.0 : math.sin(loot.age * 9) * 0.12;
       final path = KenneyAssets.lootDropIconFor(loot.drop);
       final img =
           lootByPath[path] ??
@@ -425,7 +428,9 @@ class _TileRoomPainter extends CustomPainter {
         LootRarity.epic => const Color(0xBBFFE08A),
         LootRarity.legendary => const Color(0xDDFF8C40),
       };
-      final pulse = showLootPulse ? 0.85 + 0.15 * math.sin(loot.age * 6) : 1.0;
+      final pulse = showLootPulse && !presentationCalm
+          ? 0.85 + 0.15 * math.sin(loot.age * 6)
+          : 1.0;
       _fillPaint.color = glow;
       canvas.drawCircle(
         c,

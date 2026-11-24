@@ -1875,7 +1875,9 @@ int _nonNegativeMs(Object? raw) {
   return n < 0 ? 0 : n;
 }
 
-/// Play purchase ids already granted. Missing or junk → empty. Capped.
+/// Play purchase ids already granted. Missing or junk → empty.
+/// Every id is kept. Dropping the oldest let a later load grant that
+/// purchase again. The field stays a list of strings.
 List<String> _shopPurchaseIds(Object? raw) {
   if (raw is! List) return const [];
   final ids = <String>[];
@@ -1885,7 +1887,5 @@ List<String> _shopPurchaseIds(Object? raw) {
     if (id.isEmpty || ids.contains(id)) continue;
     ids.add(id);
   }
-  const cap = 64;
-  if (ids.length <= cap) return ids;
-  return ids.sublist(ids.length - cap);
+  return ids;
 }

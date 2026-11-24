@@ -183,6 +183,10 @@ class GameDirector extends ChangeNotifier {
   @visibleForTesting
   Future<void>? debugAwayCreditPause;
 
+  /// Test seam. The next WISP watch uses this result and does not load an ad.
+  @visibleForTesting
+  Future<AdWatchResult>? debugWispAdResult;
+
   CloudRead get lastCloudRead => _lastCloudRead;
 
   /// True when a cloud restore kept the previous device file.
@@ -280,6 +284,10 @@ class GameDirector extends ChangeNotifier {
   /// Resume is replaying the gap. Combat and hub idle wait so they cannot
   /// spend the same seconds twice.
   bool _awayCreditInFlight = false;
+
+  /// Completes after the in-flight catch-up has been written into [_state].
+  /// A pause waits for this before it stamps the clock or saves.
+  Completer<void>? _awayCreditDone;
 
   /// One Welcome Back card watches once. A new absence clears it.
   bool _welcomeBackAdBusy = false;
@@ -2201,7 +2209,10 @@ class GameDirector extends ChangeNotifier {
   /// Rewarded ad: one free level on the cheapest CAMP track. Three a day.
   Future<void> watchCampAd() async {
     if (GameLogic.campAdClaimsToday(_state) >= GameLogic.campAdDailyCap) {
-      showToast('Free CAMP level already used today', life: 2.0);
+      showToast(
+        '${GameLogic.campAdDailyCap}/${GameLogic.campAdDailyCap} free CAMP levels used today',
+        life: 2.0,
+      );
       return;
     }
     if (_state.metaDepth.adFree) {
@@ -2232,14 +2243,28 @@ class GameDirector extends ChangeNotifier {
     final before = GameLogic.campAdClaimsToday(_state);
     final next = GameLogic.grantCampAdLevel(_state);
     if (GameLogic.campAdClaimsToday(next) <= before) {
-      showToast('Free CAMP level already used today', life: 2.0);
+      showToast(
+        '${GameLogic.campAdDailyCap}/${GameLogic.campAdDailyCap} free CAMP levels used today',
+        life: 2.0,
+      );
       return;
     }
     _applyUpgrade(next);
     GameAudio.ui();
+    final track = GameLogic.recommendedSanctuaryTrack(next);
+    final trackName = switch (track) {
+      'gold' => 'Gold',
+      'power' => 'Power',
+      'vitality' => 'Vitality',
+      'defense' => 'Defense',
+      'xp' => 'XP',
+      _ => track,
+    };
     final left = GameLogic.campAdDailyCap - GameLogic.campAdClaimsToday(next);
     showToast(
-      left > 0 ? 'Free CAMP level · $left left today' : 'Free CAMP level',
+      left > 0
+          ? 'Free $trackName level · $left left today'
+          : 'Free $trackName level',
       life: 2.2,
     );
   }
