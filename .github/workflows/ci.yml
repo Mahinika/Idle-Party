@@ -23,10 +23,17 @@ jobs:
           set -euo pipefail
           base="${{ github.event.pull_request.base.sha }}"
           head="${{ github.event.pull_request.head.sha }}"
-          if git diff --name-only "$base" "$head" | grep -qx CHANGELOG.md; then
+          # pull_request checkout is the merge commit. Diff that tree if the
+          # head SHA is not readable as its own commit in this clone.
+          changed="$(git diff --name-only "$base" "$head" 2>/dev/null || true)"
+          if ! printf '%s\n' "$changed" | grep -qx CHANGELOG.md; then
+            changed="$(git diff --name-only "$base" HEAD)"
+          fi
+          if printf '%s\n' "$changed" | grep -qx CHANGELOG.md; then
             echo "CHANGELOG.md updated."
           else
             echo "Pull requests targeting main must update CHANGELOG.md with a short entry." >&2
+            printf '%s\n' "$changed" >&2
             exit 1
           fi
 
