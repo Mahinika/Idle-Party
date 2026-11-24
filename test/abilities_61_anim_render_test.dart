@@ -64,11 +64,6 @@ void main() {
         base.createSync(recursive: true);
         final name = id.name;
         File('${base.path}/${name}_strip.png').writeAsBytesSync(stripBytes);
-        final frameDir = Directory('${base.path}/$name');
-        frameDir.createSync(recursive: true);
-        for (var i = 0; i < frames.length; i++) {
-          File('${frameDir.path}/f$i.png').writeAsBytesSync(frames[i]);
-        }
       }
     }
   });

@@ -36,6 +36,24 @@ abstract final class SpellShapePaint {
     return _stroke;
   }
 
+  /// Melee abilities in the 61 set paint a bespoke overlay; the generic weapon
+  /// slash arc reads as a beige/purple capsule in the lower-left on contact tiles.
+  @visibleForTesting
+  static bool suppressesGenericWeaponSlash(AbilityId? id) => switch (id) {
+        AbilityId.executeFury ||
+        AbilityId.hammerOfJusticeHoly ||
+        AbilityId.hammerOfJusticeRet ||
+        AbilityId.claw ||
+        AbilityId.kidneyShotAssa ||
+        AbilityId.adrenalineRush ||
+        AbilityId.revealingStrike ||
+        AbilityId.secretTechnique ||
+        AbilityId.soulReaper ||
+        AbilityId.maim =>
+          true,
+        _ => false,
+      };
+
   /// Paints one [SpatialBurst] the same way fight floaters do.
   static void paintWorldBurst(
     Canvas canvas,
@@ -44,7 +62,8 @@ abstract final class SpellShapePaint {
     Offset Function(double tx, double ty) centerAt,
   ) {
     final kind = burst.slash ? SpatialBurstKind.slash : burst.kind;
-    if (kind == SpatialBurstKind.slash) {
+    if (kind == SpatialBurstKind.slash &&
+        !suppressesGenericWeaponSlash(burst.paintId)) {
       _paintSlash(canvas, burst, tile, centerAt);
     } else if (kind == SpatialBurstKind.ring) {
       _paintRing(canvas, burst, tile, centerAt);
