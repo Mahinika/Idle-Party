@@ -257,6 +257,8 @@ void main() {
         ),
       );
       await _waitForFightRender(tester, director);
+      director.setUiPaused(true);
+      await tester.pump(const Duration(milliseconds: 80));
       expect(tester.takeException(), isNull);
 
       if (Platform.environment['RENDER_ABILITIES_61'] == '1') {
@@ -329,7 +331,7 @@ void _stageAbilities61Vfx(GameDirector director, List<AbilityId> ids) {
 
 Future<Uint8List> _capturePng(WidgetTester tester, GlobalKey key) async {
   final boundary = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
-  final image = await tester.runAsync(() => boundary.toImage(pixelRatio: 3));
+  final image = await tester.runAsync(() => boundary.toImage(pixelRatio: 1));
   final data = await image!.toByteData(format: ui.ImageByteFormat.png);
   return data!.buffer.asUint8List();
 }
