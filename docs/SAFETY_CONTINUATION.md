@@ -157,29 +157,16 @@ this PR, still without a Play release or a Firestore deploy.
 - `setDungeonTilesReady` and `clearToast` no longer notify listeners during
   build. Crashlytics still records real fatals.
 
-## Do not do yet
+## Firestore friend claims
 
-Firestore rules and the friend-claim data model stay put until the parent
-confirms which Firebase project and edition are live. The file
-`firestore.rules` in git is not proof of what is deployed.
-
-Risk in the repo copy, not a claim about production:
-
-- Clients sign in anonymously, and the rules only require `request.auth != null`.
-- `friendCodes` update lets any signed-in caller increment `claims` while
-  leaving `ownerDevice` unchanged. Knowing an 8-character code is enough.
-- `friendClaims` create lets any signed-in caller pick a 64-character device
-  id. That can burn the 30-claim cap.
-- `FirestoreFriendReferralGateway._claimApart` writes the claim doc and the
-  counter as two requests. Two callers can lose an increment. The rules
-  comment in that file already says the transaction often fails the rules
-  check because of server timestamps.
-
-Next validated patch, after the project is identified: read the live ruleset,
-diff it against `firestore.rules`, then make the claim counter a single
-transaction the rules accept (or a trusted function). Do not grant tickets
-from a client-writable counter without that. Do not read production saves
-and do not send claim traffic to try the hole.
+`firestore.rules` in git is not what is deployed. The 2026-11-22 rules
+require a claim row and `claims + 1` in the same transaction, bind new
+rows to `request.auth.uid`, and keep `ownerDevice` as the 64-character
+install hash so existing codes still match. The client no longer writes
+the claim and the counter as two requests. Do not deploy these rules
+unless the owner asks in that turn. Do not read production saves and do
+not send claim traffic to try the hole. How to run the rules tests:
+`tool/firestore_rules_test/README.md`.
 
 ## Later batches, in dependency order
 

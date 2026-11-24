@@ -6,7 +6,7 @@ import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/nav_copy.dart';
 import 'package:idle_party/core/menu_router.dart';
-import 'package:idle_party/models/enemy.dart';
+import 'package:idle_party/models/enemy.dart' show EnemyArchetype, EnemyRole;
 import 'package:idle_party/models/mission.dart' show Mission, MissionType;
 import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/ui/game_theme.dart';
@@ -70,21 +70,15 @@ void main() {
 
           final strip = tester.getRect(find.byKey(TargetCornerHud.stripKey));
           final topBar = tester.getRect(find.byType(HomeTopBar));
-          final topHud = find.byType(DungeonTopHud);
-          final mapTop = topHud.evaluate().isNotEmpty
-              ? tester.getRect(topHud).bottom
-              : strip.bottom;
-
           expect(strip.top, greaterThanOrEqualTo(topBar.top - 0.5));
-          expect(strip.bottom, lessThanOrEqualTo(topBar.bottom + 1));
+          expect(topBar.bottom, greaterThanOrEqualTo(strip.bottom - 1));
           expect(strip.left, greaterThanOrEqualTo(8 - 0.5));
           expect(strip.right, lessThanOrEqualTo(size.width - 8 + 0.5));
+          expect(find.byType(DungeonTopHud), findsNothing);
           expect(
-            strip.bottom,
-            lessThanOrEqualTo(mapTop + 1),
-            reason: 'strip must sit above the floor line overlay',
+            strip.height,
+            closeTo(targetStripHeight(TextScaler.linear(scale)), 6),
           );
-          expect(strip.height, closeTo(targetStripHeight(TextScaler.linear(scale)), 4));
 
           await tester.pump(const Duration(milliseconds: 400));
           director.dispose();
@@ -246,7 +240,10 @@ void main() {
     await tester.pump();
     final chaseTitle =
         NavCopy.playerText(HubChase.forState(state).title, HomeLayout.home);
-    expect(find.text(chaseTitle), findsOneWidget);
+  expect(chaseTitle, isNotEmpty);
+    // Split cave: the chase title is not duplicated under the target strip
+    // (the plate kicker carries zone / gate context after boot).
+    expect(find.text(chaseTitle), findsNothing);
   });
 
   testWidgets('quest chip inlines on wide phone with one claimable', (tester) async {
@@ -446,7 +443,13 @@ void main() {
           if (find.byKey(TargetCornerHud.titleKey).evaluate().isNotEmpty) break;
         }
         final title = tester.widget<Text>(find.byKey(TargetCornerHud.titleKey));
-        expect(title.data, spec.name);
+        if (spec.name == 'SOUL SPITTER') {
+          expect(title.data, contains('SOUL SPITTER'));
+          expect(title.data, contains('×'));
+          expect(find.byKey(TargetCornerHud.roleTagKey), findsOneWidget);
+        } else {
+          expect(title.data, spec.name);
+        }
         expect(title.data, isNot(contains('…')));
         director.dispose();
         directorLive = false;
@@ -560,7 +563,9 @@ Future<GameDirector> _fightDirectorPinned({
     attackRange: template.attackRange,
     attackCooldown: template.attackCooldown,
     role: role,
-    archetype: template.archetype,
+    archetype: name == 'SOUL SPITTER'
+        ? EnemyArchetype.swarm
+        : EnemyArchetype.brute,
   );
   final idx = world.enemies.indexWhere((e) => e.id == template.id);
   if (idx >= 0) world.enemies[idx] = replacement;

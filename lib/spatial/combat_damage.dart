@@ -38,7 +38,7 @@ int combatApplyHeroIncomingDamage(
     );
     dealt = avoid.damage;
     blocked = avoid.blocked;
-    if (avoid.avoided && !reducedVfx) {
+    if (avoid.avoided) {
       SpatialCombat.spawnFloater(
         world,
         x: hero.x,
@@ -46,6 +46,7 @@ int combatApplyHeroIncomingDamage(
         text: avoid.dodged ? 'DODGE' : 'PARRY',
         argb: 0xFF90E0A0,
         life: 0.35,
+        priority: 2,
       );
     }
     if (blocked &&
@@ -70,12 +71,15 @@ int combatApplyHeroIncomingDamage(
   if (hero.painSuppressionTimer > 0) {
     mul *= 0.55;
   }
-  // Active Shield Block window stacks DR on top of mastery block (−30%).
-  if (hero.shieldBlockTimer > 0 && !blocked) {
+  // Active Shield Block window stacks ×0.55 on mastery block (−30%),
+  // including a melee hit avoidance already marked blocked.
+  if (hero.shieldBlockTimer > 0) {
     mul *= 0.55;
-    blocked = true;
-    if (WarriorAbilities.isUnlocked(AbilityId.revenge, hero.heroLevel)) {
-      hero.revengeReady = true;
+    if (!blocked) {
+      blocked = true;
+      if (WarriorAbilities.isUnlocked(AbilityId.revenge, hero.heroLevel)) {
+        hero.revengeReady = true;
+      }
     }
   }
   if (world.relicLowHpDr > 0 &&

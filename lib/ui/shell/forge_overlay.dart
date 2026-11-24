@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/gold_income.dart';
 import '../../core/gear/gear_upgrade_copy.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
@@ -353,7 +354,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       gainNote: soft ? 'SOFT' : null,
       progress: ForgeOverlay.forgeSoftProgress(state, type),
       detail: shortGold > 0
-          ? 'Need ${formatGold(shortGold)} more'
+          ? null
           : onPressed != null
           ? GearUpgradeCopy.forgeNextFloorLine(state, type)
           : null,
@@ -364,6 +365,10 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
         primary: primaryBuy,
         quantity: onPressed == null ? null : buys,
         onPressed: onPressed,
+        caption: shortGold > 0 ? 'Need ${formatGold(shortGold)} more' : null,
+        footnote: shortGold > 0 && director.runGoldPerMinute > 0
+            ? '+${GoldIncome.perMinuteLabel(director.runGoldPerMinute)}'
+            : null,
       ),
     );
   }

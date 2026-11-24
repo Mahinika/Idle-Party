@@ -117,7 +117,7 @@ To limit or stop Firebase Analytics / AdMob identifiers in the EU/EEA, use **SET
 
 Friend-invite rows are a hashed install id, a short code, and a time. Clearing app storage or uninstalling stops new writes from that phone. Google may keep those rows under their policies. There is no Idle Party account to delete.
 
-Local save on the device is removed when you clear the app’s storage or uninstall. Clipboard backups you made yourself stay on your device until you delete them.
+Local save on the device is removed when you clear the app’s storage or uninstall. Android backup does not restore that save (backup is off for this app). Play Games cloud save is the way to carry a save to another device. Clipboard backups you made yourself stay on your device until you delete them. A clipboard import keeps Play purchases that already belong to this device; it does not grant purchases pasted in from another save. FOREVERSCROLLS is a local code, not a Play purchase.
 
 ## Children
 

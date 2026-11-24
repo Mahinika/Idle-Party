@@ -71,7 +71,7 @@ class DungeonAmbientParticlesState extends State<DungeonAmbientParticles>
 
 extension _DungeonAmbientParticles on _TileRoomPainter {
   bool get _ambientMotionOff {
-    if (vfxQuality == VfxQuality.minimal) return true;
+    if (presentationCalm || vfxQuality == VfxQuality.minimal) return true;
     return WidgetsBinding
         .instance
         .platformDispatcher
