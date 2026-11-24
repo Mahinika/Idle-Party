@@ -1,3 +1,6 @@
+@Tags(['artifact'])
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/hero.dart';
@@ -5,7 +8,6 @@ import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/hero_look_row.dart';
 import 'package:idle_party/ui/menu_chrome.dart';
 
-@Tags(['artifact'])
 void main() {
   testWidgets('race picker golden for PR artifact', (tester) async {
     await tester.binding.setSurfaceSize(const Size(360, 320));
