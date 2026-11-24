@@ -26,6 +26,7 @@ import 'ad_free_nudge.dart';
 import 'ad_rewarded.dart';
 import 'analytics_events.dart';
 import 'app_analytics.dart';
+import 'onboarding_funnel.dart';
 import 'build_stamp.dart';
 import 'debug_play_log.dart';
 import 'fight_frame_budget.dart';
@@ -2022,6 +2023,7 @@ class GameDirector extends ChangeNotifier {
         _applyUpgrade(_state.copyWith(metaDepth: priorMeta), persist: false);
         return false;
       }
+      _syncMeasurementUser();
       final paidCinders = _state.metaDepth.cinders > beforeCinders;
       if (recovered && paidCinders) {
         GameAudio.ui();
@@ -2088,7 +2090,9 @@ class GameDirector extends ChangeNotifier {
     final err = await ShopStore.buy(productId);
     notifyListeners();
     if (err != null) {
-      unawaited(AppAnalytics.storePurchaseCancel(productId));
+      unawaited(
+        AppAnalytics.storePurchaseFail(productId, reason: 'sheet_unavailable'),
+      );
       showToast(err, life: 3.2);
       return;
     }
