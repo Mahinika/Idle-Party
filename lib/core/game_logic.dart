@@ -25,6 +25,7 @@ import 'dungeon_generator.dart';
 import 'economy_service.dart';
 import 'blessing_constellation.dart';
 import 'game_state.dart';
+import 'save_needs_update.dart';
 import 'gauntlet_pact.dart';
 import 'gauntlet_trophies.dart';
 import 'check_in.dart';
@@ -2419,9 +2420,43 @@ class GameLogic {
   static GameState enterDaily(GameState state, {DateTime? now}) =>
       _enterDaily(state, now: now);
 
-  /// Parses a save of any version, migrating legacy v1 saves
-  /// (single `enemy` + stored `battleNumber`) to the room-based v2 model.
+  /// One-shot line when a newer build wrote the file. Reading clears it.
+  static String? takeSaveRefusal() {
+    final message = _saveRefusal;
+    _saveRefusal = null;
+    return message;
+  }
+
+  static String? _saveRefusal;
+
+  static void _noteSaveNeedsUpdate() {
+    _saveRefusal = SaveNeedsAppUpdate.message;
+  }
+
+  /// True when [raw] is a save this build must not load or rewrite.
+  /// Junk text is false so the caller can treat it as a failed parse.
+  static bool rawSaveNeedsAppUpdate(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return false;
+      return saveVersionOf(Map<String, dynamic>.from(decoded)) >
+          GameState.saveVersion;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Parses a save this build understands.
+  ///
+  /// Legacy v1 saves (single `enemy` + stored `battleNumber`) migrate to
+  /// the room-based model. A `version` above [GameState.saveVersion] throws
+  /// [SaveNeedsAppUpdate] before any migration. Callers must not rewrite
+  /// those bytes.
   static GameState stateFromJson(Map<String, dynamic> json) {
+    if (saveVersionOf(json) > GameState.saveVersion) {
+      _noteSaveNeedsUpdate();
+      throw const SaveNeedsAppUpdate();
+    }
     final loaded = saveVersionOf(json) <= 1
         ? _migrateV1(json)
         : _backfillLifetimeGold(GameState.fromJson(json));
@@ -2531,7 +2566,14 @@ class GameLogic {
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! Map<String, dynamic>) return null;
+      if (saveVersionOf(decoded) > GameState.saveVersion) {
+        _noteSaveNeedsUpdate();
+        return null;
+      }
       return stateFromJson(decoded);
+    } on SaveNeedsAppUpdate {
+      _noteSaveNeedsUpdate();
+      return null;
     } catch (e, st) {
       debugPrint('GameLogic.importSaveJson failed: $e\n$st');
       return null;

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
+import '../../core/save_needs_update.dart';
 import '../../core/game_logic.dart';
 import '../../core/play_games_bridge.dart';
 import '../../core/play_games_scores.dart';
@@ -94,6 +95,8 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
       director.showToast(
         read.kind == CloudReadKind.empty
             ? 'No Play Games save found'
+            : read.kind == CloudReadKind.needsUpdate
+            ? SaveNeedsAppUpdate.message
             : 'Could not read Play Games save. Kept this device.',
         life: 2.2,
       );
@@ -351,10 +354,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
           ],
         ),
         const SizedBox(height: 8),
-        Text(
-          yoursLine,
-          style: GameTheme.section(color: GameTheme.parchment),
-        ),
+        Text(yoursLine, style: GameTheme.section(color: GameTheme.parchment)),
         if (kind == PlayBoardKind.partyPower) ...[
           const SizedBox(height: 4),
           Text(
@@ -544,10 +544,7 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'PLAY GAMES',
-          style: GameTheme.section(color: GameTheme.torchHot),
-        ),
+        Text('PLAY GAMES', style: GameTheme.section(color: GameTheme.torchHot)),
         const SizedBox(height: 4),
         Text(
           PlayGamesSection.seasonLine(

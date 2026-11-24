@@ -85,6 +85,8 @@ void main() {
     expect(ci, contains('changelog-main'));
     expect(ci, contains("base.ref == 'main'"));
     expect(ci, contains('CHANGELOG.md'));
+    expect(ci, contains(r'git diff --name-only "$base...$head"'));
+    expect(ci, isNot(contains(r'git diff --name-only "$base" "$head"')));
   });
 
   test('the four workflow skills exist and point at live files', () {

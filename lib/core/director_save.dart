@@ -839,7 +839,8 @@ extension GameDirectorSave on GameDirector {
         _hasExistingSave = false;
         _state = GameLogic.createInitialState();
         _blockSaveRecovery(
-          'Saving is paused. A save file could not be read. It was left untouched.',
+          GameLogic.takeSaveRefusal() ??
+              'Saving is paused. A save file could not be read. It was left untouched.',
         );
         await _offerHealthySlots();
       } else {
@@ -859,7 +860,8 @@ extension GameDirectorSave on GameDirector {
           _hasExistingSave = false;
           _state = GameLogic.createInitialState();
           _blockSaveRecovery(
-            'Saving is paused. A save file could not be read. It was left untouched.',
+            GameLogic.takeSaveRefusal() ??
+                'Saving is paused. A save file could not be read. It was left untouched.',
           );
         } else {
           final saved = await _storage.load();

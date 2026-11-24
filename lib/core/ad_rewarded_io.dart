@@ -7,9 +7,11 @@ import 'ad_config.dart';
 import 'ad_rewarded.dart';
 import 'app_analytics.dart';
 import 'remote_tune_boot.dart';
+import 'ump_consent_gate.dart';
 import 'immersive_ui.dart';
 import 'flutter_test_env_stub.dart'
-    if (dart.library.io) 'flutter_test_env_io.dart' as test_env;
+    if (dart.library.io) 'flutter_test_env_io.dart'
+    as test_env;
 
 bool get realAdsAvailable {
   if (test_env.inFlutterTestProcess()) return false;
@@ -19,6 +21,7 @@ bool get realAdsAvailable {
 
 bool _sdkReady = false;
 RewardedAd? _ready;
+DateTime? _readyAt;
 Future<void>? _chain;
 
 /// One ad load at a time. A tap during preload waits for that load.
@@ -67,7 +70,8 @@ Future<void> showPrivacyOptions() async {
 Future<AdWatchResult> showRewarded({required String placement}) async {
   if (!realAdsAvailable) return AdWatchResult.unavailable;
   unawaited(AppAnalytics.rewardedTap(placement));
-  // The tap is the one prompt: UMP only here, then the ad they asked for.
+  // Startup already shows UMP. If that form never finished, ask once here,
+  // then show the ad this tap requested.
   await _serialized(() async {
     await _ensureSdk(askConsent: true);
     if (_sdkReady && _ready == null) await _preload(placement: placement);
@@ -76,8 +80,14 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
     unawaited(AppAnalytics.rewardedLoadFail(placement));
     return AdWatchResult.failed;
   }
-  var ad = _ready;
+  var ad = takeFreshRewardedPreload<RewardedAd>(
+    ad: _ready,
+    loadedAt: _readyAt,
+    now: DateTime.now(),
+    dispose: (stale) => stale.dispose(),
+  );
   _ready = null;
+  _readyAt = null;
   ad ??= await _loadAd(placement: placement);
   if (ad == null) {
     unawaited(AppAnalytics.rewardedLoadFail(placement));
@@ -110,9 +120,7 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
     await ad.show(
       onUserEarnedReward: (AdWithoutView adView, RewardItem reward) {
         earned = true;
-        debugPrint(
-          'rewarded ad earned: ${reward.amount} ${reward.type}',
-        );
+        debugPrint('rewarded ad earned: ${reward.amount} ${reward.type}');
       },
     );
   } catch (e, st) {
@@ -139,6 +147,7 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
         unawaited(AppAnalytics.rewardedSkip(placement));
       case AdWatchResult.failed:
       case AdWatchResult.unavailable:
+      case AdWatchResult.busy:
         break;
     }
     return result;
@@ -168,33 +177,42 @@ Future<void> _ensureSdk({required bool askConsent}) async {
 }
 
 Future<void> _requestConsent({required bool askConsent}) async {
-  final done = Completer<void>();
-  ConsentInformation.instance.requestConsentInfoUpdate(
-    ConsentRequestParameters(),
-    () {
-      if (!askConsent) {
-        if (!done.isCompleted) done.complete();
-        return;
-      }
+  await runUmpConsentGate(
+    showFormOnSuccess: askConsent,
+    requestUpdate: (callbacks) {
+      ConsentInformation.instance.requestConsentInfoUpdate(
+        ConsentRequestParameters(),
+        callbacks.onSuccess,
+        (FormError error) {
+          debugPrint('UMP update: ${error.message}');
+          callbacks.onError(error);
+        },
+      );
+    },
+    showForm: () async {
+      final done = Completer<void>();
       ConsentForm.loadAndShowConsentFormIfRequired((FormError? error) {
         if (error != null) {
           debugPrint('UMP form: ${error.message}');
         }
         if (!done.isCompleted) done.complete();
       });
+      await done.future;
     },
-    (FormError error) {
-      debugPrint('UMP update: ${error.message}');
-      if (!done.isCompleted) done.complete();
+    resync: () async {
+      await AppAnalytics.syncConsent();
+      await RemoteTuneBoot.refresh();
     },
   );
-  await done.future.timeout(const Duration(seconds: 10), onTimeout: () {});
   unawaited(lockImmersiveUi());
 }
 
 Future<void> _preload({String? placement}) async {
   if (_ready != null || !_sdkReady) return;
-  _ready = await _loadAd(placement: placement);
+  final ad = await _loadAd(placement: placement);
+  if (ad == null) return;
+  _ready = ad;
+  _readyAt = DateTime.now();
 }
 
 Future<RewardedAd?> _loadAd({String? placement}) async {
@@ -215,8 +233,11 @@ Future<RewardedAd?> _loadAd({String? placement}) async {
       },
     ),
   );
-  return loaded.future.timeout(const Duration(seconds: 20), onTimeout: () {
-    debugPrint('rewarded ad load timed out');
-    return null;
-  });
+  return loaded.future.timeout(
+    const Duration(seconds: 20),
+    onTimeout: () {
+      debugPrint('rewarded ad load timed out');
+      return null;
+    },
+  );
 }

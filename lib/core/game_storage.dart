@@ -7,6 +7,7 @@ import '../models/dungeon_def.dart';
 import 'debug_play_log.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'save_needs_update.dart';
 
 /// One of the five title-screen save files.
 class SaveSlotSummary {
@@ -105,8 +106,8 @@ class SaveSlotSummary {
         ? picked
         : levels.values.toList(growable: false);
     if (values.isEmpty) return 1;
-    final level = values.fold<int>(0, (sum, value) => sum + value) ~/
-        values.length;
+    final level =
+        values.fold<int>(0, (sum, value) => sum + value) ~/ values.length;
     return level < 1 ? 1 : level;
   }
 }
@@ -300,6 +301,9 @@ class SharedPreferencesGameStorage implements GameStorage {
   ) async {
     try {
       return GameLogic.stateFromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } on SaveNeedsAppUpdate {
+      // A newer build wrote this file. Leave every copy where it is.
+      return null;
     } catch (e, st) {
       DebugPlayLog.event('save', 'load failed (quarantined): $e');
       debugPrint('save load failed (quarantined): $e\n$st');

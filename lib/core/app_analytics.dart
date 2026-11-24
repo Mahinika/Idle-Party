@@ -20,6 +20,15 @@ abstract final class AppAnalytics {
   /// Drops the early buffer so a test can restore the framework handlers.
   static void debugResetEarlyErrorBuffer() => impl.debugResetEarlyErrorBuffer();
 
+  /// Test seam for uncaught async errors. Null sends them to Crashlytics.
+  static set debugRecordPlatformError(
+    void Function(Object error, StackTrace? stack, {required bool fatal})? hook,
+  ) => impl.debugRecordPlatformError = hook;
+
+  /// Records one platform error through the live fatal/non-fatal choice.
+  static void debugEmitPlatformError(Object error, StackTrace stack) =>
+      impl.debugEmitPlatformError(error, stack);
+
   /// Re-read UMP after SETTINGS → AD PRIVACY.
   static Future<void> syncConsent() => impl.syncConsent();
 

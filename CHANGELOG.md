@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- A save from a newer build stays on the device and in the cloud, with "Update the app to load this save". The consent form is no longer cut off by the 10s UMP update timer, and consent plus Remote Config sync after it closes. A rewarded ad older than 55 minutes reloads, a second tap while an ad is open does not grant again, uncaught async errors are non-fatal in Crashlytics, and the changelog check diffs from the merge-base.
 - Crashlytics: `RenderFlex` overflows (including wipe-retry rewarded offer) record as non-fatal; the wipe panel scrolls on short phones at text scale 1.45; `setDungeonTilesReady` and `clearToast` defer `notifyListeners` during build. CI goldens for target strip / top bar refreshed on Linux Flutter 3.47.9 (pixel drift, no UI code).
 - QA 2026-11-21: wipe scrim covers fight tools, ability-name floaters stack, the tomorrow teaser stays on the town card, and small UI fixes (MENU, party chip, shop, vault CTA, speed tip).
 - QA retest: each sheet keeps its own subtitle, loot and ability names share one lane, the equip toast clears the lantern, the hero tab keeps the level, the CC line stays in its chip, a failed audio load retries once, and layout plus audio failures are non-fatal in Crashlytics.

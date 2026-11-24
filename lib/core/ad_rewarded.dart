@@ -1,11 +1,53 @@
 import 'ad_rewarded_stub.dart'
-    if (dart.library.io) 'ad_rewarded_io.dart' as impl;
+    if (dart.library.io) 'ad_rewarded_io.dart'
+    as impl;
 
-enum AdWatchResult { rewarded, skipped, failed, unavailable }
+enum AdWatchResult { rewarded, skipped, failed, unavailable, busy }
+
+/// A preloaded rewarded ad older than this is discarded and loaded again.
+const Duration rewardedPreloadMaxAge = Duration(minutes: 55);
+
+/// True when [loadedAt] is older than [rewardedPreloadMaxAge] at [now].
+bool rewardedPreloadIsStale(DateTime loadedAt, DateTime now) =>
+    now.difference(loadedAt) > rewardedPreloadMaxAge;
+
+/// The ad to show, or null when it was missing or stale.
+///
+/// A stale or untimed preload is disposed. The caller loads a new one.
+T? takeFreshRewardedPreload<T>({
+  required T? ad,
+  required DateTime? loadedAt,
+  required DateTime now,
+  required void Function(T ad) dispose,
+}) {
+  if (ad == null) return null;
+  if (loadedAt == null || rewardedPreloadIsStale(loadedAt, now)) {
+    dispose(ad);
+    return null;
+  }
+  return ad;
+}
 
 /// Optional rewarded ads. No-op on web / tests / non-Android.
 abstract final class AdRewarded {
-  static bool get realAdsAvailable => impl.realAdsAvailable;
+  /// Test seam. Null uses the platform check.
+  static bool? debugAdsAvailable;
+
+  static bool get realAdsAvailable =>
+      debugAdsAvailable ?? impl.realAdsAvailable;
+
+  /// Test seam. When set, [showRewarded] awaits this instead of the SDK.
+  static Future<AdWatchResult> Function({required String placement})?
+  debugShowRewarded;
+
+  static int _inFlight = 0;
+
+  /// Drops the test seams. Does not finish an ad that is still open.
+  static void debugReset() {
+    debugAdsAvailable = null;
+    debugShowRewarded = null;
+    _inFlight = 0;
+  }
 
   /// Times a visible offer asked for a load. Tests read this. The SDK no-ops
   /// off Android.
@@ -20,8 +62,26 @@ abstract final class AdRewarded {
 
   static Future<void> warmup() => impl.warmup();
 
-  static Future<AdWatchResult> showRewarded({required String placement}) =>
-      impl.showRewarded(placement: placement);
+  /// One ad at a time. A second tap while the first is loading or showing
+  /// returns [AdWatchResult.busy] and must not grant a reward.
+  static Future<AdWatchResult> showRewarded({required String placement}) {
+    if (_inFlight > 0) return Future<AdWatchResult>.value(AdWatchResult.busy);
+    _inFlight++;
+    try {
+      return _showRewarded(placement: placement).whenComplete(() {
+        _inFlight--;
+      });
+    } catch (error) {
+      _inFlight--;
+      return Future<AdWatchResult>.error(error);
+    }
+  }
+
+  static Future<AdWatchResult> _showRewarded({required String placement}) {
+    final hooked = debugShowRewarded;
+    if (hooked != null) return hooked(placement: placement);
+    return impl.showRewarded(placement: placement);
+  }
 
   /// SETTINGS → AD PRIVACY. Lets EU players change or withdraw AdMob consent.
   static Future<void> showPrivacyOptions() => impl.showPrivacyOptions();

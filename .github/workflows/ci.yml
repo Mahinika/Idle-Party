@@ -18,7 +18,10 @@ jobs:
           set -euo pipefail
           base="${{ github.event.pull_request.base.sha }}"
           head="${{ github.event.pull_request.head.sha }}"
-          if git diff --name-only "$base" "$head" | grep -qx CHANGELOG.md; then
+          # Three-dot is the merge-base. A branch behind main still has to
+          # change CHANGELOG.md itself. A merge commit as head still diffs
+          # only what that head added since the branches split.
+          if git diff --name-only "$base...$head" | grep -qx CHANGELOG.md; then
             echo "CHANGELOG.md updated."
           else
             echo "Pull requests targeting main must update CHANGELOG.md with a short entry." >&2
