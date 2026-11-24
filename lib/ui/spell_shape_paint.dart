@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
 
 import '../models/class_ability.dart';
@@ -270,6 +271,7 @@ abstract final class SpellShapePaint {
       shape: def.aoeShape,
       id: id,
     );
+    final travelBeam = _showcaseWantsBeamTravel(id, kind);
     AbilityShowcaseMotion.paintPhase(
       canvas,
       tileRect: tileRect,
@@ -284,8 +286,8 @@ abstract final class SpellShapePaint {
       radius: 0.95,
       kind: kind,
       angle: kind == SpatialBurstKind.cone ? -math.pi / 2 : null,
-      x2: kind == SpatialBurstKind.beam ? 0 : null,
-      y2: kind == SpatialBurstKind.beam ? -2.4 : null,
+      x2: travelBeam ? 0 : null,
+      y2: travelBeam ? -2.4 : null,
       crisp: SpellVfx.isBig(id),
       paintId: id,
     );
@@ -322,9 +324,7 @@ abstract final class SpellShapePaint {
       _paintVineTendrils(canvas, at(0, 0.35), tile * 1.35, 0.85);
     }
 
-    if (!_showcaseSkipsBolt(def.id) &&
-        (def.effect == AbilityEffectKind.damage ||
-            def.effect == AbilityEffectKind.aoe)) {
+    if (_showcaseWantsTravelBolt(def)) {
       _paintShowcaseBolt(
         canvas,
         center: Offset(cx + tile * 0.55, cy),
@@ -336,19 +336,77 @@ abstract final class SpellShapePaint {
     }
   }
 
-  static bool _showcaseSkipsBolt(AbilityId id) => switch (id) {
-        AbilityId.claw ||
-        AbilityId.executeFury ||
-        AbilityId.kidneyShotAssa ||
-        AbilityId.adrenalineRush ||
-        AbilityId.revealingStrike ||
-        AbilityId.secretTechnique ||
-        AbilityId.maim ||
-        AbilityId.colossusSmash ||
-        AbilityId.armsCharge =>
+  /// Test hook: contact-sheet traveling bolts (not in-fight floaters).
+  @visibleForTesting
+  static bool showcaseWantsTravelBolt(ClassAbilityDef def) =>
+      _showcaseWantsTravelBolt(def);
+
+  static bool hasCustomBoltLabel(String? label) => _hasCustomBoltLabel(label);
+
+  static bool _showcaseWantsBeamTravel(AbilityId id, SpatialBurstKind kind) {
+    if (kind != SpatialBurstKind.beam) return false;
+    return switch (id) {
+      AbilityId.arcaneBarrage ||
+      AbilityId.crashLightning ||
+      AbilityId.bindingShot ||
+      AbilityId.harpoonSurvival ||
+      AbilityId.killShotMm ||
+      AbilityId.killShotBm ||
+      AbilityId.starsurge ||
+      AbilityId.armsCharge =>
+        true,
+      _ => false,
+    };
+  }
+
+  static bool _hasCustomBoltLabel(String? label) => switch (label) {
+        'Barrage' ||
+        'SWD' ||
+        'Surge' ||
+        'HFire' ||
+        'SFire' ||
+        'FOrb' ||
+        'KillSh' ||
+        'Cone' ||
+        'Breath' ||
+        'Prism' ||
+        'Meteor' ||
+        'Claw' ||
+        'Crash' ||
+        'Chain' ||
+        'Bind' ||
+        'Harp' ||
+        'WBomb' ||
+        'Stamp' ||
+        'Infer' ||
+        'Star' ||
+        'Roots' ||
+        'ERW' ||
+        'Chrg' ||
+        'Barrie' =>
           true,
         _ => false,
       };
+
+  static bool _showcaseWantsTravelBolt(ClassAbilityDef def) {
+    if (def.effect != AbilityEffectKind.damage &&
+        def.effect != AbilityEffectKind.aoe) {
+      return false;
+    }
+    if (def.boltStyle == SpellBoltStyle.weapon) return false;
+    final kind = SpellVfx.burstKindFor(
+      style: def.boltStyle ?? SpellBoltStyle.weapon,
+      shape: def.aoeShape,
+      id: def.id,
+    );
+    if (kind == SpatialBurstKind.slash ||
+        kind == SpatialBurstKind.ring ||
+        kind == SpatialBurstKind.summon ||
+        kind == SpatialBurstKind.leaf) {
+      return false;
+    }
+    return _hasCustomBoltLabel(def.shortLabel);
+  }
 
   /// Non-orb traveling shapes keyed by HUD shortLabel. Paint-only.
   static bool paintCustomTravelingBolt(

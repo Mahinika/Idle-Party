@@ -43,26 +43,18 @@ abstract final class AbilityShowcaseMotion {
       );
     } else if (phase < 0.42) {
       final t = ((phase - 0.2) / 0.22).clamp(0.0, 1.0);
-      final smear = _path
-        ..reset()
-        ..moveTo(cx - tile * 0.85, cy + tile * 0.05)
-        ..lineTo(cx + tile * (0.35 + t * 0.55), cy - tile * 0.08);
-      canvas.drawPath(
-        smear,
-        Paint()
-          ..color = ramp.bright.withValues(alpha: 0.35 + t * 0.45)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(3.0, tile * 0.14)
-          ..strokeCap = StrokeCap.round,
-      );
-      canvas.drawPath(
-        smear,
-        Paint()
-          ..color = ramp.hot.withValues(alpha: 0.55 + t * 0.35)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(1.4, tile * 0.06)
-          ..strokeCap = StrokeCap.round,
-      );
+      for (var i = 0; i < 5; i++) {
+        final a = -1.05 + i * 0.52;
+        final reach = tile * (0.35 + t * 0.45);
+        canvas.drawLine(
+          c,
+          Offset(cx + math.cos(a) * reach, cy + math.sin(a) * reach * 0.85),
+          Paint()
+            ..color = ramp.bright.withValues(alpha: 0.25 + t * 0.4)
+            ..strokeWidth = math.max(2.0, tile * 0.09)
+            ..strokeCap = StrokeCap.round,
+        );
+      }
     } else if (phase < 0.58) {
       final t = ((phase - 0.42) / 0.16).clamp(0.0, 1.0);
       final flash = (1 - (t - 0.5).abs() * 2).clamp(0.0, 1.0);
