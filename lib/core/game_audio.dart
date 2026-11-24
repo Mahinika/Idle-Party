@@ -11,6 +11,7 @@ import 'audio_assets.dart';
 import 'audio_failure_report.dart';
 import 'audio_variation_bank.dart';
 import 'combat_feel.dart';
+import 'music_playback_plan.dart';
 import 'music_playlist.dart';
 import 'music_score.dart';
 
@@ -697,13 +698,15 @@ abstract final class GameAudio {
     // Rest is a real state (no music handle). Do not treat that as a
     // failed start and restart the bed on every settings sync.
     final musicOk = _musicMatches();
-    if (!forceRestart &&
-        !placeChanged &&
-        !bossChanged &&
-        !moodChanged &&
-        kind == _ambience &&
-        _ambienceHandle != null &&
-        musicOk) {
+    if (MusicPlaybackPlan.canSkipAmbienceRestart(
+      forceRestart: forceRestart,
+      placeChanged: placeChanged,
+      bossChanged: bossChanged,
+      moodChanged: moodChanged,
+      sameKind: kind == _ambience,
+      ambienceHandleLive: _voiceLive(_ambienceHandle),
+      musicInSync: musicOk,
+    )) {
       return;
     }
     await _ensureBedFor(kind);
@@ -751,13 +754,45 @@ abstract final class GameAudio {
     AmbienceKind.none => MusicPlace.none,
   };
 
-  static bool _musicMatches() {
-    final stem = _score.stem;
-    if (stem == MusicStem.none || musicVolume <= 0.01) {
-      return _playing == MusicStem.none;
+  static bool _voiceLive(SoundHandle? handle) {
+    if (handle == null || !_ready) return false;
+    try {
+      return SoLoud.instance.getIsValidVoiceHandle(handle);
+    } catch (_) {
+      return false;
     }
-    if (stem == MusicStem.dungeon && _audibleMood != _score.mood) return false;
-    return _playing == stem && _musicHandle != null;
+  }
+
+  @visibleForTesting
+  static bool debugMusicMatches() => _musicMatches();
+
+  static bool _musicMatches() {
+    return MusicPlaybackPlan.musicMatches(
+      score: _score,
+      playing: _playing,
+      musicHandleLive: _voiceLive(_musicHandle),
+      audibleMood: _audibleMood,
+      muted: muted,
+      musicVolume: musicVolume,
+    );
+  }
+
+  /// Restores bed music after a fullscreen ad or consent form when lifecycle
+  /// resume did not run. No-op while muted or backgrounded.
+  static void resyncAfterInterrupt() {
+    if (!MusicPlaybackPlan.shouldPlayBackground(
+      engineReady: _ready,
+      muted: muted,
+      backgroundPaused: _backgroundPaused,
+    )) {
+      return;
+    }
+    unawaited(
+      setAmbience(
+        _ambience,
+        forceRestart: !_musicMatches() || !_voiceLive(_ambienceHandle),
+      ),
+    );
   }
 
   static void _ensureScoreTimer() {
@@ -767,10 +802,10 @@ abstract final class GameAudio {
     if (binding.contains('Test')) return;
     _scoreTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!_ready || _backgroundPaused) return;
-      if (!_score.tick(DateTime.now())) return;
+      final advanced = _score.tick(DateTime.now());
       if (muted) return;
-      // A finished bed stays on the same stem. Restart so the next song
-      // actually starts. A sting returning to the bed changes stem too.
+      // Heal a dead voice handle or advance the score clock to the next bed.
+      if (!advanced && _musicMatches()) return;
       unawaited(_realizeMusic(restart: true));
     });
   }
