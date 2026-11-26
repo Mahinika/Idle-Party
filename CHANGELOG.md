@@ -8,7 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
-- **Draft — hero range / positioning (not for merge without Robert):** Option A′ ranges + melee arc ring around focus (`stableMeleeSlot`, swarm rank fallback for rogue blade kits); see `docs/RANGE_POSITIONING_AUDIT.md`.
+- **Draft — hero range / positioning (not for merge without Robert):** Option A′ ranges + melee arc v2 (per-spec arc radius/step, tank stand, lone-melee rank fallback, combat arc / swarm rank); see `docs/RANGE_POSITIONING_AUDIT.md`.
 
 - Sim nightly: tighten AoE×12 combat-share regression (parse median band, 4 trials); documents #116 spatial shift and #130 re-center (no kit coeffs in this PR).
 

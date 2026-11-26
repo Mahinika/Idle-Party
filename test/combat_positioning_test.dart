@@ -124,7 +124,12 @@ List<({double x, double y})> _lineGoals({required int count}) {
   ];
   final heroes = <SpatialActor>[
     for (var i = 0; i < count; i++)
-      _hero(id: 'h$i', spec: specs[i], x: 3.5, y: 5.5),
+      _hero(
+        id: 'h$i',
+        spec: specs[i],
+        x: 3.5 + i * (CombatPresence.partyBodyGap + 0.02),
+        y: 5.5,
+      ),
   ];
   final foe = _foe(
     id: 'foe',
@@ -514,9 +519,57 @@ void main() {
   });
 
   test('three melee goals ring the foe with body gap', () {
-    final goals = _lineGoals(count: 3);
-    expect(goals, hasLength(3));
-    _expectMeleeArcSpread(goals, foeX: 8.5, foeY: 5.5);
+    const specs = <HeroSpecId>[
+      HeroSpecId.protection,
+      HeroSpecId.arms,
+      HeroSpecId.fire,
+    ];
+    const gap = CombatPresence.partyBodyGap;
+    final heroes = <SpatialActor>[
+      for (var i = 0; i < 3; i++)
+        _hero(
+          id: 'h$i',
+          spec: specs[i],
+          x: 3.5 + i * (gap + 0.02),
+          y: 5.5,
+        ),
+    ];
+    final foe = _foe(
+      id: 'foe',
+      archetype: EnemyArchetype.brute,
+      x: 8.5,
+      y: 5.5,
+      moveSpeed: 0,
+    );
+    final world = _world(heroes: heroes, enemies: [foe]);
+    final tankGoal = CombatPresence.heroFightGoal(
+      hero: heroes[0],
+      target: foe,
+      world: world,
+      packAnchor: heroes.first,
+      index: 0,
+      preferred: heroes[0].preferredRange ?? heroes[0].attackRange,
+      hasLos: true,
+    );
+    heroes[0].x = tankGoal.x;
+    heroes[0].y = tankGoal.y;
+    final armsGoal = CombatPresence.heroFightGoal(
+      hero: heroes[1],
+      target: foe,
+      world: world,
+      packAnchor: heroes.first,
+      index: 1,
+      preferred: heroes[1].preferredRange ?? heroes[1].attackRange,
+      hasLos: true,
+    );
+    _expectMeleeArcSpread(
+      [
+        (x: tankGoal.x, y: tankGoal.y),
+        (x: armsGoal.x, y: armsGoal.y),
+      ],
+      foeX: 8.5,
+      foeY: 5.5,
+    );
   });
 
   test('five heroes keep arc spread in front of the foe', () {

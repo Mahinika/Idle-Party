@@ -137,18 +137,20 @@ Balance gate (6 trials): still **no HIGH**; LOW melee band unchanged (fury/arms/
 
 | Spec | In-range before → after | 1st hit (s) before → after |
 |------|-------------------------|----------------------------|
-| arms | 33.9 → **49.7** | 2.65 → 2.85 |
-| fury | 35.9 → **54.5** | 1.93 → **1.83** |
-| feral | 48.2 → 43.3 | 0.68 → 0.68 |
-| retribution | 30.7 → 29.9 | 0.98 → 0.98 |
-| frostDk | 51.1 → 31.8 | 0.42 → 0.42 |
-| unholy | 50.8 → 40.7 | 2.38 → 2.78 |
-| assassination | 58.3 → 40.1 | 0.87 → 0.87 |
-| combat | 68.3 → 61.5 | 1.17 → 1.17 |
-| subtlety | 49.7 → 71.1 | 0.17 → 0.17 |
-| enhancement | 50.0 → 46.3 | 0.45 → 0.45 |
+| arms | 33.9 → 49.7 → **59.7** | 2.65 → 2.85 → **2.22** |
+| fury | 35.9 → 54.5 → **47.5** | 1.93 → 1.83 → **1.83** |
+| feral | 48.2 → 43.3 → **56.6** | 0.68 → 0.68 → 0.68 |
+| retribution | 30.7 → 29.9 → **55.4** | 0.98 → 0.98 → 0.98 |
+| frostDk | 51.1 → 31.8 → **54.2** | 0.42 → 0.42 → 0.42 |
+| unholy | 50.8 → 40.7 → **57.1** | 2.38 → 2.78 → **2.38** |
+| assassination | 58.3 → 40.1 → **56.5** | 0.87 → 0.87 → 0.87 |
+| combat | 68.3 → 61.5 → **68.2** | 1.17 → 1.17 → 1.17 |
+| subtlety | 49.7 → 71.1 → **75.3** | 0.17 → 0.17 → 0.17 |
+| enhancement | 50.0 → 46.3 → **61.7** | 0.45 → 0.45 → 0.45 |
 
-AoE×12 gate + live gate: **no HIGH** (rogue swarm rank fallback).
+**Arc v2 params:** per-spec `meleeArcRadius` (tank stand ~`attackRange - 0.58`, combat `0.52`, party-aware tank front when focus is arms); slot order by ascending `attackRange`; wing `meleeArcStep` mins for small parties; lone melee on rank file (fury / assassination / unholy); combat on arc in normal packs, rank in swarms (≥10).
+
+AoE×12 gate + live gate: **no HIGH** after v2.
 
 ## 6. Risks
 
