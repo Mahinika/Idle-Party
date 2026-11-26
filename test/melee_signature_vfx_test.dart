@@ -6,9 +6,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/class_ability.dart';
-import 'package:idle_party/models/spell_bolt_style.dart';
 import 'package:idle_party/ui/spell_shape_paint.dart';
-import 'package:idle_party/ui/spell_vfx_palette.dart';
+import 'package:idle_party/ui/theme.dart';
 
 import 'shell_golden_harness.dart';
 
@@ -51,6 +50,14 @@ void main() {
     expect(features[AbilityId.kidneyShotAssa]!.signaturePalette[1], greaterThan(6));
     expect(features[AbilityId.revealingStrike]!.signaturePalette[2], greaterThan(8));
     expect(features[AbilityId.maim]!.signaturePalette[3], greaterThan(10));
+    for (final id in _fourMelee) {
+      final def = ClassKits.defFor(id)!;
+      final rgba = await _renderShowcase(def, life: 0.34);
+      final whiteCore = _discWhiteCorePixels(rgba, 160, 160);
+      final oliveRing = _discOliveRingPixels(rgba, 160, 160);
+      expect(whiteCore, lessThan(12), reason: '$id white disc core');
+      expect(oliveRing, lessThan(90), reason: '$id olive weapon disc');
+    }
   });
 
   test('regenerate four melee strips when RENDER_MELEE_SIG', () async {
@@ -96,6 +103,14 @@ void main() {
       Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()),
       Paint()..color = const Color(0xFF100C14),
     );
+    final caption = GameTheme.body(size: 10, color: const Color(0xFFA89888));
+    for (final label in [('Before (main disc)', gap + tile * 0.25), ('After (signature)', gap * 2 + tile + tile * 0.2)]) {
+      final tp = TextPainter(
+        text: TextSpan(text: label.$1, style: caption),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(canvas, Offset(label.$2, 4));
+    }
 
     for (var row = 0; row < _fourMelee.length; row++) {
       final id = _fourMelee[row];
@@ -111,13 +126,25 @@ void main() {
         RRect.fromRectAndRadius(afterRect.inflate(2), const Radius.circular(6)),
         Paint()..color = const Color(0xFF231A28),
       );
-      _paintLegacyMeleeOverlay(canvas, tileRect, id, def, life: 0.34);
+      SpellShapePaint.paintAbilityShowcaseMainDiscBaseline(
+        canvas,
+        tileRect: tileRect,
+        def: def,
+        life: 0.34,
+      );
       SpellShapePaint.paintAbilityShowcase(
         canvas,
         tileRect: afterRect,
         def: def,
         life: 0.34,
       );
+      final nameTp = TextPainter(
+        text: TextSpan(text: def.name, style: GameTheme.body(size: 11)),
+        textDirection: TextDirection.ltr,
+        maxLines: 2,
+        ellipsis: '…',
+      )..layout(maxWidth: tile);
+      nameTp.paint(canvas, Offset(gap, y + tile - 12));
     }
 
     final bytes = await _pngFromRecorder(recorder, w, h);
@@ -261,87 +288,42 @@ _MeleeFeatures _measureFeatures(Uint8List rgba, int w, int h) {
   );
 }
 
-/// Pre-signature overlay stack (main before feat/melee-signature-vfx).
-void _paintLegacyMeleeOverlay(
-  Canvas canvas,
-  Rect tileRect,
-  AbilityId id,
-  ClassAbilityDef def, {
-  required double life,
-}) {
-  final tile = tileRect.width / 3.2;
-  final cx = tileRect.center.dx;
-  final cy = tileRect.center.dy - tile * 0.15;
-  final c = Offset(cx, cy);
-  final r = tile * 0.95 * (0.85 + (1 - life) * 0.25);
-  final alpha = (life / 0.55).clamp(0.0, 1.0);
-  final ramp = SpellSchoolRamp.forStyle(def.boltStyle ?? SpellBoltStyle.weapon);
-  switch (id) {
-    case AbilityId.executeFury:
-      _legacyImpactStar(canvas, c, r * 0.65, alpha, ramp, tile);
-      _legacyBlood(canvas, c, r, alpha);
-    case AbilityId.kidneyShotAssa:
-    case AbilityId.maim:
-      _legacyStunStars(canvas, c, r, alpha, tile);
-      _legacyImpactStar(canvas, c, r * 0.55, alpha, ramp, tile);
-    case AbilityId.revealingStrike:
-      _legacyImpactStar(canvas, c, r * 0.75, alpha, ramp, tile);
-    default:
-      break;
-  }
-}
-
-void _legacyImpactStar(
-  Canvas canvas,
-  Offset c,
-  double r,
-  double alpha,
-  SpellSchoolRamp ramp,
-  double tile,
-) {
-  for (var i = 0; i < 8; i++) {
-    final a = i * math.pi / 4;
-    final len = i.isEven ? r : r * 0.45;
-    canvas.drawLine(
-      c,
-      Offset(c.dx + math.cos(a) * len, c.dy + math.sin(a) * len),
-      Paint()
-        ..color = ramp.hot.withValues(alpha: alpha)
-        ..strokeWidth = math.max(2.4, tile * 0.08)
-        ..strokeCap = StrokeCap.round,
-    );
-  }
-}
-
-void _legacyStunStars(Canvas canvas, Offset c, double r, double alpha, double tile) {
-  for (var i = 0; i < 4; i++) {
-    final p = Offset(
-      c.dx + math.cos(i * 1.57) * r * 0.62,
-      c.dy + math.sin(i * 1.57) * r * 0.45 - r * 0.08,
-    );
-    for (var s = 0; s < 4; s++) {
-      final a = s * math.pi / 2;
-      canvas.drawLine(
-        p,
-        Offset(p.dx + math.cos(a) * r * 0.22, p.dy + math.sin(a) * r * 0.22),
-        Paint()
-          ..color = const Color(0xFFFFF6C0).withValues(alpha: alpha)
-          ..strokeWidth = math.max(2.2, tile * 0.07)
-          ..strokeCap = StrokeCap.round,
-      );
+int _discWhiteCorePixels(Uint8List rgba, int w, int h) {
+  var n = 0;
+  final cx = w / 2;
+  final cy = h / 2;
+  final rad = w * 0.22;
+  for (var y = 0; y < h; y++) {
+    for (var x = 0; x < w; x++) {
+      if (math.sqrt(math.pow(x - cx, 2) + math.pow(y - cy, 2)) > rad) continue;
+      final i = (y * w + x) * 4;
+      if (rgba[i + 3] < 80) continue;
+      final r = rgba[i];
+      final g = rgba[i + 1];
+      final b = rgba[i + 2];
+      if (r > 235 && g > 235 && b > 215) n++;
     }
   }
+  return n;
 }
 
-void _legacyBlood(Canvas canvas, Offset c, double r, double alpha) {
-  for (var i = 0; i < 5; i++) {
-    final a = i * 1.25;
-    canvas.drawCircle(
-      Offset(c.dx + math.cos(a) * r * 0.55, c.dy + math.sin(a) * r * 0.35),
-      r * 0.08,
-      Paint()..color = const Color(0xFF901818).withValues(alpha: alpha * 0.85),
-    );
+int _discOliveRingPixels(Uint8List rgba, int w, int h) {
+  var n = 0;
+  final cx = w / 2;
+  final cy = h / 2;
+  for (var y = 0; y < h; y++) {
+    for (var x = 0; x < w; x++) {
+      final d = math.sqrt(math.pow(x - cx, 2) + math.pow(y - cy, 2));
+      if (d < w * 0.18 || d > w * 0.4) continue;
+      final i = (y * w + x) * 4;
+      if (rgba[i + 3] < 60) continue;
+      final r = rgba[i];
+      final g = rgba[i + 1];
+      final b = rgba[i + 2];
+      if (r > 240 && g > 200 && g < 232 && b > 120 && b < 155) n++;
+    }
   }
+  return n;
 }
 
 Future<Uint8List> _pngFromRecorder(ui.PictureRecorder recorder, int w, int h) async {

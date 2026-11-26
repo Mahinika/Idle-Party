@@ -8,7 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
-- **Melee signature VFX:** Execute, Kidney Shot, Revealing Strike, and Maim use distinct showcase/fight overlays (vertical cleave, low jab + daze, cross-slash expose mark, triple rake shreds); regression test + before/after sheet under `docs/design/abilities-61/rendered/`.
+- **Melee signature VFX:** Execute, Kidney Shot, Revealing Strike, and Maim use distinct showcase/fight overlays (vertical cleave, low jab + daze, cross-slash expose mark, triple rake shreds); skip shared disc/motion for those four; regression test + before/after sheet under `docs/design/abilities-61/rendered/`.
 
 
 
