@@ -229,7 +229,6 @@ class TownSceneLayout {
     ];
 
     final plantings = <TownPlanting>[
-      TownPlanting(Rect.fromLTWH(0, backBottom - 36, 56, 44), 'flowers'),
       TownPlanting(Rect.fromLTWH(w - 56, backBottom - 40, 56, 44), 'shrub'),
     ];
     if (lane.height >= 40) {
@@ -285,13 +284,11 @@ class TownSceneLayout {
     for (var x = 72.0; x < w - 70; x += 54) {
       plantings.add(TownPlanting(Rect.fromLTWH(x, grass - 6, 32, 26), 'shrub'));
     }
-    // Clusters at the lawn edges and beside the spur. Not on the doors.
-    plantings.add(TownPlanting(Rect.fromLTWH(4, grass + 16, 40, 32), 'flowers'));
+      // Clusters at the lawn edges and beside the spur. Not on the doors.
     plantings.add(TownPlanting(Rect.fromLTWH(34, grass + 30, 34, 28), 'herbs'));
     plantings.add(TownPlanting(Rect.fromLTWH(w - 42, grass + 18, 38, 30), 'wild'));
     if (lane.height >= 70) {
       plantings.add(TownPlanting(Rect.fromLTWH(6, lane.top + 6, 40, 32), 'shrub'));
-      plantings.add(TownPlanting(Rect.fromLTWH(w - 46, lane.top + 14, 40, 32), 'flowers'));
       if (approaches.isNotEmpty) {
         final spur = approaches.first;
         plantings.add(
@@ -301,19 +298,6 @@ class TownSceneLayout {
           TownPlanting(Rect.fromLTWH(spur.right + 4, spur.top + 16, 30, 26), 'herbs'),
         );
       }
-    }
-    if (rightGap >= 16) {
-      plantings.add(
-        TownPlanting(
-          Rect.fromLTWH(
-            well.right + 2,
-            well.bottom - 26,
-            math.min(34, rightGap + 6),
-            28,
-          ),
-          'flowers',
-        ),
-      );
     }
     final thresholds = <Rect>[
       for (final building in front)

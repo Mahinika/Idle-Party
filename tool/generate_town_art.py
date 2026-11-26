@@ -293,14 +293,23 @@ def stone_wall(pix: Pix, x: int, y: int, w: int, h: int, seed: int = 0, ramp: li
                 pix.rect(x0, yy, max(1, x1 - x0 - 1), 1, ramp[min(tone + 1, 5)])
                 if ch >= 4:
                     pix.put(x0 + 1, yy + 1, ramp[min(tone + 2, 5)])
-                # A few stones are chipped.
+                # Light from upper-left: highlight lip, shadow sole.
+                pix.rect(x0, yy, x1 - x0, 1, ramp[min(tone + 2, 5)])
+                if x1 - x0 > 3:
+                    pix.put(x0 + 1, yy + 1, ramp[min(tone + 3, 5)])
+                # A few stones are chipped or mossed.
                 if (row + i + seed) % 7 == 0 and x1 - x0 > 4:
                     pix.put(x0 + 2, yy + ch - 2, ramp[1])
                     pix.put(x0 + 3, yy + ch - 2, ramp[0])
+                    pix.put(x0 + 1, yy + ch - 3, (36, 34, 32))
+                if (row + i + seed) % 11 == 3 and ch > 3:
+                    pix.put(x1 - 2, yy + ch - 2, LEAF[2])
+                    pix.put(x1 - 3, yy + ch - 3, LEAF[3])
                 pix.rect(x0, yy + ch - 1, x1 - x0, 1, ramp[0])
                 pix.put(x1 - 1, yy, ramp[1])
                 if ch > 2:
                     pix.put(x1 - 1, yy + 1, ramp[1])
+                    pix.put(x0, yy + ch - 2, ramp[0])
             xx += sw
             i += 1
         yy += ch
@@ -338,7 +347,7 @@ def timber_wall(pix: Pix, x: int, y: int, w: int, h: int, seed: int = 1) -> None
 
 def plaster_wall(pix: Pix, x: int, y: int, w: int, h: int, seed: int = 0) -> None:
     pix.rect(x, y, w, h, PLASTER[3])
-    # Stain clusters, not noise.
+    # Stain clusters and a left key light.
     for i in range(6 + (w // 20)):
         cx = x + 4 + ((i * 17 + seed * 5) % max(1, w - 8))
         cy = y + 3 + ((i * 11 + seed) % max(1, h - 6))
@@ -348,6 +357,13 @@ def plaster_wall(pix: Pix, x: int, y: int, w: int, h: int, seed: int = 0) -> Non
         pix.put(cx, cy + 1, PLASTER[2])
         if i % 3 == 0:
             pix.put(cx + 2, cy + 1, PLASTER[1])
+    pix.rect(x, y, 2, h, PLASTER[4])
+    pix.rect(x + w - 3, y, 2, h, PLASTER[1])
+    for wy in range(y + 4, y + h - 4, 6):
+        for wx in range(x + 6, x + w - 6, 10):
+            if (wx + wy + seed) % 9 == 0:
+                pix.put(wx, wy, PLASTER[5])
+                pix.put(wx + 1, wy, PLASTER[4])
     # Hairline crack on one wall.
     if w > 24 and h > 16:
         cx = x + w // 3
@@ -384,13 +400,18 @@ def tile_span(pix: Pix, y: int, x0: int, x1: int, row: int, ramp: list[tuple[int
             tone = 3 if (col + row) % 5 else 2
             if (col + row) % 7 == 0:
                 tone = 4
+            if (col + row) % 9 == 0:
+                tone = 1
             pix.rect(a, y, b - a, 2, ramp[tone])
             pix.rect(a, y, max(1, b - a - 1), 1, ramp[min(tone + 1, 5)])
+            pix.put(a, y, ramp[min(tone + 2, 5)])
             pix.put(b - 1, y, ramp[1])
             pix.put(b - 1, y + 1, ramp[0])
             pix.put(a, y + 2, ramp[0])
+            pix.put(b - 2, y + 2, ramp[0])
             if b - a > 3:
                 pix.put(a + 1, y + 2, ramp[1])
+                pix.put(a + 2, y + 1, ramp[min(tone + 1, 5)])
         xx += tile_w
         col += 1
 
@@ -434,6 +455,11 @@ def window(pix: Pix, x: int, y: int, w: int = 11, h: int = 13, curtains: bool = 
     pix.rect(x + 2, y + 2, max(1, w // 2 - 2), max(1, h // 2 - 2), EMBER[5])
     pix.put(x + 2, y + 2, EMBER[6])
     pix.put(x + 3, y + 3, EMBER[5])
+    pix.put(x + w - 4, y + 3, EMBER[4])
+    pix.put(x + 4, y + h - 4, EMBER[2])
+    # Warm spill under the sill.
+    pix.put(x + 2, y + h + 2, (120, 72, 40))
+    pix.put(x + w - 3, y + h + 2, (96, 56, 32))
     pix.rect(x + w // 2, y + 1, 1, h - 2, TIMBER[2])
     pix.rect(x + 1, y + h // 2, w - 2, 1, TIMBER[2])
     # Sill
@@ -598,11 +624,19 @@ def chimney(pix: Pix, x: int, y: int, h: int) -> None:
 
 
 def smoke(pix: Pix, x: int, y: int) -> None:
-    puffs = ((0, 0, 3), (2, -3, 2), (1, -4, 3), (4, -7, 2), (3, -8, 3), (6, -12, 1), (5, -13, 2))
+    """Soft chimney plume. Light grey so it reads at dusk."""
+    puffs = (
+        (0, 0, 4), (1, -2, 4), (2, -5, 4), (3, -8, 4),
+        (5, -12, 3), (4, -16, 4), (7, -20, 3), (6, -24, 3),
+        (8, -28, 2), (7, -32, 2),
+    )
     for dx, dy, n in puffs:
         for k in range(n):
-            pix.put(x + dx + (k % 2), y + dy, CLOUD[2 if k == 0 else 3])
-            pix.put(x + dx + 1, y + dy + 1, CLOUD[1])
+            tone = (156, 152, 164) if k == 0 and dy > -8 else (124, 118, 132)
+            if dy < -14:
+                tone = (96, 92, 108)
+            pix.put(x + dx + (k % 2), y + dy, tone)
+            pix.put(x + dx + 1, y + dy + 1, (78, 74, 88))
 
 
 def step(pix: Pix, x: int, y: int, w: int, h: int) -> None:
@@ -698,6 +732,8 @@ def generate_forge(tier: int) -> Image.Image:
         if tier == 1:
             beam(pix, 56, 82, 3, 48)
     gable(pix, (60, 34), (16, 84), (104, 82), TILE)
+    pix.rect(26, 82, 68, 2, STONE[0])
+    pix.rect(28, 84, 64, 1, (28, 22, 20))
     chimney(pix, 86, 16, 58)
     # Forge mouth: brick reveal, coals, flame.
     pix.rect(40, 96, 28, 34, (92, 42, 32))
@@ -806,6 +842,8 @@ def generate_inn(tier: int) -> Image.Image:
     # Jetty shadow on the stone.
     pix.rect(34, 100, 52, 2, STONE[0])
     gable(pix, (60, 22), (12, 70), (110, 66), TILE)
+    pix.rect(24, 68, 72, 2, PLASTER[1])
+    pix.rect(26, 70, 68, 1, (36, 30, 28))
     chimney(pix, 88, 8, 52)
     door(pix, 52, 112, 16, 28, arch=True)
     window(pix, 30, 74, 12, 14, curtains=True)
@@ -956,11 +994,14 @@ def generate_well() -> Image.Image:
     beam(pix, 12, 16, 4, 28)
     beam(pix, 40, 16, 4, 28)
     gable(pix, (28, 4), (8, 22), (48, 22), TILE)
-    # Rope and bucket.
+    # Rope and bucket (wider wooden hoop, iron band).
     pix.rect(26, 18, 1, 14, TIMBER[1])
-    pix.rect(22, 32, 8, 6, TIMBER[3])
-    pix.rect(22, 32, 8, 1, IRON[4])
-    pix.rect(22, 36, 8, 1, IRON[2])
+    pix.rect(20, 30, 12, 8, TIMBER[2])
+    pix.rect(20, 30, 12, 1, TIMBER[4])
+    pix.rect(20, 36, 12, 1, IRON[3])
+    pix.rect(21, 31, 10, 5, TIMBER[0])
+    pix.put(24, 33, IRON[4])
+    pix.put(28, 34, (60, 90, 100))
     # Moss.
     pix.put(10, 48, LEAF[3])
     pix.put(11, 50, LEAF[2])
@@ -1148,10 +1189,6 @@ def generate_tree_tall() -> Image.Image:
     return pix.image()
 
 
-def generate_flowers() -> Image.Image:
-    return life_art.flowers()
-
-
 def generate_ground() -> Image.Image:
     return life_art.ground()
 
@@ -1219,12 +1256,23 @@ def generate_backdrop() -> Image.Image:
     # A far roof, so the ridge is a place.
     pix.rect(200, 140, 10, 6, STONE[3])
     gable(pix, (205, 132), (198, 142), (214, 142), TILE)
-    for bx, by in ((120, 70), (210, 58), (280, 80)):
-        pix.put(bx, by, STONE[1])
-        pix.put(bx + 2, by - 1, STONE[1])
-        pix.put(bx - 2, by - 1, STONE[1])
-        pix.put(bx + 3, by, STONE[1])
-        pix.put(bx - 3, by, STONE[1])
+    birds = (
+        (72, 44, 0),
+        (128, 36, 1),
+        (198, 50, 0),
+        (268, 40, 1),
+        (318, 54, 0),
+    )
+    for bx, by, flip in birds:
+        wing = -2 if flip else 2
+        body = (32, 28, 40)
+        pix.put(bx, by, body)
+        pix.put(bx + 1, by, (48, 44, 56))
+        pix.put(bx + wing, by - 1, (64, 62, 74))
+        pix.put(bx - wing, by, (64, 62, 74))
+        pix.put(bx + wing - 1, by - 2, (82, 80, 92))
+        pix.put(bx - wing + 1, by - 2, (82, 80, 92))
+        pix.put(bx, by + 1, (20, 16, 26))
     # The same dusk greens as the lawn tile. 120 divides 360.
     for y in range(176, 200):
         for x in range(360):
@@ -1281,7 +1329,7 @@ python3 tool/generate_town_art.py
 |------|--------|
 | Ink (32, 22, 18), 1 px contour | Same warm ink as the heroes |
 | Light | Dusk. Upper-left key, plum sky, warm horizon, lamp windows |
-| Ground | Dark saturated lawn, 64×64, seamless. Cobbles and flowers sit on the paths |
+| Ground | Dark saturated lawn, 128×128, seamless tufts. Cobble flower beds stay on path tiles only |
 | Roofs | Individual tiles. Guild slate, houses terracotta, market a folded awning |
 | Windows | Hot amber glass, wood mullions, light stays inside the frame |
 | People | Smith, courier, and gardener. Idle + 4 walk frames |
@@ -1292,12 +1340,12 @@ python3 tool/generate_town_art.py
 | File | Use |
 |------|-----|
 | backdrop.png | Dusk sky, moon, low sun, ridge, distant roof |
-| ground.png | Dusk lawn, 64×64, edges meet |
+| ground.png | Dusk lawn, 128×128, edges meet |
 | path.png / path_b.png | Cobble street, 360×36, flower beds at the ends |
 | approach.png | Cobble spur, 36×192, mortar meets at the wrap |
 | alert.png | Claim spark on guild and vault |
 | tree_round.png / tree_tall.png | Leaf clumps, blossoms, fruit |
-| flowers.png / shrub.png / wild.png / herbs.png | Four different plantings |
+| shrub.png / wild.png / herbs.png | Edge plantings |
 | meadow.png / thicket.png / scuff.png | Unique lawn clumps, placed once |
 | worn.png | Small worn patch for a doorway |
 | contact.png | Dark grass under a building |
@@ -1322,7 +1370,6 @@ def main() -> int:
         ("approach.png", life_art.approach()),
         ("tree_round.png", generate_tree_round()),
         ("tree_tall.png", generate_tree_tall()),
-        ("flowers.png", generate_flowers()),
         ("shrub.png", life_art.shrub()),
         ("wild.png", life_art.wild()),
         ("herbs.png", life_art.herbs()),
@@ -1335,6 +1382,7 @@ def main() -> int:
         ("pennants.png", life_art.pennants()),
         ("lanterns.png", life_art.lanterns()),
         ("folk.png", generate_folk()),
+        ("yard_props.png", life_art.yard_props()),
         ("alert.png", life_art.alert()),
         ("well.png", generate_well()),
         ("vault_shut.png", generate_vault(False)),
@@ -1366,7 +1414,6 @@ def main() -> int:
     paste(preview, by_name["worn.png"], (20, 430))
     paste(preview, by_name["worn.png"], (150, 436))
     paste(preview, by_name["worn.png"], (270, 428))
-    paste(preview, by_name["flowers.png"], (8, 250))
     paste(preview, by_name["shrub.png"], (300, 246))
     paste(preview, by_name["tree_round.png"], (0, 200))
     paste(preview, by_name["tree_tall.png"], (312, 188))

@@ -8,7 +8,16 @@ checks that this file changed.
 
 ## [Unreleased]
 
+
+
+- **Abilities-61 VFX (pass 2):** per-ability showcase signatures, motion phases (charge/smear/impact), 6-frame anim strips under `docs/design/abilities-61/rendered/anim/`, ffmpeg GIF script, and centered in-fight staging.
+- **Abilities-61 VFX (pass 2c):** drop generic weapon slash arc for bespoke melee signatures (showcase + fight); pixel regression on lower-left worm; anim assets are strips/GIFs only (no per-frame PNG dirs).
+- **Abilities-61 VFX (pass 2b):** remove contact-sheet horizontal motion smear and default weapon bolt capsule; in-fight weapon projectiles without custom labels render as a dot, not a worm.
+- **Abilities-61:** every hero spec reaches 11 kit abilities (Protection stays 13; Blood and Guardian unchanged) — 61 new spells with v3-layered `SpellShapePaint` / `SpellVfxLayers` (summon silhouettes, pillars, domes, meteor scorch), in-context A56 fight renders + v3 comparison sheet under `docs/design/abilities-61/rendered/`, labeled traveling bolts, fallback mechanics where proposals needed new engine work, and regression tests for catalog counts, legacy coeffs, saves, and combat resolution.
+- Town square: calm lawn tufts only (no tiled flower dots), no ambient critters; shrubs and meadow clumps, buildings, and hero-scale folk stay. Town lawn QA cobbles and folk shading.
+
 - A save from a newer build stays on the device and in the cloud, with "Update the app to load this save". The consent form is no longer cut off by the 10s UMP update timer, and consent plus Remote Config sync after it closes. A rewarded ad older than 55 minutes reloads, a second tap while an ad is open does not grant again, uncaught async errors are non-fatal in Crashlytics, and the changelog check diffs from the merge-base.
+
 - Play review: race picker says cosmetic-only (no stat bonuses), and music bed resyncs after ads or dead voice handles via `MusicPlaybackPlan`.
 - Analytics: once-per-install onboarding steps (prefs, not the save), install cohort and ad-free / season pass user properties, and separate Play purchase fail vs cancel. No price or reward change.
 - Apex audit (2026-11-24): boss clears save the default craft goal before CRAFT opens, “Use auto target” keeps meter progress when auto still names the same mat, duplicate vault copies show the highest rank in the sheet, plus regression coverage for goal/meter toasts, vault bag cap, bag-only upgrades, legacy duplicates, and boss material payoff lines.
