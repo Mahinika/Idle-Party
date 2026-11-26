@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/vfx_quality.dart';
 import 'package:idle_party/ui/game_theme.dart';
+import 'package:idle_party/ui/shell/home/town_ambient.dart';
 import 'package:idle_party/ui/shell/home/town_life.dart';
 import 'package:idle_party/ui/shell/home/town_scene.dart';
 
@@ -127,6 +128,26 @@ void main() {
     expectPacked(const Size(360, 340), wantFolk: true);
     expectPacked(const Size(360, 280), textScale: 2, wantFolk: false);
     expectPacked(const Size(320, 300), wantFolk: false);
+  });
+
+  test('yard props sit off labels at A56', () {
+    final layout = TownSceneLayout.pack(const Size(360, 780));
+    final props = townYardProps(layout, const Size(360, 780));
+    expect(props, isNotEmpty);
+    for (final prop in props) {
+      expect(
+        layout.labels.any((l) => prop.dst.overlaps(l.inflate(2))),
+        isFalse,
+        reason: '${prop.dst}',
+      );
+      for (final hit in layout.hitTargets) {
+        expect(
+          prop.dst.overlaps(hit.inflate(4)),
+          isFalse,
+          reason: 'prop on $hit',
+        );
+      }
+    }
   });
 
   test('folk poses are deterministic and idle when motion is off', () {
