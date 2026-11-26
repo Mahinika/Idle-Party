@@ -13,6 +13,7 @@ import 'floater_banner_stack.dart';
 import 'floater_paint.dart';
 import 'shell/shell_common.dart';
 import 'ability_vfx_paint.dart';
+import 'spell_shape_paint.dart';
 import 'dungeon_camera.dart';
 import '../core/game_logic.dart';
 import '../core/hero_identity.dart';

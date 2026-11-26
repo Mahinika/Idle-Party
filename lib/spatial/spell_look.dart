@@ -20,7 +20,10 @@ SpellBoltStyle? spellBoltStyleForAbilityId(AbilityId id) {
     AbilityId.pyroblast ||
     AbilityId.combustion ||
     AbilityId.explosiveTrap ||
-    AbilityId.explosiveShot => SpellBoltStyle.fire,
+    AbilityId.explosiveShot ||
+    AbilityId.wildfireBomb ||
+    AbilityId.fireElemental ||
+    AbilityId.meteor => SpellBoltStyle.fire,
 
     // —— Frost ——
     AbilityId.frostShock ||
@@ -35,7 +38,12 @@ SpellBoltStyle? spellBoltStyleForAbilityId(AbilityId id) {
     AbilityId.chainsOfIce ||
     AbilityId.frostStrike ||
     AbilityId.freezingTrap ||
-    AbilityId.iceBlock => SpellBoltStyle.frost,
+    AbilityId.iceBlock ||
+    AbilityId.frozenOrb ||
+    AbilityId.breathOfSindragosa ||
+    AbilityId.empowerRuneWeapon ||
+    AbilityId.iceBarrierFrost ||
+    AbilityId.frostMageConeOfCold => SpellBoltStyle.frost,
 
     // —— Lightning ——
     AbilityId.thunderClap ||
@@ -43,7 +51,8 @@ SpellBoltStyle? spellBoltStyleForAbilityId(AbilityId id) {
     AbilityId.lightningBolt ||
     AbilityId.thunderstorm ||
     AbilityId.earthShock ||
-    AbilityId.stormstrike => SpellBoltStyle.lightning,
+    AbilityId.stormstrike ||
+    AbilityId.crashLightning => SpellBoltStyle.lightning,
 
     // —— Holy ——
     AbilityId.holyPriestNova ||
@@ -70,7 +79,19 @@ SpellBoltStyle? spellBoltStyleForAbilityId(AbilityId id) {
     AbilityId.renew ||
     AbilityId.guardianSpirit ||
     AbilityId.beaconOfLight ||
-    AbilityId.layOnHands => SpellBoltStyle.holy,
+    AbilityId.layOnHands ||
+    AbilityId.lightOfDawn ||
+    AbilityId.hammerOfJusticeHoly ||
+    AbilityId.ardentDefender ||
+    AbilityId.wordOfGloryProt ||
+    AbilityId.consecrationRet ||
+    AbilityId.hammerOfJusticeRet ||
+    AbilityId.wordOfGloryRet ||
+    AbilityId.powerWordBarrier ||
+    AbilityId.halo ||
+    AbilityId.holyFire ||
+    AbilityId.holyWordSanctify ||
+    AbilityId.prayerOfMendingHoly => SpellBoltStyle.holy,
 
     // —— Nature (resto sham / balance / resto druid) ——
     AbilityId.hurricane ||
@@ -92,12 +113,22 @@ SpellBoltStyle? spellBoltStyleForAbilityId(AbilityId id) {
     AbilityId.wildGrowth ||
     AbilityId.lifebloom ||
     AbilityId.nourish ||
-    AbilityId.tranquility => SpellBoltStyle.nature,
+    AbilityId.tranquility ||
+    AbilityId.healingSurge ||
+    AbilityId.healingTideTotem ||
+    AbilityId.earthbindTotem ||
+    AbilityId.manaTideTotem ||
+    AbilityId.starsurge ||
+    AbilityId.forceOfNature ||
+    AbilityId.ironbark ||
+    AbilityId.innervateDruid ||
+    AbilityId.entanglingRoots => SpellBoltStyle.nature,
 
     // —— Poison (rogue toxins / hunter sting) ——
     AbilityId.envenom ||
     AbilityId.garrote ||
-    AbilityId.serpentSting => SpellBoltStyle.poison,
+    AbilityId.serpentSting ||
+    AbilityId.crimsonVial => SpellBoltStyle.poison,
 
     // —— Arcane ——
     AbilityId.arcaneBlast ||
@@ -107,7 +138,10 @@ SpellBoltStyle? spellBoltStyleForAbilityId(AbilityId id) {
     AbilityId.slow ||
     AbilityId.antiMagicShell ||
     AbilityId.boneShield ||
-    AbilityId.presenceOfMind => SpellBoltStyle.arcane,
+    AbilityId.presenceOfMind ||
+    AbilityId.arcaneBarrage ||
+    AbilityId.prismaticBarrier ||
+    AbilityId.evocation => SpellBoltStyle.arcane,
 
     // —— Arrow (hunter ranged) ——
     AbilityId.arcaneShot ||
@@ -119,9 +153,18 @@ SpellBoltStyle? spellBoltStyleForAbilityId(AbilityId id) {
     AbilityId.volley ||
     AbilityId.killCommand ||
     AbilityId.blackArrow ||
-    AbilityId.bestialWrath => SpellBoltStyle.arrow,
+    AbilityId.bestialWrath ||
+    AbilityId.stampede ||
+    AbilityId.killShotBm ||
+    AbilityId.killShotMm ||
+    AbilityId.bindingShot ||
+    AbilityId.harpoonSurvival => SpellBoltStyle.arrow,
 
-    AbilityId.handOfGuldan => SpellBoltStyle.demon,
+    AbilityId.handOfGuldan ||
+    AbilityId.callDreadstalkers ||
+    AbilityId.soulFireDemo ||
+    AbilityId.summonInfernal ||
+    AbilityId.shadowburn => SpellBoltStyle.demon,
 
     // —— Shadow ——
     AbilityId.shadowBolt ||
@@ -144,7 +187,15 @@ SpellBoltStyle? spellBoltStyleForAbilityId(AbilityId id) {
     AbilityId.armyOfDead ||
     AbilityId.gargoyle ||
     AbilityId.runeTap ||
-    AbilityId.psychicScream => SpellBoltStyle.shadow,
+    AbilityId.psychicScream ||
+    AbilityId.secretTechnique ||
+    AbilityId.shadowfiendDisc ||
+    AbilityId.shadowWordDeath ||
+    AbilityId.shadowfiendShadow ||
+    AbilityId.soulReaper ||
+    AbilityId.darkTransformation ||
+    AbilityId.darkSoul ||
+    AbilityId.howlOfTerror => SpellBoltStyle.shadow,
 
     // —— Weapon / physical ——
     AbilityId.bladestorm ||
@@ -185,7 +236,16 @@ SpellBoltStyle? spellBoltStyleForAbilityId(AbilityId id) {
     AbilityId.bladeFlurry ||
     AbilityId.hemorrhage ||
     AbilityId.backstab ||
-    AbilityId.sweepingStrikes => SpellBoltStyle.weapon,
+    AbilityId.sweepingStrikes ||
+    AbilityId.colossusSmash ||
+    AbilityId.dieByTheSword ||
+    AbilityId.executeFury ||
+    AbilityId.piercingHowl ||
+    AbilityId.claw ||
+    AbilityId.kidneyShotAssa ||
+    AbilityId.adrenalineRush ||
+    AbilityId.revealingStrike ||
+    AbilityId.maim => SpellBoltStyle.weapon,
     _ => null,
   };
 }
@@ -230,6 +290,18 @@ double? spellGroundDiscLifeFor(AbilityId id) {
     AbilityId.fanOfKnivesCombat ||
     AbilityId.feralThrash ||
     AbilityId.guardianThrash => 1.5,
+    AbilityId.consecrationRet => 6.0,
+    AbilityId.bindingShot => 2.2,
+    AbilityId.wildfireBomb => 3.5,
+    AbilityId.powerWordBarrier => 3.0,
+    AbilityId.halo => 2.5,
+    AbilityId.holyWordSanctify => 2.8,
+    AbilityId.frozenOrb => 3.0,
+    AbilityId.healingTideTotem => 3.5,
+    AbilityId.earthbindTotem => 2.0,
+    AbilityId.meteor => 3.2,
+    AbilityId.summonInfernal => 3.5,
+    AbilityId.entanglingRoots => 2.2,
     _ => null,
   };
 }
