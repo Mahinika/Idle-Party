@@ -32,6 +32,6 @@ void main() {
     expect(s.levelsGained, 15);
     expect(s.kills, 62);
     expect(s.gearFinds, 26);
-    expect(s.bestDrop, 'Runic Cloth Legguards of Power');
+    expect(s.bestDrop, 'Runed Sanctum Cloth Pauldrons');
   }, timeout: const Timeout(Duration(minutes: 3)));
 }
