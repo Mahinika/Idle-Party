@@ -4,8 +4,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:idle_party/models/class_ability.dart';
-import 'package:idle_party/models/spell_bolt_style.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/ui/spell_shape_paint.dart';
 
