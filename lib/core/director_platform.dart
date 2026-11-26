@@ -226,6 +226,8 @@ extension GameDirectorPlatform on GameDirector {
         case AdWatchResult.failed:
           showToast('Ad not ready — try again in a bit', life: 2.2);
           return false;
+        case AdWatchResult.busy:
+          return false;
         case AdWatchResult.unavailable:
           showToast('Ads play on the Android app', life: 2.2);
           return false;
@@ -262,6 +264,8 @@ extension GameDirectorPlatform on GameDirector {
         dismissWispPending();
       case AdWatchResult.failed:
         showToast('Ad not ready — try again in a bit', life: 2.2);
+      case AdWatchResult.busy:
+        showToast('Ad already playing', life: 1.6);
       case AdWatchResult.unavailable:
         showToast('Ads play on the Android app', life: 2.2);
     }
@@ -353,9 +357,14 @@ extension GameDirectorPlatform on GameDirector {
         _importArmRejected = false;
         return false;
       }
+      final needsUpdate = GameLogic.rawSaveNeedsAppUpdate(raw);
       final imported = GameLogic.importSaveJson(raw);
       if (imported == null) {
+        GameLogic.takeSaveRefusal();
         await _undoImportArm();
+        if (needsUpdate) {
+          showToast(SaveNeedsAppUpdate.message, replace: true);
+        }
         return false;
       }
       // Clipboard JSON does not carry Play ownership. Device flags stay,
@@ -605,6 +614,8 @@ extension GameDirectorPlatform on GameDirector {
       showToast(
         read.kind == CloudReadKind.empty
             ? 'No Play Games save found'
+            : read.kind == CloudReadKind.needsUpdate
+            ? SaveNeedsAppUpdate.message
             : 'Could not read Play Games save. Kept this device.',
         life: 2.2,
       );
@@ -701,6 +712,10 @@ extension GameDirectorPlatform on GameDirector {
     if (await localReadBlocksMutation()) return false;
     final read = await PlayGamesBridge.loadCloud();
     _lastCloudRead = read;
+    if (read.kind == CloudReadKind.needsUpdate) {
+      showToast(SaveNeedsAppUpdate.message, life: 2.4);
+      return false;
+    }
     if (read.kind != CloudReadKind.empty && read.kind != CloudReadKind.ready) {
       showToast('Could not read Play Games save. Kept this device.', life: 2.4);
       return false;
@@ -778,6 +793,10 @@ extension GameDirectorPlatform on GameDirector {
     if (_durableSaveBlocked || !_state.metaDepth.playGamesOptIn) return;
     final read = await PlayGamesBridge.loadCloud();
     _lastCloudRead = read;
+    if (read.kind == CloudReadKind.needsUpdate) {
+      showToast(SaveNeedsAppUpdate.message, life: 3.4);
+      return;
+    }
     if (read.kind != CloudReadKind.empty && read.kind != CloudReadKind.ready) {
       return;
     }
@@ -1041,6 +1060,8 @@ extension GameDirectorPlatform on GameDirector {
           return true;
         case AdWatchResult.skipped:
           showToast('Watch the full ad for gold', life: 2.2);
+          return false;
+        case AdWatchResult.busy:
           return false;
         case AdWatchResult.failed:
         case AdWatchResult.unavailable:

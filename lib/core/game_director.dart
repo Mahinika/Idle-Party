@@ -71,6 +71,7 @@ import 'chase_contract.dart';
 import 'ui_feedback.dart';
 import 'session_telemetry.dart';
 import 'local_notify.dart';
+import 'save_needs_update.dart';
 import 'local_reminders.dart';
 import 'wipe_advice.dart';
 import 'wisp_gift.dart';
@@ -439,8 +440,12 @@ class GameDirector extends ChangeNotifier {
       if (raw != null && raw.isNotEmpty) {
         final parsed = GameLogic.importSaveJson(raw);
         if (parsed == null || _memoryDroppedDisk(_state, parsed)) {
+          final needsUpdate = GameLogic.rawSaveNeedsAppUpdate(raw);
+          GameLogic.takeSaveRefusal();
           _blockSaveRecovery(
-            'Saving is paused. This device has a save that was not loaded. Retry leaves it untouched.',
+            needsUpdate
+                ? SaveNeedsAppUpdate.message
+                : 'Saving is paused. This device has a save that was not loaded. Retry leaves it untouched.',
           );
           return true;
         }
@@ -2237,6 +2242,8 @@ class GameDirector extends ChangeNotifier {
         _grantCampAdLevel();
       case AdWatchResult.skipped:
         showToast('Watch the whole ad for a free CAMP level', life: 2.2);
+      case AdWatchResult.busy:
+        showToast('Ad already playing', life: 1.6);
       case AdWatchResult.failed:
       case AdWatchResult.unavailable:
         showToast('Ad did not finish', life: 2.0);
@@ -2311,6 +2318,8 @@ class GameDirector extends ChangeNotifier {
           'Watch the whole ad to get ${AdBoost.ticketsPerAd} Ad Ticket',
           life: 2.2,
         );
+      case AdWatchResult.busy:
+        showToast('Ad already playing', life: 1.6);
       case AdWatchResult.failed:
         showToast('Ad not ready — try again in a bit', life: 2.2);
       case AdWatchResult.unavailable:
@@ -2348,6 +2357,8 @@ class GameDirector extends ChangeNotifier {
         _finishQuestReroll(slotIndex);
       case AdWatchResult.skipped:
         showToast('Watch the whole ad to reroll this quest', life: 2.2);
+      case AdWatchResult.busy:
+        showToast('Ad already playing', life: 1.6);
       case AdWatchResult.failed:
         showToast('Ad not ready — try again in a bit', life: 2.2);
       case AdWatchResult.unavailable:

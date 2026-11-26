@@ -12,6 +12,8 @@ import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
     as test_env;
 import 'measurement_consent.dart';
+import 'remote_tune_boot.dart';
+import 'ump_consent_gate.dart';
 
 bool get _androidLive {
   if (test_env.inFlutterTestProcess()) return false;
@@ -43,14 +45,33 @@ void armEarlyErrorBuffer() {
   final previousPlatform = PlatformDispatcher.instance.onError;
   PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
     if (_crashHandlersInstalled) {
-      unawaited(
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true),
-      );
+      _emitPlatform(error, stack);
     } else {
       _platformPending.add((error, stack));
     }
     return previousPlatform?.call(error, stack) ?? false;
   };
+}
+
+/// Test seam. When set, platform errors are reported here and not to Firebase.
+void Function(Object error, StackTrace? stack, {required bool fatal})?
+debugRecordPlatformError;
+
+/// Records one uncaught async error the same way the live handlers do.
+void debugEmitPlatformError(Object error, StackTrace stack) {
+  _emitPlatform(error, stack);
+}
+
+void _emitPlatform(Object error, StackTrace? stack) {
+  final fatal = platformAsyncErrorIsFatal(error, stack ?? StackTrace.empty);
+  final hook = debugRecordPlatformError;
+  if (hook != null) {
+    hook(error, stack, fatal: fatal);
+    return;
+  }
+  unawaited(
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: fatal),
+  );
 }
 
 int get debugBufferedErrorCount =>
@@ -91,25 +112,45 @@ Future<void> syncConsent() async {
   final analytics = _analytics;
   if (analytics == null) return;
   try {
-    await _requestConsent();
-    final canRequestAds = await ConsentInformation.instance.canRequestAds();
-    final consent = MeasurementConsent(granted: canRequestAds);
-    // One call sets all four, including ad_personalization. Google clears
-    // that signal when storage consent is withdrawn.
-    await analytics.setConsent(
-      analyticsStorageConsentGranted: consent.analyticsStorage,
-      adStorageConsentGranted: consent.adStorage,
-      adUserDataConsentGranted: consent.adUserData,
-      adPersonalizationSignalsConsentGranted: consent.adPersonalization,
+    await runUmpConsentGate(
+      requestUpdate: _requestConsentInfoUpdate,
+      showForm: _showStartupConsentForm,
+      resync: _resyncAfterConsentForm,
     );
-    await analytics.setAnalyticsCollectionEnabled(consent.analyticsCollection);
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
-      consent.crashlytics,
-    );
-    debugPrint('Firebase Analytics consent granted: ${consent.granted}');
+    // Timeout, error, or a form that already resynced. Apply the answer
+    // we can see now. A form that closed inside the gate already applied
+    // it once; this covers the path where no form ran.
+    await _applyMeasurementConsent();
   } catch (e, st) {
     debugPrint('Firebase Analytics consent sync failed: $e\n$st');
   }
+}
+
+Future<void> _applyMeasurementConsent() async {
+  final analytics = _analytics;
+  if (analytics == null) return;
+  final canRequestAds = await ConsentInformation.instance.canRequestAds();
+  final consent = MeasurementConsent(granted: canRequestAds);
+  // One call sets all four, including ad_personalization. Google clears
+  // that signal when storage consent is withdrawn.
+  await analytics.setConsent(
+    analyticsStorageConsentGranted: consent.analyticsStorage,
+    adStorageConsentGranted: consent.adStorage,
+    adUserDataConsentGranted: consent.adUserData,
+    adPersonalizationSignalsConsentGranted: consent.adPersonalization,
+  );
+  await analytics.setAnalyticsCollectionEnabled(consent.analyticsCollection);
+  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+    consent.crashlytics,
+  );
+  debugPrint('Firebase Analytics consent granted: ${consent.granted}');
+}
+
+/// Form closed. Apply the real answer, then fetch Remote Config.
+/// Remote Config still refuses the fetch when ads cannot be requested.
+Future<void> _resyncAfterConsentForm() async {
+  await _applyMeasurementConsent();
+  await RemoteTuneBoot.refresh();
 }
 
 Future<void> logEvent(String name, [Map<String, Object>? params]) async {
@@ -182,13 +223,7 @@ void _installCrashHandlers() {
     unawaited(_recordFlutter(details, alreadyPresented: true));
   }
   for (final pending in platformCopy) {
-    unawaited(
-      FirebaseCrashlytics.instance.recordError(
-        pending.$1,
-        pending.$2,
-        fatal: true,
-      ),
-    );
+    _emitPlatform(pending.$1, pending.$2);
   }
 }
 
@@ -211,22 +246,25 @@ Future<void> _recordFlutter(
   );
 }
 
-Future<void> _requestConsent() async {
-  final done = Completer<void>();
+void _requestConsentInfoUpdate(UmpUpdateCallbacks callbacks) {
   ConsentInformation.instance.requestConsentInfoUpdate(
     ConsentRequestParameters(),
-    () {
-      ConsentForm.loadAndShowConsentFormIfRequired((FormError? error) {
-        if (error != null) {
-          debugPrint('UMP form (analytics): ${error.message}');
-        }
-        if (!done.isCompleted) done.complete();
-      });
-    },
+    callbacks.onSuccess,
     (FormError error) {
       debugPrint('UMP update (analytics): ${error.message}');
-      if (!done.isCompleted) done.complete();
+      callbacks.onError(error);
     },
   );
-  await done.future.timeout(const Duration(seconds: 10), onTimeout: () {});
+}
+
+/// No timeout. The player can read the form for as long as they need.
+Future<void> _showStartupConsentForm() async {
+  final done = Completer<void>();
+  ConsentForm.loadAndShowConsentFormIfRequired((FormError? error) {
+    if (error != null) {
+      debugPrint('UMP form (analytics): ${error.message}');
+    }
+    if (!done.isCompleted) done.complete();
+  });
+  await done.future;
 }

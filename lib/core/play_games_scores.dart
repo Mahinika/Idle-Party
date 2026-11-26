@@ -5,6 +5,7 @@ import 'coupon_codes.dart';
 import 'game_state.dart';
 import 'keystone.dart';
 import 'party_name_filter.dart';
+import 'save_needs_update.dart';
 
 /// Encode / decode seasonal Play Games scores (single int per board).
 abstract final class PlayGamesScores {
@@ -289,6 +290,12 @@ abstract final class PlayGamesScores {
               ? 'Signed in to Play Games'
               : 'Signed in · no cloud save yet',
         );
+      case CloudReadKind.needsUpdate:
+        return const CloudSignInPlan(
+          install: false,
+          upload: false,
+          toast: SaveNeedsAppUpdate.message,
+        );
       case CloudReadKind.failed:
       case CloudReadKind.unavailable:
       case CloudReadKind.signedOut:
@@ -315,6 +322,11 @@ abstract final class PlayGamesScores {
         return const CloudRestorePlan(
           CloudRestoreChoice.missing,
           toast: 'No Play Games save found',
+        );
+      case CloudReadKind.needsUpdate:
+        return const CloudRestorePlan(
+          CloudRestoreChoice.unreadable,
+          toast: SaveNeedsAppUpdate.message,
         );
       case CloudReadKind.failed:
       case CloudReadKind.unavailable:
@@ -344,7 +356,7 @@ enum CloudConflict { preferLocal, preferCloud, askUser }
 enum SaveProgressRelation { localAhead, cloudAhead, tie, diverged }
 
 /// Outcome of one Play Games snapshot read. A failure is not an empty file.
-enum CloudReadKind { unavailable, signedOut, empty, failed, ready }
+enum CloudReadKind { unavailable, signedOut, empty, failed, needsUpdate, ready }
 
 class CloudRead {
   const CloudRead._(this.kind, this.state);
@@ -357,6 +369,9 @@ class CloudRead {
 
   const CloudRead.failed() : this._(CloudReadKind.failed, null);
 
+  /// The snapshot was written by a newer app. Do not load or replace it.
+  const CloudRead.needsUpdate() : this._(CloudReadKind.needsUpdate, null);
+
   const CloudRead.ready(GameState state) : this._(CloudReadKind.ready, state);
 
   final CloudReadKind kind;
@@ -364,6 +379,7 @@ class CloudRead {
 
   bool get blocksAutomaticUpload =>
       kind == CloudReadKind.failed ||
+      kind == CloudReadKind.needsUpdate ||
       kind == CloudReadKind.unavailable ||
       kind == CloudReadKind.signedOut;
 }

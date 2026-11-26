@@ -6,6 +6,13 @@ int get debugBufferedErrorCount => 0;
 
 void debugResetEarlyErrorBuffer() {}
 
+void Function(Object error, StackTrace? stack, {required bool fatal})?
+debugRecordPlatformError;
+
+void debugEmitPlatformError(Object error, StackTrace stack) {
+  debugRecordPlatformError?.call(error, stack, fatal: false);
+}
+
 Future<void> syncConsent() async {}
 
 Future<void> logEvent(String name, [Map<String, Object>? params]) async {}
