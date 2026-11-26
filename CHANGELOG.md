@@ -8,6 +8,8 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- **Melee signature VFX:** Execute, Kidney Shot, Revealing Strike, and Maim use distinct showcase/fight overlays (vertical cleave, low jab + daze, cross-slash expose mark, triple rake shreds); regression test + before/after sheet under `docs/design/abilities-61/rendered/`.
+
 
 
 - **Abilities-61 VFX (pass 2):** per-ability showcase signatures, motion phases (charge/smear/impact), 6-frame anim strips under `docs/design/abilities-61/rendered/anim/`, ffmpeg GIF script, and centered in-fight staging.
