@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- Sim nightly: tighten AoE×12 combat-share regression (parse median band, 4 trials); documents #116 spatial shift and #130 re-center (no kit coeffs in this PR).
 - **Melee signature VFX:** Execute, Kidney Shot, Revealing Strike, and Maim use distinct showcase/fight overlays (vertical cleave, low jab + daze, cross-slash expose mark, triple rake shreds); skip shared disc/motion for those four; regression test + before/after sheet under `docs/design/abilities-61/rendered/`.
 
 
