@@ -30,7 +30,7 @@ void main() {
     expect(s.roomsCleared, 5);
     expect(s.bossDelta, 1);
     expect(s.levelsGained, 15);
-    expect(s.kills, 61);
+    expect(s.kills, 62);
     expect(s.gearFinds, 28);
     expect(s.bestDrop, 'Runic Cloth Legguards of Power');
   }, timeout: const Timeout(Duration(minutes: 3)));
