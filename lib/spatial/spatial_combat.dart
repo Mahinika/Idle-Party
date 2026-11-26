@@ -710,6 +710,7 @@ class SpatialBurst {
     this.crisp = false,
     this.x2,
     this.y2,
+    this.paintId,
   });
 
   double x;
@@ -729,6 +730,9 @@ class SpatialBurst {
   /// Optional beam end (Lightning Bolt, Chain Lightning, Holy Shock).
   final double? x2;
   final double? y2;
+
+  /// Paint-only id for summon silhouettes, pillars, domes. Combat ignores it.
+  final AbilityId? paintId;
 }
 
 enum SpatialBurstKind {
@@ -770,6 +774,12 @@ enum SpatialBurstKind {
 
   /// Shadow swirl (Shadow Bolt, Death Coil, Mind Blast).
   skull,
+
+  /// Temp companion rise (Shadowfiend, elemental, treant, stampede dust).
+  summon,
+
+  /// Vertical holy/fel light column (Holy Fire, Soul Fire).
+  pillar,
 }
 
 enum SpatialGroundFxKind {
@@ -1361,6 +1371,7 @@ abstract final class SpatialCombat {
     bool crisp = false,
     double? x2,
     double? y2,
+    AbilityId? paintId,
   }) {
     if (world.bursts.length >= _maxBursts) {
       world.bursts.removeAt(0);
@@ -1378,6 +1389,7 @@ abstract final class SpatialCombat {
         crisp: crisp,
         x2: x2,
         y2: y2,
+        paintId: paintId,
       ),
     );
   }
