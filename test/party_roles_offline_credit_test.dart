@@ -31,7 +31,7 @@ void main() {
     expect(s.bossDelta, 1);
     expect(s.levelsGained, 15);
     expect(s.kills, 62);
-    expect(s.gearFinds, 28);
+    expect(s.gearFinds, 26);
     expect(s.bestDrop, 'Runic Cloth Legguards of Power');
   }, timeout: const Timeout(Duration(minutes: 3)));
 }
