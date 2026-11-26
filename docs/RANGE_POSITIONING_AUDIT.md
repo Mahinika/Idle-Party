@@ -129,6 +129,27 @@ Compared to main baseline (focus hero, Sandy F5):
 
 Balance gate (6 trials): still **no HIGH**; LOW melee band unchanged (fury/arms/feral) — reach tweak alone does not fix kit coeffs.
 
+## 7. Melee arc spread (2026-11-26, Robert)
+
+**Behavior:** melee + tanks use `stableMeleeSlot` + `_meleeArcAroundTarget` around the focus enemy (not a file behind the tank). Melee DPS in range skip the pack leash pull-back. Dense swarms (≥10 awake): Combat / Subtlety / Assassination keep the rank line for AoE share gates.
+
+**In-range % / first hit (Prot+Disc+focus, Sandy F5, 4 trials)** — before arc vs after arc on this branch:
+
+| Spec | In-range before → after | 1st hit (s) before → after |
+|------|-------------------------|----------------------------|
+| arms | 33.9 → **49.7** | 2.65 → 2.85 |
+| fury | 35.9 → **54.5** | 1.93 → **1.83** |
+| feral | 48.2 → 43.3 | 0.68 → 0.68 |
+| retribution | 30.7 → 29.9 | 0.98 → 0.98 |
+| frostDk | 51.1 → 31.8 | 0.42 → 0.42 |
+| unholy | 50.8 → 40.7 | 2.38 → 2.78 |
+| assassination | 58.3 → 40.1 | 0.87 → 0.87 |
+| combat | 68.3 → 61.5 | 1.17 → 1.17 |
+| subtlety | 49.7 → 71.1 | 0.17 → 0.17 |
+| enhancement | 50.0 → 46.3 | 0.45 → 0.45 |
+
+AoE×12 gate + live gate: **no HIGH** (rogue swarm rank fallback).
+
 ## 6. Risks
 
 - **Balance gate:** LOW melee kits (fury, arms, feral) may move slightly as reach improves; Survival share may rise as mongoose bites connect.

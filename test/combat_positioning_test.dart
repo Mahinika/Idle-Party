@@ -151,7 +151,11 @@ List<({double x, double y})> _lineGoals({required int count}) {
   ];
 }
 
-void _expectShortLine(List<({double x, double y})> goals) {
+void _expectMeleeArcSpread(
+  List<({double x, double y})> goals, {
+  required double foeX,
+  required double foeY,
+}) {
   for (var i = 0; i < goals.length; i++) {
     for (var j = i + 1; j < goals.length; j++) {
       final d = _distPoint(goals[i].x, goals[i].y, goals[j].x, goals[j].y);
@@ -160,11 +164,31 @@ void _expectShortLine(List<({double x, double y})> goals) {
         greaterThanOrEqualTo(CombatPresence.partyBodyGap - 0.02),
         reason: 'slot $i and $j share a tile',
       );
-      expect(d, lessThan(8), reason: 'slot $i and $j left the line');
+      expect(d, lessThan(8), reason: 'slot $i and $j left the ring');
+    }
+    final toFoe = _distPoint(goals[i].x, goals[i].y, foeX, foeY);
+    expect(toFoe, greaterThan(0.4));
+    expect(toFoe, lessThan(5.5));
+  }
+  final cx = goals.map((g) => g.x).reduce((a, b) => a + b) / goals.length;
+  final cy = goals.map((g) => g.y).reduce((a, b) => a + b) / goals.length;
+  final span = goals
+      .map((g) => _distPoint(g.x, g.y, cx, cy))
+      .reduce(math.max);
+  expect(span, greaterThan(0.45), reason: 'melee collapsed on one point');
+}
+
+void _expectFightSpread(List<({double x, double y})> goals) {
+  for (var i = 0; i < goals.length; i++) {
+    for (var j = i + 1; j < goals.length; j++) {
+      final d = _distPoint(goals[i].x, goals[i].y, goals[j].x, goals[j].y);
+      expect(
+        d,
+        greaterThanOrEqualTo(CombatPresence.partyBodyGap - 0.02),
+        reason: 'goal $i and $j overlap',
+      );
     }
   }
-  final ys = goals.map((g) => g.y).toList()..sort();
-  expect(ys.last - ys.first, greaterThan(0.9));
 }
 
 void main() {
@@ -489,16 +513,17 @@ void main() {
     );
   });
 
-  test('three heroes hold a short line in front of the foe', () {
+  test('three melee goals ring the foe with body gap', () {
     final goals = _lineGoals(count: 3);
     expect(goals, hasLength(3));
-    _expectShortLine(goals);
+    _expectMeleeArcSpread(goals, foeX: 8.5, foeY: 5.5);
   });
 
-  test('five heroes hold a short line in front of the foe', () {
+  test('five heroes keep arc spread in front of the foe', () {
     final goals = _lineGoals(count: 5);
     expect(goals, hasLength(5));
-    _expectShortLine(goals);
+    _expectMeleeArcSpread(goals.take(3).toList(), foeX: 8.5, foeY: 5.5);
+    _expectFightSpread(goals.map((g) => (x: g.x, y: g.y)).toList());
   });
 
   test('generated caves keep the caster in the fight room with a shot', () {
@@ -908,7 +933,7 @@ void main() {
           hasLos: true,
         ),
     ];
-    _expectShortLine([
+    _expectFightSpread([
       for (final g in goals) (x: g.x, y: g.y),
     ]);
   });

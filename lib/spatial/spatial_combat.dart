@@ -381,6 +381,10 @@ class SpatialActor {
   double approachHeroX = 0;
   double approachHeroY = 0;
 
+  /// Stable arc slot around the current melee focus (hysteresis).
+  String? meleeRingFocusId;
+  int meleeRingSlot = -1;
+
   /// Seconds until another speech bark may fire.
   double barkCd = 0;
 
@@ -2722,6 +2726,8 @@ abstract final class SpatialCombat {
     to.approachY = from.approachY;
     to.approachHeroX = from.approachHeroX;
     to.approachHeroY = from.approachHeroY;
+    to.meleeRingFocusId = from.meleeRingFocusId;
+    to.meleeRingSlot = from.meleeRingSlot;
     to.barkCd = from.barkCd;
     to.lowHpBarked = from.lowHpBarked;
     to.rage = from.rage;
@@ -3944,6 +3950,10 @@ abstract final class SpatialCombat {
           hero.id != packAnchor.id &&
           actorIsMeleeDps(hero) &&
           target != null) {
+        final toTarget = actorDist(hero, target);
+        if (toTarget <= hero.attackRange * 0.97) {
+          // On the arc in range — do not queue behind the tank.
+        } else {
         final dx = hero.x - packAnchor.x;
         final dy = hero.y - packAnchor.y;
         final fwd = CombatPresence.fightForward(
@@ -3963,6 +3973,7 @@ abstract final class SpatialCombat {
           tx = march.x;
           ty = march.y;
           hold = 0.45;
+        }
         }
       }
 

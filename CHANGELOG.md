@@ -8,7 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
-- **Draft — hero range / positioning (not for merge without Robert):** Survival mid-range trapper (2.8 / 3.6) + Harpoon 5.0; Fury and Feral reach +0.05; long ranged `minStand` (healer attack +0.2 held for a balance pass — see audit). Full options in `docs/RANGE_POSITIONING_AUDIT.md`.
+- **Draft — hero range / positioning (not for merge without Robert):** Option A′ ranges + melee arc ring around focus (`stableMeleeSlot`, swarm rank fallback for rogue blade kits); see `docs/RANGE_POSITIONING_AUDIT.md`.
 
 - Sim nightly: tighten AoE×12 combat-share regression (parse median band, 4 trials); documents #116 spatial shift and #130 re-center (no kit coeffs in this PR).
 

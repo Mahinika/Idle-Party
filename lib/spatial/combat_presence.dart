@@ -625,10 +625,155 @@ abstract final class CombatPresence {
         dps.add(h);
       }
     }
+    tanks.sort((a, b) => a.id.compareTo(b.id));
+    dps.sort((a, b) => a.id.compareTo(b.id));
     final ti = tanks.indexWhere((h) => h.id == hero.id);
     if (ti >= 0) return ti;
     final di = dps.indexWhere((h) => h.id == hero.id);
     return tanks.length + (di < 0 ? 0 : di);
+  }
+
+  /// Stable arc index around [target] — reassign only when the focus body changes.
+  static int stableMeleeSlot(
+    SpatialActor hero,
+    SpatialActor target,
+    SpatialWorld world,
+  ) {
+    final ideal = meleeSlot(hero, world.heroes);
+    if (hero.meleeRingFocusId != target.id) {
+      hero.meleeRingFocusId = target.id;
+      hero.meleeRingSlot = ideal;
+      return ideal;
+    }
+    if (hero.meleeRingSlot < 0) {
+      hero.meleeRingSlot = ideal;
+      return ideal;
+    }
+    final living =
+        world.heroes.where((h) => h.isAlive && !isBackliner(h)).length;
+    if (hero.meleeRingSlot >= living) {
+      hero.meleeRingSlot = ideal;
+    }
+    return hero.meleeRingSlot;
+  }
+
+  /// Blade kits stay on the rank file in dense swarms so AoE share gates hold.
+  static bool _preferMeleeArc(SpatialActor hero, SpatialWorld world) {
+    final awake = world.enemies.where((e) => e.isAlive && !e.dormant).length;
+    if (awake < 10) return true;
+    return switch (hero.heroSpecId) {
+      HeroSpecId.combat ||
+      HeroSpecId.subtlety ||
+      HeroSpecId.assassination =>
+        false,
+      _ => true,
+    };
+  }
+
+  /// Melee and tanks ring the focus foe — not a single file behind the tank.
+  static (double, double)? _meleeArcAroundTarget({
+    required SpatialWorld world,
+    required SpatialActor hero,
+    required SpatialActor target,
+    required SpatialActor anchor,
+  }) {
+    final slot = stableMeleeSlot(hero, target, world);
+    final towardParty = _facingFor(
+      world,
+      target.x,
+      target.y,
+      anchor.x,
+      anchor.y,
+    );
+    final pref = hero.preferredRange ?? hero.attackRange * 0.75;
+    final awake = world.enemies
+        .where((e) => e.isAlive && !e.dormant)
+        .length;
+    final reachMul = awake >= 10 ? 0.88 : 0.94;
+    final radius = math
+        .min(pref * 1.02, hero.attackRange * reachMul)
+        .clamp(0.72, hero.attackRange * 0.97);
+    var step = math.max(1.38, partyBodyGap / math.max(radius, 0.8));
+    if (awake >= 10) {
+      step = math.max(step, 1.48);
+    }
+
+    bool accept(double x, double y) {
+      if (!world.canWalk(x, y)) return false;
+      if (!_inFightRoom(world, x, y, target.x, target.y, lip: false)) {
+        return false;
+      }
+      if (!_clearSight(world, x, y, target.x, target.y)) return false;
+      if (!SpatialCombat.hasClearCorridor(
+        world.map,
+        world.openGateIds,
+        hero.x.floor(),
+        hero.y.floor(),
+        x.floor(),
+        y.floor(),
+        tight: true,
+      )) {
+        return false;
+      }
+      final d = SpatialCombat.distPoint(x, y, target.x, target.y);
+      if (d < 0.42 || d > hero.attackRange * 0.98) return false;
+      for (final h in world.heroes) {
+        if (!h.isAlive || h.id == hero.id) continue;
+        if (SpatialCombat.distPoint(x, y, h.x, h.y) < partyBodyGap - 0.08) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    (double, double) pick(int idx, double rad, double ang0) {
+      final p = walkableRing(
+        world: world,
+        cx: target.x,
+        cy: target.y,
+        front: towardParty,
+        index: idx,
+        radius: rad,
+        firstAngle: ang0,
+        step: step,
+        fallbackX: hero.x,
+        fallbackY: hero.y,
+      );
+      return p;
+    }
+
+    final depthPad = awake >= 10 && slot > 0 ? 0.18 + slot * 0.06 : 0.0;
+    final slotRadius = math.min(
+      hero.attackRange * 0.97,
+      radius + depthPad,
+    );
+    final attempts = <(int, double, double)>[
+      (slot, slotRadius, 0.0),
+      (slot, slotRadius * 0.92, 0.0),
+      (slot, slotRadius * 0.84, 0.12),
+      (slot - 1, slotRadius, 0.0),
+      (slot + 1, slotRadius, 0.0),
+      (0, radius * 0.88, 0.0),
+    ];
+    for (final (idx, rad, ang) in attempts) {
+      final i = idx < 0 ? 0 : idx;
+      final p = pick(i, rad, ang);
+      if (accept(p.$1, p.$2)) return p;
+    }
+
+    return _bestFloorTile(
+      world: world,
+      originX: target.x,
+      originY: target.y,
+      radius: hero.attackRange.ceil() + 1,
+      score: (x, y) {
+        if (!accept(x, y)) return null;
+        final d = SpatialCombat.distPoint(x, y, target.x, target.y);
+        final stick =
+            SpatialCombat.distPoint(x, y, hero.x, hero.y) < 0.55 ? 0.35 : 0.0;
+        return (d - radius).abs() + stick;
+      },
+    );
   }
 
   static int _backlineSlot(SpatialActor hero, List<SpatialActor> heroes) {
@@ -1124,6 +1269,15 @@ abstract final class CombatPresence {
     required bool hasLos,
   }) {
     final anchor = packAnchor ?? hero;
+    if (!isBackliner(hero) && _preferMeleeArc(hero, world)) {
+      final arc = _meleeArcAroundTarget(
+        world: world,
+        hero: hero,
+        target: target,
+        anchor: anchor,
+      );
+      if (arc != null) return (x: arc.$1, y: arc.$2, hold: 0.2);
+    }
     final line = _partyLine(
       world: world,
       hero: hero,
@@ -1160,7 +1314,14 @@ abstract final class CombatPresence {
       }
     }
 
-    if (!isBackliner(hero)) {
+    if (!isBackliner(hero) && _preferMeleeArc(hero, world)) {
+      final arc2 = _meleeArcAroundTarget(
+        world: world,
+        hero: hero,
+        target: target,
+        anchor: anchor,
+      );
+      if (arc2 != null) return (x: arc2.$1, y: arc2.$2, hold: 0.2);
       if (packAnchor != null && hero.id != packAnchor.id) {
         final march = idleSlot(
           hero: hero,
