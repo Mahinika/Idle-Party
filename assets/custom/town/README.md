@@ -29,7 +29,7 @@ python3 tool/generate_town_art.py
 |------|--------|
 | Ink (32, 22, 18), 1 px contour | Same warm ink as the heroes |
 | Light | Dusk. Upper-left key, plum sky, warm horizon, lamp windows |
-| Ground | Dark saturated lawn, 64×64, seamless. Cobbles and flowers sit on the paths |
+| Ground | Dark saturated lawn, 128×128, seamless tufts. Cobble flower beds stay on path tiles only |
 | Roofs | Individual tiles. Guild slate, houses terracotta, market a folded awning |
 | Windows | Hot amber glass, wood mullions, light stays inside the frame |
 | People | Smith, courier, and gardener. Idle + 4 walk frames |
@@ -40,12 +40,12 @@ python3 tool/generate_town_art.py
 | File | Use |
 |------|-----|
 | backdrop.png | Dusk sky, moon, low sun, ridge, distant roof |
-| ground.png | Dusk lawn, 64×64, edges meet |
+| ground.png | Dusk lawn, 128×128, edges meet |
 | path.png / path_b.png | Cobble street, 360×36, flower beds at the ends |
 | approach.png | Cobble spur, 36×192, mortar meets at the wrap |
 | alert.png | Claim spark on guild and vault |
 | tree_round.png / tree_tall.png | Leaf clumps, blossoms, fruit |
-| flowers.png / shrub.png / wild.png / herbs.png | Four different plantings |
+| shrub.png / wild.png / herbs.png | Edge plantings |
 | meadow.png / thicket.png / scuff.png | Unique lawn clumps, placed once |
 | worn.png | Small worn patch for a doorway |
 | contact.png | Dark grass under a building |

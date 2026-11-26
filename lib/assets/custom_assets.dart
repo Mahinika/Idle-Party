@@ -320,7 +320,6 @@ abstract final class CustomAssets {
   static const String townApproach = '$_townRoot/approach.png';
   static const String townTreeRound = '$_townRoot/tree_round.png';
   static const String townTreeTall = '$_townRoot/tree_tall.png';
-  static const String townFlowers = '$_townRoot/flowers.png';
   static const String townShrub = '$_townRoot/shrub.png';
   static const String townWild = '$_townRoot/wild.png';
   static const String townHerbs = '$_townRoot/herbs.png';
@@ -330,6 +329,7 @@ abstract final class CustomAssets {
   static const String townScuff = '$_townRoot/scuff.png';
   static const String townContact = '$_townRoot/contact.png';
   static const String townFolk = '$_townRoot/folk.png';
+  static const String townYardProps = '$_townRoot/yard_props.png';
   static const String townAlert = '$_townRoot/alert.png';
   static const String townNameplate = '$_townRoot/nameplate.png';
   static const String townPennants = '$_townRoot/pennants.png';
@@ -354,7 +354,6 @@ abstract final class CustomAssets {
     townApproach,
     townTreeRound,
     townTreeTall,
-    townFlowers,
     townShrub,
     townWild,
     townHerbs,
@@ -364,6 +363,7 @@ abstract final class CustomAssets {
     townScuff,
     townContact,
     townFolk,
+    townYardProps,
     townAlert,
     townNameplate,
     townPennants,

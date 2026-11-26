@@ -100,9 +100,12 @@ void main() {
     final key = GlobalKey();
     await tester.pumpWidget(
       shellGoldenScaffold(
-        RepaintBoundary(
-          key: key,
-          child: TownPreview(director: director, router: router),
+        MediaQuery(
+          data: shellGoldenMedia.copyWith(disableAnimations: true),
+          child: RepaintBoundary(
+            key: key,
+            child: TownPreview(director: director, router: router),
+          ),
         ),
       ),
     );

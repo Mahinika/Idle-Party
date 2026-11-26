@@ -21,8 +21,7 @@ LOGICAL_H = CELL_H // 2
 PLANT_W = 64
 PLANT_H = 52
 
-# Dusk lawn. Dark to light, still saturated. Upper-left is the light.
-# Same greens as generate_town_art.GRASS, with two extra tip stops.
+# Dusk lawn. Tufts and plantings use the full ramp; the tile uses LAWN only.
 GRASS = [
     (12, 36, 14),
     (16, 52, 16),
@@ -33,6 +32,12 @@ GRASS = [
     (56, 132, 34),
     (70, 146, 40),
 ]
+# Three close dusk greens. Low contrast so paths and plaques read on top.
+LAWN = (
+    (34, 78, 24),
+    (38, 88, 26),
+    (42, 96, 28),
+)
 CLOVER = [
     (16, 52, 32),
     (24, 72, 40),
@@ -177,26 +182,48 @@ def _noise(x: int, y: int, cell: int, w: int = 480, h: int = 960) -> float:
 
 
 def _shade_rect(pix: Pix, x: int, y: int, w: int, h: int, ramp: list[tuple[int, int, int]]) -> None:
+    """Upper-left key light (matches hero shading)."""
     for yy in range(h):
         for xx in range(w):
             nx = xx / max(1, w - 1) * 2 - 1
             ny = yy / max(1, h - 1)
-            pix.put(x + xx, y + yy, ramp[band(0.2 - 0.85 * nx - 0.45 * ny, len(ramp))])
+            pix.put(x + xx, y + yy, ramp[band(0.35 - 0.9 * nx - 0.5 * ny, len(ramp))])
+
+
+def selective_outline(pix: Pix) -> None:
+    """Ink follows material: darker neighbour colour, not flat black."""
+    pending: list[tuple[int, int, tuple[int, int, int, int]]] = []
+    for y in range(pix.h):
+        for x in range(pix.w):
+            if pix.get(x, y) is not None:
+                continue
+            rgb: list[tuple[int, int, int]] = []
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                c = pix.get(x + dx, y + dy)
+                if c is not None:
+                    rgb.append(c[:3])
+            if not rgb:
+                continue
+            r = min(t[0] for t in rgb)
+            g = min(t[1] for t in rgb)
+            b = min(t[2] for t in rgb)
+            pending.append((x, y, (max(0, r - 52), max(0, g - 56), max(0, b - 48), 255)))
+    for x, y, ink in pending:
+        pix.put(x, y, ink)
 
 
 def _is_grass(c: tuple[int, int, int, int] | None) -> bool:
     if c is None:
         return False
     rgb = c[:3]
-    return rgb in GRASS or rgb in CLOVER or rgb in SUN
+    return rgb in GRASS or rgb in CLOVER or rgb in SUN or rgb in LAWN
 
 
 # --- Lawn -----------------------------------------------------------------
 
 
-# A short period of similar tufts reads as grass. A landmark shape
-# would show the repeat. 64 keeps a phone on several periods.
-GROUND_TILE = 64
+# A longer period makes the tuft scatter less obvious at phone scale.
+GROUND_TILE = 128
 
 
 def _tuft(pix: Pix, x: int, y: int, blades: tuple[tuple[int, int, int], ...]) -> None:
@@ -216,41 +243,63 @@ def _tuft(pix: Pix, x: int, y: int, blades: tuple[tuple[int, int, int], ...]) ->
         pix.put_wrap(x + dx, y + height - 1, GRASS[1])
 
 
-def ground() -> Image.Image:
-    """Seamless dusk grass. Two close greens, a few tufts, dirt.
+TUFT_SHAPES = (
+    ((0, 5, 0), (2, 7, 1), (4, 4, -1)),
+    ((0, 6, -1), (2, 5, 0), (5, 4, 1)),
+    ((0, 5, 1), (3, 6, 0)),
+    ((1, 4, 0), (3, 8, -1), (5, 5, 1)),
+    ((0, 7, 1), (2, 4, -1), (4, 6, 0)),
+    ((0, 6, 1), (2, 8, -1)),
+)
 
-    No flowers: those live on the planting sprites. No soft ramp and no
-    per-pixel noise. Marks use wrapped coordinates so each edge continues
-    the opposite edge. Detail stays in clusters inside the period, so a
-    repeat cannot paint a band wider than the tile.
-    """
+
+def _gentle_worn_wrap(pix: Pix, cx: int, cy: int, rx: int, ry: int) -> None:
+    """Grass-only scuff. No dirt brown — blends into the lawn."""
+    for dy in range(-ry, ry + 1):
+        for dx in range(-rx, rx + 1):
+            nx = dx / max(1, rx)
+            ny = dy / max(1, ry)
+            if nx * nx + ny * ny > 1:
+                continue
+            col = LAWN[1] if ny > 0.1 else LAWN[2] if ny < -0.1 else LAWN[0]
+            if (dx + dy) % 4 == 0:
+                col = GRASS[3]
+            pix.put_wrap(cx + dx, cy + dy, col)
+
+
+def _bloom_cluster(pix: Pix, x: int, y: int, kind: int) -> None:
+    _flower(pix, x, y, kind)
+    _flower(pix, x + 6, y + 2, (kind + 2) % 6)
+
+
+def ground() -> Image.Image:
+    """Calm lawn: 87f626dd weave plus at most one step lighter (no noise bands)."""
     w = h = GROUND_TILE
     pix = Pix(w, h)
-    # 4px mottling of two close greens. Small enough that a repeat is
-    # texture, not a checker of slabs. Two of every five cells step down
-    # so one green cannot own the tile.
+    ramp = (GRASS[3], GRASS[4], (31, 92, 23))
     for y in range(h):
         for x in range(w):
-            alt = ((x // 4) + (y // 4) * 2) % 5 < 2
-            pix.put(x, y, GRASS[3] if alt else GRASS[4])
-    # A few lighter clumps so the base is not only those two fills.
-    for cx, cy in ((8, 4), (28, 12), (48, 20), (16, 36), (40, 44)):
-        for dy in range(4):
-            for dx in range(5):
-                pix.put(cx + dx, cy + dy, GRASS[5] if (dx + dy) % 2 == 0 else GRASS[6])
-    _tuft(pix, 10, 8, ((0, 6, 0), (2, 8, 1), (4, 5, -1)))
-    _tuft(pix, 30, 18, ((0, 5, -1), (2, 7, 0), (5, 4, 1)))
-    _tuft(pix, 48, 12, ((0, 7, 1), (2, 5, 0), (4, 6, -1)))
-    _tuft(pix, 18, 40, ((0, 6, 0), (3, 8, 1), (5, 4, -1)))
-    _tuft(pix, 42, 46, ((0, 5, 1), (2, 7, 0)))
-    for dx, dy in ((0, 0), (1, 0), (0, 1)):
-        pix.put(24 + dx, 34 + dy, DIRT[1 + dy])
-        pix.put(52 + dx, 28 + dy, DIRT[2])
-    # Copy the opposite edge so the repeat meets on the same pixels.
-    for y in range(h):
-        pix.put(w - 1, y, pix.get(0, y))
-    for x in range(w):
-        pix.put(x, h - 1, pix.get(x, 0))
+            m = (x * 7 + y * 11) % 3
+            col = ramp[m]
+            if m == 1 and (_hash(x, y) % 19) == 0:
+                col = ramp[2]
+            elif m == 0 and (_hash(x, y) % 31) == 0:
+                col = ramp[1]
+            pix.put_wrap(x, y, col)
+    for cx, cy, rx, ry in (
+        (41, 94, 9, 4),
+        (82, 118, 7, 3),
+        (109, 46, 8, 3),
+        (24, 62, 7, 3),
+    ):
+        _gentle_worn_wrap(pix, cx, cy, rx, ry)
+    for tx, ty, shape in (
+        (37, 52, 0),
+        (91, 23, 1),
+        (64, 109, 2),
+        (17, 88, 4),
+    ):
+        _tuft(pix, tx, ty, TUFT_SHAPES[shape])
     return pix.image()
 
 
@@ -354,7 +403,7 @@ def _flower(pix: Pix, x: int, y: int, kind: int) -> None:
     pix.put_wrap(x, y + 3, GRASS[0])
 
 
-MORTAR = (22, 40, 20)
+MORTAR = (58, 49, 40)  # #3a3128 path mortar
 
 
 def _mortar(pix: Pix) -> None:
@@ -484,37 +533,42 @@ def approach() -> Image.Image:
 
 
 def _cobble(pix: Pix, x: int, y: int, w: int, h: int, kind: int) -> None:
-    ramp = (STONE, STONE_GREY, DIRT)[kind % 3]
-    # DIRT is shorter; cobbles of kind 2 use the warm dirt ramp as sandstone.
+    """One stone on mortar. Gaps between cobbles stay #3a3128."""
+    ramp = (STONE, STONE_GREY, STONE)[kind % 3]
     if kind % 3 == 2:
         ramp = (
-            (120, 86, 52),
-            (156, 116, 72),
-            (188, 148, 100),
-            (214, 178, 132),
-            (232, 204, 164),
-            (246, 226, 196),
+            (98, 78, 58),
+            (128, 102, 78),
+            (158, 128, 102),
+            (188, 158, 128),
+            (218, 188, 158),
+            (238, 210, 182),
         )
     for yy in range(h):
-        inset = 1 if yy == 0 or yy == h - 1 else 0
-        if kind == 1 and yy < 2:
-            inset = 2
-        for xx in range(inset, w - inset):
-            if (xx < 2 or xx > w - 3) and (yy < 2 or yy > h - 3) and (xx + yy + kind) % 2 == 0:
-                continue
-            tone = 4 if yy < 2 or xx < 2 else 1 if yy > h - 3 else 3
-            if (xx * 3 + yy * 5 + kind) % 17 == 0:
-                tone = 5 if tone >= 3 else 0
-            pix.put(x + xx, y + yy, ramp[min(tone, len(ramp) - 1)])
-    pix.put(x + 2, y + 2, ramp[min(5, len(ramp) - 1)])
-    pix.put(x + w - 3, y + h - 3, ramp[0])
-    if w > 12 and h > 8:
-        pix.put(x + w // 2, y + 3, ramp[1])
-        pix.put(x + w // 2, y + 4, ramp[0])
-        pix.put(x + 4, y + h // 2, MOSS[1])
-        pix.put(x + 5, y + h // 2, MOSS[3])
-    pix.put(x + 2, y + h, GRASS[0])
-    pix.put(x + w // 2, y + h, GRASS[1])
+        for xx in range(w):
+            pix.put(x + xx, y + yy, MORTAR)
+    if w < 4 or h < 4:
+        return
+    for yy in range(1, h - 1):
+        for xx in range(1, w - 1):
+            tone = 2 + ((xx * 5 + yy * 7 + kind * 3) % 3)
+            if (xx * 11 + yy * 13) % 17 == 0:
+                tone = max(1, tone - 1)
+            if (xx * 7 + yy * 5) % 23 == 0:
+                tone = min(5, tone + 1)
+            if yy == 1:
+                tone = min(5, tone + 1)
+            elif yy == h - 2:
+                tone = max(0, tone - 2)
+            elif xx == w - 2:
+                tone = max(0, tone - 1)
+            pix.put(x + xx, y + yy, ramp[tone])
+    if (kind + x) % 2 == 0:
+        pix.put(x + 1, y + 1, MORTAR)
+        pix.put(x + w - 2, y + h - 2, MORTAR)
+    if w > 10 and (kind + y) % 3 == 0:
+        pix.put(x + 2, y + h - 2, MOSS[2])
+        pix.put(x + w - 3, y + 2, MOSS[1])
 
 
 def worn() -> Image.Image:
@@ -731,11 +785,7 @@ def scuff() -> Image.Image:
 
 
 def contact() -> Image.Image:
-    """A broken grass edge: short blades over a gapped shadow.
-
-    Not a blurred ellipse. Empty pixels stay empty so the lawn shows
-    through. Three clumps sit where feet would, plus one pebble.
-    """
+    """Grass pressed against a wall: darker fringe and worn blades."""
     pix = Pix(64, 16)
     # Shadow runs with gaps. Dark grass, one pixel tall, then a deeper crumb.
     runs = ((2, 10), (16, 12), (32, 8), (46, 14))
@@ -743,9 +793,11 @@ def contact() -> Image.Image:
         for i in range(bw):
             if i % 5 == 3:
                 continue
+            pix.put(x + i, 11, GRASS[0])
             pix.put(x + i, 12, GRASS[1])
             if i % 2 == 0:
                 pix.put(x + i, 13, GRASS[0])
+        pix.put(x + 1, 12, LAWN[0])
         pix.put(x + 2, 13, DIRT[1])
         pix.put(x + bw - 2, 12, GRASS[3])
     # Short blades, clustered, not a wall.
@@ -903,11 +955,39 @@ def _hand(pix: Pix, x: int, y: int, skin: list[tuple[int, int, int]]) -> None:
     pix.put(x + 1, y + 1, skin[4])
 
 
+def _neck(pix: Pix, cx: int, top: int, skin: list[tuple[int, int, int]]) -> None:
+    """Skin between chin and collar so the head does not float."""
+    for dy in range(4):
+        tone = 4 if dy == 0 else 2 if dy >= 2 else 3
+        pix.rect(cx - 3, top + dy, 7, 1, skin[min(tone, len(skin) - 1)])
+    pix.put(cx, top, skin[5])
+    pix.put(cx - 1, top + 1, skin[4])
+    pix.put(cx + 1, top + 1, skin[3])
+    pix.put(cx, top + 2, skin[4])
+
+
 def _boot(pix: Pix, x: int, y: int) -> None:
     _shade_rect(pix, x, y, 5, 4, BOOT)
     pix.rect(x - 1, y + 3, 7, 1, BOOT[0])
-    pix.put(x + 1, y, BOOT[4])
-    pix.put(x, y + 1, BOOT[3])
+    pix.put(x, y, BOOT[4])
+    pix.put(x + 1, y, BOOT[3])
+    pix.put(x + 2, y + 1, BOOT[2])
+    pix.put(x, y + 2, BOOT[0])
+
+
+def _trouser_leg(
+    pix: Pix,
+    center_x: int,
+    top: int,
+    bottom: int,
+    ramp: list[tuple[int, int, int]],
+) -> None:
+    """Five-pixel trouser columns that meet the boot width."""
+    w = 5
+    left = center_x - w // 2
+    _shade_rect(pix, left, top, w, max(1, bottom - top), ramp)
+    pix.rect(left + 2, top + 1, 1, max(1, bottom - top - 2), ramp[1])
+    pix.rect(left + w - 2, top + 2, 1, max(1, bottom - top - 4), ramp[0])
 
 
 def _torso(pix: Pix, x: int, y: int, w: int, h: int, ramp: list[tuple[int, int, int]]) -> None:
@@ -916,6 +996,12 @@ def _torso(pix: Pix, x: int, y: int, w: int, h: int, ramp: list[tuple[int, int, 
     pix.rect(x + w // 2 - 1, y + 2, 1, h - 3, ramp[1])
     pix.rect(x + w - 2, y + 2, 1, h - 2, ramp[0])
     pix.rect(x, y, w, 1, ramp[min(5, len(ramp) - 1)])
+    pix.rect(x, y + h - 1, w, 1, ramp[0])
+
+
+def _trim_h(pix: Pix, x: int, y: int, w: int, light: tuple[int, int, int], dark: tuple[int, int, int]) -> None:
+    pix.rect(x, y, w, 1, light)
+    pix.rect(x, y + 1, w, 1, dark)
 
 
 def _head_pixels(style: str) -> tuple[tuple[str, ...], dict[str, tuple[int, int, int]]]:
@@ -987,11 +1073,20 @@ def _draw_head(pix: Pix, x: int, y: int, style: str) -> None:
     rows, cmap = _head_pixels(style)
     _stamp(pix, x, y, rows, cmap)
     skin = {"smith": SKIN_TAN, "courier": SKIN_LIGHT, "gardener": SKIN_WARM}[style]
+    # Eye glints on the stamped whites.
+    for ex, ey in ((x + 6, y + 3), (x + 10, y + 3)):
+        pix.put(ex, ey, (255, 252, 248))
+        pix.put(ex + 1, ey - 1, (255, 255, 255))
+        pix.put(ex + 1, ey, skin[5])
     # Ears.
     pix.rect(x - 1, y + 4, 2, 3, skin[2])
     pix.rect(x + len(rows[0]) - 1, y + 4, 2, 3, skin[3])
     pix.put(x - 1, y + 5, skin[4])
     pix.put(x + len(rows[0]), y + 5, skin[5])
+    hair = {"smith": HAIR_D, "courier": HAIR_GOLD, "gardener": HAIR_RED}[style]
+    pix.put(x + 3, y + 1, hair[5])
+    pix.put(x + 9, y + 2, hair[4])
+    pix.put(x + 5, y - 1, hair[min(5, len(hair) - 1)])
     if style == "gardener":
         # Bun on the crown, a different silhouette from the cap and the beard.
         pix.rect(x + 8, y - 3, 5, 4, HAIR_RED[2])
@@ -1023,6 +1118,15 @@ def _up2(src: Pix) -> Pix:
     return dst
 
 
+def _chin_band(pix: Pix, cx: int, bob: int, kind: int) -> None:
+    skin = (SKIN_TAN, SKIN_LIGHT, SKIN_WARM)[kind]
+    y = 16 + bob
+    for xx in range(cx - 3, cx + 4):
+        pix.put(xx, y, skin[3])
+    for xx in range(cx - 2, cx + 3):
+        pix.put(xx, y + 1, skin[4])
+
+
 def _person(kind: int, frame: int) -> Pix:
     """One villager on the yard grid. Frame 0 idle, 1–4 a walk, facing right."""
     pix = Pix(LOGICAL_W, LOGICAL_H)
@@ -1045,13 +1149,15 @@ def _person(kind: int, frame: int) -> Pix:
     }[frame]
     sway = (0, -2, -1, 2, 1)[frame]
 
+    cx = (22, 22, 24)[kind]
     if kind == 0:
         _smith(pix, bob, steps, hands)
     elif kind == 1:
         _courier(pix, bob, steps, hands, sway)
     else:
         _gardener(pix, bob, steps, sway)
-    pix.outline()
+    _chin_band(pix, cx, bob, kind)
+    selective_outline(pix)
     _shadow_feet(pix, [20 + steps[0], 22 + steps[1]] if kind != 2 else [18 + sway, 26 + sway])
     return _up2(pix)
 
@@ -1062,33 +1168,35 @@ def _smith(
     steps: tuple[int, int],
     hands: tuple[tuple[int, int], tuple[int, int]],
 ) -> None:
-    cx = 20
-    hy = 30 + bob
-    sy = 18 + bob
+    cx = 22
+    hy = 28 + bob
+    sy = 17 + bob
     # Far arm, then legs, torso, near arm, head, hammer.
     _limb(pix, cx - 6, sy, cx - 6 + hands[0][0], sy + hands[0][1], MOSS_CLOTH, 3)
     _hand(pix, cx - 7 + hands[0][0], sy + hands[0][1], SKIN_TAN)
-    _limb(pix, cx - 4, hy, cx + steps[0], 48 + bob, LEATHER, 4)
-    _limb(pix, cx + 2, hy, cx + steps[1], 48 + bob, LEATHER, 4)
+    _trouser_leg(pix, cx + steps[0] + 2, hy, 48 + bob, LEATHER)
+    _trouser_leg(pix, cx + steps[1] + 2, hy, 48 + bob, LEATHER)
     _boot(pix, cx + steps[0], 48 + bob)
     _boot(pix, cx + steps[1] - 1, 48 + bob)
-    _torso(pix, cx - 7, 17 + bob, 15, 14, MOSS_CLOTH)
+    _torso(pix, cx - 7, 16 + bob, 15, 14, MOSS_CLOTH)
     # Apron over the tunic, with a strap and stitches.
     _shade_rect(pix, cx - 5, 22 + bob, 11, 12, APRON)
     pix.rect(cx - 1, 17 + bob, 3, 6, APRON[2])
-    pix.rect(cx - 5, 22 + bob, 11, 1, APRON[4])
+    _trim_h(pix, cx - 5, 21 + bob, 11, APRON[4], APRON[0])
     for syy in range(24 + bob, 32 + bob, 3):
         pix.put(cx - 4, syy, APRON[0])
         pix.put(cx + 4, syy, APRON[1])
     pix.rect(cx - 2, 28 + bob, 4, 3, APRON[1])
     pix.put(cx - 1, 29 + bob, APRON[4])
-    # Belt.
-    pix.rect(cx - 6, hy - 1, 13, 2, LEATHER[1])
-    pix.rect(cx - 1, hy - 1, 3, 2, IRON[3])
-    pix.put(cx, hy - 1, IRON[5])
+    # Belt and buckle.
+    _shade_rect(pix, cx - 6, hy - 1, 13, 3, LEATHER)
+    pix.rect(cx - 1, hy, 4, 2, IRON[3])
+    pix.put(cx, hy, IRON[5])
+    pix.put(cx + 1, hy, (212, 168, 48))
     # Neckerchief.
     pix.rect(cx - 3, 16 + bob, 7, 2, (164, 36, 44))
     pix.put(cx - 2, 16 + bob, (220, 140, 130))
+    _trim_h(pix, cx - 7, 16 + bob, 15, MOSS_CLOTH[5], MOSS_CLOTH[1])
     _limb(pix, cx + 6, sy, cx + 6 + hands[1][0], sy + hands[1][1], MOSS_CLOTH, 3)
     hx = cx + 6 + hands[1][0]
     hyh = sy + hands[1][1]
@@ -1100,7 +1208,8 @@ def _smith(
     pix.rect(hx - 1, hyh + 2, 10, 1, IRON[0])
     pix.put(hx + 1, hyh - 1, IRON[5])
     pix.put(hx + 6, hyh, IRON[1])
-    _draw_head(pix, cx - 6, 4 + bob, "smith")
+    _draw_head(pix, cx - 6, 5 + bob, "smith")
+    _neck(pix, cx, 15 + bob, SKIN_TAN)
 
 
 def _courier(
@@ -1111,23 +1220,29 @@ def _courier(
     sway: int,
 ) -> None:
     cx = 22
-    hy = 31 + bob
-    sy = 18 + bob
+    hy = 28 + bob
+    sy = 17 + bob
     _limb(pix, cx - 5, sy, cx - 5 + hands[0][0], sy + hands[0][1], WOOL, 3)
     _hand(pix, cx - 6 + hands[0][0], sy + hands[0][1], SKIN_LIGHT)
-    _limb(pix, cx - 3, hy, cx + steps[0], 48 + bob, WOOL, 3)
-    _limb(pix, cx + 2, hy, cx + steps[1], 48 + bob, WOOL, 3)
+    _trouser_leg(pix, cx + steps[0] + 2, hy, 48 + bob, WOOL)
+    _trouser_leg(pix, cx + steps[1] + 2, hy, 48 + bob, WOOL)
     _boot(pix, cx + steps[0], 48 + bob)
     _boot(pix, cx + steps[1] - 1, 48 + bob)
-    _torso(pix, cx - 6, 17 + bob, 12, 15, WOOL)
-    # Shirt and a row of buttons. The coat opening is a light wedge.
+    _torso(pix, cx - 6, 16 + bob, 12, 14, WOOL)
+    for fy in (20, 24, 28):
+        pix.put(cx - 1, fy + bob, WOOL[1])
+        pix.put(cx + 2, fy + bob, WOOL[0])
+    # Shirt, lapel wedge, gold buttons.
     pix.rect(cx - 2, 18 + bob, 4, 6, CREAM[4])
     pix.put(cx - 1, 19 + bob, CREAM[5])
+    pix.rect(cx - 6, 17 + bob, 2, 12, WOOL[5])
+    pix.rect(cx + 4, 18 + bob, 2, 10, WOOL[1])
     for by in (24, 27, 30):
         pix.rect(cx - 1, by + bob, 2, 2, (212, 168, 48))
         pix.put(cx - 1, by + bob, (255, 220, 120))
-    pix.rect(cx - 6, hy - 1, 12, 2, LEATHER[2])
-    pix.rect(cx - 1, hy - 1, 3, 2, IRON[4])
+    _shade_rect(pix, cx - 6, hy - 1, 12, 3, LEATHER)
+    pix.rect(cx - 1, hy, 4, 2, IRON[3])
+    pix.put(cx, hy, IRON[5])
     # Satchel on the trailing hip. It sways against the stride.
     sx = cx - 12 + sway
     _shade_rect(pix, sx, 24 + bob, 7, 9, LEATHER)
@@ -1145,6 +1260,7 @@ def _courier(
         pix.rect(hx, hyh + 3, 5, 1, CREAM[2])
         pix.put(hx + 1, hyh, (180, 60, 60))
     _draw_head(pix, cx - 6, 5 + bob, "courier")
+    _neck(pix, cx, 15 + bob, SKIN_LIGHT)
 
 
 def frame_letter(hands: tuple[tuple[int, int], tuple[int, int]]) -> bool:
@@ -1153,17 +1269,18 @@ def frame_letter(hands: tuple[tuple[int, int], tuple[int, int]]) -> bool:
 
 def _gardener(pix: Pix, bob: int, steps: tuple[int, int], sway: int) -> None:
     cx = 24
-    sy = 18 + bob
+    sy = 17 + bob
     # Basket arm (far / screen left) and the near arm, then the skirt hides the legs.
     _limb(pix, cx - 6, sy, cx - 10 + sway, sy + 12, ROSE, 3)
     _hand(pix, cx - 12 + sway, sy + 12, SKIN_WARM)
     _basket(pix, cx - 16 + sway, sy + 14)
-    _torso(pix, cx - 6, 17 + bob, 12, 10, ROSE)
+    _torso(pix, cx - 6, 16 + bob, 12, 9, ROSE)
     # Shawl over the shoulders.
     _shade_rect(pix, cx - 8, 17 + bob, 16, 5, CREAM)
     pix.rect(cx - 8, 17 + bob, 16, 1, CREAM[5])
     pix.rect(cx - 8, 21 + bob, 16, 1, CREAM[1])
     pix.put(cx - 4, 19 + bob, CREAM[4])
+    _trim_h(pix, cx - 2, 25 + bob, 8, ROSE[5], ROSE[1])
     # Skirt flares, and it sways with the step.
     top = 26 + bob
     hem = 49 + bob
@@ -1179,12 +1296,15 @@ def _gardener(pix: Pix, bob: int, steps: tuple[int, int], sway: int) -> None:
             pix.put(x, y, ROSE[tone])
     pix.rect(cx - 10 + sway, hem - 2, 20, 2, ROSE[0])
     pix.put(cx - 8 + sway, hem - 1, ROSE[4])
-    # Shoes under the hem.
+    hy = 28 + bob
+    _trouser_leg(pix, cx + steps[0] + 2, hy, 48 + bob, ROSE)
+    _trouser_leg(pix, cx + steps[1] + 2, hy, 48 + bob, ROSE)
     _boot(pix, cx + steps[0] - 2, 48 + bob)
     _boot(pix, cx + steps[1] - 1, 48 + bob)
     _limb(pix, cx + 5, sy, cx + 8, sy + 11, ROSE, 3)
     _hand(pix, cx + 7, sy + 11, SKIN_WARM)
     _draw_head(pix, cx - 6, 4 + bob, "gardener")
+    _neck(pix, cx, 15 + bob, SKIN_WARM)
 
 
 def _basket(pix: Pix, x: int, y: int) -> None:
@@ -1202,6 +1322,33 @@ def _basket(pix: Pix, x: int, y: int) -> None:
     pix.put(x + 8, y - 1, (255, 214, 80))
     pix.put(x + 4, y - 3, GRASS[5])
     pix.put(x + 6, y - 3, GRASS[6])
+
+
+def yard_props() -> Image.Image:
+    """Barrel, crate, and laundry line. One row atlas, logical halves doubled."""
+    pix = Pix(120, 40)
+    # Barrel
+    _shade_rect(pix, 2, 8, 10, 14, LEATHER)
+    pix.rect(1, 10, 12, 2, LEATHER[4])
+    pix.rect(1, 18, 12, 2, LEATHER[0])
+    pix.put(4, 12, IRON[4])
+    # Crate
+    crate_timber = [(48, 32, 18), (78, 52, 28), (112, 76, 40), (148, 104, 56)]
+    _shade_rect(pix, 22, 10, 14, 12, crate_timber)
+    for row in range(3):
+        pix.rect(24, 12 + row * 3, 10, 2, crate_timber[2 if row % 2 else 3])
+    pix.put(26, 14, crate_timber[0])
+    # Laundry
+    pix.rect(44, 6, 2, 20, crate_timber[1])
+    pix.rect(78, 6, 2, 20, crate_timber[1])
+    pix.rect(46, 8, 32, 1, CREAM[4])
+    pix.rect(46, 12, 32, 1, CREAM[3])
+    pix.rect(46, 16, 28, 1, ROSE[3])
+    pix.rect(50, 10, 6, 6, CREAM[5])
+    pix.rect(60, 11, 8, 5, ROSE[4])
+    pix.rect(70, 9, 6, 7, WOOL[4])
+    doubled = _up2(pix)
+    return doubled.image()
 
 
 def folk() -> Image.Image:
