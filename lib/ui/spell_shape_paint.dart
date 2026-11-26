@@ -65,6 +65,22 @@ abstract final class SpellShapePaint {
   static bool usesMeleeSignatureSilhouette(AbilityId id) =>
       _meleeSignatureSilhouetteIds.contains(id);
 
+  /// Hide filler/root travel bolts from melee specs (damage still lands in sim).
+  static bool shouldSkipMeleeAbilityTravelBolt({
+    required SpatialProjectile projectile,
+    required bool casterRanged,
+  }) {
+    return projectile.team == SpatialTeam.hero &&
+        projectile.style == SpellBoltStyle.weapon &&
+        projectile.label == null &&
+        !casterRanged;
+  }
+
+  /// Short-lived announce puffs on the caster must not read as a ground AOE disc.
+  @visibleForTesting
+  static bool usesCompactCasterBurst(SpatialBurst burst) =>
+      burst.paintId == null && burst.radius <= 0.62;
+
   /// Paints one [SpatialBurst] the same way fight floaters do.
   static void paintWorldBurst(
     Canvas canvas,
@@ -98,6 +114,8 @@ abstract final class SpellShapePaint {
         kind == SpatialBurstKind.summon ||
         kind == SpatialBurstKind.pillar) {
       paintTypedBurst(canvas, burst, tile, centerAt);
+    } else if (usesCompactCasterBurst(burst)) {
+      _paintCompactCasterBurst(canvas, burst, tile, centerAt);
     } else {
       _paintDiscBurst(canvas, burst, tile, centerAt);
     }
@@ -1065,6 +1083,24 @@ abstract final class SpellShapePaint {
       default:
         break;
     }
+  }
+
+  static void _paintCompactCasterBurst(
+    Canvas canvas,
+    SpatialBurst burst,
+    double tile,
+    Offset Function(double tx, double ty) centerAt,
+  ) {
+    final alpha = (burst.life / 0.55).clamp(0.0, 1.0);
+    if (alpha < 0.05) return;
+    final c = centerAt(burst.x, burst.y);
+    final r = tile * burst.radius * 0.14;
+    canvas.drawCircle(c, r, _fillC(Color(burst.argb).withValues(alpha: alpha * 0.55)));
+    canvas.drawCircle(
+      c,
+      r * 0.45,
+      _fillC(Colors.white.withValues(alpha: alpha * 0.35)),
+    );
   }
 
   static void _paintDiscBurst(
