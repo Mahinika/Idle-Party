@@ -147,6 +147,8 @@ extension GameDirectorFight on GameDirector {
         );
       case AdWatchResult.failed:
         showToast('Ad not ready — try again in a bit', life: 2.2);
+      case AdWatchResult.busy:
+        break;
       case AdWatchResult.unavailable:
         showToast('Ads play on the Android app', life: 2.2);
     }
@@ -172,6 +174,8 @@ extension GameDirectorFight on GameDirector {
           showToast('Watch the whole ad to revive the party', life: 2.2);
         case AdWatchResult.failed:
           showToast('Ad not ready — try again in a bit', life: 2.2);
+        case AdWatchResult.busy:
+          break;
         case AdWatchResult.unavailable:
           showToast('Ads play on the Android app', life: 2.2);
         case AdWatchResult.rewarded:
@@ -242,7 +246,9 @@ extension GameDirectorFight on GameDirector {
   /// A finished watch leaves the choice on screen. Skip, timeout, and a
   /// missing ad arm the 3s retry again.
   void _rearmWipeAfterAd(AdWatchResult result) {
-    if (result == AdWatchResult.rewarded) return;
+    if (result == AdWatchResult.rewarded || result == AdWatchResult.busy) {
+      return;
+    }
     if (!_awaitingWipeChoice) return;
     _armWipeAutoContinue();
   }

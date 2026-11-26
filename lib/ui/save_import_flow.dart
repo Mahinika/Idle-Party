@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/game_director.dart';
+import '../core/save_needs_update.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
@@ -50,7 +51,13 @@ abstract final class SaveImportFlow {
     if (!context.mounted) return false;
     if (onConfirmed != null) await onConfirmed();
     final success = await director.importSaveJson(raw);
-    director.showToast(success ? 'Save imported' : 'That file was not a save.');
+    final needsUpdate =
+        director.toast?.contains(SaveNeedsAppUpdate.message) ?? false;
+    if (success) {
+      director.showToast('Save imported');
+    } else if (!needsUpdate) {
+      director.showToast('That file was not a save.');
+    }
     return success;
   }
 }

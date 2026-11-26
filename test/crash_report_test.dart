@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/app_analytics.dart';
 import 'package:idle_party/core/audio_failure_report.dart';
 import 'package:idle_party/core/crash_report.dart';
 
@@ -67,6 +68,30 @@ void main() {
       );
     },
   );
+
+  test('uncaught async errors are non-fatal in Crashlytics', () {
+    expect(
+      platformAsyncErrorIsFatal(StateError('zone'), StackTrace.current),
+      isFalse,
+    );
+    final fatals = <bool>[];
+    AppAnalytics.debugRecordPlatformError =
+        (Object error, StackTrace? stack, {required bool fatal}) {
+          fatals.add(fatal);
+        };
+    addTearDown(() => AppAnalytics.debugRecordPlatformError = null);
+    AppAnalytics.debugEmitPlatformError(
+      StateError('async'),
+      StackTrace.current,
+    );
+    expect(fatals, [false]);
+    expect(
+      flutterErrorIsNonFatal(
+        FlutterErrorDetails(exception: StateError('boot')),
+      ),
+      isFalse,
+    );
+  });
 
   test('an audio path is claimed once per session', () {
     AudioFailureReport.debugReset();

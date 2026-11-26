@@ -660,10 +660,20 @@ abstract final class PlayGamesBridge {
 
   /// Empty string and null are a confirmed missing body only when no snapshot
   /// was listed. [readSnapshot] turns that into a failed read if the name exists.
+  /// A newer [GameState.saveVersion] is not merged and is not a failed parse:
+  /// the cloud bytes stay put.
   static CloudRead decodeCloudPayload(String? raw) {
     if (raw == null || raw.isEmpty) return const CloudRead.empty();
+    if (GameLogic.rawSaveNeedsAppUpdate(raw)) {
+      return const CloudRead.needsUpdate();
+    }
     final state = GameLogic.importSaveJson(raw);
-    if (state == null) return const CloudRead.failed();
+    if (state == null) {
+      if (GameLogic.takeSaveRefusal() != null) {
+        return const CloudRead.needsUpdate();
+      }
+      return const CloudRead.failed();
+    }
     return CloudRead.ready(state);
   }
 
