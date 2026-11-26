@@ -725,7 +725,14 @@ abstract final class CombatPresence {
   }) {
     final stand = math.min(preferred, hero.attackRange * 0.9).clamp(1.5, 4.6);
     final maxDist = math.min(hero.attackRange * 0.95, 5.2);
-    final minStand = hasLos ? 1.35 : 0.85;
+    // Long-range kits stay outside enemy melee when LOS is open.
+    final minStand = hasLos
+        ? (hero.attackRange >= 4.6
+            ? 2.35
+            : hero.attackRange >= 4.0
+                ? 2.05
+                : 1.35)
+        : 0.85;
     final back = fightForward(
       fromX: target.x,
       fromY: target.y,
