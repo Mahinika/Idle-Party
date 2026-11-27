@@ -167,10 +167,7 @@ class HomeTopBar extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                   ],
-                  Flexible(
-                    fit: FlexFit.loose,
-                    child: _essencePill(context, state, goldHasSub),
-                  ),
+                  _essencePill(context, state, goldHasSub),
                 ],
                 if (compactTop && state.keystoneRunActive) ...[
                   const SizedBox(width: 4),

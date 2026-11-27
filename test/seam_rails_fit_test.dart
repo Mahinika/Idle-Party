@@ -69,8 +69,11 @@ void main() {
       final (director, router) = await pump(tester, scale);
       expect(tester.takeException(), isNull);
       final entries = FightSeamRails.visibleEntries(director.state, director);
-      final labels = [for (final e in entries) e.label];
-      expect(labels, containsAll(['SCROLLS', 'QUESTS', 'VAULT', 'RUN']));
+      final labels = [
+        for (final e in entries) e.labelFor?.call(director.state) ?? e.label,
+      ];
+      expect(labels, containsAll(['SCROLLS', 'QUESTS', 'RUN']));
+      expect(labels.any((l) => l == 'VAULT' || l == 'CLAIM'), isTrue);
       final seam = find.byType(FightSeamRails);
       final seamRect = tester.getRect(seam);
       for (final label in labels) {

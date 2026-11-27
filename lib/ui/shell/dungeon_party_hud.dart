@@ -200,7 +200,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   static const _fullOpacity = 1.0;
   static const _dimOpacity = 0.72;
   static const _dimOpacityPhone = 0.72;
-  static const _homePartyRowHeight = 48.0;
+  static const _homePartyRowHeight = 44.0;
 
   Timer? _fadeTimer;
   double _opacity = _fullOpacity;

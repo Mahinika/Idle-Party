@@ -186,10 +186,18 @@ void main() {
   });
 
   testWidgets('claim chip semantics names daily vault', (tester) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     var state = GameLogic.enterDungeon(
       GameLogic.createInitialState(now: DateTime(2026, 11, 3)),
-    ).copyWith(homeLayout: HomeLayout.home);
+    ).copyWith(
+      homeLayout: HomeLayout.home,
+      homePanelFull: false,
+    );
     state = state.copyWith(
+      highestFloorCleared: 1,
       metaDepth: state.metaDepth.copyWith(
         dailyVaultClears: GameLogic.dailyVaultClearTarget,
         dailyVaultClaimed: false,
@@ -209,8 +217,10 @@ void main() {
       ),
     );
     await tester.pump();
-    final node = tester.getSemantics(find.bySemanticsLabel(RegExp('Claim the daily')));
-    expect(node.label, contains('daily'));
+    final node = tester.getSemantics(
+      find.bySemanticsLabel(RegExp('Daily vault', caseSensitive: false)),
+    );
+    expect(node.label.toLowerCase(), contains('daily vault'));
     expect(node.label.toLowerCase(), isNot(contains('day ends')));
   });
 

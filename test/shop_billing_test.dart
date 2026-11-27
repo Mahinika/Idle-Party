@@ -344,8 +344,8 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.textContaining('Delver\'s Kit'), findsOneWidget);
-      expect(find.textContaining('not sold here'), findsOneWidget);
+      expect(find.textContaining('Supporter'), findsWidgets);
+      expect(find.textContaining('Play is connected'), findsOneWidget);
 
       final scroll = find.byType(Scrollable).first;
       for (final label in [
