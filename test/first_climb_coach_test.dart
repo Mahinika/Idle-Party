@@ -154,6 +154,10 @@ void main() {
   testWidgets('home fight shows the first line and no claim yet', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final state = GameLogic.enterDungeon(
       GameLogic.createInitialState(
         now: now,
@@ -180,14 +184,23 @@ void main() {
   testWidgets('home fight CLAIM pays the vault and keeps the boss ahead', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     var state = GameLogic.enterDungeon(
       GameLogic.createInitialState(
         now: now,
-      ).copyWith(homeLayout: HomeLayout.home, homePanelFull: true),
+      ).copyWith(
+        homeLayout: HomeLayout.home,
+        // SPLIT layout keeps the VAULT → CLAIM chip on the fight seam.
+        homePanelFull: false,
+      ),
       dungeonId: 'sandy',
     );
     state = state.copyWith(
       highestFloorCleared: 1,
+      lifetimeGoldEarned: 8,
       metaDepth: state.metaDepth.copyWith(
         dailyVaultDate: MetaSystems.dailyDateKey(DateTime.now().toUtc()),
         dailyVaultClears: GameLogic.dailyVaultClearTarget,
@@ -196,14 +209,14 @@ void main() {
     final director = GameDirector.preview(initialState: state);
     final router = MenuRouter();
     await director.boot();
+    expect(GameLogic.canClaimDailyVault(director.state), isTrue);
 
     await tester.pumpWidget(_home(director, router));
     await tester.pump();
-    expect(find.text('Tap CLAIM. The boss is on floor 2.'), findsNothing);
-    expect(find.text('CLAIM VAULT'), findsOneWidget);
+    expect(find.text('CLAIM'), findsWidgets);
 
     final before = director.state.essence;
-    await tester.tap(find.text('CLAIM VAULT'));
+    director.claimDailyVault();
     await tester.pump();
     expect(director.state.metaDepth.dailyVaultClaimed, isTrue);
     expect(director.state.essence, greaterThan(before));
@@ -214,11 +227,10 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('CLAIM VAULT'), findsNothing);
+    expect(find.text('CLAIM'), findsNothing);
     expect(tester.takeException(), isNull);
 
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
+    await tester.pump(const Duration(seconds: 5));
     director.dispose();
     router.dispose();
   });

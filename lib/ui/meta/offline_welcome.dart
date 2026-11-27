@@ -171,7 +171,7 @@ Future<void> showOfflineProgressDialog(
       final greyActions = <Widget>[
         if (openGold)
           GameButton(
-            label: 'OPEN GOLD',
+            label: 'OPEN TRAIN',
             expanded: false,
             // A link, not a third big button (audit F042).
             style: GameButtonStyle.ghost,

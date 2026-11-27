@@ -100,7 +100,7 @@ class ChaseContract {
       progressLabel != null && progressLabel!.startsWith('EQUIP')
           ? progressLabel
           : 'EQUIP',
-    HubChaseKind.marketUpgrade => 'OPEN GOLD',
+    HubChaseKind.marketUpgrade => 'OPEN TRAIN',
     HubChaseKind.ascend => 'ASCEND',
     HubChaseKind.dailyRun => 'DAILY RUN',
     HubChaseKind.keystone =>
@@ -139,6 +139,13 @@ class ChaseContract {
     final chase = HubChase.forState(state, now: now);
     final title = chase.title.trim();
     if (title.isEmpty || title.startsWith('Tomorrow:')) return null;
+    if (inDungeon) {
+      if (chase.kind == HubChaseKind.dailyVaultProgress &&
+          title.contains('·')) {
+        return null;
+      }
+      if (chase.kind == HubChaseKind.claimDailyVault) return null;
+    }
     return title;
   }
 

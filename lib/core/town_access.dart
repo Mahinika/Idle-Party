@@ -36,13 +36,19 @@ abstract final class TownAccess {
       };
 
   static String lockedCopy(TownBuildingId id, GameState s) => switch (id) {
-        TownBuildingId.forge => 'CRAFT opens after the first boss.',
+        TownBuildingId.forge => 'CRAFT opens after your first boss.',
+        TownBuildingId.inn => innLockedCopy(s),
         TownBuildingId.market => 'MARKET opens after the first boss.',
-        TownBuildingId.inn =>
-          'Party swaps unlock at first Ascend. Until then the starter three rest here.',
         TownBuildingId.guild => 'QUESTS open after the first floor.',
         TownBuildingId.vault => vaultCopy(s),
       };
+
+  static String innLockedCopy(GameState s) {
+    final n = s.heroes.length;
+    final heroes = n == 1 ? '1 hero' : '$n heroes';
+    return 'First Ascend unlocks party swaps and a fourth hero. '
+        'Your $heroes keep the lineup until then.';
+  }
 
   static String vaultCopy(GameState s) {
     if (vaultClaimedToday(s)) return 'Vault claimed today.';

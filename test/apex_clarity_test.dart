@@ -349,7 +349,7 @@ void main() {
       expect(director.state.metaDepth.apexCraftClassId, 'warrior');
       expect(director.state.metaDepth.apexTargetProgress, 40);
       expect(find.text('CRAFT R1'), findsOneWidget);
-      expect(find.textContaining('Crafts at AL'), findsOneWidget);
+      expect(find.textContaining('Crafted at Ascend'), findsOneWidget);
       expect(tester.takeException(), isNull);
 
       await tester.tap(find.text('MAIN'));

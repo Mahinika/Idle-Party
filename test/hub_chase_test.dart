@@ -11,6 +11,7 @@ import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/ui/chase_bind.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
+import 'package:idle_party/core/return_week.dart';
 import 'package:idle_party/core/local_season.dart';
 import 'package:idle_party/core/ashen_crown.dart';
 import 'package:idle_party/core/greater_rift.dart';
@@ -1061,9 +1062,9 @@ void main() {
         final chase = HubChase.forState(state, now: now);
         expect(chase.kind, HubChaseKind.dailyVaultProgress);
         expect(chase.title, 'Tomorrow: Sandy Caverns');
+        expect(chase.detail, ReturnWeek.tomorrowRewardLine(state));
         expect(chase.detail.toLowerCase(), contains('tomorrow'));
-        expect(chase.detail.toLowerCase(), contains('keeps fighting'));
-        expect(chase.detail, contains('CAMP'));
+        expect(chase.detail.toLowerCase(), contains('essence for camp'));
         expect(chase.detail.toUpperCase(), isNot(contains('KEY')));
         expect(chase.detail.toUpperCase(), isNot(contains('GAUNTLET')));
         expect(chase.kind, isNot(HubChaseKind.dailyRun));
@@ -1083,7 +1084,7 @@ void main() {
       );
       final chase = HubChase.forState(state, now: now);
       expect(chase.title, 'Tomorrow: Sandy Caverns');
-      expect(chase.detail.toLowerCase(), contains('keeps fighting'));
+      expect(chase.detail, ReturnWeek.tomorrowRewardLine(state));
       expect(chase.detail.toUpperCase(), isNot(contains('KEY')));
       expect(chase.detail.toUpperCase(), isNot(contains('GAUNTLET')));
       expect(chase.kind, isNot(HubChaseKind.clearFloors));

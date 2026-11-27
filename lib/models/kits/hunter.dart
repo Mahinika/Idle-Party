@@ -622,6 +622,6 @@ const List<ClassAbilityDef> _hunterKit = <ClassAbilityDef>[
         boltStyle: SpellBoltStyle.arrow,
         castArgb: 4291866720,
       ),
-      gate: AbilityGate(requireFocus: true, maxRange: 6.5),
+      gate: AbilityGate(requireFocus: true, maxRange: 5.0),
     ),
 ];

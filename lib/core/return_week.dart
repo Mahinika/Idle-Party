@@ -50,6 +50,23 @@ abstract final class ReturnWeek {
   static String tomorrowTitle(GameState state) =>
       'Tomorrow: ${caveName(state)}';
 
+  /// One line on the town card after today's vault is claimed — reward
+  /// destination, not wallet numbers (players read +gold as on-hand gold).
+  static String tomorrowRewardLine(GameState state) {
+    final pay = GameLogic.checkInPayout(state);
+    final cave = caveName(state);
+    final hint = switch (pay.day) {
+      1 => 'essence for CAMP',
+      2 => 'gold for FORGE',
+      3 => 'Embers for RELICS',
+      4 => 'Cinders for RELICS',
+      5 => 'tickets for SCROLLS',
+      6 => 'essence and gold for CAMP and FORGE',
+      _ => 'jackpot for CAMP, FORGE, and SCROLLS',
+    };
+    return 'Tomorrow: $cave · $hint';
+  }
+
   /// Wallet can already buy a click on a shelf that exists today.
   static String? readySpend(GameState state) {
     final forge = GameLogic.canForgeGoldSpendEven(state);
@@ -76,15 +93,8 @@ abstract final class ReturnWeek {
     );
   }
 
-  static String tomorrowDetail(GameState state) {
-    final pay = GameLogic.checkInPayout(state);
-    final cave = caveName(state);
-    return _withReady(
-      state,
-      'Tomorrow: $cave — ${pay.name}, ${pay.hookPrize}. '
-          '${spendSentence(pay)} Leave them in the cave tonight. $keepsFighting',
-    );
-  }
+  static String tomorrowDetail(GameState state) =>
+      tomorrowRewardLine(state);
 
   /// One short line on the home row. The card keeps the spend sentence.
   static String coachLine(GameState state) {

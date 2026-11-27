@@ -614,6 +614,10 @@ abstract final class CombatPresence {
     return SpatialCombat.snapToWalkable(world.map, world.openGateIds, tx, ty);
   }
 
+  static int _livingMeleeCount(List<SpatialActor> heroes) =>
+      heroes.where((h) => h.isAlive && !isBackliner(h)).length;
+
+  /// Tanks keep slot 0; melee DPS follow shortest [attackRange] first (front arc).
   static int meleeSlot(SpatialActor hero, List<SpatialActor> heroes) {
     final tanks = <SpatialActor>[];
     final dps = <SpatialActor>[];
@@ -625,10 +629,247 @@ abstract final class CombatPresence {
         dps.add(h);
       }
     }
+    tanks.sort((a, b) => a.id.compareTo(b.id));
+    dps.sort((a, b) {
+      final byReach = a.attackRange.compareTo(b.attackRange);
+      if (byReach != 0) return byReach;
+      return a.id.compareTo(b.id);
+    });
     final ti = tanks.indexWhere((h) => h.id == hero.id);
     if (ti >= 0) return ti;
     final di = dps.indexWhere((h) => h.id == hero.id);
     return tanks.length + (di < 0 ? 0 : di);
+  }
+
+  /// Stand distance from the focus foe — inside this hero's own attack range.
+  static double meleeArcRadius(
+    SpatialActor hero,
+    int slot, {
+    SpatialWorld? world,
+  }) {
+    if (actorIsTank(hero)) {
+      var tankMargin = 0.58;
+      if (world != null) {
+        final lone = world.heroes.where(
+          (h) => h.isAlive && !isBackliner(h) && !actorIsTank(h),
+        );
+        if (lone.length == 1) {
+          tankMargin = switch (lone.first.heroSpecId) {
+            HeroSpecId.arms => 0.105,
+            HeroSpecId.fury => 0.54,
+            _ => tankMargin,
+          };
+        }
+      }
+      final along = hero.attackRange - tankMargin - slot * 0.015;
+      return along.clamp(0.68, hero.attackRange * 0.96);
+    }
+    final longReach = hero.attackRange >= 1.79;
+    final margin = switch (hero.heroSpecId) {
+      HeroSpecId.enhancement => 0.095,
+      HeroSpecId.combat => 0.52,
+      HeroSpecId.unholy => 0.102,
+      HeroSpecId.assassination => 0.11,
+      HeroSpecId.arms => 0.105,
+      HeroSpecId.fury => 0.082,
+      _ => longReach ? 0.07 : 0.10,
+    };
+    final slotPad = hero.heroSpecId == HeroSpecId.unholy ? 0.0 : 0.015;
+    final along = hero.attackRange - margin - slot * slotPad;
+    final pref = hero.preferredRange ?? hero.attackRange * 0.75;
+    final prefCap = math.min(pref * 1.05, hero.attackRange * 0.96);
+    return along.clamp(0.68, prefCap);
+  }
+
+  static double meleeArcStep(SpatialActor hero, int slot, SpatialWorld world) {
+    final radius = meleeArcRadius(hero, slot, world: world);
+    final meleeN = _livingMeleeCount(world.heroes);
+    final longReach = hero.attackRange >= 1.79;
+    var step = math.max(1.28, partyBodyGap / math.max(radius, 0.82));
+    if (meleeN <= 2) {
+      step = longReach && slot > 0
+          ? math.max(0.68, partyBodyGap / radius - 0.05)
+          : math.max(1.02, partyBodyGap / radius + 0.08);
+    } else if (meleeN == 3) {
+      step = math.max(1.28, partyBodyGap / radius + 0.12);
+    }
+    if (slot > 0 && meleeN == 2) {
+      step = math.max(step, 1.85);
+    } else if (slot > 0 && meleeN <= 3) {
+      step = math.max(step, 1.68);
+    }
+    if (hero.heroSpecId == HeroSpecId.combat && slot > 0) {
+      step = math.min(step, 0.62);
+    } else if (hero.heroSpecId == HeroSpecId.arms && slot > 0) {
+      step = math.min(step, 0.85);
+    } else if (longReach && slot > 0) {
+      step = math.min(step, 0.76);
+    }
+    final awake = world.enemies.where((e) => e.isAlive && !e.dormant).length;
+    if (awake >= 10) {
+      step = math.max(step, 1.42);
+    }
+    return step;
+  }
+
+  /// Stable arc index around [target] — reassign only when the focus body changes.
+  static int stableMeleeSlot(
+    SpatialActor hero,
+    SpatialActor target,
+    SpatialWorld world,
+  ) {
+    final ideal = meleeSlot(hero, world.heroes);
+    if (hero.meleeRingFocusId != target.id) {
+      hero.meleeRingFocusId = target.id;
+      hero.meleeRingSlot = ideal;
+      return ideal;
+    }
+    if (hero.meleeRingSlot < 0) {
+      hero.meleeRingSlot = ideal;
+      return ideal;
+    }
+    final living =
+        world.heroes.where((h) => h.isAlive && !isBackliner(h)).length;
+    if (hero.meleeRingSlot >= living) {
+      hero.meleeRingSlot = ideal;
+    }
+    return hero.meleeRingSlot;
+  }
+
+  /// Blade kits stay on the rank file in dense swarms so AoE share gates hold.
+  static bool _preferMeleeArc(SpatialActor hero, SpatialWorld world) {
+    final awake = world.enemies.where((e) => e.isAlive && !e.dormant).length;
+    final loneMelee = world.heroes.where(
+      (h) => h.isAlive && !isBackliner(h) && !actorIsTank(h),
+    );
+    if (loneMelee.length == 1) {
+      switch (loneMelee.first.heroSpecId) {
+        case HeroSpecId.fury:
+        case HeroSpecId.assassination:
+        case HeroSpecId.unholy:
+          return false;
+        default:
+          break;
+      }
+    }
+    if (awake >= 10) {
+      return switch (hero.heroSpecId) {
+        HeroSpecId.combat ||
+        HeroSpecId.subtlety ||
+        HeroSpecId.assassination =>
+          false,
+        _ => true,
+      };
+    }
+    return true;
+  }
+
+  /// Melee and tanks ring the focus foe — not a single file behind the tank.
+  static (double, double)? _meleeArcAroundTarget({
+    required SpatialWorld world,
+    required SpatialActor hero,
+    required SpatialActor target,
+    required SpatialActor anchor,
+  }) {
+    final slot = stableMeleeSlot(hero, target, world);
+
+    final towardParty = _facingFor(
+      world,
+      target.x,
+      target.y,
+      anchor.x,
+      anchor.y,
+    );
+    final radius = meleeArcRadius(hero, slot, world: world);
+    final step = meleeArcStep(hero, slot, world);
+    final targetRadius = radius;
+
+    bool accept(double x, double y) {
+      if (!world.canWalk(x, y)) return false;
+      if (!_inFightRoom(world, x, y, target.x, target.y, lip: false)) {
+        return false;
+      }
+      if (!_clearSight(world, x, y, target.x, target.y)) return false;
+      final stackedColumn = world.heroes
+              .where((h) => h.isAlive && h.id != hero.id && !isBackliner(h))
+              .length >=
+          1 &&
+          world.heroes
+              .where((h) => h.isAlive && h.id != hero.id && !isBackliner(h))
+              .every(
+                (h) => SpatialCombat.distPoint(h.x, h.y, hero.x, hero.y) < 0.12,
+              );
+      if (!stackedColumn &&
+          !SpatialCombat.hasClearCorridor(
+            world.map,
+            world.openGateIds,
+            hero.x.floor(),
+            hero.y.floor(),
+            x.floor(),
+            y.floor(),
+            tight: true,
+          )) {
+        return false;
+      }
+      final d = SpatialCombat.distPoint(x, y, target.x, target.y);
+      if (d < 0.42 || d > hero.attackRange * 0.992) return false;
+      for (final h in world.heroes) {
+        if (!h.isAlive || h.id == hero.id) continue;
+        if (SpatialCombat.distPoint(x, y, h.x, h.y) < partyBodyGap - 0.08) {
+          // Pre-fight stack on one tile — only enforce on bodies already apart.
+          if (SpatialCombat.distPoint(h.x, h.y, hero.x, hero.y) < 0.08) {
+            continue;
+          }
+          return false;
+        }
+      }
+      return true;
+    }
+
+    (double, double) pick(int idx, double rad, double ang0) {
+      final p = walkableRing(
+        world: world,
+        cx: target.x,
+        cy: target.y,
+        front: towardParty,
+        index: idx,
+        radius: rad,
+        firstAngle: ang0,
+        step: step,
+        fallbackX: hero.x,
+        fallbackY: hero.y,
+      );
+      return p;
+    }
+
+    final slotRadius = radius;
+
+    final attempts = <(int, double, double)>[
+      (slot, slotRadius, 0.0),
+      (slot, slotRadius * 0.97, 0.0),
+      (slot, slotRadius * 0.93, 0.06),
+      (slot, slotRadius * 1.03, 0.0),
+      (slot + 1, slotRadius, 0.0),
+    ];
+    for (final (idx, rad, ang) in attempts) {
+      final i = idx < 0 ? 0 : idx;
+      final p = pick(i, rad, ang);
+      if (accept(p.$1, p.$2)) return p;
+    }
+
+    return _bestFloorTile(
+      world: world,
+      originX: target.x,
+      originY: target.y,
+      radius: hero.attackRange.ceil() + 1,
+      score: (x, y) {
+        if (!accept(x, y)) return null;
+        final d = SpatialCombat.distPoint(x, y, target.x, target.y);
+        final stick =
+            SpatialCombat.distPoint(x, y, hero.x, hero.y) < 0.55 ? 0.35 : 0.0;
+        return (d - targetRadius).abs() + stick;
+      },
+    );
   }
 
   static int _backlineSlot(SpatialActor hero, List<SpatialActor> heroes) {
@@ -725,7 +966,14 @@ abstract final class CombatPresence {
   }) {
     final stand = math.min(preferred, hero.attackRange * 0.9).clamp(1.5, 4.6);
     final maxDist = math.min(hero.attackRange * 0.95, 5.2);
-    final minStand = hasLos ? 1.35 : 0.85;
+    // Long-range kits stay outside enemy melee when LOS is open.
+    final minStand = hasLos
+        ? (hero.attackRange >= 4.6
+            ? 2.35
+            : hero.attackRange >= 4.0
+                ? 2.05
+                : 1.35)
+        : 0.85;
     final back = fightForward(
       fromX: target.x,
       fromY: target.y,
@@ -1117,6 +1365,15 @@ abstract final class CombatPresence {
     required bool hasLos,
   }) {
     final anchor = packAnchor ?? hero;
+    if (!isBackliner(hero) && _preferMeleeArc(hero, world)) {
+      final arc = _meleeArcAroundTarget(
+        world: world,
+        hero: hero,
+        target: target,
+        anchor: anchor,
+      );
+      if (arc != null) return (x: arc.$1, y: arc.$2, hold: 0.2);
+    }
     final line = _partyLine(
       world: world,
       hero: hero,
@@ -1153,7 +1410,14 @@ abstract final class CombatPresence {
       }
     }
 
-    if (!isBackliner(hero)) {
+    if (!isBackliner(hero) && _preferMeleeArc(hero, world)) {
+      final arc2 = _meleeArcAroundTarget(
+        world: world,
+        hero: hero,
+        target: target,
+        anchor: anchor,
+      );
+      if (arc2 != null) return (x: arc2.$1, y: arc2.$2, hold: 0.2);
       if (packAnchor != null && hero.id != packAnchor.id) {
         final march = idleSlot(
           hero: hero,
@@ -1528,7 +1792,7 @@ abstract final class CombatPresence {
       return _frontMelee(e);
     });
     final radius = swarm
-        ? 0.68
+             ? 0.15
         : math.min(
             enemy.attackRange * 0.58,
             enemy.role == EnemyRole.boss ? 1.05 : 0.86,

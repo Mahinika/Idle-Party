@@ -851,11 +851,10 @@ class HubChase {
     if (!GameLogic.checkInActive(state)) return null;
     if (state.heroes.isEmpty) return null;
     if (!ReturnWeek.active(state)) {
-      final pay = GameLogic.checkInPayout(state);
       return HubChase(
         kind: HubChaseKind.dailyVaultProgress,
         title: 'Tomorrow: one cave',
-        detail: 'Tomorrow pays ${pay.hookPrize}. One cave fills the vault.',
+        detail: ReturnWeek.tomorrowRewardLine(state),
         progressLabel: 'Tomorrow',
         zoneId: GameLogic.recommendedDungeonId(state),
       );

@@ -334,13 +334,15 @@ class _HomeShellState extends State<HomeShell> {
         RemoteTune.townSquareActive(state.inDungeon) &&
         HomeShell.coachDisagreesWithTownCta(text, state);
     var shown = duplicateCoach || offCta ? null : text;
-    final showClaim = state.inDungeon && GameLogic.canClaimDailyVault(state);
-    if (showClaim &&
-        shown != null &&
-        shown.toUpperCase().contains('CLAIM')) {
+    final vaultReadyInCave =
+        state.inDungeon && GameLogic.canClaimDailyVault(state);
+    // In-cave claim lives on the fight seam VAULT chip, not over the floor.
+    if (vaultReadyInCave ||
+        (shown != null && shown.toUpperCase().contains('CLAIM'))) {
       shown = null;
     }
-    if (shown == null && !showClaim) return const SizedBox.shrink();
+    if (shown == null) return const SizedBox.shrink();
+    final line = shown;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -349,65 +351,11 @@ class _HomeShellState extends State<HomeShell> {
         8,
         textScale > GameTheme.typeScaleMax ? 0 : 2,
       ),
-      child: showClaim
-          ? Row(
-              children: [
-                if (shown != null)
-                  Expanded(
-                    child: Text(
-                      shown,
-                      maxLines: textScale >= 2 ? 1 : 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.hint(color: GameTheme.torchHot),
-                    ),
-                  ),
-                if (shown != null) const SizedBox(width: 6),
-                _claimChip(),
-              ],
-            )
-          : Text(
-              shown!,
-              maxLines: textScale >= 2 ? 1 : 2,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.hint(color: GameTheme.torchHot),
-            ),
-    );
-  }
-
-  Widget _claimChip() {
-    return WebClickScope(
-      label: 'CLAIM VAULT',
-      onPressed: director.claimDailyVault,
-      child: Semantics(
-        button: true,
-        label: 'Claim the daily vault.',
-        child: InkWell(
-          onTap: director.claimDailyVault,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              minWidth: GameTheme.minTouch,
-              minHeight: GameTheme.minTouch,
-            ),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: GameTheme.hudFarmGreen,
-                borderRadius: BorderRadius.circular(3),
-                border: Border.all(color: GameTheme.clear),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Center(
-                  child: Text(
-                    'CLAIM VAULT',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.hint(color: GameTheme.clear),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
+      child: Text(
+        line,
+        maxLines: textScale >= 2 ? 1 : 2,
+        overflow: TextOverflow.ellipsis,
+        style: GameTheme.hint(color: GameTheme.torchHot),
       ),
     );
   }

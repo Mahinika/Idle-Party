@@ -48,7 +48,8 @@ class RailButton extends StatelessWidget {
     if (!entry.visible(state, director)) return const SizedBox.shrink();
     final timer = entry.timer?.call(state);
     final badge = entry.badge(state);
-    final spoken = entry.accessibilityLabel ?? entry.label;
+    final screenLabel = entry.labelFor?.call(state) ?? entry.label;
+    final spoken = entry.accessibilityLabel ?? screenLabel;
     if (compact) {
       if (iconOnly) {
         final semanticsLabel = badge ? '$spoken, ready' : spoken;
@@ -105,8 +106,8 @@ class RailButton extends StatelessWidget {
           timer != null && timer.isNotEmpty && timer.length <= 3 ? timer : null;
       final label = Text(
         timer != null && timer.isNotEmpty && pip == null
-            ? '${entry.label} $timer'
-            : entry.label,
+            ? '$screenLabel $timer'
+            : screenLabel,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: GameTheme.readable(color: GameTheme.parchment),
@@ -291,7 +292,7 @@ class RailButton extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    entry.label,
+                    screenLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GameTheme.hint(color: GameTheme.parchment),

@@ -68,7 +68,7 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('FORGE'), findsWidgets);
+    expect(find.text('CRAFT'), findsWidgets);
     expect(tester.takeException(), isNull);
 
     router.open(MenuRoute.gold, gold: GoldPanel.market);

@@ -363,7 +363,7 @@ void main() {
       WipeAdvice.hubHintFor('Equip the better item in BAG'),
       contains('BAG'),
     );
-    expect(WipeAdvice.hubCtaLabelFor('Upgrade AP in GOLD'), 'OPEN GOLD');
+    expect(WipeAdvice.hubCtaLabelFor('Upgrade AP in GOLD'), 'OPEN TRAIN');
     expect(WipeAdvice.hubNavFor('Upgrade AP in GOLD')?.route, MenuRoute.gold);
     expect(
       WipeAdvice.hubHintFor('Upgrade AP in GOLD'),

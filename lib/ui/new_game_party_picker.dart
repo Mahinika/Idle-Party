@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../core/game_logic.dart';
 import '../core/gear/gear_upgrade_copy.dart';
 import '../core/party_name_filter.dart';
-import '../core/remote_tune.dart';
 import '../core/starter_gear.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
@@ -97,31 +96,12 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     return HeroSpecs.def(HeroSpecs.starterUnlocked.first).classId;
   }
 
-  List<HeroSpecId> _startersForRole(PartyRoleBucket role) => [
-        for (final id in HeroSpecs.starterUnlocked)
-          if (HeroSpecs.partyRole(id) == role) id,
-      ];
-
   void _selectSlot(int index) {
     setState(() {
       _activeSlot = index;
       _filter = _classForSlot(index);
       _pickHint = null;
     });
-  }
-
-  Future<void> _playNow() async {
-    if (_starting) return;
-    for (var i = 0; i < _slots.length; i++) {
-      final role = _roleForSlot(i);
-      _slots[i] = _startersForRole(role).first;
-      _looks[i] = HeroRace.human;
-      _sexes[i] = HeroSex.defaultFor(HeroSpecs.def(_slots[i]!).gearAffinity);
-    }
-  if (_nameCtrl.text.trim().isEmpty) {
-      _nameCtrl.text = 'The Ember Guard';
-    }
-    await _tryStart(skipRaceDialog: true);
   }
 
   Future<void> _tryStart({bool skipRaceDialog = false}) async {
@@ -307,7 +287,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                   counterText: '',
                   labelText: 'Party name',
                   hintText: 'The Ember Guard',
-                  helperText: 'Shows on season ranks',
+                  helperText: '',
                   helperStyle: GameTheme.hint(color: GameTheme.parchmentDim),
                   labelStyle: GameTheme.section(color: GameTheme.parchmentDim),
                   hintStyle: GameTheme.readable(color: GameTheme.parchmentDim),
@@ -513,20 +493,6 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                   style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
                 const SizedBox(height: 6),
-              ],
-              if (RemoteTune.firstClimbPlayNow) ...[
-                GameButton(
-                  label: 'PLAY NOW',
-                  style: GameButtonStyle.go,
-                  onPressed: _starting ? null : () => unawaited(_playNow()),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Or pick class and race below, then START.',
-                  textAlign: TextAlign.center,
-                  style: GameTheme.hint(color: GameTheme.parchmentDim),
-                ),
-                const SizedBox(height: 8),
               ],
               Row(
                 children: [

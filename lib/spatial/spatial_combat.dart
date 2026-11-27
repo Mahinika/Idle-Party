@@ -381,6 +381,10 @@ class SpatialActor {
   double approachHeroX = 0;
   double approachHeroY = 0;
 
+  /// Stable arc slot around the current melee focus (hysteresis).
+  String? meleeRingFocusId;
+  int meleeRingSlot = -1;
+
   /// Seconds until another speech bark may fire.
   double barkCd = 0;
 
@@ -2722,6 +2726,8 @@ abstract final class SpatialCombat {
     to.approachY = from.approachY;
     to.approachHeroX = from.approachHeroX;
     to.approachHeroY = from.approachHeroY;
+    to.meleeRingFocusId = from.meleeRingFocusId;
+    to.meleeRingSlot = from.meleeRingSlot;
     to.barkCd = from.barkCd;
     to.lowHpBarked = from.lowHpBarked;
     to.rage = from.rage;
@@ -3944,6 +3950,10 @@ abstract final class SpatialCombat {
           hero.id != packAnchor.id &&
           actorIsMeleeDps(hero) &&
           target != null) {
+        final toTarget = actorDist(hero, target);
+        if (toTarget <= hero.attackRange * 0.97) {
+          // On the arc in range — do not queue behind the tank.
+        } else {
         final dx = hero.x - packAnchor.x;
         final dy = hero.y - packAnchor.y;
         final fwd = CombatPresence.fightForward(
@@ -3963,6 +3973,7 @@ abstract final class SpatialCombat {
           tx = march.x;
           ty = march.y;
           hold = 0.45;
+        }
         }
       }
 
@@ -5177,11 +5188,24 @@ abstract final class SpatialCombat {
       if (unit != null && payout.xp > 0) '+${payout.xp} XP',
     ];
     if (bestGear != null && bestGear.isNotEmpty) {
-      // Above the rank, and gone before it can sit on a body.
+      // Loot label lane north of the party — not on bodies mid-fight.
+      var lx = enemy.x;
+      var ly = enemy.y - 1.45;
+      if (world.heroes.isNotEmpty) {
+        var hx = 0.0;
+        var hy = 0.0;
+        for (final h in world.heroes) {
+          hx += h.x;
+          hy += h.y;
+        }
+        final n = world.heroes.length;
+        lx = hx / n;
+        ly = hy / n - 1.55;
+      }
       spawnFloater(
         world,
-        x: enemy.x,
-        y: enemy.y - 1.45,
+        x: lx,
+        y: ly,
         text: bestGear,
         argb: _floaterGear,
         life: 0.42,

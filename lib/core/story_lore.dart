@@ -5,10 +5,11 @@ import 'game_logic.dart';
 /// Short fiction lines for Idle Party — no dialogue trees, just flavor
 /// on existing UI rails (intro, hub, toasts, ascend).
 abstract final class StoryLore {
-  static const String introTagline = 'Your party keeps fighting when you leave.';
+  static const String introTagline =
+      'Your party keeps fighting while you\'re away.';
 
   static const String introSubline =
-      'Hub AFK banks gold and essence while you are away. Leave mid-dungeon and the party keeps fighting offline.';
+      'Gold and essence still build while the app is closed.';
 
   static const String studioName = 'Cognifox Studio';
 
@@ -84,7 +85,7 @@ abstract final class StoryLore {
     if (nextDungeonId != null && nextDungeonId.isNotEmpty) {
       return 'Next cave: ${DungeonCatalog.byId(nextDungeonId).name}.';
     }
-    return 'Next: ${DungeonCatalog.byId(clearedId).name} floor 1.';
+    return dungeonCleared(clearedId);
   }
 
   static String unlockedNextZone(String newDungeonId) {
