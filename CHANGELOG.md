@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- Pre-Sunday UI polish: fight HUD drops in-cave hunt lines and CLAIM over the floor, F# CLEAR clears on the next floor, loot names spawn above the party, tomorrow vault copy names shelf not wallet gold, shorter SHOP header and Play wait text, two-line hero/gear names, 360×640 @1.45 layout on home and wallet.
 - Sim nightly: tighten AoE×12 combat-share regression (parse median band, 4 trials); documents #116 spatial shift and #130 re-center (no kit coeffs in this PR).
 
 - **Abilities-61 VFX (pass 2):** per-ability showcase signatures, motion phases (charge/smear/impact), 6-frame anim strips under `docs/design/abilities-61/rendered/anim/`, ffmpeg GIF script, and centered in-fight staging.

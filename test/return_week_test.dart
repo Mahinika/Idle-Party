@@ -71,10 +71,12 @@ void main() {
     final state = week(2, claimed: true);
     final chase = HubChase.forState(state, now: now);
     expect(chase.title, 'Tomorrow: Sandy Caverns');
-    expect(chase.detail, contains('Check-in 2/7'));
-    expect(chase.detail, contains('2,000 gold'));
-    expect(chase.detail.toLowerCase(), contains('leave them in the cave'));
-    expect(chase.detail, contains(ReturnWeek.keepsFighting));
+    expect(
+      chase.detail,
+      'Tomorrow: Sandy Caverns · gold for FORGE',
+    );
+    expect(chase.detail, isNot(contains('2,000')));
+    expect(chase.detail, isNot(contains('2 000')));
     expect(chase.kind, isNot(HubChaseKind.clearFloors));
     expect(
       GameLogic.checkInWelcomeLine(state),
@@ -156,7 +158,7 @@ void main() {
   testWidgets('camp names tomorrow\'s cave after the vault is claimed', (
     tester,
   ) async {
-    final state = week(3, claimed: true).copyWith(homeLayout: HomeLayout.home);
+    final state = week(2, claimed: true).copyWith(homeLayout: HomeLayout.home);
     final director = GameDirector.preview(initialState: state);
     final router = MenuRouter();
     addTearDown(director.dispose);
@@ -171,7 +173,10 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.text('Tomorrow: Sandy Caverns'), findsWidgets);
+    expect(
+      find.textContaining('Tomorrow: Sandy Caverns · gold for FORGE'),
+      findsWidgets,
+    );
     expect(find.textContaining('keeps fighting while closed'), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -202,6 +207,11 @@ void main() {
     );
     await tester.pump();
     expect(tester.takeException(), isNull);
-    expect(find.text('Tomorrow: Sandy Caverns'), findsWidgets);
+    expect(
+      find.textContaining(
+        'Tomorrow: Sandy Caverns · essence and gold for CAMP and FORGE',
+      ),
+      findsWidgets,
+    );
   });
 }

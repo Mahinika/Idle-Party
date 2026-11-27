@@ -199,7 +199,11 @@ void main() {
               final kicker = find.descendant(
                 of: strip,
                 matching: find.byWidgetPredicate(
-                  (w) => w is Text && (w.data ?? '').contains('Sandy'),
+                  (w) =>
+                      w is Text &&
+                      ((w.data ?? '').contains('Sandy') ||
+                          (w.data ?? '').contains('BOSS') ||
+                          RegExp(r'\bto\b').hasMatch(w.data ?? '')),
                 ),
               );
               expect(kicker, findsOneWidget);

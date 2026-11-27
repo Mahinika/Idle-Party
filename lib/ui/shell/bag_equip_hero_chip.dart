@@ -70,9 +70,14 @@ class _EquipHeroChip extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text(
-                    hero.displayName(plainEnglish: plainEnglish),
-                    style: GameTheme.hint(color: GameTheme.parchment),
+                  Expanded(
+                    child: Text(
+                      hero.displayName(plainEnglish: plainEnglish),
+                      maxLines: 2,
+                      softWrap: true,
+                      overflow: TextOverflow.fade,
+                      style: GameTheme.hint(color: GameTheme.parchment),
+                    ),
                   ),
                   if (isBest) ...[
                     const SizedBox(width: 3),

@@ -5177,11 +5177,24 @@ abstract final class SpatialCombat {
       if (unit != null && payout.xp > 0) '+${payout.xp} XP',
     ];
     if (bestGear != null && bestGear.isNotEmpty) {
-      // Above the rank, and gone before it can sit on a body.
+      // Loot label lane north of the party — not on bodies mid-fight.
+      var lx = enemy.x;
+      var ly = enemy.y - 1.45;
+      if (world.heroes.isNotEmpty) {
+        var hx = 0.0;
+        var hy = 0.0;
+        for (final h in world.heroes) {
+          hx += h.x;
+          hy += h.y;
+        }
+        final n = world.heroes.length;
+        lx = hx / n;
+        ly = hy / n - 1.55;
+      }
       spawnFloater(
         world,
-        x: enemy.x,
-        y: enemy.y - 1.45,
+        x: lx,
+        y: ly,
         text: bestGear,
         argb: _floaterGear,
         life: 0.42,

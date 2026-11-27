@@ -885,8 +885,9 @@ class _InventoryDockState extends State<InventoryDock>
                 children: [
                   Text(
                     selected.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                    softWrap: true,
+                    overflow: TextOverflow.fade,
                     style: GameTheme.readable(
                       color: itemRarityColor(selected.rarity),
                     ),

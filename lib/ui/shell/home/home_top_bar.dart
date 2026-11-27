@@ -76,6 +76,10 @@ class HomeTopBar extends StatelessWidget {
   ) {
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final compactTop = state.homeLayout == HomeLayout.home && state.inDungeon;
+    final shortViewport = MediaQuery.sizeOf(context).height < 680;
+    final tightWallet = !state.inDungeon &&
+        shortViewport &&
+        textScale >= GameTheme.typeScaleMax - 0.01;
     final chaseHub = HubChase.forState(state);
     final questReady = chaseHub.kind == HubChaseKind.claimMissions;
     final goal = questReady
@@ -139,7 +143,9 @@ class HomeTopBar extends StatelessWidget {
                       flex: 0,
                       fit: FlexFit.loose,
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 72),
+                        constraints: BoxConstraints(
+                          maxWidth: tightWallet ? 64 : 72,
+                        ),
                         child: _tap(
                           label: 'Ascension Level ${state.ascensionLevel}',
                           onTap: () => showAlAscensionSheet(
@@ -161,7 +167,10 @@ class HomeTopBar extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                   ],
-                  _essencePill(context, state, goldHasSub),
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: _essencePill(context, state, goldHasSub),
+                  ),
                 ],
                 if (compactTop && state.keystoneRunActive) ...[
                   const SizedBox(width: 4),
@@ -182,7 +191,7 @@ class HomeTopBar extends StatelessWidget {
                       child: HudPill(
                         icon: UiIcon.gold,
                         text: formatGold(state.gold),
-                        sub: perMin > 0
+                        sub: perMin > 0 && !tightWallet
                             ? '+${GoldIncome.perMinuteLabel(perMin)}'
                             : null,
                         edge: GameTheme.buyGoldBottom,

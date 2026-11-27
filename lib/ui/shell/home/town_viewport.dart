@@ -14,6 +14,7 @@ import '../../../core/hub_chase.dart';
 import '../../../core/hub_primary_cta.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
+import '../../../core/return_week.dart';
 import '../../../core/town_access.dart';
 import '../../../models/dungeon_def.dart';
 import '../../../models/hero.dart';
@@ -255,7 +256,9 @@ class _TownViewportState extends State<TownViewport> {
     final plan = ChaseDispatcher.plan(chase, state: state);
     final held = director.vaultClaimHold;
     final label = held ? 'CLAIM VAULT' : (plan.label ?? 'ENTER');
-    final tomorrow = chase.title.startsWith('Tomorrow:') ? chase.title : null;
+    final tomorrow = chase.title.startsWith('Tomorrow:')
+        ? ReturnWeek.tomorrowRewardLine(state)
+        : null;
     final cave = DungeonCatalog.byId(state.dungeonId).name;
     final al = state.ascensionLevel;
     final primaryIsEnter =

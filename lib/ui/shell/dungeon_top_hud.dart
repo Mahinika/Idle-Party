@@ -169,7 +169,10 @@ String homeFightPlateKicker({
   }
   final bossBit = _firstBossBit(state, floor);
   final fightBit = bossBit.isNotEmpty ? bossBit : _packJobBit(world);
-  return '$zoneShort$keyBit$fightBit';
+  // Zone name stays on the hub; the target strip keeps the fight job only.
+  final bit = fightBit.isNotEmpty ? fightBit : keyBit;
+  if (bit.isEmpty) return '';
+  return bit.startsWith(' · ') ? bit.substring(3) : bit;
 }
 
 /// Drop a one-glyph prefix (`↻ FARM` → `FARM`) so the classic row fits.

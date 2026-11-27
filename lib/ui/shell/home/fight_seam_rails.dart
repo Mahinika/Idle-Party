@@ -118,10 +118,9 @@ class _FightSeamRailsState extends State<FightSeamRails> {
   static const double _gap = 6;
 
   String _labelOf(HomeEntry entry, GameState state) {
+    final base = entry.labelFor?.call(state) ?? entry.label;
     final timer = entry.timer?.call(state);
-    return timer != null && timer.isNotEmpty
-        ? '${entry.label} $timer'
-        : entry.label;
+    return timer != null && timer.isNotEmpty ? '$base $timer' : base;
   }
 
   double _textWidth(BuildContext context, String text) {

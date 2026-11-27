@@ -798,10 +798,22 @@ class GameDirector extends ChangeNotifier {
   }
 
   void _beginFloorClock() {
+    if (uiFeedback.dropFloorClearLines()) {
+      _notifyUnlessBuilding();
+    }
+    if (uiFeedback.celebrating &&
+        uiFeedback.clearSummary != null &&
+        UiFeedback.isFloorClearLine(uiFeedback.clearSummary!)) {
+      uiFeedback.clearToast();
+      _notifyUnlessBuilding();
+    }
     _floorStartedAt = DateTime.now();
     _floorXpSnapshot = partyXpBank(_state);
     _bossIntroHeard = false;
   }
+
+  @visibleForTesting
+  void debugBeginFloorClock() => _beginFloorClock();
 
   void _freezeRunIncome() {
     _refreshRunGpm(DateTime.now().millisecondsSinceEpoch);

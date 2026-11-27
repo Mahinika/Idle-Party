@@ -31,7 +31,7 @@ class ShopDock extends StatefulWidget {
 
   /// Store line while Play billing is not connected (polish7 P058).
   static const String needsPlayLine =
-      'The store needs Google Play. Prices show once it connects.';
+      'Waiting for Google Play — packs show prices once it connects.';
 
   /// True for a store line that waits on Play: it gets the one-row banner
   /// with RETRY (audit F026, polish7 P058).
@@ -61,10 +61,8 @@ class ShopDock extends StatefulWidget {
     required bool showEssence,
     HomeLayout layout = HomeLayout.classic,
   }) => NavCopy.playerText(
-    'SCROLLS tickets live on the hub. This shelf lists Ad-free welcome, '
-        'Long Away, and Delver\'s Kit (Supporter). Cinder pouch and '
-        'Season pass premium appear when Play lists them. Bag and pets are '
-        'not sold here.',
+    'SCROLLS tickets live on the hub. Ad-free welcome, Long Away, Supporter, '
+        'Cinder pouch, and Season pass premium sell here when Play is connected.',
     layout,
   );
 
@@ -75,8 +73,7 @@ class ShopDock extends StatefulWidget {
     final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
     final raw =
         'Free tickets are SCROLLS on the hub. '
-        'Ad-free welcome, Long Away, and Delver\'s Kit are here. '
-        'Cinder pouch and Season pass premium join when Play lists them. '
+        'Paid packs are here once Play is connected. '
         'Gold is under GOLD.$essenceBit';
     return NavCopy.playerText(raw, layout);
   }
@@ -89,8 +86,7 @@ class ShopDock extends StatefulWidget {
     final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
     final raw =
         'Free tickets are SCROLLS on the hub. '
-        'Ad-free welcome, Long Away, and Delver\'s Kit are here. '
-        'Cinder pouch and Season pass premium join when Play lists them. '
+        'Paid packs are here once Play is connected. '
         'Bag space and pet errands use gold or Cinders in GEAR'
         '${showEssence ? ' and ESSENCE' : ''} — not real money. '
         'Gold is under GOLD.$essenceBit';

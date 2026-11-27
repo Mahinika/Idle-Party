@@ -200,7 +200,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   static const _fullOpacity = 1.0;
   static const _dimOpacity = 0.72;
   static const _dimOpacityPhone = 0.72;
-  static const _homePartyRowHeight = 44.0;
+  static const _homePartyRowHeight = 48.0;
 
   Timer? _fadeTimer;
   double _opacity = _fullOpacity;
@@ -392,7 +392,10 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     final shortViewport = MediaQuery.sizeOf(context).height < 680;
     final tuckPartyPad =
         shortViewport && textScale > GameTheme.typeScaleMax - 0.01;
-    final lineHeight = _homePartyRowHeight * textScale;
+    final rowBase = textScale <= GameTheme.typeScaleMax
+        ? _homePartyRowHeight
+        : 44.0;
+    final lineHeight = rowBase * textScale;
     final denseParty = heroCount >= 5;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1134,9 +1137,9 @@ class _HomePartyChip extends StatelessWidget {
         children: [
           Text(
             who,
-            maxLines: 1,
-            softWrap: false,
-            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+            softWrap: true,
+            overflow: TextOverflow.fade,
             style: nameStyle,
           ),
           if (cc.isEmpty) const SizedBox(height: 1),

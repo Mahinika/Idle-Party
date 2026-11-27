@@ -40,6 +40,7 @@ class HomeEntry {
     required this.badge,
     required this.open,
     this.timer,
+    this.labelFor,
     this.accessibilityLabel,
   });
 
@@ -54,6 +55,7 @@ class HomeEntry {
   final bool Function(GameState state, GameDirector director) visible;
   final bool Function(GameState state) badge;
   final String? Function(GameState state)? timer;
+  final String Function(GameState state)? labelFor;
   final HomeOpen open;
 }
 
@@ -124,6 +126,8 @@ abstract final class HomeCatalog {
       order: 20,
       icon: UiIcon.chest,
       label: 'VAULT',
+      labelFor: (s) => GameLogic.canClaimDailyVault(s) ? 'CLAIM' : 'VAULT',
+      accessibilityLabel: 'Daily vault',
       visible: (s, _) =>
           GameLogic.showDailyVault(s) && !s.metaDepth.dailyVaultClaimed,
       badge: (s) =>

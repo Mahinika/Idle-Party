@@ -253,7 +253,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(TownViewport),
-        matching: find.text('Tomorrow: Sandy Caverns'),
+        matching: find.textContaining('Tomorrow: Sandy Caverns'),
       ),
       findsOneWidget,
     );
