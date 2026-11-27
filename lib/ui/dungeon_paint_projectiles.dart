@@ -35,6 +35,21 @@ extension _DungeonPaintProjectiles on _TileRoomPainter {
     for (final p in world.projectiles) {
       if (p.delay > 0) continue;
       if (!_inView(p.x, p.y)) continue;
+      SpatialActor? caster;
+      if (p.casterId != null) {
+        for (final h in world.heroes) {
+          if (h.id == p.casterId) {
+            caster = h;
+            break;
+          }
+        }
+      }
+      if (SpellShapePaint.shouldSkipMeleeAbilityTravelBolt(
+        projectile: p,
+        casterRanged: caster?.ranged ?? true,
+      )) {
+        continue;
+      }
       final c = center(p.x, p.y);
       final speed = math.sqrt(p.vx * p.vx + p.vy * p.vy);
       final angle = speed > 0.01 ? math.atan2(p.vy, p.vx) : 0.0;

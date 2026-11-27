@@ -36,6 +36,13 @@ abstract final class SpellShapePaint {
     return _stroke;
   }
 
+  static const Set<AbilityId> _meleeSignatureSilhouetteIds = {
+    AbilityId.executeFury,
+    AbilityId.kidneyShotAssa,
+    AbilityId.revealingStrike,
+    AbilityId.maim,
+  };
+
   /// Melee abilities in the 61 set paint a bespoke overlay; the generic weapon
   /// slash arc reads as a beige/purple capsule in the lower-left on contact tiles.
   @visibleForTesting
@@ -54,6 +61,26 @@ abstract final class SpellShapePaint {
         _ => false,
       };
 
+  @visibleForTesting
+  static bool usesMeleeSignatureSilhouette(AbilityId id) =>
+      _meleeSignatureSilhouetteIds.contains(id);
+
+  /// Hide filler/root travel bolts from melee specs (damage still lands in sim).
+  static bool shouldSkipMeleeAbilityTravelBolt({
+    required SpatialProjectile projectile,
+    required bool casterRanged,
+  }) {
+    return projectile.team == SpatialTeam.hero &&
+        projectile.style == SpellBoltStyle.weapon &&
+        projectile.label == null &&
+        !casterRanged;
+  }
+
+  /// Short-lived announce puffs on the caster must not read as a ground AOE disc.
+  @visibleForTesting
+  static bool usesCompactCasterBurst(SpatialBurst burst) =>
+      burst.paintId == null && burst.radius <= 0.62;
+
   /// Paints one [SpatialBurst] the same way fight floaters do.
   static void paintWorldBurst(
     Canvas canvas,
@@ -62,7 +89,11 @@ abstract final class SpellShapePaint {
     Offset Function(double tx, double ty) centerAt,
   ) {
     final kind = burst.slash ? SpatialBurstKind.slash : burst.kind;
-    if (kind == SpatialBurstKind.slash &&
+    final meleeSilhouette =
+        burst.paintId != null && usesMeleeSignatureSilhouette(burst.paintId!);
+    if (kind == SpatialBurstKind.slash && meleeSilhouette) {
+      _paintMeleeSignaturePip(canvas, burst, tile, centerAt);
+    } else if (kind == SpatialBurstKind.slash &&
         !suppressesGenericWeaponSlash(burst.paintId)) {
       _paintSlash(canvas, burst, tile, centerAt);
     } else if (kind == SpatialBurstKind.ring) {
@@ -83,6 +114,8 @@ abstract final class SpellShapePaint {
         kind == SpatialBurstKind.summon ||
         kind == SpatialBurstKind.pillar) {
       paintTypedBurst(canvas, burst, tile, centerAt);
+    } else if (usesCompactCasterBurst(burst)) {
+      _paintCompactCasterBurst(canvas, burst, tile, centerAt);
     } else {
       _paintDiscBurst(canvas, burst, tile, centerAt);
     }
@@ -290,12 +323,16 @@ abstract final class SpellShapePaint {
       id: id,
     );
     final travelBeam = _showcaseWantsBeamTravel(id, kind);
-    AbilityShowcaseMotion.paintPhase(
-      canvas,
-      tileRect: tileRect,
-      def: def,
-      life: life / 0.95,
-    );
+    if (_meleeSignatureSilhouetteIds.contains(id)) {
+      _paintMeleeSignatureShowcaseCharge(canvas, tileRect, def, life);
+    } else {
+      AbilityShowcaseMotion.paintPhase(
+        canvas,
+        tileRect: tileRect,
+        def: def,
+        life: life / 0.95,
+      );
+    }
     final burst = SpatialBurst(
       x: 0,
       y: 0,
@@ -896,6 +933,176 @@ abstract final class SpellShapePaint {
     canvas.drawCircle(c, r * 0.4, _fillC(Colors.white.withValues(alpha: alpha)));
   }
 
+  static void _paintMeleeSignaturePip(
+    Canvas canvas,
+    SpatialBurst burst,
+    double tile,
+    Offset Function(double tx, double ty) centerAt,
+  ) {
+    final alpha = (burst.life / 0.55).clamp(0.0, 1.0);
+    if (alpha < 0.12) return;
+    final c = centerAt(burst.x, burst.y);
+    final flash = (1 - (alpha - 0.35).abs() * 2.8).clamp(0.0, 1.0);
+    final r = tile * burst.radius * (0.08 + flash * 0.12);
+    final tint = switch (burst.paintId) {
+      AbilityId.executeFury => const Color(0xFFFF2818),
+      AbilityId.kidneyShotAssa => const Color(0xFF9040C8),
+      AbilityId.revealingStrike => const Color(0xFFFFD040),
+      AbilityId.maim => const Color(0xFFCC1010),
+      _ => Color(burst.argb),
+    };
+    if (flash > 0.05) {
+      canvas.drawCircle(c, r, _fillC(tint.withValues(alpha: alpha * flash * 0.45)));
+    }
+  }
+
+  static void _paintMeleeSignatureShowcaseCharge(
+    Canvas canvas,
+    Rect tileRect,
+    ClassAbilityDef def,
+    double life,
+  ) {
+    final tile = tileRect.width / 3.2;
+    final cx = tileRect.center.dx;
+    final cy = tileRect.center.dy - tile * 0.1;
+    final phase = life.clamp(0.0, 1.0);
+  final alpha = (phase < 0.35 ? phase / 0.35 : (1 - (phase - 0.35) / 0.65)).clamp(0.0, 1.0);
+    if (alpha < 0.08) return;
+    switch (def.id) {
+      case AbilityId.executeFury:
+        canvas.drawLine(
+          Offset(cx, cy - tile * 0.2 * alpha),
+          Offset(cx, cy + tile * 0.08),
+          Paint()
+            ..color = const Color(0xFF601010).withValues(alpha: alpha * 0.35)
+            ..strokeWidth = math.max(1.5, tile * 0.05)
+            ..strokeCap = StrokeCap.round,
+        );
+      case AbilityId.kidneyShotAssa:
+        for (var i = 0; i < 3; i++) {
+          final a = i * 2.1 - 0.4;
+          canvas.drawLine(
+            Offset(cx + math.cos(a) * tile * 0.08, cy + tile * 0.12),
+            Offset(cx + math.cos(a) * tile * 0.2, cy + tile * 0.22),
+            Paint()
+              ..color = const Color(0xFFB070E0).withValues(alpha: alpha * 0.4)
+              ..strokeWidth = math.max(1.2, tile * 0.04)
+              ..strokeCap = StrokeCap.round,
+          );
+        }
+      case AbilityId.revealingStrike:
+        canvas.drawLine(
+          Offset(cx - tile * 0.12 * alpha, cy - tile * 0.12 * alpha),
+          Offset(cx + tile * 0.12 * alpha, cy + tile * 0.12 * alpha),
+          Paint()
+            ..color = const Color(0xFFC89830).withValues(alpha: alpha * 0.35)
+            ..strokeWidth = math.max(1.2, tile * 0.04),
+        );
+      case AbilityId.maim:
+        for (var i = -1; i <= 1; i++) {
+          canvas.drawLine(
+            Offset(cx + i * tile * 0.12, cy + tile * 0.18),
+            Offset(cx + i * tile * 0.12 + tile * 0.06, cy - tile * 0.1),
+            Paint()
+              ..color = const Color(0xFF901818).withValues(alpha: alpha * 0.38)
+              ..strokeWidth = math.max(1.2, tile * 0.04),
+          );
+        }
+      default:
+        break;
+    }
+  }
+
+  /// main @ 0aac4042 baseline for before/after sheet (disc + impact-star stack).
+  @visibleForTesting
+  static void paintAbilityShowcaseMainDiscBaseline(
+    Canvas canvas, {
+    required Rect tileRect,
+    required ClassAbilityDef def,
+    double life = 0.34,
+  }) {
+    final id = def.id;
+    final tile = tileRect.width / 3.2;
+    final cx = tileRect.center.dx;
+    final cy = tileRect.center.dy - tile * 0.15;
+    Offset at(double tx, double ty) => Offset(cx + tx * tile, cy + ty * tile);
+    final style = def.boltStyle ?? SpellBoltStyle.weapon;
+    final argb = SpatialCombat.burstArgbForStyle(style);
+    final kind = SpellVfx.burstKindFor(
+      style: style,
+      shape: def.aoeShape,
+      id: id,
+    );
+    AbilityShowcaseMotion.paintPhase(
+      canvas,
+      tileRect: tileRect,
+      def: def,
+      life: life / 0.95,
+    );
+    final burst = SpatialBurst(
+      x: 0,
+      y: 0,
+      life: life,
+      argb: argb,
+      radius: 0.95,
+      kind: kind,
+      paintId: id,
+    );
+    _paintDiscBurst(canvas, burst, tile, at);
+    _paintAbilityOverlayMainDiscBaseline(canvas, burst, tile, at);
+  }
+
+  static void _paintAbilityOverlayMainDiscBaseline(
+    Canvas canvas,
+    SpatialBurst burst,
+    double tile,
+    Offset Function(double, double) centerAt,
+  ) {
+    final id = burst.paintId!;
+    final alpha = (burst.life / 0.55).clamp(0.0, 1.0);
+    final c = centerAt(burst.x, burst.y);
+    final r = tile * burst.radius * (0.85 + (1 - alpha) * 0.25);
+    final ramp = _rampForBurst(burst, Color(burst.argb));
+    switch (id) {
+      case AbilityId.executeFury:
+        _paintImpactStar(canvas, c, r * 0.65, alpha, ramp, tile);
+        for (var i = 0; i < 5; i++) {
+          final a = i * 1.25;
+          canvas.drawCircle(
+            Offset(c.dx + math.cos(a) * r * 0.55, c.dy + math.sin(a) * r * 0.35),
+            r * 0.08,
+            _fillC(const Color(0xFF901818).withValues(alpha: alpha * 0.85)),
+          );
+        }
+      case AbilityId.kidneyShotAssa:
+      case AbilityId.maim:
+        _paintStunStars(canvas, c, r, alpha, tile);
+        _paintImpactStar(canvas, c, r * 0.55, alpha, ramp, tile);
+      case AbilityId.revealingStrike:
+        _paintImpactStar(canvas, c, r * 0.75, alpha, ramp, tile);
+      default:
+        break;
+    }
+  }
+
+  static void _paintCompactCasterBurst(
+    Canvas canvas,
+    SpatialBurst burst,
+    double tile,
+    Offset Function(double tx, double ty) centerAt,
+  ) {
+    final alpha = (burst.life / 0.55).clamp(0.0, 1.0);
+    if (alpha < 0.05) return;
+    final c = centerAt(burst.x, burst.y);
+    final r = tile * burst.radius * 0.14;
+    canvas.drawCircle(c, r, _fillC(Color(burst.argb).withValues(alpha: alpha * 0.55)));
+    canvas.drawCircle(
+      c,
+      r * 0.45,
+      _fillC(Colors.white.withValues(alpha: alpha * 0.35)),
+    );
+  }
+
   static void _paintDiscBurst(
     Canvas canvas,
     SpatialBurst burst,
@@ -1208,16 +1415,15 @@ abstract final class SpellShapePaint {
       case AbilityId.claw:
         _paintClawRakes(canvas, c, r, alpha, ramp, tile);
       case AbilityId.executeFury:
-        _paintImpactStar(canvas, c, r * 0.65, alpha, ramp, tile);
-        _paintBloodSplatter(canvas, c, r, alpha);
+        _paintExecuteGuillotine(canvas, c, r, alpha, ramp, tile);
       case AbilityId.kidneyShotAssa:
-      case AbilityId.maim:
-        _paintStunStars(canvas, c, r, alpha, tile);
-        _paintImpactStar(canvas, c, r * 0.55, alpha, ramp, tile);
+        _paintKidneyShotJab(canvas, c, r, alpha, tile);
       case AbilityId.adrenalineRush:
         _paintSpeedAura(canvas, c, r, alpha, tile);
       case AbilityId.revealingStrike:
-        _paintImpactStar(canvas, c, r * 0.75, alpha, ramp, tile);
+        _paintRevealingStrikeExpose(canvas, c, r, alpha, ramp, tile);
+      case AbilityId.maim:
+        _paintMaimRakes(canvas, c, r, alpha, ramp, tile);
       case AbilityId.secretTechnique:
         _paintShadowCloneSlashes(canvas, c, r, alpha, tile);
       case AbilityId.hammerOfJusticeHoly:
@@ -1383,6 +1589,191 @@ abstract final class SpellShapePaint {
     }
   }
 
+  static void _paintExecuteGuillotine(
+    Canvas canvas,
+    Offset c,
+    double r,
+    double alpha,
+    SpellSchoolRamp ramp,
+    double tile,
+  ) {
+    final bladeW = math.max(4.0, tile * 0.14);
+    final top = Offset(c.dx, c.dy - r * 1.15);
+    final hit = Offset(c.dx, c.dy + r * 0.42);
+    canvas.drawLine(
+      top,
+      hit,
+      _strokeC(const Color(0xFF120808).withValues(alpha: alpha), bladeW * 1.35, cap: StrokeCap.round),
+    );
+    canvas.drawLine(
+      top,
+      hit,
+      _strokeC(const Color(0xFFFF5040).withValues(alpha: alpha * 0.95), bladeW, cap: StrokeCap.round),
+    );
+    canvas.drawLine(
+      top,
+      hit,
+      _strokeC(const Color(0xFF901020).withValues(alpha: alpha * 0.55), bladeW * 0.45, cap: StrokeCap.round),
+    );
+    canvas.drawLine(
+      Offset(c.dx - bladeW * 0.9, hit.dy),
+      Offset(c.dx + bladeW * 0.9, hit.dy),
+      _strokeC(const Color(0xFFFF3028).withValues(alpha: alpha), math.max(2.6, tile * 0.09), cap: StrokeCap.round),
+    );
+    for (var i = -2; i <= 2; i++) {
+      if (i == 0) continue;
+      final crack = Offset(c.dx + i * r * 0.18, hit.dy + r * 0.08);
+      canvas.drawLine(
+        hit,
+        crack,
+        _strokeC(const Color(0xFF901010).withValues(alpha: alpha * 0.85), math.max(1.8, tile * 0.06), cap: StrokeCap.round),
+      );
+    }
+    SpellVfxLayers.impactSparks(
+      canvas,
+      hit,
+      r * 0.2,
+      ramp,
+      alpha * 0.7,
+      count: 6,
+    );
+  }
+
+  static void _paintKidneyShotJab(
+    Canvas canvas,
+    Offset c,
+    double r,
+    double alpha,
+    double tile,
+  ) {
+    final jabStart = Offset(c.dx - r * 0.72, c.dy + r * 0.42);
+    final jabEnd = Offset(c.dx - r * 0.05, c.dy + r * 0.12);
+    canvas.drawLine(
+      jabStart,
+      jabEnd,
+      _strokeC(const Color(0xFF201018).withValues(alpha: alpha), math.max(3.4, tile * 0.11), cap: StrokeCap.round),
+    );
+    canvas.drawLine(
+      jabStart,
+      jabEnd,
+      _strokeC(const Color(0xFFD8C8B0).withValues(alpha: alpha), math.max(2.0, tile * 0.07), cap: StrokeCap.round),
+    );
+    canvas.drawCircle(
+      jabEnd,
+      r * 0.07,
+      _fillC(const Color(0xFF50C8B0).withValues(alpha: alpha * 0.55)),
+    );
+    canvas.drawCircle(
+      jabEnd,
+      r * 0.05,
+      _fillC(const Color(0xFFB040D0).withValues(alpha: alpha * 0.85)),
+    );
+    final flick = _path
+      ..reset()
+      ..moveTo(jabEnd.dx, jabEnd.dy)
+      ..quadraticBezierTo(jabEnd.dx + r * 0.35, jabEnd.dy - r * 0.22, jabEnd.dx + r * 0.55, jabEnd.dy + r * 0.08);
+    canvas.drawPath(
+      flick,
+      _strokeC(const Color(0xFF9040C8).withValues(alpha: alpha * 0.9), math.max(2.2, tile * 0.07), cap: StrokeCap.round),
+    );
+    for (var i = 0; i < 3; i++) {
+      final a = i * 2.1 - 0.35;
+      final star = Offset(c.dx + math.cos(a) * r * 0.32, c.dy + r * 0.02 + math.sin(a) * r * 0.22);
+      for (var s = 0; s < 4; s++) {
+        final sa = s * math.pi / 2;
+        canvas.drawLine(
+          star,
+          Offset(star.dx + math.cos(sa) * r * 0.12, star.dy + math.sin(sa) * r * 0.12),
+          _strokeC(const Color(0xFFFFF6C0).withValues(alpha: alpha * 0.8), math.max(1.4, tile * 0.04), cap: StrokeCap.round),
+        );
+      }
+    }
+  }
+
+  static void _paintRevealingStrikeExpose(
+    Canvas canvas,
+    Offset c,
+    double r,
+    double alpha,
+    SpellSchoolRamp ramp,
+    double tile,
+  ) {
+    final stroke = math.max(3.6, tile * 0.12);
+    canvas.drawLine(
+      Offset(c.dx - r * 0.82, c.dy - r * 0.78),
+      Offset(c.dx + r * 0.82, c.dy + r * 0.78),
+      _strokeC(const Color(0xFFB87818).withValues(alpha: alpha), stroke, cap: StrokeCap.round),
+    );
+    canvas.drawLine(
+      Offset(c.dx - r * 0.82, c.dy + r * 0.78),
+      Offset(c.dx + r * 0.82, c.dy - r * 0.78),
+      _strokeC(const Color(0xFFB87818).withValues(alpha: alpha), stroke, cap: StrokeCap.round),
+    );
+    canvas.drawLine(
+      Offset(c.dx - r * 0.74, c.dy - r * 0.7),
+      Offset(c.dx + r * 0.74, c.dy + r * 0.7),
+      _strokeC(const Color(0xFFFFE060).withValues(alpha: alpha * 0.95), stroke * 0.55, cap: StrokeCap.round),
+    );
+    canvas.drawLine(
+      Offset(c.dx - r * 0.74, c.dy + r * 0.7),
+      Offset(c.dx + r * 0.74, c.dy - r * 0.7),
+      _strokeC(const Color(0xFFFFE060).withValues(alpha: alpha * 0.95), stroke * 0.55, cap: StrokeCap.round),
+    );
+    final mark = Offset(c.dx + r * 0.22, c.dy - r * 0.08);
+    canvas.drawCircle(mark, r * 0.26, _fillC(const Color(0xFFFFE060).withValues(alpha: alpha * 0.45)));
+    canvas.drawCircle(mark, r * 0.14, _fillC(const Color(0xFFFFF0C0).withValues(alpha: alpha * 0.85)));
+    canvas.drawCircle(
+      mark.translate(0, -r * 0.02),
+      r * 0.05,
+      _fillC(const Color(0xFF302010).withValues(alpha: alpha)),
+    );
+    for (var i = -1; i <= 1; i++) {
+      canvas.drawLine(
+        mark.translate(i * r * 0.18, -r * 0.22),
+        mark.translate(i * r * 0.18, -r * 0.38),
+        _strokeC(const Color(0xFFFFC040).withValues(alpha: alpha), math.max(1.6, tile * 0.05), cap: StrokeCap.round),
+      );
+    }
+  }
+
+  static void _paintMaimRakes(
+    Canvas canvas,
+    Offset c,
+    double r,
+    double alpha,
+    SpellSchoolRamp ramp,
+    double tile,
+  ) {
+    for (var i = -1; i <= 1; i++) {
+      final rake = _path
+        ..reset()
+        ..moveTo(c.dx + i * r * 0.34 - r * 0.22, c.dy + r * 0.55)
+        ..quadraticBezierTo(
+          c.dx + i * r * 0.28,
+          c.dy - r * 0.05,
+          c.dx + i * r * 0.38 + r * 0.28,
+          c.dy - r * 0.82,
+        );
+      canvas.drawPath(
+        rake,
+        _strokeC(const Color(0xFF401010).withValues(alpha: alpha), math.max(4.2, tile * 0.14), cap: StrokeCap.round),
+      );
+      canvas.drawPath(
+        rake,
+        _strokeC(ramp.bright.withValues(alpha: alpha * 0.9), math.max(2.4, tile * 0.08), cap: StrokeCap.round),
+      );
+      for (var s = 0; s < 3; s++) {
+        final t = 0.35 + s * 0.22;
+        final px = c.dx + i * r * 0.34 - r * 0.22 + (c.dx + i * r * 0.38 + r * 0.28 - (c.dx + i * r * 0.34 - r * 0.22)) * t;
+        final py = c.dy + r * 0.55 + (c.dy - r * 0.82 - (c.dy + r * 0.55)) * t;
+        canvas.drawOval(
+          Rect.fromCenter(center: Offset(px, py), width: r * 0.16, height: r * 0.08),
+          _fillC(const Color(0xFFCC1818).withValues(alpha: alpha * (0.75 - s * 0.12))),
+        );
+      }
+    }
+  }
+
   static void _paintImpactStar(
     Canvas canvas,
     Offset c,
@@ -1425,17 +1816,6 @@ abstract final class SpellShapePaint {
         1.35,
         false,
         _strokeC(shadow.withValues(alpha: alpha * (0.95 - i * 0.15)), math.max(3.0, tile * 0.11), cap: StrokeCap.round),
-      );
-    }
-  }
-
-  static void _paintBloodSplatter(Canvas canvas, Offset c, double r, double alpha) {
-    for (var i = 0; i < 5; i++) {
-      final a = i * 1.25;
-      canvas.drawCircle(
-        Offset(c.dx + math.cos(a) * r * 0.55, c.dy + math.sin(a) * r * 0.35),
-        r * 0.08,
-        _fillC(const Color(0xFF901818).withValues(alpha: alpha * 0.85)),
       );
     }
   }
