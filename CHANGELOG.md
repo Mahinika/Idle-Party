@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- Copy polish: shorter title tagline, one NEW PARTY start button, town FORGE · CRAFT naming, OPEN TRAIN on welcome back, plain ESSENCE and CRAFT lines, INN lock text matches roster size, Patch Notes no longer auto-covers the town square, and a clearer cave-cleared boss toast when no next zone opens.
 - Sim nightly: tighten AoE×12 combat-share regression (parse median band, 4 trials); documents #116 spatial shift and #130 re-center (no kit coeffs in this PR).
 
 - **Abilities-61 VFX (pass 2):** per-ability showcase signatures, motion phases (charge/smear/impact), 6-frame anim strips under `docs/design/abilities-61/rendered/anim/`, ffmpeg GIF script, and centered in-fight staging.

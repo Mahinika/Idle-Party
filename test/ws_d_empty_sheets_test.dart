@@ -41,7 +41,10 @@ void main() {
       MaterialApp(home: Scaffold(body: CraftOverlay(director: director))),
     );
     await tester.pump();
-    expect(find.text('CRAFT opens after the first boss.'), findsOneWidget);
+    expect(
+      find.text('CRAFT opens after your first boss.'),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 

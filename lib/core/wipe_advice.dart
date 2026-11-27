@@ -231,13 +231,13 @@ abstract final class WipeAdvice {
     final nav = hubNavFor(adviceLine);
     if (nav != null) {
       if (nav.route == MenuRoute.key) return 'OPEN KEY';
-      if (nav.goldPanel == GoldPanel.market) return 'OPEN GOLD';
+      if (nav.goldPanel == GoldPanel.market) return 'OPEN MARKET';
       if (nav.route == MenuRoute.shop) return 'OPEN SHOP';
       if (nav.gear == GearPanel.bag) return 'OPEN BAG';
       if (nav.route == MenuRoute.gear) return 'OPEN GEAR';
-      if (nav.route == MenuRoute.gold) return 'OPEN GOLD';
+      if (nav.route == MenuRoute.gold) return 'OPEN TRAIN';
     }
-    if (adviceLine.startsWith('Use a flask')) return 'OPEN GOLD';
+    if (adviceLine.startsWith('Use a flask')) return 'OPEN MARKET';
     // Endgame modes: brown CTA still returns to hub (no ENDGAME menu route).
     if (adviceLine.contains('Farm Rift') && adviceLine.contains('ENDGAME')) {
       return 'OPEN ENDGAME';

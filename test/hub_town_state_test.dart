@@ -167,7 +167,7 @@ void main() {
     await tester.pump();
     expect(router.isOpen, isFalse);
     expect(
-      find.textContaining('Party swaps unlock at first Ascend'),
+      find.textContaining('First Ascend unlocks party swaps'),
       findsOneWidget,
     );
     await settleTimers(tester, director);

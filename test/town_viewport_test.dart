@@ -198,7 +198,10 @@ void main() {
       expect(find.text('GUILD'), findsOneWidget);
       expect(find.text('ENTER'), findsOneWidget);
       await tapBuilding(tester, TownBuildingId.forge);
-      expect(find.text('CRAFT opens after the first boss.'), findsOneWidget);
+      expect(
+        find.text('CRAFT opens after your first boss.'),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     });
 
@@ -209,7 +212,7 @@ void main() {
       router = MenuRouter();
       await pumpTown(tester);
       expect(find.text('GUILD'), findsOneWidget);
-      expect(find.text('FORGE'), findsOneWidget);
+      expect(find.text('CRAFT'), findsWidgets);
       expect(find.text('MARKET'), findsOneWidget);
       expect(find.text('INN'), findsOneWidget);
       expect(find.text('VAULT'), findsOneWidget);
@@ -255,13 +258,22 @@ void main() {
       await pumpTown(tester);
       await tapBuilding(tester, TownBuildingId.forge);
       expect(router.isOpen, isFalse);
-      expect(find.text('CRAFT opens after the first boss.'), findsOneWidget);
+      expect(
+        find.text('CRAFT opens after your first boss.'),
+        findsOneWidget,
+      );
       expect(find.text('FORGE opens after the first boss (F2).'), findsNothing);
       await tester.tap(find.text('CLOSE'));
       await tester.pump();
-      expect(find.text('CRAFT opens after the first boss.'), findsNothing);
+      expect(
+        find.text('CRAFT opens after your first boss.'),
+        findsNothing,
+      );
       await tapBuilding(tester, TownBuildingId.forge);
-      expect(find.text('CRAFT opens after the first boss.'), findsOneWidget);
+      expect(
+        find.text('CRAFT opens after your first boss.'),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     });
 
@@ -273,7 +285,7 @@ void main() {
       expect(router.route, MenuRoute.more);
       expect(router.moreSection, MoreSection.craft);
       expect(find.text('CRAFT'), findsWidgets);
-      expect(find.textContaining('Tap a hero, pick a slot'), findsOneWidget);
+      expect(find.textContaining('Pick a hero and slot'), findsOneWidget);
       await tester.tap(find.text('CLOSE').first);
       await tester.pump();
       expect(router.isOpen, isFalse);
@@ -326,7 +338,7 @@ void main() {
       expect(router.isOpen, isFalse);
       expect(router.route, MenuRoute.none);
       expect(
-        find.textContaining('Party swaps unlock at first Ascend'),
+        find.textContaining('First Ascend unlocks party swaps'),
         findsOneWidget,
       );
       expect(find.text('GEAR'), findsNothing);
@@ -401,7 +413,7 @@ void main() {
       director = GameDirector.preview(initialState: afterAscend());
       router = MenuRouter();
       await pumpTown(tester, textScale: 1.45);
-      expect(find.text('FORGE'), findsOneWidget);
+      expect(find.text('CRAFT'), findsWidgets);
       expect(find.text('ENTER'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -468,7 +480,7 @@ void main() {
       director = GameDirector.preview(initialState: afterAscend());
       router = MenuRouter();
       await pumpTown(tester, size: TownPreview.shortSize);
-      expect(find.text('FORGE'), findsOneWidget);
+      expect(find.text('CRAFT'), findsWidgets);
       expect(find.text('GUILD'), findsOneWidget);
       expect(find.text('ENTER'), findsOneWidget);
       expect(tester.takeException(), isNull);
