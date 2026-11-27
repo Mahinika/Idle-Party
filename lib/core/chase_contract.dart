@@ -100,7 +100,7 @@ class ChaseContract {
       progressLabel != null && progressLabel!.startsWith('EQUIP')
           ? progressLabel
           : 'EQUIP',
-    HubChaseKind.marketUpgrade => 'OPEN GOLD',
+    HubChaseKind.marketUpgrade => 'OPEN TRAIN',
     HubChaseKind.ascend => 'ASCEND',
     HubChaseKind.dailyRun => 'DAILY RUN',
     HubChaseKind.keystone =>

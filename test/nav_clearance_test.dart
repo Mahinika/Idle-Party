@@ -115,7 +115,7 @@ void main() {
         closeTo(nav.top - circle.top, 0.5),
       );
       await scrollToEnd(tester);
-      expectClear(tester, 'FORGE');
+      expectClear(tester, 'CRAFT');
 
       await tester.tap(find.text('CAMP'));
       await tester.pump();

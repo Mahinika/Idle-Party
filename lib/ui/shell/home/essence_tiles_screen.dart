@@ -28,13 +28,13 @@ class EssenceTilesScreen extends StatelessWidget {
   static const Key buyDotKey = ValueKey('essence-tile-buy-dot');
 
   static String blessingStatus(GameState s) =>
-      'Hand Lv${s.godHandLevel} · next '
+      'Next blessing: '
       '${formatCount(GameLogic.godHandUpgradeCost(s.godHandLevel))} essence';
 
   static String relicStatus(GameState s) {
     final owned = s.unlockedRelics.length;
-    return '$owned/${RelicCatalog.all.length} · next '
-        '${RelicCatalog.discoverCost(owned)} embers';
+    return '$owned of ${RelicCatalog.all.length} found · discover '
+        '${RelicCatalog.discoverCost(owned)} Embers';
   }
 
   /// PETS tile status: roster and the next hatch price (audit F051).
@@ -341,11 +341,25 @@ class EssenceTilesScreen extends StatelessWidget {
     if (!GameLogic.canAscend(state)) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-      child: GameButton(
-        label: 'ASCEND',
-        style: GameButtonStyle.brown,
-        dense: true,
-        onPressed: () => confirmAscend(context, director),
+      child: ShellLayout.card(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ShellLayout.sectionHeader('ASCEND'),
+            const SizedBox(height: 4),
+            ShellLayout.hint(
+              'Reset gold and worn gear for lasting essence power.',
+              maxLines: 3,
+            ),
+            const SizedBox(height: 8),
+            GameButton(
+              label: 'ASCEND',
+              style: GameButtonStyle.go,
+              dense: true,
+              onPressed: () => confirmAscend(context, director),
+            ),
+          ],
+        ),
       ),
     );
   }

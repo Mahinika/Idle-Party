@@ -61,8 +61,8 @@ class TownBuilding {
     ),
     TownBuilding(
       id: TownBuildingId.forge,
-      label: 'FORGE',
-      description: 'Craft and upgrade Apex gear',
+      label: 'CRAFT',
+      description: 'Town forge — Apex craft and upgrades',
     ),
     TownBuilding(
       id: TownBuildingId.market,
@@ -97,8 +97,8 @@ class TownBuilding {
   static const List<TownBuilding> frontRow = [
     TownBuilding(
       id: TownBuildingId.forge,
-      label: 'FORGE',
-      description: 'Craft and upgrade Apex gear',
+      label: 'CRAFT',
+      description: 'Town forge — Apex craft and upgrades',
     ),
     TownBuilding(
       id: TownBuildingId.market,

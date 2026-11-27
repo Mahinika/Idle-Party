@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../core/ad_rewarded.dart';
@@ -363,9 +364,11 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  BuildStamp.versionLabel(
-                                    MetaSystems.currentVersion,
-                                  ),
+                                  kReleaseMode
+                                      ? MetaSystems.currentVersion
+                                      : BuildStamp.versionLabel(
+                                          MetaSystems.currentVersion,
+                                        ),
                                   textAlign: TextAlign.center,
                                   style: GameTheme.hint(color: GameTheme.parchmentDim.withValues(
                                       alpha: 0.7,

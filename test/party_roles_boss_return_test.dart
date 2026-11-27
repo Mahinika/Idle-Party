@@ -327,7 +327,7 @@ void main() {
     );
     expect(line.data, contains('next fight'));
     expect(line.style?.color, isNot(GameTheme.accentWarn));
-    expect(find.text('OPEN GOLD'), findsNothing);
+    expect(find.text('OPEN TRAIN'), findsNothing);
     expect(find.textContaining('missed'), findsNothing);
     expect(find.textContaining('hurry'), findsNothing);
     await _writeWelcomeShot(tester, 'welcome_back_360x780.png');
@@ -724,7 +724,7 @@ void main() {
     expect(noButton, isNot(contains('Open GOLD')));
   });
 
-  testWidgets('classic OPEN GOLD is the forge and does not pay again', (
+  testWidgets('classic OPEN TRAIN is the forge and does not pay again', (
     tester,
   ) async {
     final rich = GameLogic.createInitialState(
@@ -762,9 +762,9 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.text('OPEN GOLD'), findsOneWidget);
+    expect(find.text('OPEN TRAIN'), findsOneWidget);
     await _writeWelcomeShot(tester, 'welcome_classic_forge.png');
-    await tester.tap(find.text('OPEN GOLD'));
+    await tester.tap(find.text('OPEN TRAIN'));
     await tester.pumpAndSettle();
     expect(router.route, MenuRoute.gold);
     expect(director.state.gold, 50000);
@@ -804,12 +804,12 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('OPEN GOLD'), findsOneWidget);
+    expect(find.text('OPEN TRAIN'), findsOneWidget);
     expect(find.text('OPEN ESSENCE'), findsNothing);
     await _writeWelcomeShot(tester, 'welcome_home_forge.png');
     final goldBefore = director.state.gold;
     final essenceBefore = director.state.essence;
-    await tester.tap(find.text('OPEN GOLD'));
+    await tester.tap(find.text('OPEN TRAIN'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('AP'), findsWidgets);
@@ -877,7 +877,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('OPEN ESSENCE'), findsOneWidget);
-    expect(find.text('OPEN GOLD'), findsNothing);
+    expect(find.text('OPEN TRAIN'), findsNothing);
     await tester.tap(find.text('OPEN ESSENCE'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
@@ -931,10 +931,10 @@ void main() {
     final pending = showOfflineProgressDialog(shell, director);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('OPEN GOLD'), findsOneWidget);
+    expect(find.text('OPEN TRAIN'), findsOneWidget);
     expect(find.textContaining(GameLogic.returnCanBuy), findsOneWidget);
     final goldBefore = director.state.gold;
-    await tester.tap(find.text('OPEN GOLD'));
+    await tester.tap(find.text('OPEN TRAIN'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('AP'), findsWidgets);
@@ -1059,8 +1059,8 @@ void main() {
     expect(director.state.gold, creditedGold);
     expect(director.state.essence, creditedEssence);
 
-    expect(find.text('OPEN GOLD'), findsOneWidget);
-    await tester.tap(find.text('OPEN GOLD'));
+    expect(find.text('OPEN TRAIN'), findsOneWidget);
+    await tester.tap(find.text('OPEN TRAIN'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('WELCOME BACK'), findsNothing);
@@ -1098,7 +1098,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.textContaining('still needs'), findsOneWidget);
-    expect(find.text('OPEN GOLD'), findsNothing);
+    expect(find.text('OPEN TRAIN'), findsNothing);
     expect(find.text('OPEN ESSENCE'), findsNothing);
     await _writeWelcomeShot(tester, 'welcome_home_short.png');
   });

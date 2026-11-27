@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
+import '../../../core/home_layout.dart';
 import '../../../core/game_logic.dart';
 import '../../../core/menu_router.dart';
 import '../../../core/meta_systems.dart';
@@ -190,6 +191,9 @@ class _HomePromptHostState extends State<HomePromptHost> {
 
   Future<bool> _whatsNewCard() async {
     if (_whatsNew || !mounted) return false;
+    final state = director.state;
+    // Patch notes stay in MENU when the town square is visible (audit copy polish).
+    if (state.homeLayout == HomeLayout.home && !state.inDungeon) return false;
     if (!HomePrompts.calm(director)) return false;
     if (!MetaSystems.hasUnseenChangelog(director.state)) return false;
     _whatsNew = true;

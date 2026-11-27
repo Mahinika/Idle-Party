@@ -111,7 +111,7 @@ void main() {
     addTearDown(router.dispose);
     await pumpShell(tester, director, router);
     expect(find.byType(TownViewport), findsOneWidget);
-    expect(find.text('FORGE'), findsOneWidget);
+    expect(find.text('CRAFT'), findsWidgets);
     expect(find.text('MARKET'), findsOneWidget);
     expect(find.text('INN'), findsOneWidget);
     expect(find.text('GUILD'), findsOneWidget);
@@ -129,19 +129,28 @@ void main() {
 
     await tapBuilding(tester, TownBuildingId.forge);
     expect(router.isOpen, isFalse);
-    expect(find.text('CRAFT opens after the first boss.'), findsOneWidget);
+    expect(
+      find.text('CRAFT opens after your first boss.'),
+      findsOneWidget,
+    );
     await tester.tap(find.text('CLOSE'));
     await tester.pump();
-    expect(find.text('CRAFT opens after the first boss.'), findsNothing);
+    expect(
+      find.text('CRAFT opens after your first boss.'),
+      findsNothing,
+    );
     await tapBuilding(tester, TownBuildingId.forge);
-    expect(find.text('CRAFT opens after the first boss.'), findsOneWidget);
+    expect(
+      find.text('CRAFT opens after your first boss.'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('CLOSE'));
     await tester.pump();
     await tapBuilding(tester, TownBuildingId.inn);
     expect(router.route, MenuRoute.none);
     expect(
-      find.textContaining('Party swaps unlock at first Ascend'),
+      find.textContaining('First Ascend unlocks party swaps'),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);
@@ -159,7 +168,7 @@ void main() {
     await tapBuilding(tester, TownBuildingId.forge);
     expect(router.route, MenuRoute.more);
     expect(router.moreSection, MoreSection.craft);
-    expect(find.textContaining('Tap a hero, pick a slot'), findsOneWidget);
+    expect(find.textContaining('Pick a hero and slot'), findsOneWidget);
     await tester.tap(find.text('FIGHT'));
     await tester.pump();
     expect(router.isOpen, isFalse);
@@ -267,7 +276,7 @@ void main() {
     await tester.pump();
     expect(director.state.inDungeon, isFalse);
     expect(find.byType(TownViewport), findsOneWidget);
-    expect(find.text('FORGE'), findsOneWidget);
+    expect(find.text('CRAFT'), findsWidgets);
     director.dispose();
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 20));

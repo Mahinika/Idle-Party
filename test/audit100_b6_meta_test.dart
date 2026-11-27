@@ -138,7 +138,7 @@ void main() {
         final (_, router) = await a100Pump(t, size, scale);
         router.open(MenuRoute.essence);
         await a100Settle(t);
-        expect(find.textContaining('Hand Lv'), findsOneWidget);
+        expect(find.textContaining('Next blessing:'), findsOneWidget);
         expect(find.byKey(EssenceTilesScreen.buyDotKey), findsWidgets);
         expect(t.takeException(), isNull);
       });

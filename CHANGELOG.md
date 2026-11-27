@@ -9,6 +9,7 @@ checks that this file changed.
 ## [Unreleased]
 
 - Pre-Sunday UI polish: fight HUD drops in-cave hunt lines and CLAIM over the floor, F# CLEAR clears on the next floor, loot names spawn above the party, tomorrow vault copy names shelf not wallet gold, shorter SHOP header and Play wait text, two-line hero/gear names, 360×640 @1.45 layout on home and wallet.
+- Copy polish (#136): shorter title tagline, one NEW PARTY start button, town FORGE · CRAFT naming, OPEN TRAIN on welcome back, plain ESSENCE and CRAFT lines, INN lock text matches roster size, Patch Notes no longer auto-covers the town square, and a clearer cave-cleared boss toast when no next zone opens.
 - **Hero range / positioning:** Option A′ ranges + melee arc v2 (per-spec arc radius/step, tank stand, lone-melee rank fallback, combat arc / swarm rank); see `docs/RANGE_POSITIONING_AUDIT.md`.
 - Sim nightly: tighten AoE×12 combat-share regression (parse median band, 4 trials); documents #116 spatial shift and #130 re-center (no kit coeffs in this PR).
 - **Feral melee paint:** hide travel weapon bolts from non-ranged casters; compact caster announce puff instead of full disc; Maim impact stays on target.

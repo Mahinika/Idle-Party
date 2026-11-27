@@ -164,7 +164,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           'Lv${GameLogic.maxHeroLevel}. $meter';
     }
     final need = DungeonCatalog.unlockHeroLevel(DungeonCatalog.byId('crystal'));
-    return 'Drops after Crystal Spire (party mean Lv$need). $meter';
+    return 'Drops after Crystal Spire when your party reaches Lv$need. $meter';
   }
 
   static int _haveForMat(GameState state, String matId) {
@@ -191,7 +191,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     final state = director.state;
     if (!MenuTabs.showCraft(state)) {
       return Text(
-        'CRAFT opens after the first boss.',
+        'CRAFT opens after your first boss.',
         textAlign: TextAlign.center,
         style: GameTheme.readable(color: GameTheme.parchmentDim),
       );
@@ -288,9 +288,8 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Tap a hero, pick a slot, then CRAFT. Opening this sheet saves that goal '
-          'so bosses fill the meter. Weapon R1 first. Keeps through Ascend. '
-          'DPS roll Crit + Haste; healers Mp5 + Crit + Haste.',
+          'Pick a hero and slot, then craft Apex gear. Weapon first. '
+          'Bosses fill the meter for the target you set here.',
           style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
@@ -451,7 +450,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
       return [
         const SizedBox(height: 4),
         Text(
-          'Crafts at AL${state.ascensionLevel}',
+          'Crafted at Ascend ${state.ascensionLevel} power',
           style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 4),

@@ -166,16 +166,16 @@ void main() {
           expect(find.text('FARM'), findsOneWidget);
           expect(find.text('PUSH'), findsOneWidget);
         } else {
-          expect(find.text('FORGE'), findsWidgets);
+          expect(find.text('CRAFT'), findsWidgets);
           expect(find.text('MARKET'), findsWidgets);
           expect(find.text('INN'), findsWidgets);
           expect(find.text('GUILD'), findsWidgets);
           expect(
-            tester.getSize(find.text('FORGE').first).height,
+            tester.getSize(find.text('CRAFT').first).height,
             greaterThan(10),
           );
           expect(
-            tester.getSize(find.text('FORGE').first).width,
+            tester.getSize(find.text('CRAFT').first).width,
             greaterThan(28),
           );
         }
@@ -193,7 +193,7 @@ void main() {
           );
           expect(find.text('FIGHT'), findsOneWidget);
           if (!dungeon) {
-            expect(find.text('FORGE'), findsWidgets);
+            expect(find.text('CRAFT'), findsWidgets);
           }
         },
       );
@@ -219,7 +219,7 @@ void main() {
     final label = tester.getRect(find.text('FIGHT'));
     expect(640 - label.bottom, greaterThanOrEqualTo(34));
     expect(find.text('HEROES'), findsOneWidget);
-    expect(find.text('FORGE'), findsWidgets);
+    expect(find.text('CRAFT'), findsWidgets);
     expect(find.text('INN'), findsWidgets);
   });
 
@@ -264,7 +264,7 @@ void main() {
         expect(find.text('CAMP'), findsWidgets);
         expect(find.text('FARM'), findsOneWidget);
       } else {
-        expect(find.text('FORGE'), findsWidgets);
+        expect(find.text('CRAFT'), findsWidgets);
         expect(find.text('MARKET'), findsWidgets);
         expect(find.text('INN'), findsWidgets);
       }

@@ -15,11 +15,13 @@ void main() {
 
   test('intro and ascend copy stay short and present', () {
     expect(StoryLore.introTagline, contains('party'));
-    expect(StoryLore.introSubline.toLowerCase(), contains('offline'));
-    expect(StoryLore.introSubline.toLowerCase(), contains('hub afk'));
     expect(StoryLore.introSubline.toLowerCase(), contains('essence'));
-    expect(StoryLore.introSubline.toLowerCase(), contains('mid-dungeon'));
-    expect(StoryLore.introTagline.toLowerCase(), contains('when you leave'));
+    expect(StoryLore.introSubline.toLowerCase(), contains('gold'));
+    expect(StoryLore.introTagline.toLowerCase(), contains("you're away"));
+    expect(
+      StoryLore.bossNextLine(clearedId: 'veil', nextDungeonId: null),
+      StoryLore.dungeonCleared('veil'),
+    );
     expect(StoryLore.introBeats.first.body.toLowerCase(), contains('without you'));
     expect(StoryLore.introBeats.first.body.toLowerCase(), contains('send them in'));
     expect(StoryLore.introBeats.first.body.toLowerCase(), isNot(contains('fist')));
