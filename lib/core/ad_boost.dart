@@ -12,8 +12,11 @@ abstract final class AdBoost {
   static const int minuteMs = 60 * 1000;
   static const int maxStackMs = 24 * hourMs;
 
-  /// Tickets granted per finished rewarded ad (or ad-free daily claim).
+  /// Tickets granted per finished rewarded ad.
   static const int ticketsPerAd = 1;
+
+  /// Ad-free claims this many tickets once per UTC day.
+  static const int adFreeDailyTickets = 5;
 
   /// Extra attack while Sharp Edge / Full Boost ATK timer is running.
   /// Felt vs GOLD ATK tracks; still far from a second combat class / +100%.
@@ -51,9 +54,13 @@ abstract final class AdBoost {
   static bool hasPerm(MetaDepthState md, int bit) =>
       (md.shopPermScrolls & bit) == bit && bit != 0;
 
-  /// Sharp Edge / Gold Rush / Study / Fleet / Lucky duration per ticket.
+  /// Sharp Edge / Study / Fleet / Lucky / Haste duration per ticket.
   static const int splitHours = 2;
   static const int splitMs = splitHours * hourMs;
+
+  /// Scroll of Gold (Gold Rush) per ticket. Other splits stay at [splitHours].
+  static const int goldRushHours = 4;
+  static const int goldRushMs = goldRushHours * hourMs;
 
   /// Full Boost: both timers (best ticket value vs buying splits).
   static const int hoursPerAd = 4;
@@ -312,7 +319,7 @@ class AdBuffOffer {
     AdBuffId.atk =>
       '+${AdBoost.attackPercent}% ATK · ${AdBoost.splitHours}h',
     AdBuffId.gold =>
-      '×${AdBoost.goldMul} gold · ${AdBoost.splitHours}h',
+      '×${AdBoost.goldMul} gold · ${AdBoost.goldRushHours}h',
     AdBuffId.xp =>
       '+${AdBoost.xpPercent}% party XP · ${AdBoost.splitHours}h',
     AdBuffId.move =>
@@ -343,9 +350,9 @@ abstract final class AdBuffCatalog {
       id: AdBuffId.gold,
       label: 'Scroll of Gold',
       blurb:
-          '×${AdBoost.goldMul} all gold (kills, chests, hub AFK) for ${AdBoost.splitHours} hours',
+          '×${AdBoost.goldMul} all gold (kills, chests, hub AFK) for ${AdBoost.goldRushHours} hours',
       ticketCost: 1,
-      durationMs: AdBoost.splitMs,
+      durationMs: AdBoost.goldRushMs,
     ),
     AdBuffOffer(
       id: AdBuffId.xp,

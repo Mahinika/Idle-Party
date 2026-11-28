@@ -9,6 +9,7 @@ import 'ad_boost.dart';
 import 'economy_service.dart';
 import 'encounter_factory.dart';
 import 'game_state.dart';
+import 'gold_income.dart';
 import 'keystone.dart';
 import 'remote_tune.dart';
 
@@ -38,11 +39,14 @@ abstract final class WispGift {
   /// Wallet floor cannot exceed this many reference floors (anti-whale spike).
   static const int watchWalletCapFloorMul = 120;
 
+  /// WATCH is at least this many minutes of hub gold (2 hours).
+  static const int watchHubFloorMinutes = 120;
+
   /// Live cadence. Debug builds (emulator) spawn often with no daily cap
   /// so the gift can be tried without waiting. Release keeps the real loop.
-  static const int releaseDailyCap = 6;
+  static const int releaseDailyCap = 8;
   static const int releaseFirstDelayMs = 90 * 1000;
-  static const int releaseIntervalMs = 10 * 60 * 1000;
+  static const int releaseIntervalMs = 8 * 60 * 1000;
   static const int releaseVisibleMs = 10 * 1000;
 
   /// Debug stays on the fast loop until Firebase publishes a WISP number
@@ -197,7 +201,10 @@ abstract final class WispGift {
     final rawWallet = state.gold <= 0 ? 0 : state.gold ~/ watchWalletDivisor;
     final walletCap = max(fromFloors, ref * watchWalletCapFloorMul);
     final fromWallet = min(rawWallet, walletCap);
-    return max(1, max(fromKeepBand, max(fromFloors, fromWallet)));
+    final fromFormula = max(1, max(fromKeepBand, max(fromFloors, fromWallet)));
+    final hubFloor =
+        GoldIncome.hubGoldPerMinute(state) * watchHubFloorMinutes;
+    return max(fromFormula, hubFloor);
   }
 
   static bool shouldSpawn(MetaDepthState md, int nowMs) {

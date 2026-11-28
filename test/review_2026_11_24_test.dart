@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/ad_offer.dart';
 import 'package:idle_party/core/ad_rewarded.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
@@ -363,9 +364,11 @@ void main() {
       expect(director.state.gold, gold);
       gate.complete(AdWatchResult.rewarded);
       expect(await welcome, isTrue);
-      expect(director.state.gold, gold + 40);
+      final extra = AdOffer.welcomeExtraGold(director.state, 40);
+      expect(extra, greaterThanOrEqualTo(80));
+      expect(director.state.gold, gold + extra);
       expect(await director.watchWelcomeBackGoldAd(40), isFalse);
-      expect(director.state.gold, gold + 40);
+      expect(director.state.gold, gold + extra);
     });
   });
 }

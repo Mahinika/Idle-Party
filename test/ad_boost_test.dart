@@ -124,19 +124,43 @@ void main() {
     expect(after.metaDepth.adAtkUntilMs, atk);
   });
 
-  test('ad-free daily ticket once per UTC day', () {
+  test('ad-free daily tickets are five, once per UTC day', () {
     var state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
     state = state.copyWith(metaDepth: state.metaDepth.copyWith(adFree: true));
     final day = DateTime.utc(2026, 9, 6, 12);
     state = GameLogic.claimAdFreeDailyTicket(state, now: day);
-    expect(state.metaDepth.adTickets, 1);
+    expect(state.metaDepth.adTickets, AdBoost.adFreeDailyTickets);
+    expect(AdBoost.adFreeDailyTickets, 5);
     final again = GameLogic.claimAdFreeDailyTicket(state, now: day);
-    expect(again.metaDepth.adTickets, 1);
+    expect(again.metaDepth.adTickets, AdBoost.adFreeDailyTickets);
     final nextDay = GameLogic.claimAdFreeDailyTicket(
       state,
       now: DateTime.utc(2026, 9, 7, 1),
     );
-    expect(nextDay.metaDepth.adTickets, 2);
+    expect(nextDay.metaDepth.adTickets, AdBoost.adFreeDailyTickets * 2);
+  });
+
+  test('Scroll of Gold lasts 4h and the other splits stay 2h', () {
+    expect(AdBoost.goldRushHours, 4);
+    expect(AdBoost.splitHours, 2);
+    expect(AdBoost.maxStackMs, 24 * AdBoost.hourMs);
+    final gold = AdBuffCatalog.byId(AdBuffId.gold);
+    final atk = AdBuffCatalog.byId(AdBuffId.atk);
+    expect(gold.durationMs, AdBoost.goldRushMs);
+    expect(gold.effect, contains('4h'));
+    expect(atk.durationMs, AdBoost.splitMs);
+    expect(atk.effect, contains('2h'));
+    var state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
+    state = GameLogic.grantAdTicket(state);
+    state = GameLogic.spendAdBuff(state, AdBuffId.gold, nowMs: now);
+    expect(
+      state.metaDepth.adGoldUntilMs - now,
+      AdBoost.goldRushMs,
+    );
+    expect(
+      AdBoost.remainingMs(state.metaDepth.adGoldUntilMs, nowMs: now),
+      lessThanOrEqualTo(AdBoost.maxStackMs),
+    );
   });
 
   test('extendUntil helper still caps at 24h', () {
@@ -248,7 +272,7 @@ void main() {
   });
 
   test(
-    'welcome back watch doubles gold and essence and keeps the old save',
+    'welcome back watch triples gold and essence and keeps the old save',
     () {
       final fresh = GameLogic.createInitialState(
         now: DateTime.utc(2026, 8, 21),
@@ -261,20 +285,28 @@ void main() {
         essence: 5,
         lifetimeGoldEarned: 100,
       );
+      final extra = AdOffer.welcomeExtraGold(state, 40);
+      expect(extra, greaterThanOrEqualTo(40 * (AdOffer.welcomeMul - 1)));
+      expect(
+        extra,
+        greaterThanOrEqualTo(
+          GoldIncome.hubGoldPerMinute(state) * AdOffer.welcomeFloorMinutes,
+        ),
+      );
       final next = GameLogic.grantWelcomeBackWatchGold(
         state,
         40,
         baseEssence: 2,
       );
-      expect(next.gold, 140);
-      expect(next.essence, 7);
-      expect(next.lifetimeGoldEarned, 140);
+      expect(next.gold, 100 + extra);
+      expect(next.essence, 5 + AdOffer.welcomeExtraEssence(2));
+      expect(next.lifetimeGoldEarned, 100 + extra);
       expect(next.metaDepth.adTickets, 0);
       expect(next.metaDepth.adOfflineMulPending, isFalse);
       expect(next.metaDepth.toJson().containsKey('welcomeBackAd'), isFalse);
       final loaded = GameLogic.stateFromJson(next.toJson());
-      expect(loaded.gold, 140);
-      expect(loaded.lifetimeGoldEarned, 140);
+      expect(loaded.gold, 100 + extra);
+      expect(loaded.lifetimeGoldEarned, 100 + extra);
 
       final free = state.copyWith(
         metaDepth: state.metaDepth.copyWith(adFree: true),
@@ -313,7 +345,7 @@ void main() {
     expect(open.awayGoldMultiplied, isFalse);
     expect(open.welcomeBackAdOffer, isTrue);
     expect(open.welcomeBackAdLabel, AdOffer.welcomeLabel);
-    expect(open.welcomeBackAdLabel, 'Watch ad: 2× offline loot');
+    expect(open.welcomeBackAdLabel, 'Watch ad: 3× offline loot');
 
     final armed = GameLogic.spendAdBuff(
       GameLogic.grantAdTicket(played),
