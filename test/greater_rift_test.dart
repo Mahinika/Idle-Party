@@ -464,6 +464,7 @@ void main() {
     expect(resolved, isNotNull);
     final notes = LogicNotices.takeMetaPayoffs().join(' ');
     expect(notes, contains('Ranked GR1 · 00:12 over par'));
+    expect(notes, contains('+${GreaterRift.failEssence(1)}e'));
     expect(notes.contains('wipe'), isFalse);
     expect(notes.contains('failed'), isFalse);
   });

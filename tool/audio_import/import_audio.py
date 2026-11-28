@@ -500,7 +500,7 @@ def write_note(music_rows: list[tuple]) -> None:
         "| `music/boss.ogg` | Owned synth (“Unresolved Crown”) | Owned |",
         "| `music/resolve.ogg` | Owned synth (“Floor Breath”) | Owned |",
         "| `music/down.ogg` | Owned synth (“The Drop”) | Owned |",
-        "| `music/dungeon.mp3` | Owned ElevenLabs spare. Not played. | Owned |",
+        "| dungeon.mp3 (spare) | Owned ElevenLabs. `tool/audio_spare/dungeon.mp3` — not in the APK | Owned |",
     ]
     for name, title, url, author, _dur in music_rows:
         lines.append(f"| `music/{name}` | [{title}]({url}) by {author} | CC0 |")

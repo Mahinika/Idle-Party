@@ -792,8 +792,7 @@ abstract final class CombatPresence {
       if (!_clearSight(world, x, y, target.x, target.y)) return false;
       final stackedColumn = world.heroes
               .where((h) => h.isAlive && h.id != hero.id && !isBackliner(h))
-              .length >=
-          1 &&
+              .isNotEmpty &&
           world.heroes
               .where((h) => h.isAlive && h.id != hero.id && !isBackliner(h))
               .every(

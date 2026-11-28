@@ -28,6 +28,7 @@ import 'analytics_events.dart';
 import 'app_analytics.dart';
 import 'onboarding_funnel.dart';
 import 'build_stamp.dart';
+import 'crash_report.dart';
 import 'debug_play_log.dart';
 import 'fight_frame_budget.dart';
 import 'funnel_analytics.dart';
@@ -1014,6 +1015,14 @@ class GameDirector extends ChangeNotifier {
         uiTextScale: value.clamp(kUiTextScaleMin, kUiTextScaleMax),
       ),
     );
+  }
+
+  /// Live preview while dragging SETTINGS text scale (no save until [setUiTextScale]).
+  void previewUiTextScale(double value) {
+    final scaled = value.clamp(kUiTextScaleMin, kUiTextScaleMax);
+    if (_state.uiTextScale == scaled) return;
+    _state = _state.copyWith(uiTextScale: scaled);
+    _directorNotify();
   }
 
   void resetDisplayDefaults() {

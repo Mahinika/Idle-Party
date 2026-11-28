@@ -153,7 +153,8 @@ class _Is2ShellState extends State<Is2Shell> {
   double _partyStripHeight(BuildContext context, GameDirector d) {
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final partyRows = d.state.combatHeroes.length.clamp(1, 5);
-    return partyRows * 32.0 * textScale +
+    final rowHeight = (32.0 * textScale).clamp(28.0, 46.0);
+    return partyRows * rowHeight +
         (GameLogic.canUseConsumable(d.state)
             ? DungeonFlaskButton.stripReserve
             : 0);
@@ -275,6 +276,7 @@ class _Is2FightTopBar extends StatefulWidget {
 
 class _Is2FightTopBarState extends State<_Is2FightTopBar> {
   late Object _token;
+  var _measureScheduled = false;
 
   @override
   void initState() {
@@ -282,6 +284,23 @@ class _Is2FightTopBarState extends State<_Is2FightTopBar> {
     _token = _readToken();
     widget.director.addListener(_onDirector);
     widget.router.addListener(_onDirector);
+    _scheduleOnMeasured();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _scheduleOnMeasured();
+  }
+
+  void _scheduleOnMeasured() {
+    if (_measureScheduled) return;
+    _measureScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureScheduled = false;
+      if (!mounted) return;
+      widget.onMeasured();
+    });
   }
 
   @override
@@ -295,6 +314,7 @@ class _Is2FightTopBarState extends State<_Is2FightTopBar> {
     final next = _readToken();
     if (next == _token) return;
     setState(() => _token = next);
+    _scheduleOnMeasured();
   }
 
   Object _readToken() {
@@ -320,7 +340,6 @@ class _Is2FightTopBarState extends State<_Is2FightTopBar> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => widget.onMeasured());
     final d = widget.director;
     final state = d.state;
     return Column(

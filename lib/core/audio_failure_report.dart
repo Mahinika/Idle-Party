@@ -54,7 +54,7 @@ abstract final class AudioFailureReport {
       );
     } catch (e, st) {
       _reported.remove(path);
-      debugPrint('AudioFailureReport failed: $e\n$st');
+      if (kDebugMode) debugPrint('AudioFailureReport failed: $e\n$st');
     }
   }
 }

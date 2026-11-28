@@ -57,6 +57,13 @@ list is marked done and emits nothing.
 | `first_boss` | — | First boss clear. |
 | `first_upgrade` | — | First forge gold spend. |
 | `d1_return` | `days_since_install` | First open on a later UTC day. |
+| `d7_return` | `days_since_install` | First session on or after UTC day 7 (once). |
+| `d14_return` | `days_since_install` | First session on or after UTC day 14 (once). |
+| `d30_return` | `days_since_install` | First session on or after UTC day 30 (once). |
+| `boss_clear` | `dungeon_id`, `floor` | Every boss room clear (not first-boss funnel). |
+| `daily_run_complete` | `dungeon_id`, `floor` | Daily Run echo cleared and reward claimed. |
+| `notify_prompt_shown` | — | Away-reminder opt-in card shown. |
+| `notify_later` | — | Player tapped LATER on that card. |
 | `coach_step` | `tip_id` | First-session coach tip completed (`dismissTip`). |
 
 ## Welcome Back & rewarded ads

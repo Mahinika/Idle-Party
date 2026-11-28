@@ -403,7 +403,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
           targetHeight: targetHeight,
         );
       } catch (e, st) {
-        debugPrint('DecodedImageCache soft load failed ($asset): $e\n$st');
+        if (kDebugMode) debugPrint('DecodedImageCache soft load failed ($asset): $e\n$st');
         return null;
       }
     }

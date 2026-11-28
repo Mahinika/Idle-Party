@@ -24,6 +24,7 @@ import 'relics.dart';
 import 'dungeon_generator.dart';
 import 'economy_service.dart';
 import 'blessing_constellation.dart';
+import 'crash_report.dart';
 import 'game_state.dart';
 import 'save_needs_update.dart';
 import 'gauntlet_pact.dart';
@@ -2441,7 +2442,8 @@ class GameLogic {
       if (decoded is! Map) return false;
       return saveVersionOf(Map<String, dynamic>.from(decoded)) >
           GameState.saveVersion;
-    } catch (_) {
+    } catch (e, st) {
+      CrashReport.recordNonFatal(e, st, reason: 'game_logic:raw_save_version');
       return false;
     }
   }
@@ -2576,7 +2578,7 @@ class GameLogic {
       _noteSaveNeedsUpdate();
       return null;
     } catch (e, st) {
-      debugPrint('GameLogic.importSaveJson failed: $e\n$st');
+      if (kDebugMode) debugPrint('GameLogic.importSaveJson failed: $e\n$st');
       return null;
     } finally {
       if (logic != null) {

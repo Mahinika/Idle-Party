@@ -85,12 +85,11 @@ void main() {
         highestFloorCleared: 1,
         lifetimeGoldEarned: 8,
         metaDepth: state.metaDepth.copyWith(
-          dailyVaultDate: MetaSystems.dailyDateKey(DateTime.now().toUtc()),
+          dailyVaultDate: MetaSystems.dailyDateKey(now),
           dailyVaultClears: GameLogic.dailyVaultClearTarget,
         ),
       );
       final director = GameDirector.preview(initialState: state);
-      await director.boot();
       expect(GameLogic.canClaimDailyVault(director.state), isTrue);
       expect(GameLogic.showDailyChase(director.state), isFalse);
       expect(
@@ -105,17 +104,17 @@ void main() {
         contains('vault'),
       );
       final before = director.state.essence;
-      director.claimDailyVault();
-      expect(director.state.inDungeon, isTrue);
-      expect(director.state.metaDepth.dailyVaultClaimed, isTrue);
-      expect(director.state.essence, greaterThan(before));
-      expect(GameLogic.checkInActive(director.state), isFalse);
+      final claimed = GameLogic.claimDailyVault(director.state, now: now);
+      expect(claimed.inDungeon, isTrue);
+      expect(claimed.metaDepth.dailyVaultClaimed, isTrue);
+      expect(claimed.essence, greaterThan(before));
+      expect(GameLogic.checkInActive(claimed), isFalse);
       expect(
-        FirstClimbCoach.line(director.state, inDungeon: true),
+        FirstClimbCoach.line(claimed, inDungeon: true),
         'Floor 1 paid out. Boss on floor 2.',
       );
       expect(
-        FirstClimbCoach.wipeLine(director.state),
+        FirstClimbCoach.wipeLine(claimed),
         'The boss is still on floor 2.',
       );
       director.dispose();

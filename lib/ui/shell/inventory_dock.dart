@@ -176,6 +176,7 @@ class _InventoryDockState extends State<InventoryDock>
     with TickerProviderStateMixin {
   late final FlexTabs _tabs;
   List<GearPanel> _visible = const [GearPanel.gear, GearPanel.bag];
+  GearPanel? _resyncScheduled;
   bool _showFilters = false;
   bool _upgradesOnlyFilter = false;
   bool _longPressTipShown = false;
@@ -243,6 +244,15 @@ class _InventoryDockState extends State<InventoryDock>
       },
     );
     _maybeOpenRosterForMeet();
+  }
+
+  void _schedulePanelResync(GearPanel target) {
+    if (_resyncScheduled == target) return;
+    _resyncScheduled = target;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _resyncScheduled = null;
+      if (mounted && widget.panel != target) widget.onPanelChanged(target);
+    });
   }
 
   void _maybeOpenRosterForMeet({bool revealJustArrived = false}) {
@@ -1187,9 +1197,7 @@ class _InventoryDockState extends State<InventoryDock>
         ? widget.panel
         : _visible.first;
     if (safeTab != widget.panel) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) widget.onPanelChanged(safeTab);
-      });
+      _schedulePanelResync(safeTab);
     }
     final pages = <({String label, Widget body})>[
       for (final tab in _visible)
