@@ -33,7 +33,7 @@ Status values: **fixed** | **verified-not-real** | **skipped-needs-approval** | 
 | IP-034 | fixed | fixlist batch 2 copy/UI |
 | IP-035 | fixed | fixlist batch 2 copy/UI |
 | IP-036 | fixed | fixlist batch 2 copy/UI |
-| IP-037 | fixed | fixlist batch 2 copy/UI |
+| IP-037 | fixed | Rail HUD shows SCROLLS shelf; WATCH ad icon keeps WATCH label (no dup a11y) |
 | IP-038 | fixed | fixlist batch 2 copy/UI |
 | IP-039 | fixed | fixlist batch 2 copy/UI |
 | IP-040 | fixed | fixlist batch 2 copy/UI |
@@ -316,7 +316,19 @@ Status values: **fixed** | **verified-not-real** | **skipped-needs-approval** | 
 
 ## Goldens changed (list every path in repo diff vs 751c72ac)
 
+- `test/goldens/after/fight_a56.png`
+- `test/goldens/after/fight_hit_a56.png`
+- `test/goldens/after/fight_hit_min_a56.png`
+- `test/goldens/after/gear_a56.png`
+- `test/goldens/after/gold_a56.png`
+- `test/goldens/after/home_shell_fight_a56.png`
+- `test/goldens/after/home_shell_full_a56.png`
+- `test/goldens/after/home_shell_split_a56.png`
+- `test/goldens/after/home_shop_compact_a56.png`
+- `test/goldens/after/scrolls_a56.png`
+- `test/goldens/after/shop_a56.png`
 - `test/goldens/widgets/playtest_gear_equip_360_scale145.png`
+- `test/goldens/widgets/playtest_home_topbar_elite_411.png`
 
 ## CI placeholder
 
