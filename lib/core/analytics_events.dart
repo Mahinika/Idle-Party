@@ -43,6 +43,10 @@ abstract final class AnalyticsEvents {
   static const questReroll = 'quest_reroll';
 
   static const notifyOpen = 'notify_open';
+  static const notifyPromptShown = 'notify_prompt_shown';
+  static const notifyLater = 'notify_later';
+  static const bossClear = 'boss_clear';
+  static const dailyRunComplete = 'daily_run_complete';
 
   /// Matches [FirstSessionTips.tips] ids (coach only, not boot intro).
   static const Set<String> coachTipIds = {

@@ -230,6 +230,29 @@ abstract final class AppAnalytics {
   static Future<void> notifyOpen({required String channel}) =>
       logEvent(AnalyticsEvents.notifyOpen, {'channel': channel});
 
+  static Future<void> notifyPromptShown() =>
+      logEvent(AnalyticsEvents.notifyPromptShown);
+
+  static Future<void> notifyLater() => logEvent(AnalyticsEvents.notifyLater);
+
+  static Future<void> bossClear({
+    required String dungeonId,
+    required int floor,
+  }) =>
+      logEvent(AnalyticsEvents.bossClear, {
+        'dungeon_id': dungeonId,
+        'floor': floor,
+      });
+
+  static Future<void> dailyRunComplete({
+    required String dungeonId,
+    required int floor,
+  }) =>
+      logEvent(AnalyticsEvents.dailyRunComplete, {
+        'dungeon_id': dungeonId,
+        'floor': floor,
+      });
+
   /// Seconds this foreground stint lasted. Sent when the app backgrounds.
   static Future<void> sessionLength(int seconds) =>
       logEvent('session_length', {'seconds': seconds});

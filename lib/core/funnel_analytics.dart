@@ -27,6 +27,9 @@ abstract final class FunnelAnalytics {
   static const firstReward = 'first_reward';
   static const firstBoss = 'first_boss';
   static const d1Return = 'd1_return';
+  static const d7Return = 'd7_return';
+  static const d14Return = 'd14_return';
+  static const d30Return = 'd30_return';
   static const timeToCombat = 'time_to_combat';
 
   /// Screens before a save exists. Logged by [BootFunnel], not [onNewInstall],
@@ -59,6 +62,9 @@ abstract final class FunnelAnalytics {
     firstReward,
     firstBoss,
     d1Return,
+    d7Return,
+    d14Return,
+    d30Return,
     timeToCombat,
     firstUpgrade,
   ];
@@ -71,6 +77,9 @@ abstract final class FunnelAnalytics {
     firstReward,
     firstBoss,
     d1Return,
+    d7Return,
+    d14Return,
+    d30Return,
     timeToCombat,
     firstUpgrade,
   ];
@@ -120,6 +129,11 @@ abstract final class FunnelAnalytics {
     if (d1 != null) {
       next = d1.state;
       events.addAll(d1.events);
+    }
+    final dn = _maybeDayNReturns(next, now);
+    if (dn != null) {
+      next = dn.state;
+      events.addAll(dn.events);
     }
     final progress = reconcileProgress(next, now);
     next = progress.state;
@@ -233,6 +247,28 @@ abstract final class FunnelAnalytics {
     return FunnelTick(_mark(state, d1Return), [
       FunnelHit(d1Return, {'days_since_install': days}),
     ]);
+  }
+
+  /// Day 7 / 14 / 30 return markers — once each per save install.
+  static FunnelTick? _maybeDayNReturns(GameState state, DateTime now) {
+    final installMs = state.metaDepth.funnelInstallMs;
+    if (installMs <= 0) return null;
+    final install = DateTime.fromMillisecondsSinceEpoch(installMs, isUtc: true);
+    final days = utcCalendarDaysApart(install, now.toUtc());
+    var next = state;
+    final events = <FunnelHit>[];
+    for (final hit in <(String, int)>[
+      (d7Return, 7),
+      (d14Return, 14),
+      (d30Return, 30),
+    ]) {
+      final (name, need) = hit;
+      if (has(next, name) || days < need) continue;
+      next = _mark(next, name);
+      events.add(FunnelHit(name, {'days_since_install': days}));
+    }
+    if (events.isEmpty) return null;
+    return FunnelTick(next, events);
   }
 
   static int utcCalendarDaysApart(DateTime fromUtc, DateTime toUtc) {

@@ -78,6 +78,11 @@ The older exploration **Första sessionen** (`first_open` → `first_enter` →
 `onboarding_launch` has volume. Do not add `store_purchase` value on top
 of `in_app_purchase`.
 
+**Per-save funnel order:** `first_reward` (first combat gold) can appear
+before `first_boss` in explorations because it stamps on lifetime gold, not
+boss clears. Onboarding step order (boss at `step_index` 4) stays the
+product truth for the install funnel above.
+
 ## 3. Retention
 
 No new session event.
@@ -87,8 +92,9 @@ No new session event.
 - **Cohort:** user property `install_cohort`. Breakdown of `session_start`
   or `app_cold_start` by that property.
 - **Day-N:** user property `days_since_install`, or the same param on
-  `app_cold_start`. `d1_return` is still the first later UTC day on that
-  save (once per save, not per install).
+  `app_cold_start`. `d1_return`, `d7_return`, `d14_return`, and `d30_return`
+  fire once each when `days_since_install` crosses that UTC threshold (per save
+  install clock).
 
 Card: **Explore** → **Free form**. Rows: `install_cohort`. Values: event
 count of `session_start`. Filter `build_mode` = `release`.
