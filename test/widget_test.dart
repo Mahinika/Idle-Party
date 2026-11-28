@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/shop_catalog.dart';
@@ -26,6 +28,12 @@ Future<void> pumpSheet(WidgetTester tester) async {
 /// Hub cards (thanks / reminders / what's new) sit on a scrim. Dismiss so
 /// the bottom bar can be tapped. A card can land on the frame after the
 /// last one closes, so look twice before giving up.
+GameDirector _classicDirector({GameState? initialState}) {
+  final base = initialState ??
+      GameLogic.createInitialState().copyWith(homeLayout: HomeLayout.classic);
+  return GameDirector.preview(initialState: base);
+}
+
 Future<void> dismissHubPrompts(WidgetTester tester) async {
   for (var i = 0; i < 4; i++) {
     await tester.pump();
@@ -56,7 +64,7 @@ Future<void> dismissHubPrompts(WidgetTester tester) async {
 
 void main() {
   testWidgets('renders the idle party hub', (WidgetTester tester) async {
-    final director = GameDirector.preview();
+    final director = _classicDirector();
 
     // Tall phone: short-height collapse is off so ascend progress stays visible.
     tester.view.physicalSize = const Size(400, 860);
@@ -82,7 +90,7 @@ void main() {
   });
 
   testWidgets('short hub keeps pillars without early KEYSTONE', (WidgetTester tester) async {
-    final director = GameDirector.preview();
+    final director = _classicDirector();
 
     tester.view.physicalSize = const Size(390, 640);
     tester.view.devicePixelRatio = 1.0;
@@ -125,6 +133,7 @@ void main() {
     );
     final director = GameDirector.preview(
       initialState: base.copyWith(
+        homeLayout: HomeLayout.classic,
         heroRoster: [
           for (final h in base.heroRoster)
             h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
@@ -163,6 +172,7 @@ void main() {
     final director = GameDirector.preview(
       initialState:
           GameLogic.createInitialState().copyWith(
+            homeLayout: HomeLayout.classic,
             highestDungeonCleared: 0,
             highestFloorCleared: 1,
             lifetimeGoldEarned: 100,
@@ -211,6 +221,7 @@ void main() {
     final director = GameDirector.preview(
       initialState:
           GameLogic.createInitialState().copyWith(
+            homeLayout: HomeLayout.classic,
             highestDungeonCleared: 0,
             highestFloorCleared: 1,
             lifetimeGoldEarned: 100,
@@ -237,7 +248,7 @@ void main() {
   });
 
   testWidgets('compact phone viewport keeps bottom nav usable', (WidgetTester tester) async {
-    final director = GameDirector.preview();
+    final director = _classicDirector();
     await director.boot();
     director.enterDungeon();
 
@@ -270,6 +281,7 @@ void main() {
 
   testWidgets('menu badge points at bag upgrades', (WidgetTester tester) async {
     final seeded = GameLogic.createInitialState().copyWith(
+      homeLayout: HomeLayout.classic,
       seenChangelogVersion: MetaSystems.currentVersion,
       seenTips: [
         for (final t in FirstSessionTips.tips) t.id,
@@ -319,7 +331,7 @@ void main() {
   });
 
   testWidgets('wide desktop viewport still opens overlays', (WidgetTester tester) async {
-    final director = GameDirector.preview();
+    final director = _classicDirector();
     await director.boot();
     director.enterDungeon();
 
@@ -346,6 +358,7 @@ void main() {
   testWidgets('GOLD → MARKET opens listings without a dim crash', (tester) async {
     final director = GameDirector.preview(
       initialState: GameLogic.createInitialState().copyWith(
+        homeLayout: HomeLayout.classic,
         highestFloorCleared: 1,
         lifetimeGoldEarned: 100,
         gold: 500,
@@ -387,7 +400,7 @@ void main() {
   });
 
   testWidgets('GEAR pauses dungeon combat but not hub', (tester) async {
-    final director = GameDirector.preview();
+    final director = _classicDirector();
     tester.view.physicalSize = const Size(360, 780);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);

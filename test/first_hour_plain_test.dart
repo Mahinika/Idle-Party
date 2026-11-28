@@ -169,12 +169,10 @@ void main() {
     final director = GameDirector.preview();
     await director.boot();
     await director.startNewGame(HeroSpecs.starterUnlocked);
-    expect(director.state.inDungeon, isFalse);
-    expect(FirstSessionTips.nextTipId(director.state, inDungeon: false), 'first_run');
-    director.enterDungeon(dungeonId: 'sandy');
     expect(director.state.inDungeon, isTrue);
     expect(director.state.dungeonId, 'sandy');
     expect(director.state.seenTips, contains('first_run'));
+    expect(FirstSessionTips.nextTipId(director.state, inDungeon: false), isNull);
     director.dispose();
   });
 

@@ -78,11 +78,19 @@ void main() {
   });
 
   test('reuse notice for Sep/Oct boards stays soft', () {
-    expect(PlayLeaderboardIds.reusedBoardNotice('2026-09'), contains('August'));
-    expect(PlayLeaderboardIds.reusedBoardNotice('2026-09'), contains('September'));
-    expect(PlayLeaderboardIds.reusedBoardNotice('2026-10'), contains('August'));
-    expect(PlayLeaderboardIds.reusedBoardNotice('2026-10'), contains('September'));
+    expect(
+      PlayLeaderboardIds.reusedBoardNotice('2026-09'),
+      contains('earlier month'),
+    );
+    expect(
+      PlayLeaderboardIds.reusedBoardNotice('2026-10'),
+      contains('earlier month'),
+    );
     expect(PlayLeaderboardIds.reusedBoardNotice('2026-08'), isNull);
+    expect(
+      PlayLeaderboardIds.reusedBoardNotice('2026-09')!,
+      isNot(contains('Console')),
+    );
   });
 
   test('forge MOVE/HASTE/CRIT gains are 2 points each', () {

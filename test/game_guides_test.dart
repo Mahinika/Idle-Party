@@ -112,6 +112,11 @@ void main() {
       isTrue,
     );
     for (final t in topics) {
+      final bullets = t.body
+          .split('\n')
+          .where((line) => line.trimLeft().startsWith('•'))
+          .length;
+      expect(bullets, lessThanOrEqualTo(5), reason: '${t.id} has $bullets bullets');
       expect(t.title, isNotEmpty);
       expect(t.body.length, greaterThan(40));
       expect(

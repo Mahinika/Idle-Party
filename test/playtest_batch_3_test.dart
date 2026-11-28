@@ -21,6 +21,7 @@ import 'package:idle_party/ui/shell/home/rail_button.dart';
 import 'package:idle_party/ui/shell/dungeon_loot_log.dart';
 import 'package:idle_party/ui/shell/dungeon_top_hud.dart';
 import 'package:idle_party/ui/shell/home/fight_seam.dart';
+import 'package:idle_party/ui/shell/home/town_scene.dart';
 import 'package:idle_party/ui/shell/home/town_viewport.dart';
 import 'package:idle_party/ui/shell/inventory_dock.dart';
 import 'package:idle_party/ui/shell/menu_surface.dart';
@@ -361,21 +362,30 @@ void main() {
       ),
     );
     await tester.pump();
-    final vaultTexts = find.text('VAULT');
-    expect(vaultTexts, findsWidgets);
-    RenderParagraph? plaque;
-    for (final e in vaultTexts.evaluate()) {
-      final p = e.renderObject! as RenderParagraph;
-      if (p.text.toPlainText() == 'VAULT' && !p.didExceedMaxLines) {
-        plaque = p;
-        break;
-      }
-    }
-    expect(plaque, isNotNull, reason: 'vault name chip should not ellipsize');
-    expect(
-      plaque!.getMaxIntrinsicWidth(double.infinity),
-      lessThanOrEqualTo(plaque.size.width + 0.5),
+    final layout = TownSceneLayout.pack(
+      TownPreview.phoneSize,
+      textScale: GameTheme.typeScaleMax,
     );
+    final painter = TextPainter(
+      text: TextSpan(
+        text: 'VAULT',
+        style: GameTheme.hint(color: GameTheme.parchment),
+      ),
+      textDirection: TextDirection.ltr,
+      textScaler: TextScaler.linear(GameTheme.typeScaleMax),
+      maxLines: 1,
+    )..layout();
+    expect(layout.vaultLabel.left, greaterThanOrEqualTo(4));
+    expect(
+      layout.vaultLabel.right,
+      lessThanOrEqualTo(TownPreview.phoneSize.width - 4),
+    );
+    expect(
+      layout.vaultLabel.width,
+      greaterThanOrEqualTo(painter.width + 8),
+    );
+    painter.dispose();
+    expect(find.text('VAULT'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 }

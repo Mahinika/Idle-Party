@@ -111,7 +111,7 @@ void main() {
     expect(next.metaDepth.worldBossTickets, 1);
   });
 
-  test('failed WISP ad keeps the pending claim and skip still clears it', () async {
+  test('failed WISP ad keeps the pending claim and skip keeps it too', () async {
     final seeded = GameLogic.createInitialState(now: DateTime.utc(2026, 11, 21));
     final tapped = WispGift.onWispTapped(
       seeded.copyWith(
@@ -134,7 +134,8 @@ void main() {
       AdWatchResult.skipped,
     );
     await director.watchWispGiftAd();
-    expect(director.wispPendingChoice, isFalse);
+    expect(director.wispPendingChoice, isTrue);
+    expect(director.state.metaDepth.wispPendingWatchGold, pending);
     expect(director.state.metaDepth.wispGiftClaimsToday, claims);
   });
 

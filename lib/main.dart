@@ -35,10 +35,10 @@ import 'ui/start_menu_screen.dart';
 import 'ui/web_click_bridge.dart';
 
 Future<void> _bootFirebase() async {
-  await AppAnalytics.init();
-  BootClock.mark('firebase');
-  await RemoteTuneBoot.refresh();
-  BootClock.mark('remoteTune');
+  await Future.wait<void>([
+    AppAnalytics.init().then((_) => BootClock.mark('firebase')),
+    RemoteTuneBoot.refresh().then((_) => BootClock.mark('remoteTune')),
+  ]);
 }
 
 Future<void> main() async {

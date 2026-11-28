@@ -42,6 +42,7 @@ import 'encounter_factory.dart';
 import 'equipment_factory.dart';
 import 'market_service.dart';
 import 'market_listings_service.dart';
+import 'gear/gear_cleanup.dart';
 import 'gear_service.dart';
 import 'mission_board.dart';
 import 'loot_pipeline.dart';
@@ -188,6 +189,7 @@ class GameLogic {
       soulboundFragments: 0,
       godHandLevel: 0,
       layoutSeed: layoutSeed,
+      autoSellMaxPower: 0,
     );
     return state.copyWith(
       heroes: state.heroes
@@ -1163,6 +1165,7 @@ class GameLogic {
     final farmMul = FarmIntensity.rewardMult(state);
     final gained = applyGoldGain(state, (baseGold * mul * farmMul).round());
     if (gained <= 0) return state;
+    EconomyService.logGoldDelta(gained, source: 'combat');
     final paid = state.copyWith(
       gold: state.gold + gained,
       lifetimeGoldEarned: state.lifetimeGoldEarned + gained,
@@ -2816,12 +2819,22 @@ class GameLogic {
     String itemId, {
     int heroIndex = 0,
     EquipmentSlot? intoSlot,
-  }) => GearService.equipFromStash(
-    state,
-    itemId,
-    heroIndex: heroIndex,
-    intoSlot: intoSlot,
+  }) => _seedAutoSellCeilingIfNewSave(
+    GearService.equipFromStash(
+      state,
+      itemId,
+      heroIndex: heroIndex,
+      intoSlot: intoSlot,
+    ),
   );
+
+  /// New saves start at 0 until the first time worn gear changes.
+  static GameState _seedAutoSellCeilingIfNewSave(GameState state) {
+    if (state.autoSellMaxPower != 0) return state;
+    final ceiling = GearCleanup.recommendAutoSellCeiling(state);
+    if (ceiling == null) return state;
+    return state.copyWith(autoSellMaxPower: ceiling);
+  }
   static GameState unequipSlot(
     GameState state,
     EquipmentSlot slot, {
@@ -2925,8 +2938,16 @@ class GameLogic {
       GearService.autoEquipBetterGear(state);
 
   static ({GameState state, int equipped, List<String> names})
-  autoEquipBetterGearResult(GameState state) =>
-      GearService.autoEquipBetterGearResult(state);
+  autoEquipBetterGearResult(GameState state) {
+    final result = GearService.autoEquipBetterGearResult(state);
+    final seeded = _seedAutoSellCeilingIfNewSave(result.state);
+    if (identical(seeded, result.state)) return result;
+    return (
+      state: seeded,
+      equipped: result.equipped,
+      names: result.names,
+    );
+  }
 
   /// Wear ready upgrades when AUTO EQUIP is on. Ranked GR never swaps mid-run.
   static GameState maybeAutoEquip(GameState state) {
@@ -3322,11 +3343,13 @@ class GameLogic {
     String itemId, {
     int? heroIndex,
     EquipmentSlot? intoSlot,
-  }) => ApexForge.equipFromApexVault(
-    state,
-    itemId,
-    heroIndex: heroIndex,
-    intoSlot: intoSlot,
+  }) => _seedAutoSellCeilingIfNewSave(
+    ApexForge.equipFromApexVault(
+      state,
+      itemId,
+      heroIndex: heroIndex,
+      intoSlot: intoSlot,
+    ),
   );
   static ApexAutoEquipResult autoEquipAllApexVault(GameState state) =>
       ApexForge.autoEquipAllApexVault(state);

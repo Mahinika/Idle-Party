@@ -172,6 +172,7 @@ GameState _gameLogicForgeApplyUpgrade( GameState state, { required PartyUpgradeT
   if (state.gold < cost) {
     return state;
   }
+  EconomyService.logGoldDelta(-cost, source: 'train');
 
   switch (type) {
     case PartyUpgradeType.attack:

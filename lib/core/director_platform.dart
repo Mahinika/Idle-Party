@@ -127,6 +127,7 @@ extension GameDirectorPlatform on GameDirector {
 
   void tapWispGift() {
     if (!isWispVisible) return;
+    if (WispGift.hasPendingChoice(_state.metaDepth)) return;
     _wispVisibleRemainingMs = 0;
     _wispSpawnArmed = false;
     _wispTappedThisWindow = true;
@@ -275,7 +276,6 @@ extension GameDirectorPlatform on GameDirector {
         _grantWispWatchReward();
       case AdWatchResult.skipped:
         showToast('Watch the whole ad for the WISP bonus', life: 2.2);
-        dismissWispPending();
       case AdWatchResult.failed:
         showToast('Ad not ready — try again in a bit', life: 2.2);
       case AdWatchResult.busy:

@@ -31,17 +31,53 @@ abstract final class PlayLeaderboardIds {
           gauntlet: 'CgkIhuXGvNocEAIQAQ',
           greaterRift: 'CgkIhuXGvNocEAIQAw',
         ),
+        // Nov+ reuse the newest wired boards until Console publishes new ids.
+        '2026-11': (
+          timedKey: 'CgkIhuXGvNocEAIQAA',
+          gauntlet: 'CgkIhuXGvNocEAIQAQ',
+          greaterRift: 'CgkIhuXGvNocEAIQAw',
+        ),
+        '2026-12': (
+          timedKey: 'CgkIhuXGvNocEAIQAA',
+          gauntlet: 'CgkIhuXGvNocEAIQAQ',
+          greaterRift: 'CgkIhuXGvNocEAIQAw',
+        ),
       };
 
-  /// Soft honesty when this month reuses an older Console board id.
+  /// Newest month key in [byMonth] (lexicographic `yyyy-MM`).
+  static String? get _newestMonthKey {
+    if (byMonth.isEmpty) return null;
+    final keys = byMonth.keys.toList()..sort();
+    return keys.last;
+  }
+
+  /// Row for [monthKey], else newest month with live ids (soft-fail guard).
+  static ({String timedKey, String gauntlet, String greaterRift})? _rowFor(
+    String monthKey,
+  ) {
+    final direct = byMonth[monthKey];
+    if (direct != null) return direct;
+    final fallbackKey = _newestMonthKey;
+    if (fallbackKey == null) return null;
+    return byMonth[fallbackKey];
+  }
+
+  /// True when [monthKey] has no dedicated row and scores reuse [fallbackKey].
+  static bool usesFallbackMonth(String monthKey) {
+    if (byMonth.containsKey(monthKey)) return false;
+    return _rowFor(monthKey) != null;
+  }
+
+  /// Soft honesty when this month reuses another month's Play board.
   static String? reusedBoardNotice(String monthKey) {
-    if (monthKey == '2026-09') {
-      return 'September KEY / Gauntlet reuse August Console ids; '
-          'Ranked GR uses the September board.';
+    if (byMonth.containsKey(monthKey)) {
+      if (monthKey == '2026-09' || monthKey == '2026-10') {
+        return 'This month shares KEY and Gauntlet boards with an earlier month.';
+      }
+      return null;
     }
-    if (monthKey == '2026-10') {
-      return 'October reuses August KEY / Gauntlet and September Ranked GR '
-          'Console ids until distinct October boards exist.';
+    if (usesFallbackMonth(monthKey)) {
+      return 'This month uses the latest Play boards until new ones are linked.';
     }
     return null;
   }
@@ -65,14 +101,12 @@ abstract final class PlayLeaderboardIds {
     return monthBoardsPendingMessage;
   }
 
-  static String timedKeyId(String monthKey) =>
-      byMonth[monthKey]?.timedKey ?? '';
+  static String timedKeyId(String monthKey) => _rowFor(monthKey)?.timedKey ?? '';
 
-  static String gauntletId(String monthKey) =>
-      byMonth[monthKey]?.gauntlet ?? '';
+  static String gauntletId(String monthKey) => _rowFor(monthKey)?.gauntlet ?? '';
 
   static String greaterRiftId(String monthKey) =>
-      byMonth[monthKey]?.greaterRift ?? '';
+      _rowFor(monthKey)?.greaterRift ?? '';
 
   /// True when [id] is a real Console board id (not empty / placeholder).
   static bool isLiveBoardId(String id) {
@@ -82,7 +116,7 @@ abstract final class PlayLeaderboardIds {
   }
 
   static bool hasBoards(String monthKey) {
-    final row = byMonth[monthKey];
+    final row = _rowFor(monthKey);
     if (row == null) return false;
     return isLiveBoardId(row.timedKey) && isLiveBoardId(row.gauntlet);
   }

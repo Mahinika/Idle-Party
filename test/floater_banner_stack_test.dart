@@ -71,21 +71,20 @@ void main() {
     ]);
     expect(dy[0], 0.0, reason: 'highest priority, earliest born keeps authored Y');
     expect(dy[1]! < 0, isTrue, reason: 'LEVEL UP lifts up (negative Y)');
-    expect(dy[2]! < dy[1]!, isTrue, reason: 'ABSORB stacks above both');
-    // After offsets, vertical ranges plus the gap must not overlap.
-    const banners = [
+    expect(dy[2], 0.0, reason: 'third in cluster stays unstacked (max 2 visible)');
+    // After offsets, the two stacked banners plus the gap must not overlap.
+    const stacked = [
       (6.0, 0),
       (5.8, 1),
-      (6.1, 2),
     ];
-    for (var i = 0; i < banners.length; i++) {
-      for (var j = i + 1; j < banners.length; j++) {
-        final yi = banners[i].$1 + dy[banners[i].$2]!;
-        final yj = banners[j].$1 + dy[banners[j].$2]!;
+    for (var i = 0; i < stacked.length; i++) {
+      for (var j = i + 1; j < stacked.length; j++) {
+        final yi = stacked[i].$1 + dy[stacked[i].$2]!;
+        final yj = stacked[j].$1 + dy[stacked[j].$2]!;
         final overlap =
             yi + h + FloaterBannerStack.gapTiles > yj &&
             yj + h + FloaterBannerStack.gapTiles > yi;
-        expect(overlap, isFalse, reason: 'banner ${banners[i].$2} vs ${banners[j].$2}');
+        expect(overlap, isFalse, reason: 'banner ${stacked[i].$2} vs ${stacked[j].$2}');
       }
     }
   });

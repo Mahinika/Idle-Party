@@ -8,6 +8,8 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- ROI round 2: Play leaderboard month fallback, seasonal week rotation past 2026-W53, WISP claim timing, shop unknown SKU safety, Firebase single boot, CI push dedupe + release appbundle on PR, sampled virtual-currency analytics, auto-sell single pass, guides dedupe, FTUE integration_test, status in `docs/roi2_status.md`.
+- ROI batch 2: title PLAY + restore sheet, FARM/PUSH hint through 3 clears, MENU dot for claims only, CAMP coach line, locked town signs, modal budget, notify after first boss, Play Games protect card, hide locked nav tabs.
 - IP-048–222: Crashlytics non-fatals on save/friend/boot catches, release `debugPrint` gated behind `kDebugMode`, post-frame measure guards on fight chrome/docks, deferred install-referrer read, shop restore idempotency test.
 - Fixlist batch 2: d7/d14/d30 funnel events, boss_clear and daily_run_complete analytics, Crashlytics non-fatals on IO catches, dungeon.mp3 and town preview assets out of APK, text-scale persist on drag end, analyzer infos, and fixlist status doc.
 - IP-383 / IP-402: LEAVE explains bag merge gold spend and hunt consolation essence (+Ne) in toast copy.

@@ -5,7 +5,6 @@ import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_router.dart';
-import 'package:idle_party/ui/game_icon.dart';
 import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/home/home_nav_bar.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
@@ -58,26 +57,15 @@ void main() {
     (w) => w is Semantics && (w.properties.label ?? '').startsWith('$label locked'),
   );
 
-  testWidgets('locked tabs show a padlock and what opens them', (tester) async {
+  testWidgets('locked tabs stay hidden until the boss opens them', (tester) async {
     await pumpShell(tester, unlocked: false);
     expect(tester.takeException(), isNull);
     for (final tab in ['ESSENCE', 'MAP', 'SHOP']) {
-      expect(lockSemantics(tab), findsOneWidget, reason: tab);
+      expect(lockSemantics(tab), findsNothing, reason: tab);
+      expect(find.text(tab), findsNothing, reason: tab);
     }
-    // Real names, dimmed, under the padlock (audit F038).
-    expect(find.text('Boss F2'), findsNothing);
-    // Scoped to the nav: the FORGE/CAMP/MARKET dock has its own padlocks
-    // since audit F039.
-    final locks = find.descendant(
-      of: find.byType(HomeNavBar),
-      matching: find.byWidgetPredicate(
-        (w) => w is GameIcon && w.glyph == UiGlyph.lock,
-      ),
-    );
-    expect(locks, findsNWidgets(3));
-    expect(find.text('SHOP'), findsOneWidget);
-    expect(find.text('MAP'), findsOneWidget);
     expect(find.text('HEROES'), findsOneWidget);
+    expect(find.text('FIGHT'), findsOneWidget);
   });
 
   testWidgets('unlocked tabs drop the padlocks', (tester) async {
@@ -130,7 +118,8 @@ void main() {
       greaterThanOrEqualTo(label.getMaxIntrinsicWidth(1e9) - 0.5),
       reason: 'FIGHT is whole at 1.45',
     );
-    expect(lockSemantics('SHOP'), findsOneWidget);
+    expect(lockSemantics('SHOP'), findsNothing);
+    expect(find.text('SHOP'), findsNothing);
     expect(find.byType(FittedBox), findsNothing);
   });
 }

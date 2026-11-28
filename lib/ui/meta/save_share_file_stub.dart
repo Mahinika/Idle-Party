@@ -1,0 +1,1 @@
+Future<String?> writeSaveShareFile(String json) async => null;

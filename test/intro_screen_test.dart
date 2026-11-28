@@ -119,7 +119,9 @@ void main() {
     expect(find.byType(BootIntroScreen), findsNothing);
     expect(find.byType(StartMenuScreen), findsOneWidget);
     expect(find.text('PLAY'), findsOneWidget);
-    expect(find.text('CHOOSE PARTY'), findsOneWidget);
+    expect(find.text('CHOOSE PARTY'), findsNothing);
+    expect(find.text('Have a save?'), findsOneWidget);
+    expect(find.text('RESTORE SAVE'), findsNothing);
     expect(find.text('CONTINUE'), findsNothing);
 
     await tester.tap(find.text('PLAY'));
@@ -258,7 +260,7 @@ void main() {
     expect(director.state.partyName, 'Cave Company');
     expect(director.state.gold, 4242);
     expect(director.state.highestFloorCleared, 1);
-    expect(find.textContaining('Floor 2'), findsWidgets);
+    expect(find.textContaining('floor 2'), findsWidgets);
     expect(find.text('Grow the party'), findsNothing);
     await tester.pump(const Duration(milliseconds: 500));
   });
@@ -295,8 +297,8 @@ void main() {
     expect(find.text('Overwrite save?'), findsNothing);
 
     expect(find.byType(NewGamePartyPicker), findsNothing);
-    // Hub CTA and the first-run tip both say ENTER DUNGEON.
-    expect(find.text('ENTER DUNGEON'), findsWidgets);
+    expect(director.state.inDungeon, isTrue);
+    expect(director.state.dungeonId, 'sandy');
     expect(director.state.heroes.length, 3);
     expect(director.activeSaveSlot, 2);
     expect(director.saveSlots[0].occupied, isTrue);
@@ -330,11 +332,15 @@ void main() {
     expect(find.byType(StartMenuScreen), findsOneWidget);
     expect(find.text('CONTINUE'), findsNothing);
     expect(find.text('PLAY'), findsOneWidget);
-    expect(find.text('CHOOSE PARTY'), findsOneWidget);
+    expect(find.text('CHOOSE PARTY'), findsNothing);
+    expect(find.text('Have a save?'), findsOneWidget);
     expect(find.text('SAVE 1'), findsNothing);
-    expect(find.text('RESTORE SAVE'), findsOneWidget);
+    expect(find.text('RESTORE SAVE'), findsNothing);
     expect(director.hasExistingSave, isFalse);
 
+    await tester.tap(find.text('Have a save?'));
+    await tester.pump();
+    expect(find.text('RESTORE SAVE'), findsOneWidget);
     await tester.tap(find.text('CHOOSE PARTY'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
@@ -375,6 +381,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
+    await tester.tap(find.text('Have a save?'));
+    await tester.pump();
     await tester.tap(find.text('CHOOSE PARTY'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
@@ -505,7 +513,7 @@ void main() {
     expect(find.byType(StartMenuScreen), findsNothing);
     expect(director.state.partyName, 'Cave Company');
     expect(director.state.gold, 4242);
-    expect(find.textContaining('Floor 2'), findsWidgets);
+    expect(find.textContaining('floor 2'), findsWidgets);
 
     director.requestStartMenu();
     await tester.pump();

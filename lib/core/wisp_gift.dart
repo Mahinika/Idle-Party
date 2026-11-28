@@ -231,10 +231,8 @@ abstract final class WispGift {
     }
     final keep = keepGold(state);
     final watch = watchGold(state);
-    final nextClaims = md.wispGiftClaimsToday + 1;
     md = md.copyWith(
       wispGiftUtcDay: utcDayKey(DateTime.fromMillisecondsSinceEpoch(now).toUtc()),
-      wispGiftClaimsToday: nextClaims.clamp(0, dailyCap),
       wispPendingWatchGold: watch,
       wispPendingKeepGold: keep,
       wispBossHold: false,
@@ -248,9 +246,11 @@ abstract final class WispGift {
     final md = state.metaDepth;
     final pending = md.wispPendingWatchGold;
     if (pending <= 0) return state;
+    final nextClaims = (md.wispGiftClaimsToday + 1).clamp(0, dailyCap);
     final nextMd = md.copyWith(
       wispPendingWatchGold: 0,
       wispPendingKeepGold: 0,
+      wispGiftClaimsToday: nextClaims,
     );
     return creditGold(state.copyWith(metaDepth: nextMd), pending);
   }
@@ -266,10 +266,12 @@ abstract final class WispGift {
   static GameState dismissPending(GameState state) {
     final md = state.metaDepth;
     if (!hasPendingChoice(md)) return state;
+    final nextClaims = (md.wispGiftClaimsToday + 1).clamp(0, dailyCap);
     return state.copyWith(
       metaDepth: md.copyWith(
         wispPendingWatchGold: 0,
         wispPendingKeepGold: 0,
+        wispGiftClaimsToday: nextClaims,
       ),
     );
   }

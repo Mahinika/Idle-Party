@@ -27,6 +27,7 @@ import '../../coach_pulse.dart';
 import '../../confirm_dialogs.dart';
 import '../../hub/hub_powerups.dart';
 import '../../first_session_tips.dart';
+import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../hero_doll_sprite.dart';
 import '../../kenney_button.dart';
@@ -548,11 +549,23 @@ class _TownSquare extends StatelessWidget {
       partyDoll = math.min(partyDoll, 32.0);
     }
     final folkYardHeight = TownFolkSheet.yardHeightForPartyDoll(partyDoll);
-    final labels = <(String, Rect)>[
-      (guild.label, layout.guildLabel),
-      (vault.label, layout.vaultLabel),
+    final labels = <(String, Rect, bool)>[
+      (
+        guild.label,
+        layout.guildLabel,
+        TownAccess.showLockedOnSign(TownBuildingId.guild, state),
+      ),
+      (
+        vault.label,
+        layout.vaultLabel,
+        TownAccess.showLockedOnSign(TownBuildingId.vault, state),
+      ),
       for (var i = 0; i < TownBuilding.frontRow.length; i++)
-        (TownBuilding.frontRow[i].label, layout.frontLabels[i]),
+        (
+          TownBuilding.frontRow[i].label,
+          layout.frontLabels[i],
+          TownAccess.showLockedOnSign(TownBuilding.frontRow[i].id, state),
+        ),
     ];
 
     return Stack(
@@ -607,8 +620,18 @@ class _TownSquare extends StatelessWidget {
             size: size,
           ),
         ),
-        _building(layout.guild, guild, guild.assetPath(tier)),
-        _building(layout.vault, vault, vaultPath),
+        _building(
+          layout.guild,
+          guild,
+          guild.assetPath(tier),
+          locked: TownAccess.showLockedOnSign(TownBuildingId.guild, state),
+        ),
+        _building(
+          layout.vault,
+          vault,
+          vaultPath,
+          locked: TownAccess.showLockedOnSign(TownBuildingId.vault, state),
+        ),
         _sprite(layout.well, CustomAssets.townWell),
         Positioned.fill(
           child: TownFolkLayer(
@@ -625,6 +648,10 @@ class _TownSquare extends StatelessWidget {
             layout.front[i],
             TownBuilding.frontRow[i],
             TownBuilding.frontRow[i].assetPath(tier),
+            locked: TownAccess.showLockedOnSign(
+              TownBuilding.frontRow[i].id,
+              state,
+            ),
           ),
         for (final patch in layout.thresholds)
           if (!_coversLabel(patch, labels))
@@ -674,13 +701,14 @@ class _TownSquare extends StatelessWidget {
             height: 22,
             child: IgnorePointer(child: _TownPennants()),
           ),
-        for (final (label, rect) in labels) _nameChip(label, rect),
+        for (final (label, rect, locked) in labels)
+          _nameChip(label, rect, locked: locked),
       ],
     );
   }
 
-  bool _coversLabel(Rect flower, List<(String, Rect)> labels) {
-    for (final (_, label) in labels) {
+  bool _coversLabel(Rect flower, List<(String, Rect, bool)> labels) {
+    for (final (_, label, _) in labels) {
       if (flower.overlaps(label.inflate(2))) return true;
     }
     return false;
@@ -790,42 +818,67 @@ class _TownSquare extends StatelessWidget {
     );
   }
 
-  Widget _building(Rect rect, TownBuilding building, String asset) {
+  Widget _building(
+    Rect rect,
+    TownBuilding building,
+    String asset, {
+    required bool locked,
+  }) {
     return Positioned.fromRect(
       rect: rect,
       child: _TownBuildingButton(
         building: building,
         assetPath: asset,
         badge: badgeOf(building.id),
+        locked: locked,
         onTap: () => onTap(building),
       ),
     );
   }
 
-  Widget _nameChip(String label, Rect rect) {
+  Widget _nameChip(String label, Rect rect, {required bool locked}) {
+    final ink = locked ? GameTheme.parchmentDim : GameTheme.parchment;
     return Positioned.fromRect(
       rect: rect,
       child: IgnorePointer(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset(
-              KenneyAssets.townNameplate,
-              fit: BoxFit.fill,
-              filterQuality: FilterQuality.none,
-              excludeFromSemantics: true,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: GameTheme.hint(color: GameTheme.parchment),
+        child: Opacity(
+          opacity: locked ? 0.55 : 1,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(
+                KenneyAssets.townNameplate,
+                fit: BoxFit.fill,
+                filterQuality: FilterQuality.none,
+                excludeFromSemantics: true,
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (locked) ...[
+                      const GameIcon.glyph(
+                        UiGlyph.lock,
+                        size: 10,
+                        color: GameTheme.parchmentDim,
+                      ),
+                      const SizedBox(width: 2),
+                    ],
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: GameTheme.hint(color: ink),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -965,12 +1018,14 @@ class _TownBuildingButton extends StatelessWidget {
     required this.building,
     required this.assetPath,
     required this.badge,
+    required this.locked,
     required this.onTap,
   });
 
   final TownBuilding building;
   final String assetPath;
   final bool badge;
+  final bool locked;
   final VoidCallback onTap;
 
   @override
@@ -991,6 +1046,7 @@ class _TownBuildingButton extends StatelessWidget {
           onTap: onTap,
           child: _TownBuildingArt(
             assetPath: assetPath,
+            dimmed: locked,
             badgeKey: badge ? ValueKey('town-alert-${building.id.name}') : null,
           ),
         ),
@@ -1003,10 +1059,15 @@ class _TownBuildingButton extends StatelessWidget {
 /// inside a wider rect, so the alert is pinned to the painted roof corner,
 /// not the empty rect corner where it read as a torch (polish7 P011).
 class _TownBuildingArt extends StatefulWidget {
-  const _TownBuildingArt({required this.assetPath, this.badgeKey});
+  const _TownBuildingArt({
+    required this.assetPath,
+    this.badgeKey,
+    this.dimmed = false,
+  });
 
   final String assetPath;
   final Key? badgeKey;
+  final bool dimmed;
 
   /// Alert face and its dark contrast ring.
   static const double alert = 22;
@@ -1069,14 +1130,23 @@ class _TownBuildingArtState extends State<_TownBuildingArt> {
       filterQuality: FilterQuality.none,
     );
     final badgeKey = widget.badgeKey;
-    if (badgeKey == null) return image;
+    final painted = widget.dimmed
+        ? ColorFiltered(
+            colorFilter: const ColorFilter.mode(
+              GameTheme.buyGreyText,
+              BlendMode.saturation,
+            ),
+            child: Opacity(opacity: 0.62, child: image),
+          )
+        : image;
+    if (badgeKey == null) return painted;
     return LayoutBuilder(
       builder: (context, box) {
         final outer = Offset.zero & box.biggest;
         var roof = outer;
-        final art = _art;
-        if (art != null && art.width > 0 && art.height > 0) {
-          final fitted = applyBoxFit(BoxFit.contain, art, box.biggest);
+        final artSize = _art;
+        if (artSize != null && artSize.width > 0 && artSize.height > 0) {
+          final fitted = applyBoxFit(BoxFit.contain, artSize, box.biggest);
           roof = Alignment.bottomCenter.inscribe(fitted.destination, outer);
         }
         const r = _TownBuildingArt.ring;
@@ -1086,7 +1156,7 @@ class _TownBuildingArtState extends State<_TownBuildingArt> {
           fit: StackFit.expand,
           clipBehavior: Clip.none,
           children: [
-            image,
+            painted,
             Positioned(
               left: left,
               top: top,

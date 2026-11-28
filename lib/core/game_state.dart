@@ -157,7 +157,7 @@ class GameState {
     this.grGuardianActive = false,
     this.grOutcome = '',
     this.colorblindMode = false,
-    this.homeLayout = HomeLayout.classic,
+    this.homeLayout = HomeLayout.home,
     this.homePanelFull = true,
     this.hideHealFloaters = false,
     this.compactCombatNumbers = false,

@@ -335,7 +335,7 @@ void main() {
           '2099-01',
           playGamesSupported: true,
         ),
-        isFalse,
+        isTrue,
       );
       expect(PlayLeaderboardIds.isLiveBoardId(''), isFalse);
       expect(PlayLeaderboardIds.isLiveBoardId('CgkIXXXX'), isFalse);
@@ -359,13 +359,15 @@ void main() {
     });
 
     test('a month without Console ids does not pretend Play is missing', () {
-      expect(PlayLeaderboardIds.hasBoards('2026-11'), isFalse);
+      expect(PlayLeaderboardIds.hasBoards('2026-11'), isTrue);
+      expect(PlayLeaderboardIds.usesFallbackMonth('2027-02'), isTrue);
+      expect(PlayLeaderboardIds.hasBoards('2027-02'), isTrue);
       expect(
         PlayLeaderboardIds.unavailableMessage(
           playGamesSupported: true,
           monthKey: '2026-11',
         ),
-        PlayLeaderboardIds.monthBoardsPendingMessage,
+        PlayLeaderboardIds.boardsNeedPlayMessage,
       );
       expect(
         PlayLeaderboardIds.unavailableMessage(

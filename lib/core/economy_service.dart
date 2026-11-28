@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'ad_boost.dart';
+import 'app_analytics.dart';
 import 'game_state.dart';
 /// Wallet mutations shared by combat, loot grant, and market — no upward
 /// deps to [GameLogic].
@@ -21,5 +24,18 @@ abstract final class EconomyService {
     final found = baseGold + (baseGold * percent) ~/ 100;
     if (!AdBoost.goldActive(state.metaDepth)) return found;
     return found * AdBoost.goldMul;
+  }
+
+  /// Gold wallet delta after a grant or spend (sampled in [AppAnalytics]).
+  static void logGoldDelta(int delta, {required String source}) {
+    if (delta == 0) return;
+    unawaited(
+      AppAnalytics.logVirtualCurrency(
+        earn: delta > 0,
+        name: 'gold',
+        value: delta.abs(),
+        source: source,
+      ),
+    );
   }
 }

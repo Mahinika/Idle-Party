@@ -101,7 +101,14 @@ abstract final class ReturnWeek {
     final pay = GameLogic.checkInPayout(state);
     final cave = caveName(state);
     if (state.metaDepth.dailyVaultClaimed) return 'Tomorrow: $cave';
-    if (GameLogic.canClaimDailyVault(state)) return 'Claim ${shelf(pay)}';
+    if (GameLogic.canClaimDailyVault(state)) {
+      if (pay.day == 1) {
+        final left =
+            GameLogic.campAdDailyCap - GameLogic.campAdClaimsToday(state);
+        return 'CAMP: $left free levels ready';
+      }
+      return '${shelf(pay)}: claim today\'s vault';
+    }
     return '$cave · ${shelf(pay)}';
   }
 

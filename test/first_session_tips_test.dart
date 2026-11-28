@@ -73,7 +73,10 @@ void main() {
     );
     expect(FirstSessionTips.nextTipId(state, inDungeon: true), isNull);
     final cleared = state.copyWith(highestFloorCleared: 1);
-    expect(FirstSessionTips.nextTipId(cleared, inDungeon: true), isNull);
+    expect(
+      FirstSessionTips.nextTipId(cleared, inDungeon: true),
+      'fight_layout',
+    );
     final afterBoss = cleared.copyWith(
       bossVictories: 1,
       homeLayout: HomeLayout.home,
@@ -154,8 +157,13 @@ void main() {
       'hub_enter',
     ]);
     expect(FirstSessionTips.nextTipId(afterEnter, inDungeon: false), isNull);
-    final bossed = afterEnter.copyWith(bossVictories: 1);
-    expect(FirstSessionTips.nextTipId(bossed, inDungeon: false), 'forge');
+    final bossed = afterEnter.copyWith(bossVictories: 1, inDungeon: true);
+    expect(FirstSessionTips.nextTipId(bossed, inDungeon: false), isNull);
+    expect(FirstSessionTips.nextTipId(bossed, inDungeon: true), 'fight_layout');
+    final forgeReady = bossed.copyWith(
+      seenTips: [...bossed.seenTips, 'fight_layout', 'kit_abilities'],
+    );
+    expect(FirstSessionTips.nextTipId(forgeReady, inDungeon: true), 'forge');
   });
 
   test('first-run coach is at most two beats before first reward', () {
@@ -169,7 +177,10 @@ void main() {
     expect(FirstSessionTips.nextTipId(afterHub, inDungeon: false), isNull);
     expect(FirstSessionTips.nextTipId(afterHub, inDungeon: true), isNull);
     final cleared = afterHub.copyWith(highestFloorCleared: 1);
-    expect(FirstSessionTips.nextTipId(cleared, inDungeon: true), isNull);
+    expect(
+      FirstSessionTips.nextTipId(cleared, inDungeon: true),
+      'fight_layout',
+    );
     final afterBoss = cleared.copyWith(bossVictories: 1, seenTips: const ['first_run']);
     expect(
       FirstSessionTips.nextTipId(afterBoss, inDungeon: true),
@@ -209,12 +220,17 @@ void main() {
     expect(FirstSessionTips.earnedFirstReward(afterFloor), isTrue);
     expect(MenuTabs.showGold(afterFloor), isFalse);
     expect(FirstSessionTips.nextTipId(afterFloor, inDungeon: false), isNull);
-    final afterBoss = afterFloor.copyWith(bossVictories: 1);
+    final afterBoss = afterFloor.copyWith(bossVictories: 1, inDungeon: true);
     expect(MenuTabs.showGold(afterBoss), isTrue);
+    expect(FirstSessionTips.nextTipId(afterBoss, inDungeon: false), isNull);
     expect(
-      FirstSessionTips.nextTipId(afterBoss, inDungeon: false),
-      'forge',
+      FirstSessionTips.nextTipId(afterBoss, inDungeon: true),
+      'fight_layout',
     );
+    final forgeReady = afterBoss.copyWith(
+      seenTips: [...afterBoss.seenTips, 'fight_layout', 'kit_abilities'],
+    );
+    expect(FirstSessionTips.nextTipId(forgeReady, inDungeon: true), 'forge');
   });
 
   test('home layout FORGE coach only while the party is in the cave', () {
@@ -262,13 +278,9 @@ void main() {
       seenTips: const ['first_run', 'godhand', 'farm_push', 'hub_enter'],
     );
     expect(FirstSessionTips.nextTipId(afterEnter, inDungeon: false), isNull);
-    expect(
-      FirstSessionTips.nextTipId(
-        afterEnter.copyWith(bossVictories: 1),
-        inDungeon: false,
-      ),
-      'forge',
-    );
+    final bossed = afterEnter.copyWith(bossVictories: 1, inDungeon: true);
+    expect(FirstSessionTips.nextTipId(bossed, inDungeon: false), isNull);
+    expect(FirstSessionTips.nextTipId(bossed, inDungeon: true), 'fight_layout');
     final withBag = afterEnter.copyWith(
       gearStash: [
         EquipmentItem(
@@ -290,12 +302,12 @@ void main() {
     );
   });
 
-  test('enter dungeon dismisses the hub job tip', () async {
+  test('new game auto-start marks the hub job tip and enters Sandy', () async {
     final director = GameDirector.preview();
     await director.boot();
     await director.startNewGame(HeroSpecs.starterUnlocked);
-    expect(director.state.seenTips, isNot(contains('first_run')));
-    director.enterDungeon(dungeonId: 'sandy');
+    expect(director.state.inDungeon, isTrue);
+    expect(director.state.dungeonId, 'sandy');
     expect(director.state.seenTips, contains('first_run'));
     expect(
       FirstSessionTips.nextTipId(director.state, inDungeon: true),

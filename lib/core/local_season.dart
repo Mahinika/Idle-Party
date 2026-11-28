@@ -308,7 +308,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'year_close',
       name: 'Year Close',
-      blurb: 'Last week — time a timed KEY +2.',
+      blurb: 'Season finale — time a timed KEY +2.',
       weekKey: '2026-W53',
       affixOverride: 'iron',
       timedKeyTarget: 2,
@@ -395,20 +395,152 @@ abstract final class LocalSeasonCatalog {
     200: 'Crystal Sovereign',
   };
 
+  /// Pool for ISO weeks with no pinned row (excludes one-off finale copy).
+  static const List<LocalSeasonWeek> weekRotationPool = <LocalSeasonWeek>[
+    LocalSeasonWeek(
+      id: 'glass_tempo_rot',
+      name: 'Glass Tempo',
+      blurb: 'Fragile packs — time a KEY +2 this week.',
+      affixOverride: 'glass',
+      timedKeyTarget: 2,
+      essenceReward: 10,
+      titleReward: 'Glass Runner',
+    ),
+    LocalSeasonWeek(
+      id: 'swarm_surge_rot',
+      name: 'Swarm Surge',
+      blurb: 'Harder packs — time a timed KEY +2 under Swarm.',
+      affixOverride: 'swarm',
+      timedKeyTarget: 2,
+      essenceReward: 10,
+      titleReward: 'Swarm Breaker',
+    ),
+    LocalSeasonWeek(
+      id: 'spire_push_rot',
+      name: 'Spire Push',
+      blurb: 'Lifetime best ever — climb Gauntlet to floor 15 (lifetime PB).',
+      affixOverride: 'elite',
+      gauntletFloorTarget: 15,
+      essenceReward: 12,
+      titleReward: 'Spire Scout',
+    ),
+    LocalSeasonWeek(
+      id: 'fortune_rush_rot',
+      name: 'Fortune Rush',
+      blurb: 'Gold-heavy packs — bank a timed KEY +2.',
+      affixOverride: 'fortune',
+      timedKeyTarget: 2,
+      essenceReward: 10,
+      titleReward: 'Fortune Timed',
+    ),
+    LocalSeasonWeek(
+      id: 'iron_week_rot',
+      name: 'Iron Week',
+      blurb: 'Harder, richer packs — time a timed KEY +2 under Iron.',
+      affixOverride: 'iron',
+      timedKeyTarget: 2,
+      essenceReward: 12,
+      titleReward: 'Iron Timer',
+    ),
+    LocalSeasonWeek(
+      id: 'elite_tempo_rot',
+      name: 'Elite Tempo',
+      blurb: 'Tougher packs — clear a timed KEY +2 while Elite rules.',
+      affixOverride: 'elite',
+      timedKeyTarget: 2,
+      essenceReward: 12,
+      titleReward: 'Elite Tempo',
+    ),
+    LocalSeasonWeek(
+      id: 'ranked_gr3_rot',
+      name: 'Ranked GR Push',
+      blurb: 'Lifetime best ever — reach Ranked GR3 (no mid-run gear).',
+      affixOverride: 'tyrannical',
+      grTierTarget: 3,
+      essenceReward: 14,
+      titleReward: 'GR Boarder',
+    ),
+    LocalSeasonWeek(
+      id: 'ashen_night_rot',
+      name: 'Crown Night',
+      blurb: 'Boss week — clear Ashen Crown once with a ticket.',
+      affixOverride: 'boss_rush',
+      ashenClearTarget: true,
+      essenceReward: 16,
+      titleReward: 'Crown Night',
+    ),
+    LocalSeasonWeek(
+      id: 'ranked_gr5_rot',
+      name: 'GR Ladder',
+      blurb: 'Lifetime best ever — reach Ranked GR5 (Mothveil ladder).',
+      affixOverride: 'fortified',
+      grTierTarget: 5,
+      essenceReward: 16,
+      titleReward: 'GR Climber',
+    ),
+    LocalSeasonWeek(
+      id: 'moth_dust_rot',
+      name: 'Moth Dust Week',
+      blurb: 'Silk week — time a KEY +2 while the veil drifts.',
+      affixOverride: 'glass',
+      timedKeyTarget: 2,
+      essenceReward: 12,
+      titleReward: 'Moth Timer',
+    ),
+    LocalSeasonWeek(
+      id: 'brass_tempo_rot',
+      name: 'Brass Tempo',
+      blurb: 'Cog packs — bank a timed KEY +2 under Elite.',
+      affixOverride: 'elite',
+      timedKeyTarget: 2,
+      essenceReward: 12,
+      titleReward: 'Brass Timer',
+    ),
+    LocalSeasonWeek(
+      id: 'ember_climb_rot',
+      name: 'Ember Climb',
+      blurb: 'Lifetime best ever — climb Gauntlet to floor 25 (lifetime PB).',
+      affixOverride: 'fortune',
+      gauntletFloorTarget: 25,
+      essenceReward: 14,
+      titleReward: 'Ember Climber',
+    ),
+  ];
+
+  static int _isoWeekOrdinal(String weekKey) {
+    final match = RegExp(r'^(\d{4})-W(\d{1,2})$').firstMatch(weekKey);
+    if (match == null) return weekKey.hashCode & 0x7fffffff;
+    final year = int.parse(match.group(1)!);
+    final week = int.parse(match.group(2)!);
+    return (year - 2020) * 53 + week;
+  }
+
+  static int _monthOrdinal(String monthKey) {
+    final match = RegExp(r'^(\d{4})-(\d{2})$').firstMatch(monthKey);
+    if (match == null) return monthKey.hashCode & 0x7fffffff;
+    final year = int.parse(match.group(1)!);
+    final month = int.parse(match.group(2)!);
+    return (year - 2020) * 12 + month;
+  }
+
   static LocalSeasonWeek forWeekKey(String weekKey) {
     for (final w in weeks) {
       if (w.weekKey == weekKey) return w;
     }
-    final hash = weekKey.hashCode & 0x7fffffff;
-    return weeks[hash % weeks.length];
+    final pool = weekRotationPool;
+    if (pool.isEmpty) return weeks.first;
+    return pool[_isoWeekOrdinal(weekKey) % pool.length];
   }
 
   static LocalSeasonMonth forMonthKey(String monthKey) {
     for (final m in months) {
       if (m.monthKey == monthKey) return m;
     }
-    final hash = monthKey.hashCode & 0x7fffffff;
-    return months[hash % months.length];
+    final pool = months.where((m) => m.monthKey == null).toList();
+    if (pool.isEmpty) {
+      return months[_monthOrdinal(monthKey) % months.length];
+    }
+    return pool[_monthOrdinal(monthKey) % pool.length];
   }
 
   /// Resolve week affix: catalog override, else existing modifier / pool.

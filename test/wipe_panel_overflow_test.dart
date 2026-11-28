@@ -4,6 +4,7 @@ import 'package:idle_party/core/ad_rewarded.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/core/wipe_advice.dart';
@@ -29,7 +30,9 @@ void main() {
   GameState sevenActionCave() {
     final now = DateTime.utc(2026, 8, 22);
     var state = GameLogic.enterDungeon(
-      GameLogic.createInitialState(now: now),
+      GameLogic.createInitialState(now: now).copyWith(
+        homeLayout: HomeLayout.classic,
+      ),
     );
     final cap = GameLogic.maxGearStashFor(state);
     final junk = <EquipmentItem>[

@@ -2151,6 +2151,8 @@ void main() {
         ),
     ];
     state = state.copyWith(
+      autoSellMaxPower: 48,
+      autoSellMaxRarity: 1,
       heroes: [
         for (final h in state.heroes)
           h.copyWith(

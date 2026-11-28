@@ -25,7 +25,7 @@ void main() {
     final s = director.offlineSummary;
     expect(s, isNotNull);
     expect(s!.goldGained, 7200);
-    expect(s.essenceGained, 57);
+    expect(s.essenceGained, 77);
     expect(s.highestFloorDelta, 4);
     expect(s.roomsCleared, 5);
     expect(s.bossDelta, 1);

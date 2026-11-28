@@ -36,6 +36,13 @@ abstract final class TownAccess {
         TownBuildingId.vault => vaultClaimable(s),
       };
 
+  /// Dim the sign and art on the square before the player taps.
+  static bool showLockedOnSign(TownBuildingId id, GameState s) => switch (id) {
+        TownBuildingId.vault =>
+          vaultInSeason(s) && !vaultClaimable(s) && !vaultClaimedToday(s),
+        _ => !isOpen(id, s),
+      };
+
   static String lockedCopy(TownBuildingId id, GameState s) => switch (id) {
         TownBuildingId.forge => 'CRAFT opens after your first boss.',
         TownBuildingId.inn => innLockedCopy(s),

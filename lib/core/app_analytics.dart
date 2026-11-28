@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'analytics_events.dart';
 import 'analytics_guard.dart';
 import 'app_analytics_stub.dart'
@@ -8,6 +10,8 @@ import 'onboarding_funnel.dart';
 
 /// Soft Firebase Analytics facade. No-op on web / tests / missing config.
 abstract final class AppAnalytics {
+  static final Random _vcSample = Random();
+
   /// Test hook — records every [logEvent] (including reserved `first_open`).
   static void Function(String name, Map<String, Object>? params)? debugSink;
 
@@ -298,6 +302,51 @@ abstract final class AppAnalytics {
   /// Seconds this foreground stint lasted. Sent when the app backgrounds.
   static Future<void> sessionLength(int seconds) =>
       logEvent('session_length', {'seconds': seconds});
+
+  /// GA4 game economy — 1-in-10 sample to stay under event limits.
+  static Future<void> logVirtualCurrency({
+    required bool earn,
+    required String name,
+    required int value,
+    required String source,
+  }) async {
+    if (value <= 0) return;
+    if (_vcSample.nextInt(10) != 0) return;
+    final event = earn ? 'earn_virtual_currency' : 'spend_virtual_currency';
+    await logEvent(event, {
+      'virtual_currency_name': name,
+      'value': value,
+      'source': source,
+    });
+  }
+
+  /// AdMob paid callback — maps to GA4 [ad_impression] with value when present.
+  static Future<void> adImpression({
+    required String adFormat,
+    required String adUnitName,
+    double? value,
+    String? currency,
+    String? placement,
+  }) async {
+    final code = currency?.trim().toUpperCase();
+    final params = <String, Object>{
+      'ad_format': adFormat,
+      'ad_unit_name': adUnitName,
+      if (placement case final p?) 'placement': p,
+      if (value != null && code != null && code.length == 3) ...{
+        'value': value,
+        'currency': code,
+      },
+    };
+    debugSink?.call('ad_impression', params);
+    await impl.adImpression(
+      adFormat: adFormat,
+      adUnitName: adUnitName,
+      value: value,
+      currency: code,
+      placement: placement,
+    );
+  }
 }
 
 /// Numbers attached to [AnalyticsEvents.rewardedComplete].

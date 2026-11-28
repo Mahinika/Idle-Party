@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'analytics_guard.dart';
 import 'crash_report.dart';
+import 'firebase_boot.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
     as test_env;
@@ -87,7 +87,7 @@ void debugResetEarlyErrorBuffer() {
 Future<void> init() async {
   if (!_androidLive || _ready) return;
   try {
-    await Firebase.initializeApp();
+    await FirebaseBoot.ensureInitialized();
     _analytics = FirebaseAnalytics.instance;
     // Manifest keeps both off until syncConsent returns. After UMP, Analytics
     // collection turns on (a decline still sends consent-mode pings).
@@ -153,6 +153,32 @@ Future<void> _applyMeasurementConsent() async {
 Future<void> _resyncAfterConsentForm() async {
   await _applyMeasurementConsent();
   await RemoteTuneBoot.refresh();
+}
+
+Future<void> adImpression({
+  required String adFormat,
+  required String adUnitName,
+  double? value,
+  String? currency,
+  String? placement,
+}) async {
+  final code = currency?.trim().toUpperCase();
+  final analytics = _analytics;
+  if (analytics == null) return;
+  try {
+    await analytics.logAdImpression(
+      adPlatform: 'admob',
+      adFormat: adFormat,
+      adUnitName: adUnitName,
+      value: value,
+      currency: code,
+    );
+  } catch (e, st) {
+    CrashReport.recordNonFatal(e, st, reason: 'app_analytics_io:ad_impression');
+    if (kDebugMode) {
+      debugPrint('Firebase Analytics ad_impression failed: $e\n$st');
+    }
+  }
 }
 
 Future<void> logEvent(String name, [Map<String, Object>? params]) async {

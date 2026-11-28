@@ -83,8 +83,9 @@ class FightFieldControls extends StatelessWidget {
   static const double modeHintCapsuleAlpha = 0.85;
 
   /// FARM/PUSH line is a first-sessions tip, not forever (audit F065).
-  static const int modeHintUntilClears = 20;
+  static const int modeHintUntilClears = 3;
   static bool showModeHint(GameState s) =>
+      !s.seenTips.contains('farm_push_mode_ack') &&
       s.metaDepth.lifetimeFloorClears < modeHintUntilClears;
 
   /// Seam toggle between the big fight (FULL: only the FORGE/CAMP/MARKET
@@ -336,7 +337,14 @@ void _setFightMode(
   final state = director.state;
   final world = director.spatial;
   final fighting = world?.enemies.any((e) => e.isAlive) ?? false;
+  void ackModeHint() {
+    if (FightFieldControls.showModeHint(director.state)) {
+      director.dismissTip('farm_push_mode_ack');
+    }
+  }
+
   if (!fighting || state.dungeonMode == mode) {
+    ackModeHint();
     director.setDungeonMode(mode);
     return;
   }
@@ -364,7 +372,10 @@ void _setFightMode(
       ],
     ),
   ).then((ok) {
-    if (ok == true) director.setDungeonMode(mode);
+    if (ok == true) {
+      ackModeHint();
+      director.setDungeonMode(mode);
+    }
   });
 }
 

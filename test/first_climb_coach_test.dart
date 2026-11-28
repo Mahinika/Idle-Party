@@ -30,12 +30,14 @@ void main() {
         isNull,
         reason: 'the porch already says Tap ENTER',
       );
+      expect(director.state.inDungeon, isTrue);
       expect(
-        FirstSessionTips.nextTipId(director.state, inDungeon: false),
-        'first_run',
+        FirstSessionTips.nextTipId(director.state, inDungeon: true),
+        isNull,
+        reason: 'home new game auto-enters; coach defers until after first boss',
       );
 
-      director.enterDungeon(dungeonId: 'sandy');
+      expect(director.state.dungeonId, 'sandy');
       expect(director.state.inDungeon, isTrue);
       expect(director.state.dungeonId, 'sandy');
       expect(director.state.currentRoom.floorNumber, 1);
@@ -229,7 +231,7 @@ void main() {
     expect(find.text('CLAIM'), findsNothing);
     expect(tester.takeException(), isNull);
 
-    await tester.pump(const Duration(seconds: 5));
+    await tester.pump(const Duration(milliseconds: 400));
     director.dispose();
     router.dispose();
   });

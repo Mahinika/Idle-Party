@@ -122,9 +122,7 @@ Future<String?> buy(String productId) async {
   await _queryProducts();
   final details = _products[productId];
   if (details == null) {
-    return 'Play has not listed this pack yet. '
-        'Activated SKUs can take a few hours — clear Play Store cache, '
-        'fully close the app, and try again.';
+    return "This pack isn't available right now. Try again later.";
   }
   final item = ShopCatalog.byId[productId];
   if (item == null) return 'Unknown pack.';
@@ -253,7 +251,19 @@ Future<void> _settlePurchase(
         fromPastQuery: fromPastQuery,
         statusRestored: purchase.status == PurchaseStatus.restored,
       );
-      if (item != null && _onGranted != null) {
+      if (item == null) {
+        _onMessage?.call(
+          'This pack is not recognized. Contact support with your receipt.',
+        );
+        unawaited(
+          AppAnalytics.storePurchaseFail(
+            purchase.productID,
+            reason: 'unknown_sku',
+          ),
+        );
+        return;
+      }
+      if (_onGranted != null) {
         try {
           saved = await _onGranted!(
             productId: purchase.productID,
@@ -278,7 +288,7 @@ Future<void> _settlePurchase(
         }
         return;
       }
-      if (item != null && item.isConsumable) {
+      if (item.isConsumable) {
         await _consumePurchase(purchase);
       } else if (purchase.pendingCompletePurchase) {
         await InAppPurchase.instance.completePurchase(purchase);

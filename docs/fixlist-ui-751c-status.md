@@ -120,8 +120,8 @@ Status values: **fixed** | **verified-not-real** | **skipped-needs-approval** | 
 | IP-142 | verified-not-real | power_upgrade/shop hints ellipsis |
 | IP-143 | verified-not-real | power_upgrade/shop hints ellipsis |
 | IP-144 | verified-not-real | power_upgrade/shop hints ellipsis |
-| IP-145 | verified-not-real | power_upgrade/shop hints ellipsis |
-| IP-146 | verified-not-real | power_upgrade/shop hints ellipsis |
+| IP-145 | skipped-needs-approval | Apex forge rescaling (economy) — see R2-024 scope |
+| IP-146 | skipped-needs-approval | AdMob uptake tuning — owner console |
 | IP-147 | verified-not-real | power_upgrade/shop hints ellipsis |
 | IP-148 | verified-not-real | power_upgrade/shop hints ellipsis |
 | IP-149 | fixed | lib/ui/shell/home/town_viewport.dart signs @1.45 |
@@ -152,7 +152,7 @@ Status values: **fixed** | **verified-not-real** | **skipped-needs-approval** | 
 | IP-183 | fixed | lib/core/game_guides.dart MENU copy |
 | IP-184 | fixed | lib/core/menu_router.dart Train this run |
 | IP-185 | fixed | lib/ui/apex_forge_panel.dart TRAIN+b blessings |
-| IP-186 | verified-not-real | 11_market.png |
+| IP-186 | skipped-needs-approval | Market reroll economy — not UI ellipsis |
 | IP-187 | fixed | lib/ui/shell/home/home_top_bar.dart Cinders row |
 | IP-188 | fixed | lib/ui/shell/inventory_dock.dart bag empty copy |
 | IP-189 | fixed | lib/ui/shell/settings_overlay.dart remove Spellcraft |

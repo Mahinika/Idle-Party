@@ -424,16 +424,27 @@ abstract final class HomeCatalog {
     return TownNavPolicy.filterEntries(list, (e) => e.id);
   }
 
-  /// Red dot on the town MENU button: a cell moved there from the rail has
-  /// something waiting (tickets, the reinstall pouch, an update).
-  static bool townMenuBadge(GameState state, GameDirector director) =>
-      RemoteTune.townSquareActive(state.inDungeon) &&
-      of(HomePlace.menuGrid, town: true).any(
-        (e) =>
-            TownNavPolicy.townMenuFromRail.contains(e.id) &&
-            e.visible(state, director) &&
-            e.badge(state),
-      );
+  /// Red dot on the town MENU button: only when a moved rail cell has a claim.
+  static bool townMenuBadge(
+    GameState state,
+    GameDirector director, {
+    bool menuOpen = false,
+  }) {
+    if (menuOpen) return false;
+    if (!RemoteTune.townSquareActive(state.inDungeon)) return false;
+    return of(HomePlace.menuGrid, town: true).any(
+      (e) =>
+          TownNavPolicy.townMenuFromRail.contains(e.id) &&
+          e.visible(state, director) &&
+          _townMenuDot(e.id, state),
+    );
+  }
+
+  static bool _townMenuDot(String id, GameState state) => switch (id) {
+        'menu_pouch' => ReinstallPouch.showOffer(state),
+        'menu_vault' => GameLogic.canClaimDailyVault(state),
+        _ => false,
+      };
 }
 
 /// Friend invite sits on the MENU grid. It is a block, not a rail icon.
