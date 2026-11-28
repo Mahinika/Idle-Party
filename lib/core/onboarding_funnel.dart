@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
     as test_env;
+import 'crash_report.dart';
 import 'funnel_analytics.dart';
 
 /// Install-scoped onboarding steps. Flags live in SharedPreferences, not in
@@ -91,8 +92,8 @@ abstract final class OnboardingFunnel {
       _seen.addAll(prefs.getStringList(prefsKey) ?? const <String>[]);
       final stored = prefs.getInt(installMsKey) ?? 0;
       if (stored > 0) _installMs = stored;
-    } catch (_) {
-      // A broken store stays in memory for this process.
+    } catch (e, st) {
+      CrashReport.recordNonFatal(e, st, reason: 'onboarding_funnel:read');
     }
   }
 
@@ -169,7 +170,9 @@ abstract final class OnboardingFunnel {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList(prefsKey, seen);
       if (ms > 0) await prefs.setInt(installMsKey, ms);
-    } catch (_) {}
+    } catch (e, st) {
+      CrashReport.recordNonFatal(e, st, reason: 'onboarding_funnel:write');
+    }
   }
 
   @visibleForTesting

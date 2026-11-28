@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'ad_config.dart';
+import 'crash_report.dart';
 import 'ad_rewarded.dart';
 import 'app_analytics.dart';
 import 'remote_tune_boot.dart';
@@ -124,7 +125,8 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
       },
     );
   } catch (e, st) {
-    debugPrint('rewarded ad show failed: $e\n$st');
+    CrashReport.recordNonFatal(e, st, reason: 'ad_rewarded_io:show');
+    if (kDebugMode) debugPrint('rewarded ad show failed: $e\n$st');
     ad.dispose();
     unawaited(AppAnalytics.rewardedLoadFail(placement, reason: 'show'));
     unawaited(_preload(placement: placement));
@@ -177,7 +179,8 @@ Future<void> _ensureSdk({required bool askConsent}) async {
       'AdMob ready (${AdConfig.isLiveUnit ? 'live unit' : 'sample test unit'})',
     );
   } catch (e, st) {
-    debugPrint('AdMob init failed: $e\n$st');
+    CrashReport.recordNonFatal(e, st, reason: 'ad_rewarded_io:init');
+    if (kDebugMode) debugPrint('AdMob init failed: $e\n$st');
   }
 }
 

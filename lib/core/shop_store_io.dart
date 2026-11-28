@@ -7,6 +7,7 @@ import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 
 import 'analytics_events.dart';
 import 'app_analytics.dart';
+import 'crash_report.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
     as test_env;
@@ -101,7 +102,8 @@ Future<void> _queryProducts() async {
       debugPrint('ShopStore query error: ${response.error}');
     }
   } catch (e, st) {
-    debugPrint('ShopStore queryProductDetails failed: $e\n$st');
+    CrashReport.recordNonFatal(e, st, reason: 'shop_store_io:query_products');
+    if (kDebugMode) debugPrint('ShopStore queryProductDetails failed: $e\n$st');
     productsReady = _products.isNotEmpty;
   }
 }
@@ -260,7 +262,8 @@ Future<void> _settlePurchase(
             recovered: fromPastQuery,
           );
         } catch (e, st) {
-          debugPrint('ShopStore grant failed: $e\n$st');
+          CrashReport.recordNonFatal(e, st, reason: 'shop_store_io:grant');
+          if (kDebugMode) debugPrint('ShopStore grant failed: $e\n$st');
           saved = false;
         }
       }

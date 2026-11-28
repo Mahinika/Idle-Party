@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 
+import 'crash_report.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 
@@ -272,7 +273,8 @@ class FriendReferralSync {
           }
         }
       } catch (e, st) {
-        debugPrint('FriendReferral sync failed: $e\n$st');
+        CrashReport.recordNonFatal(e, st, reason: 'friend_referral:sync');
+        if (kDebugMode) debugPrint('FriendReferral sync failed: $e\n$st');
       }
     }
     return _maybeClaimReferrer(next, deviceId);
@@ -293,7 +295,8 @@ class FriendReferralSync {
       try {
         await gateway.ensureCode(code: code, deviceId: deviceId);
       } catch (e, st) {
-        debugPrint('FriendReferral ensureCode failed: $e\n$st');
+        CrashReport.recordNonFatal(e, st, reason: 'friend_referral:ensure_code');
+        if (kDebugMode) debugPrint('FriendReferral ensureCode failed: $e\n$st');
       }
     }
     final send = share;

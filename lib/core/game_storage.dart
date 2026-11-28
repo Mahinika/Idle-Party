@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/dungeon_def.dart';
 import 'debug_play_log.dart';
+import 'crash_report.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'save_needs_update.dart';
@@ -322,8 +323,9 @@ class SharedPreferencesGameStorage implements GameStorage {
       // A newer build wrote this file. Leave every copy where it is.
       return null;
     } catch (e, st) {
+      CrashReport.recordNonFatal(e, st, reason: 'game_storage:load');
       DebugPlayLog.event('save', 'load failed (quarantined): $e');
-      debugPrint('save load failed (quarantined): $e\n$st');
+      if (kDebugMode) debugPrint('save load failed (quarantined): $e\n$st');
       final rawV2 = prefs.getString(_saveKey);
       final rawV1 = prefs.getString(_legacySaveKey);
       if (rawV2 != null &&
