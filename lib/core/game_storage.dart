@@ -79,9 +79,18 @@ class SaveSlotSummary {
     }
   }
 
-  /// Active-party mean, matching [GameLogic.partyMeanLevel] / [GameState.heroes].
-  /// Empty active ids fall back to the whole roster. Display only.
+  /// Active-party mean for the title row. Uses the same migrate path as play
+  /// ([GameLogic.stateFromJson]) so labels match the fight party. Display only.
   static int partyLevelFromJson(Map<String, dynamic> json) {
+    try {
+      final state = GameLogic.stateFromJson(json);
+      return GameLogic.partyMeanLevel(state);
+    } catch (_) {
+      return _partyLevelFromJsonLegacy(json);
+    }
+  }
+
+  static int _partyLevelFromJsonLegacy(Map<String, dynamic> json) {
     final roster = json['heroRoster'];
     final levels = <String, int>{};
     if (roster is List) {
