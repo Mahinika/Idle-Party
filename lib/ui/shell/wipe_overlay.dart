@@ -309,6 +309,22 @@ class _WipeAutoCountdown extends StatefulWidget {
 
 class _WipeAutoCountdownState extends State<_WipeAutoCountdown> {
   int _prev = -1;
+  int? _announceScheduledFor;
+
+  void _scheduleCountdownAnnounce(int seconds, BuildContext context) {
+    if (_announceScheduledFor == seconds) return;
+    _announceScheduledFor = seconds;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _announceScheduledFor = null;
+      if (!mounted) return;
+      final view = View.of(context);
+      SemanticsService.sendAnnouncement(
+        view,
+        'Fighting again in $seconds',
+        TextDirection.ltr,
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -318,14 +334,7 @@ class _WipeAutoCountdownState extends State<_WipeAutoCountdown> {
         if (seconds <= 0) return const SizedBox.shrink();
         if (seconds <= 3 && seconds != _prev) {
           _prev = seconds;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            final view = View.of(context);
-            SemanticsService.sendAnnouncement(
-              view,
-              'Fighting again in $seconds',
-              TextDirection.ltr,
-            );
-          });
+          _scheduleCountdownAnnounce(seconds, context);
         }
         return Padding(
           padding: const EdgeInsets.only(bottom: 6),

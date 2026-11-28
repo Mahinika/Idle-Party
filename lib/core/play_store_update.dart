@@ -60,7 +60,7 @@ abstract final class PlayStoreUpdate {
         mode: LaunchMode.externalApplication,
       );
     } catch (e, st) {
-      debugPrint('PlayStoreUpdate openListing failed: $e\n$st');
+      if (kDebugMode) debugPrint('PlayStoreUpdate openListing failed: $e\n$st');
       return false;
     }
   }

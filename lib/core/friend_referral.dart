@@ -155,7 +155,12 @@ abstract final class FriendReferral {
         final decoded = Uri.decodeQueryComponent(text);
         if (decoded == text) return null;
         text = decoded;
-      } catch (_) {
+      } catch (e, st) {
+        CrashReport.recordNonFatal(
+          e,
+          st,
+          reason: 'friend_referral:decode_referrer',
+        );
         return null;
       }
     }
@@ -308,7 +313,8 @@ class FriendReferralSync {
     }
     try {
       await send(FriendReferral.shareMessage(code));
-    } catch (_) {
+    } catch (e, st) {
+      CrashReport.recordNonFatal(e, st, reason: 'friend_referral:share');
       return FriendReferralOutcome(
         next,
         toast: 'Could not open the share sheet',
@@ -341,7 +347,8 @@ class FriendReferralSync {
     final FriendClaimStatus status;
     try {
       status = await gateway.claim(code: code, deviceId: deviceId);
-    } catch (_) {
+    } catch (e, st) {
+      CrashReport.recordNonFatal(e, st, reason: 'friend_referral:apply_claim');
       return FriendReferralOutcome(
         state,
         toast: _toastFor(FriendClaimStatus.unavailable),
@@ -373,7 +380,12 @@ class FriendReferralSync {
     String? referrer;
     try {
       referrer = await read();
-    } catch (_) {
+    } catch (e, st) {
+      CrashReport.recordNonFatal(
+        e,
+        st,
+        reason: 'friend_referral:read_install_referrer',
+      );
       return FriendReferralOutcome(_noteReferrerMiss(state), toast: toast);
     }
     final code = FriendReferral.codeFromReferrer(referrer);
@@ -399,7 +411,12 @@ class FriendReferralSync {
     final FriendClaimStatus status;
     try {
       status = await gateway.claim(code: code, deviceId: deviceId);
-    } catch (_) {
+    } catch (e, st) {
+      CrashReport.recordNonFatal(
+        e,
+        st,
+        reason: 'friend_referral:install_claim',
+      );
       return FriendReferralOutcome(state, toast: toast);
     }
     if (status == FriendClaimStatus.unavailable) {
@@ -476,7 +493,8 @@ class FriendReferralSync {
       final id = await read();
       if (id == null || id.isEmpty) return null;
       return id;
-    } catch (_) {
+    } catch (e, st) {
+      CrashReport.recordNonFatal(e, st, reason: 'friend_referral:device_id');
       return null;
     }
   }

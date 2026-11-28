@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'crash_report.dart';
+
 /// Local party-name gate: length, charset, and an owned block list.
 ///
 /// Empty input becomes [defaultName]. Blocked names return null — callers
@@ -55,7 +57,8 @@ abstract final class PartyNameFilter {
       if (mod != 0) padded += '=' * (4 - mod);
       final decoded = utf8.decode(base64Url.decode(padded));
       return sanitize(decoded);
-    } catch (_) {
+    } catch (e, st) {
+      CrashReport.recordNonFatal(e, st, reason: 'party_name_filter:score_tag');
       return null;
     }
   }

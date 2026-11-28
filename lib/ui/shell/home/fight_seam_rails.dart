@@ -42,6 +42,7 @@ class FightSeamRails extends StatefulWidget {
 class _FightSeamRailsState extends State<FightSeamRails> {
   final ScrollController _scroll = ScrollController();
   var _scrollable = false;
+  var _syncScheduled = false;
 
   @override
   void initState() {
@@ -61,6 +62,15 @@ class _FightSeamRailsState extends State<FightSeamRails> {
     final next = _scroll.position.maxScrollExtent > 0;
     if (next == _scrollable) return;
     setState(() => _scrollable = next);
+  }
+
+  void _scheduleSyncScrollable() {
+    if (_syncScheduled) return;
+    _syncScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncScheduled = false;
+      _syncScrollable();
+    });
   }
 
   Widget _edgeFade({required bool start}) {
@@ -90,7 +100,7 @@ class _FightSeamRailsState extends State<FightSeamRails> {
       context,
     ).scale(1).clamp(1.0, GameTheme.typeScaleMax);
     final slot = math.max(GameTheme.minTouch, GameTheme.minTouch * scale);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncScrollable());
+    _scheduleSyncScrollable();
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border(

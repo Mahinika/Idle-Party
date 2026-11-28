@@ -120,7 +120,7 @@ abstract final class PlayGamesBridge {
       _signedInCache = await GameAuth.isSignedIn;
       return _signedInCache;
     } catch (e, st) {
-      debugPrint('PlayGames isSignedIn failed: $e\n$st');
+      if (kDebugMode) debugPrint('PlayGames isSignedIn failed: $e\n$st');
       _signedInCache = false;
       return false;
     }
@@ -142,7 +142,7 @@ abstract final class PlayGamesBridge {
       }
       return _signedInCache;
     } catch (e, st) {
-      debugPrint('PlayGames signIn failed: $e\n$st');
+      if (kDebugMode) debugPrint('PlayGames signIn failed: $e\n$st');
       _signedInCache = false;
       return false;
     }
@@ -230,7 +230,7 @@ abstract final class PlayGamesBridge {
         _pendingTimedScore = null;
         _pendingTimedBoard = null;
       } catch (e, st) {
-        debugPrint('PlayGames submit timed failed: $e\n$st');
+        if (kDebugMode) debugPrint('PlayGames submit timed failed: $e\n$st');
       }
     }
     final g = _pendingGauntletScore;
@@ -248,7 +248,7 @@ abstract final class PlayGamesBridge {
         _pendingGauntletScore = null;
         _pendingGauntletBoard = null;
       } catch (e, st) {
-        debugPrint('PlayGames submit gauntlet failed: $e\n$st');
+        if (kDebugMode) debugPrint('PlayGames submit gauntlet failed: $e\n$st');
       }
     }
     final gr = _pendingGreaterRiftScore;
@@ -266,7 +266,7 @@ abstract final class PlayGamesBridge {
         _pendingGreaterRiftScore = null;
         _pendingGreaterRiftBoard = null;
       } catch (e, st) {
-        debugPrint('PlayGames submit greater rift failed: $e\n$st');
+        if (kDebugMode) debugPrint('PlayGames submit greater rift failed: $e\n$st');
       }
     }
     final party = _pendingPartyPower;
@@ -285,7 +285,7 @@ abstract final class PlayGamesBridge {
         _pendingPartyPower = null;
         _pendingPartyBoard = null;
       } catch (e, st) {
-        debugPrint('PlayGames submit party power failed: $e\n$st');
+        if (kDebugMode) debugPrint('PlayGames submit party power failed: $e\n$st');
       }
     }
   }
@@ -334,7 +334,7 @@ abstract final class PlayGamesBridge {
           );
         }
       } catch (e, st) {
-        debugPrint('PlayGames player rank skipped: $e\n$st');
+        if (kDebugMode) debugPrint('PlayGames player rank skipped: $e\n$st');
       }
       return PlayBoardSnapshot(
         rows: PlayBoardList.rows(
@@ -345,7 +345,7 @@ abstract final class PlayGamesBridge {
         ),
       );
     } catch (e, st) {
-      debugPrint('PlayGames load board failed: $e\n$st');
+      if (kDebugMode) debugPrint('PlayGames load board failed: $e\n$st');
       return PlayBoardSnapshot.error;
     }
   }
@@ -478,7 +478,7 @@ abstract final class PlayGamesBridge {
       unawaited(flushPendingScores());
       return true;
     } catch (e, st) {
-      debugPrint('PlayGames saveCloud failed: $e\n$st');
+      if (kDebugMode) debugPrint('PlayGames saveCloud failed: $e\n$st');
       return false;
     }
   }
@@ -554,7 +554,7 @@ abstract final class PlayGamesBridge {
       _noteCloudRead(read, account: account);
       return read;
     } catch (e, st) {
-      debugPrint('PlayGames loadCloud failed: $e\n$st');
+      if (kDebugMode) debugPrint('PlayGames loadCloud failed: $e\n$st');
       const read = CloudRead.failed();
       _noteCloudRead(read, account: null);
       return read;
@@ -576,7 +576,7 @@ abstract final class PlayGamesBridge {
     try {
       listed = await listNames();
     } catch (e, st) {
-      debugPrint('PlayGames list snapshots failed: $e\n$st');
+      if (kDebugMode) debugPrint('PlayGames list snapshots failed: $e\n$st');
       return const CloudRead.failed();
     }
     final names = listed.names;
@@ -588,7 +588,7 @@ abstract final class PlayGamesBridge {
       if (decoded.kind == CloudReadKind.empty) return const CloudRead.failed();
       return decoded;
     } catch (e, st) {
-      debugPrint('PlayGames open snapshot failed: $e\n$st');
+      if (kDebugMode) debugPrint('PlayGames open snapshot failed: $e\n$st');
       return const CloudRead.failed();
     }
   }
@@ -636,7 +636,7 @@ abstract final class PlayGamesBridge {
       final names = [for (final name in namesRaw) name.toString()];
       return snapshotListFromChannel(raw, names: names);
     } catch (e, st) {
-      debugPrint('PlayGames snapshot list failed: $e\n$st');
+      if (kDebugMode) debugPrint('PlayGames snapshot list failed: $e\n$st');
       return const SnapshotNameList(names: null, fresh: false);
     }
   }
@@ -653,7 +653,7 @@ abstract final class PlayGamesBridge {
       if (id == null || id.isEmpty) return null;
       return id;
     } catch (e, st) {
-      debugPrint('PlayGames player id failed: $e\n$st');
+      if (kDebugMode) debugPrint('PlayGames player id failed: $e\n$st');
       return null;
     }
   }

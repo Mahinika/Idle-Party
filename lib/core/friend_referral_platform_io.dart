@@ -7,6 +7,7 @@ import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
     as test_env;
 import 'friend_referral.dart';
+import 'play_update_timeout.dart';
 
 bool get _androidLive {
   if (test_env.inFlutterTestProcess()) return false;
@@ -21,18 +22,21 @@ Future<String?> readFriendDeviceId() async {
     if (raw == null || raw.isEmpty) return null;
     return FriendReferral.deviceKey(raw);
   } catch (e, st) {
-    debugPrint('Friend device id failed: $e\n$st');
+    if (kDebugMode) debugPrint('Friend device id failed: $e\n$st');
     return null;
   }
 }
 
 Future<String?> readPlayInstallReferrer() async {
   if (!_androidLive) return null;
+  await Future<void>.delayed(Duration.zero);
   try {
-    final details = await PlayInstallReferrer.installReferrer;
+    final details = await boundPlayUpdateCall(
+      PlayInstallReferrer.installReferrer,
+    );
     return details.installReferrer;
   } catch (e, st) {
-    debugPrint('Play install referrer failed: $e\n$st');
+    if (kDebugMode) debugPrint('Play install referrer failed: $e\n$st');
     return null;
   }
 }

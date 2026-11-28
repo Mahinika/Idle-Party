@@ -33,6 +33,7 @@ class _EssenceDockState extends State<EssenceDock>
     with TickerProviderStateMixin {
   late final FlexTabs _tabs;
   List<EssencePanel> _visible = const [EssencePanel.tracks];
+  EssencePanel? _resyncScheduled;
 
   @override
   void initState() {
@@ -58,15 +59,22 @@ class _EssenceDockState extends State<EssenceDock>
     super.dispose();
   }
 
+  void _schedulePanelResync(EssencePanel target) {
+    if (_resyncScheduled == target) return;
+    _resyncScheduled = target;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _resyncScheduled = null;
+      if (mounted && widget.panel != target) widget.onPanelChanged(target);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     _visible = MenuRouter.visibleEssencePanels(widget.director.state);
     final safeTab =
         _visible.contains(widget.panel) ? widget.panel : _visible.first;
     if (safeTab != widget.panel) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) widget.onPanelChanged(safeTab);
-      });
+      _schedulePanelResync(safeTab);
     }
     final pages = <({String label, Widget body})>[
       for (final tab in _visible)

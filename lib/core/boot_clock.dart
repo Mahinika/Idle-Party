@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 
 /// Cold-start marks for logcat. Filter `[IP] boot-clock`.
 ///
-/// Prints in release too, so a test APK can time the Play icon against the
-/// splash. A handful of lines, no save data.
+/// Debug-only log lines for timing the Play icon against the splash.
+/// [marks] still records every name in memory for tests. No save data.
 ///
 /// Typical order after the Play icon:
 /// `main` → `runApp` → `firstFrame` → `saveBootStart` (with `playUpdateProbeStart`)
@@ -16,7 +16,7 @@ abstract final class BootClock {
   static void mark(String name) {
     final ms = DateTime.now().difference(_start).inMilliseconds;
     marks.add('$name $ms');
-    debugPrint('[IP] boot-clock · $name · ${ms}ms');
+    if (kDebugMode) debugPrint('[IP] boot-clock · $name · ${ms}ms');
   }
 
   /// Mark name without the trailing millisecond column.

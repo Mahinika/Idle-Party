@@ -28,6 +28,7 @@ import 'analytics_events.dart';
 import 'app_analytics.dart';
 import 'onboarding_funnel.dart';
 import 'build_stamp.dart';
+import 'crash_report.dart';
 import 'debug_play_log.dart';
 import 'fight_frame_budget.dart';
 import 'funnel_analytics.dart';
