@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'remote_tune.dart';
 import 'shop_catalog.dart';
 
 /// Apply a successful SHOP purchase to [state].
@@ -31,16 +32,19 @@ abstract final class ShopBilling {
           md = md.copyWith(shopStarterClaimed: true);
         }
       case ShopOfferKind.adFree:
-        // Restore must not re-grant welcome tickets.
+        // Restore must not re-grant anything. New buyers skip ads and get
+        // the same reward as a watch. They do not receive the old VIP bundle.
         if (md.adFree) return state;
-        md = md.copyWith(adFree: true, adTickets: min(9999, md.adTickets + 2));
-        if (item.boostHours > 0) {
-          md = GameLogic.grantFullBoostHours(
-            md,
-            item.boostHours,
-            nowMs: clock.millisecondsSinceEpoch,
-          );
-        }
+        md = md.copyWith(
+          adFree: true,
+          roi2: md.roi2.copyWith(vipPerkSplit: true),
+        );
+      case ShopOfferKind.vipPass:
+        if (!RemoteTune.vipPassListed) return state;
+        if (md.roi2.vipPass) return state;
+        md = md.copyWith(
+          roi2: md.roi2.copyWith(vipPass: true, vipPerkSplit: true),
+        );
       case ShopOfferKind.supporterQol:
         // Restore must not stack bag slots again.
         if (md.shopBagBonusSlots > 0) return state;
@@ -143,6 +147,7 @@ abstract final class ShopBilling {
     return switch (item.kind) {
       ShopOfferKind.boostHours => item.oneTime && md.shopStarterClaimed,
       ShopOfferKind.adFree => md.adFree,
+      ShopOfferKind.vipPass => md.roi2.vipPass,
       ShopOfferKind.supporterQol => md.shopBagBonusSlots > 0,
       ShopOfferKind.cinders => false,
       ShopOfferKind.permScroll =>

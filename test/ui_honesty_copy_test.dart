@@ -55,10 +55,10 @@ void main() {
     );
   });
 
-  test('Ad-free welcome removes WATCH earn and mentions WISP; no Play IDs', () {
+  test('Ad-free names the same reward as a watch and no Play IDs', () {
     final item = ShopCatalog.offered.firstWhere((e) => e.id == 'ad_free');
-    expect(item.description, contains('WATCH'));
-    expect(item.description, contains('lantern bonus gold'));
+    expect(item.name, 'Ad-free');
+    expect(item.description, contains('same reward'));
     expect(item.description.toLowerCase(), contains('quest reroll'));
     expect(item.description, isNot(contains('Cgk')));
   });

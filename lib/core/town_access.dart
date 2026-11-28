@@ -74,8 +74,8 @@ abstract final class TownAccess {
     final next = DateTime.utc(now.year, now.month, now.day + 1);
     final hours = next.difference(now).inHours.clamp(0, 48);
     final reset = hours <= 1
-        ? 'Resets at UTC midnight.'
-        : 'Resets in ${hours}h (UTC).';
+        ? 'Resets at midnight.'
+        : 'Resets in ${hours}h.';
     final cave = ReturnWeek.tomorrowTitle(state);
     return 'Vault claimed today. $reset $cave';
   }

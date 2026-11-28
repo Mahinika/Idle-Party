@@ -652,7 +652,7 @@ void main() {
     );
     await pumpGoldenFrames(tester);
     expect(
-      find.text('Ad-free welcome'),
+      find.text('Ad-free'),
       findsOneWidget,
     );
   });

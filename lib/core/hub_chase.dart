@@ -187,9 +187,8 @@ class HubChase {
 
     // First hour: grow the party — EQUIP / MARKET / Meet kit wait until a boss.
     if (firstHourQuiet) {
-      final bossesNeed = GameLogic.bossesRequiredForAscension(
-        state.ascensionLevel,
-      );
+      // The first boss, not the Ascend gate (that button waits for 2).
+      const bossesNeed = 1;
       final bossesLeft = (bossesNeed - state.bossVictories).clamp(
         0,
         bossesNeed,
@@ -247,9 +246,10 @@ class HubChase {
       state.ascensionLevel,
     );
     final bossesLeft = (bossesNeed - state.bossVictories).clamp(0, bossesNeed);
-    // Only "almost" once you've banked progress (AL0 needs 1 boss total -
-    // 0/1 is the start of the game, not a cliffhanger).
-    final almostAscend = bossesLeft == 1 && state.bossVictories > 0;
+    // AL0's second boss is the Ascend button, not TODAY. Later Ascend
+    // levels still say "one boss left" when a single victory remains.
+    final almostAscend =
+        bossesLeft == 1 && state.bossVictories > 0 && state.ascensionLevel > 0;
     if (almostAscend &&
         !GameLogic.endgameUnlocked(state) &&
         !GameLogic.isMaxAscension(state)) {

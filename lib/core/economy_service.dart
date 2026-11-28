@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'ad_boost.dart';
+import 'live_event.dart';
 import 'app_analytics.dart';
 import 'game_state.dart';
 /// Wallet mutations shared by combat, loot grant, and market — no upward
@@ -16,14 +17,13 @@ abstract final class EconomyService {
       return baseGold;
     }
     final percent = state.effectiveGoldFindPercent;
-    if (percent <= 0) {
-      return AdBoost.goldActive(state.metaDepth)
-          ? baseGold * AdBoost.goldMul
-          : baseGold;
-    }
-    final found = baseGold + (baseGold * percent) ~/ 100;
-    if (!AdBoost.goldActive(state.metaDepth)) return found;
-    return found * AdBoost.goldMul;
+    final found = percent <= 0
+        ? baseGold
+        : baseGold + (baseGold * percent) ~/ 100;
+    final boosted = AdBoost.goldActive(state.metaDepth)
+        ? found * AdBoost.goldMul
+        : found;
+    return LiveEvent.scaleGold(boosted, DateTime.now());
   }
 
   /// Gold wallet delta after a grant or spend (sampled in [AppAnalytics]).

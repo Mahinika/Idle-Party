@@ -7,6 +7,8 @@ import '../models/enemy.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/pet.dart';
+import '../models/roi2_persist.dart';
+import 'day_clock.dart';
 import 'game_state.dart';
 import 'keystone.dart';
 
@@ -23,6 +25,9 @@ abstract final class MetaSystems {
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = ChangelogCatalog.releases;
+
+  /// In-app PATCH NOTES: last three player-facing versions.
+  static List<ChangelogRelease> get playerNotes => ChangelogCatalog.playerNotes;
 
   /// Flat bullets for backward compat — all releases, newest first.
   static List<String> get changelog => [for (final r in releases) ...r.bullets];
@@ -67,27 +72,32 @@ abstract final class MetaSystems {
 
   // —— Daily run ——————————————————————————————————————————————
 
-  /// Stable `yyyy-mm-dd` key for the UTC calendar date of [utc].
-  static String dailyDateKey(DateTime utc) {
-    final y = utc.year.toString().padLeft(4, '0');
-    final m = utc.month.toString().padLeft(2, '0');
-    final d = utc.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
+  /// Stable `yyyy-mm-dd` key for the local calendar day of [instant].
+  ///
+  /// [roi] carries the time-zone guard and the one-day migration hold.
+  static String dailyDateKey(DateTime instant, [Roi2Persist? roi]) {
+    return DayClock.effective(roi ?? const Roi2Persist(), instant);
   }
 
   /// Deterministic seed for a given UTC date — same calendar date always
   /// yields the same seed. Derived from the date string's hash (stable,
   /// content-based) rather than raw integer math so it can't overflow
   /// differently across the VM vs. web (dart2js) number representations.
-  static int dailySeed(DateTime utc) {
-    final key = dailyDateKey(utc);
+  static int dailySeed(DateTime instant, [Roi2Persist? roi]) {
+    final key = dailyDateKey(instant, roi);
     return key.hashCode & 0x3fffffff;
   }
 
-  /// Stable day-of-epoch counter (UTC), used to rotate the daily dungeon.
-  static int _epochDay(DateTime utc) =>
-      DateTime.utc(utc.year, utc.month, utc.day).millisecondsSinceEpoch ~/
-      86400000;
+  /// Stable day-of-epoch counter for the local calendar day.
+  static int _epochDay(DateTime instant, [Roi2Persist? roi]) {
+    final parts = dailyDateKey(instant, roi).split('-');
+    final day = DateTime.utc(
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+      int.parse(parts[2]),
+    );
+    return day.millisecondsSinceEpoch ~/ 86400000;
+  }
 
   /// Rotates through the dungeon catalog by day-of-epoch so every unlocked
   /// (or not) zone gets a turn as the free Daily Run.
@@ -98,11 +108,18 @@ abstract final class MetaSystems {
     return all[index].id;
   }
 
-  /// UTC calendar day immediately before [utc]'s date key.
-  static String yesterdayDateKey(DateTime utc) {
-    final day = DateTime.utc(utc.year, utc.month, utc.day)
-        .subtract(const Duration(days: 1));
-    return dailyDateKey(day);
+  /// Local calendar day immediately before [instant].
+  static String yesterdayDateKey(DateTime instant, [Roi2Persist? roi]) {
+    final parts = dailyDateKey(instant, roi).split('-');
+    final day = DateTime.utc(
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+      int.parse(parts[2]),
+    ).subtract(const Duration(days: 1));
+    final y = day.year.toString().padLeft(4, '0');
+    final m = day.month.toString().padLeft(2, '0');
+    final d = day.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
   }
 
   /// Best PUSH floor from yesterday (or today's so-far peak / stale peak).

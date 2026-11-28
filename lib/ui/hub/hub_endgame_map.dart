@@ -214,7 +214,11 @@ class HubEndgameMap extends StatelessWidget {
                         maxLines: 2,
                       ),
               ),
-              for (final node in HubEndgameAct.nodes)
+              for (final node in HubEndgameAct.pageFromBests(
+                gauntletBestFloor: gauntletBestFloor,
+                riftBestTier: riftBestTier,
+                grBestTier: grBestTier,
+              ))
                 _placedMarker(
                   node: node,
                   mapW: mapW,
@@ -238,6 +242,34 @@ class HubEndgameMap extends StatelessWidget {
     required double hitSize,
     required double statusH,
   }) {
+    if (node.dailyPreview) {
+      const statusWord = 'DAILY RUN';
+      final labelH = statusH;
+      final cx = node.mapX * mapW;
+      final cy = node.mapY * mapH;
+      final left = (cx - hitSize / 2).clamp(0.0, mapW - hitSize).toDouble();
+      final top = (cy - hitSize / 2 - labelH)
+          .clamp(0.0, math.max(0.0, mapH - hitSize - labelH))
+          .toDouble();
+      return Positioned(
+        left: left,
+        top: top,
+        width: hitSize,
+        height: hitSize + labelH,
+        child: MapZoneMarker(
+          name: node.title,
+          portraitDungeonId: node.portraitDungeonId,
+          iconAsset: UiIcon.daily,
+          discSize: discSize,
+          hitSize: hitSize,
+          unlocked: true,
+          cleared: false,
+          selected: false,
+          statusWord: statusWord,
+          onTap: () {},
+        ),
+      );
+    }
     final selected = selectedHunt == node.hunt;
     final statusWord = selected
         ? 'HERE'

@@ -40,13 +40,15 @@ void main() {
     expect(WispGift.firstDelayMs, 20 * 1000);
   });
 
-  test('a published lantern interval replaces the debug cadence', () {
-    RemoteTune.apply(intervalSec: 120, fromRemote: true);
+  test('a published lantern interval does not replace the shipped cadence', () {
+    RemoteTune.apply(intervalSec: 120, dailyCap: 3, fromRemote: true);
 
-    expect(RemoteTune.wispFromRemote, isTrue);
-    expect(WispGift.intervalMs, 120 * 1000);
-    expect(WispGift.firstDelayMs, RemoteTune.defaultFirstDelaySec * 1000);
-    expect(WispGift.dailyCap, RemoteTune.defaultDailyCap);
+    expect(RemoteTune.wispFromRemote, isFalse);
+    expect(RemoteTune.wispIntervalMs, RemoteTune.defaultIntervalSec * 1000);
+    expect(RemoteTune.wispDailyCap, RemoteTune.defaultDailyCap);
+    expect(WispGift.intervalMs, 20 * 1000);
+    // Debug builds keep the fast loop. A published cap of 3 must not land.
+    expect(WispGift.dailyCap, 1000000);
   });
 
   test('feature flags default on and can turn off', () {

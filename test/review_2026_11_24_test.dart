@@ -364,7 +364,11 @@ void main() {
       expect(director.state.gold, gold);
       gate.complete(AdWatchResult.rewarded);
       expect(await welcome, isTrue);
-      final extra = AdOffer.welcomeExtraGold(director.state, 40);
+      final extra = AdOffer.welcomeExtraGold(
+        director.state,
+        40,
+        minutesAway: 0,
+      );
       expect(extra, greaterThanOrEqualTo(80));
       expect(director.state.gold, gold + extra);
       expect(await director.watchWelcomeBackGoldAd(40), isFalse);

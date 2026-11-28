@@ -319,6 +319,7 @@ Future<void> showOfflineProgressDialog(
                 gold: AdOffer.welcomeExtraGold(
                   rewardState,
                   summary.goldGained,
+                  minutesAway: summary.secondsAway ~/ 60,
                 ),
                 essence: AdOffer.welcomeExtraEssence(summary.essenceGained),
                 stateGold: rewardState.gold,

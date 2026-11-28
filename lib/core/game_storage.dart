@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'save_codec.dart';
 
 import '../models/dungeon_def.dart';
 import 'debug_play_log.dart';
@@ -130,6 +134,9 @@ abstract class GameStorage {
   static const String holdKey = 'idle_party_save_hold';
   static const String journalKey = 'idle_party_save_journal';
   static const String mirrorKey = 'idle_party_save_v2';
+  static const String previousSlotPrefix = 'idle_party_save_prev_';
+
+  static String previousKeyFor(int slot) => '$previousSlotPrefix$slot';
   static const String legacyMirrorKey = 'idle_party_save_v1';
   static const String mirrorCorruptKey = 'idle_party_save_v2_corrupt';
 
@@ -170,6 +177,12 @@ abstract class GameStorage {
   /// can already show a commit that returned false. A mirror write that
   /// fails after the slot commit returned true does not fail this call.
   Future<bool> save(GameState state);
+
+  /// Copies [state] beside the live slot. Autosave does not call this.
+  Future<bool> snapshotActiveSlot(GameState state) async => false;
+
+  /// Loads the last snapshot over the live slot. Null when there is none.
+  Future<GameState?> restorePreviousSlot() async => null;
 
   /// True when the active slot has a persisted blob.
   Future<bool> hasSave();
@@ -414,7 +427,7 @@ class SharedPreferencesGameStorage implements GameStorage {
   Future<bool> save(GameState state) async {
     final prefs = await _prefs;
     await _prepare(prefs);
-    final raw = jsonEncode(state.toJson());
+    final raw = await encodeGameJson(state.toJson());
     final slotKey = _slotKey(_active);
     final previous = prefs.getString(slotKey);
     // commit() updates the native map before it reports the disk result.
@@ -451,7 +464,41 @@ class SharedPreferencesGameStorage implements GameStorage {
       debugPrint('save mirror failed: $error\n$stack');
     }
     _clearUnproven();
+    unawaited(_mirrorBackupFile(_active, raw));
     return true;
+  }
+
+  static const _backupChannel = MethodChannel('idle_party/screen');
+
+  Future<void> _mirrorBackupFile(int slot, String raw) async {
+    try {
+      await _backupChannel.invokeMethod<bool>('writeSaveBackup', {
+        'slot': slot,
+        'json': raw,
+      });
+    } catch (_) {
+      // Tests and web have no Android backup file.
+    }
+  }
+
+  @override
+  Future<bool> snapshotActiveSlot(GameState state) async {
+    final prefs = await _prefs;
+    await _prepare(prefs);
+    final raw = await encodeGameJson(state.toJson());
+    return prefs.setString(GameStorage.previousKeyFor(_active), raw);
+  }
+
+  @override
+  Future<GameState?> restorePreviousSlot() async {
+    final prefs = await _prefs;
+    await _prepare(prefs);
+    final raw = prefs.getString(GameStorage.previousKeyFor(_active));
+    if (raw == null || raw.isEmpty) return null;
+    final parsed = GameLogic.importSaveJson(raw);
+    if (parsed == null) return null;
+    final ok = await save(parsed);
+    return ok ? parsed : null;
   }
 
   @override
@@ -882,6 +929,25 @@ class InMemoryGameStorage implements GameStorage {
     }
     _unprovenWrite = false;
     return true;
+  }
+
+  final Map<int, String> _previousRaw = {};
+
+  @override
+  Future<bool> snapshotActiveSlot(GameState state) async {
+    final raw = GameLogic.exportSaveJson(state);
+    _previousRaw[_active] = raw;
+    return true;
+  }
+
+  @override
+  Future<GameState?> restorePreviousSlot() async {
+    final raw = _previousRaw[_active];
+    if (raw == null || raw.isEmpty) return null;
+    final parsed = GameLogic.importSaveJson(raw);
+    if (parsed == null) return null;
+    final ok = await save(parsed);
+    return ok ? parsed : null;
   }
 
   @override

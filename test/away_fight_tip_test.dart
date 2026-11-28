@@ -97,7 +97,7 @@ void main() {
   test('ascend keeps the away appointment', () {
     final fresh = GameLogic.createInitialState(now: now);
     final armed = AwayFightTip.arm(
-      fresh.copyWith(bossVictories: 1, essence: 40),
+      fresh.copyWith(bossVictories: 2, essence: 40),
       now,
     );
     final ascended = GameLogic.ascend(

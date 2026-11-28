@@ -35,7 +35,11 @@ class WispGiftOverlay extends StatelessWidget {
         if (!director.isWispVisible) return const SizedBox.shrink();
         if (director.wispMenuPaused) return const SizedBox.shrink();
         final minimal = director.state.vfxQuality == VfxQuality.minimal;
-        final showTapHint = director.state.metaDepth.wispBossHold;
+        final parked = director.state.metaDepth.roi2.goldLanternReady;
+        final showTapHint =
+            director.state.metaDepth.wispBossHold || parked;
+        final hintLabel =
+            parked ? 'Gold lantern ready' : 'WISP · Tap for gold';
         return LayoutBuilder(
           builder: (context, constraints) {
             final scale = MediaQuery.textScalerOf(context).scale(1);
@@ -60,6 +64,7 @@ class WispGiftOverlay extends StatelessWidget {
                 child: _WispTapTarget(
                   minimal: minimal,
                   showTapHint: showTapHint,
+                  hintLabel: hintLabel,
                   hintWidth: hintWidth,
                   onTap: () async {
                     director.tapWispGift();
@@ -82,12 +87,14 @@ class _WispTapTarget extends StatefulWidget {
   const _WispTapTarget({
     required this.minimal,
     required this.showTapHint,
+    required this.hintLabel,
     required this.hintWidth,
     required this.onTap,
   });
 
   final bool minimal;
   final bool showTapHint;
+  final String hintLabel;
   final double hintWidth;
   final VoidCallback onTap;
 
@@ -139,7 +146,7 @@ class _WispTapTargetState extends State<_WispTapTarget>
       onPressed: widget.onTap,
       child: Semantics(
         button: true,
-        label: 'WISP · Tap for gold',
+        label: widget.hintLabel,
         onTap: widget.onTap,
         excludeSemantics: true,
         child: Material(
@@ -185,7 +192,7 @@ class _WispTapTargetState extends State<_WispTapTarget>
                             child: SizedBox(
                               width: widget.hintWidth,
                               child: Text(
-                                'WISP · Tap for gold',
+                                widget.hintLabel,
                                 textAlign: TextAlign.center,
                                 maxLines: 2,
                                 softWrap: true,

@@ -46,6 +46,11 @@ Future<void> prepareOffer({String? placement}) {
 
 Future<void> warmup() => prepareOffer();
 
+Future<void> presentConsentIfNeeded() async {
+  if (!realAdsAvailable) return;
+  await _serialized(() => _ensureSdk(askConsent: true));
+}
+
 Future<void> showPrivacyOptions() async {
   if (!realAdsAvailable) return;
   await _requestConsent(askConsent: true);
@@ -258,10 +263,22 @@ Future<RewardedAd?> _loadAd({
     request: const AdRequest(),
     rewardedAdLoadCallback: RewardedAdLoadCallback(
       onAdLoaded: (ad) {
+        unawaited(
+          AppAnalytics.adFill(
+            placement: placement ?? 'preload',
+            filled: true,
+          ),
+        );
         if (!loaded.isCompleted) loaded.complete(ad);
       },
       onAdFailedToLoad: (error) {
         debugPrint('rewarded ad load failed: $error');
+        unawaited(
+          AppAnalytics.adFill(
+            placement: placement ?? 'preload',
+            filled: false,
+          ),
+        );
         report(failReason);
         if (!loaded.isCompleted) loaded.complete(null);
       },

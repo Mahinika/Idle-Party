@@ -791,7 +791,9 @@ class _HubScreenState extends State<HubScreen>
     final chase = HubChase.forState(state);
     final endgameUnlocked = GameLogic.endgameUnlocked(state);
     final showEndgameLayer =
-        endgameUnlocked || GameGuides.showEndgameBridgeGuides(state);
+        state.ascensionLevel >= 1 ||
+        endgameUnlocked ||
+        GameGuides.showEndgameBridgeGuides(state);
 
     return Stack(
       fit: StackFit.expand,

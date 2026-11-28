@@ -315,7 +315,7 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
         final state = director.state;
         final md = state.metaDepth;
         final realAds = AdRewarded.realAdsAvailable;
-        final adFree = md.adFree;
+        final adFree = md.hasVipPerks;
         final canDaily = AdBoost.canClaimAdFreeDaily(md);
         final nudgeLive = AdFreeNudge.show(
           meta: md,

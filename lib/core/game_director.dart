@@ -37,6 +37,12 @@ import 'game_logic.dart';
 import 'game_state.dart';
 import 'gauntlet_pact.dart';
 import 'game_storage.dart';
+import 'save_flush_gate.dart';
+import 'day_clock.dart';
+import 'clock_guard.dart';
+import 'flutter_test_env_stub.dart'
+    if (dart.library.io) 'flutter_test_env_io.dart'
+    as test_env;
 import 'gear_service.dart';
 import 'hero_identity.dart';
 import 'home_layout.dart';
@@ -278,7 +284,6 @@ class GameDirector extends ChangeNotifier {
 
   int _wispVisibleRemainingMs = 0;
   bool _wispSpawnArmed = false;
-  bool _wispTappedThisWindow = false;
   bool _wispMenuPaused = false;
   bool _wispChoiceOpen = false;
 
@@ -2506,6 +2511,7 @@ class GameDirector extends ChangeNotifier {
     if (_isLoading) {
       return;
     }
+    unawaited(_storage.snapshotActiveSlot(_state));
 
     final hadRogue = _state.rogueUnlocked;
     final fromAl = _state.ascensionLevel;

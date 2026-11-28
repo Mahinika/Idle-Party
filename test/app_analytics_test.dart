@@ -73,7 +73,7 @@ void main() {
       expect(no.adStorage, isFalse);
       expect(no.adUserData, isFalse);
       expect(no.adPersonalization, isFalse);
-      expect(no.crashlytics, isFalse);
+      expect(no.crashlytics, isTrue);
       expect(no.analyticsCollection, isTrue);
     },
   );

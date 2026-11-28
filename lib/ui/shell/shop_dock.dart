@@ -433,6 +433,7 @@ class _ShopRow extends StatelessWidget {
   static String? assetFor(ShopCatalogItem item) {
     if (item.permMask == AdBoost.permAll) return UiIcon.star;
     if (item.kind == ShopOfferKind.adFree) return UiIcon.heart;
+    if (item.kind == ShopOfferKind.vipPass) return UiIcon.star;
     if (item.kind == ShopOfferKind.longAway) return UiIcon.campfire;
     if (item.kind == ShopOfferKind.supporterQol) return UiIcon.trophy;
     if (item.kind == ShopOfferKind.boostHours) return UiIcon.flask;
@@ -463,6 +464,7 @@ class _ShopRow extends StatelessWidget {
       ShopOfferKind.boostHours =>
         '+${item.boostHours}h${item.oneTime ? ' · once' : ''}',
       ShopOfferKind.adFree => 'permanent',
+      ShopOfferKind.vipPass => 'not for sale yet',
       ShopOfferKind.longAway => '16h cave · 24h chest · once',
       ShopOfferKind.supporterQol =>
         '+${item.bagSlots} bag · +${item.boostHours}h · once',

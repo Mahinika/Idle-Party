@@ -6,7 +6,8 @@
 ///
 /// Analytics collection stays on after the check, including a decline or a
 /// timeout, so a denied answer can still send consent-mode pings without an
-/// advertising ID. Crashlytics stays off when the player says no.
+/// advertising ID. Crash reports stay on for a decline too. They do not
+/// include an advertising ID.
 class MeasurementConsent {
   const MeasurementConsent({required this.granted});
 
@@ -20,5 +21,6 @@ class MeasurementConsent {
   /// Always on once UMP has returned.
   bool get analyticsCollection => true;
 
-  bool get crashlytics => granted;
+  /// On for a decline. No advertising ID is attached.
+  bool get crashlytics => true;
 }

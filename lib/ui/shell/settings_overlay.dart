@@ -463,6 +463,20 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         SaveTransferSection(director: director),
         const SizedBox(height: 12),
         GameButton(
+          label: 'RESTORE PREVIOUS',
+          tip: 'Put back the last backup of this save',
+          style: GameButtonStyle.grey,
+          onPressed: () async {
+            final ok = await director.restorePreviousSave();
+            if (!context.mounted) return;
+            director.showToast(
+              ok ? 'Previous save restored' : 'No previous save',
+              life: 2.2,
+            );
+          },
+        ),
+        const SizedBox(height: 8),
+        GameButton(
           label: 'SAVES',
           tip: 'Open the title screen to continue, start, or switch saves',
           style: GameButtonStyle.grey,

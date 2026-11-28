@@ -312,11 +312,16 @@ void main() {
     final manifest = File(
       'android/app/src/main/AndroidManifest.xml',
     ).readAsStringSync();
-    expect(manifest, contains('android:allowBackup="false"'));
-    expect(manifest, contains('android:fullBackupContent="false"'));
+    expect(manifest, contains('android:allowBackup="true"'));
+    expect(manifest, contains('android:fullBackupContent="@xml/backup_rules"'));
     expect(manifest, contains('android:dataExtractionRules='));
+    final backupRules = File(
+      'android/app/src/main/res/xml/data_extraction_rules.xml',
+    ).readAsStringSync();
+    expect(backupRules, contains('idle_party_backup/slot_0.json'));
+    expect(backupRules, contains('domain="sharedpref"'));
     final privacy = File('docs/PRIVACY.md').readAsStringSync();
-    expect(privacy, contains('Android backup does not restore'));
+    expect(privacy, contains('save-file copies only'));
     expect(privacy, contains('Play Games cloud save'));
     final ignore = File('.gitignore').readAsStringSync();
     expect(ignore, contains('docs/competitor_research/**/*.png'));

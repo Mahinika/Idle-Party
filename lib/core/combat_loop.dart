@@ -355,6 +355,14 @@ extension GameDirectorCombatLoop on GameDirector {
               floor: floorNo,
             ),
           );
+        if (!_state.metaDepth.roi2.consentPrompted) {
+          _state = _state.copyWith(
+            metaDepth: _state.metaDepth.copyWith(
+              roi2: _state.metaDepth.roi2.copyWith(consentPrompted: true),
+            ),
+          );
+          unawaited(AdRewarded.presentConsentIfNeeded());
+        }
         }
         if (wasDaily &&
             _state.dailyClaimed &&

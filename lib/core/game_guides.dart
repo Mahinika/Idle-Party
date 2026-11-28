@@ -176,7 +176,7 @@ abstract final class GameGuides {
         '(days 1–6 a large prize, day 7 a jackpot; a missed day does not reset the row).\n\n'
         '• The hub hunt names this job until you claim.\n'
         '• First Daily Vault claim of each calendar month also pays a season bonus.\n'
-        '• Daily Vault resets at UTC midnight.\n'
+        '• Daily Vault resets at midnight.\n'
         '• The hub hunt and offline Up next share the same job.',
   );
 
@@ -233,13 +233,13 @@ abstract final class GameGuides {
     title: 'THREE DAILIES',
     body:
         'Three different systems — not the same button:\n\n'
-        '• Daily Vault — UTC day on the hub hunt. One PUSH floor fills it '
+        '• Daily Vault — day on the hub hunt. One PUSH floor fills it '
         '(FARM does not, including a FARM boss). Then CLAIM VAULT for essence + 1 Cinder.\n'
         '• Daily Run — one free seeded floor scaled from yesterday\'s PUSH '
         '(hub DAILY RUN) for +25e base; Dawn Tithe can add more. Separate from the vault.\n'
         '• Quests — MENU · QUESTS board (Daily / Bounty / Side / Week / Contract). '
         'CLAIM QUESTS on the hub hunt when rewards are ready.\n\n'
-        'The hub hunt always picks one job. Vault reset and Daily Run reset at UTC midnight. '
+        'The hub hunt always picks one job. Vault reset and Daily Run reset at midnight. '
         'Daily Run unlocks after your first Ascend (or when every active hero hits max level). '
         'Before that, the hub hunt stays on Grow the party / one cave today.',
   );
@@ -310,7 +310,7 @@ abstract final class GameGuides {
         'mid-dungeon = party kept fighting with AFK assist. Then one wow line, '
         'a few highlights, then Up next.\n'
         '• The hub hunt flashes READY / ALMOST when a claim or Ascend is close.\n'
-        '• UTC midnight resets Daily Vault and Daily Run (not the ISO week goal).',
+        '• midnight resets Daily Vault and Daily Run (not the ISO week goal).',
   );
 
   static const GuideTopic _midgameJobs = GuideTopic(
@@ -318,10 +318,10 @@ abstract final class GameGuides {
     title: 'QUESTS',
     body:
         'QUESTS.\n\n'
-        '• Five slots: Daily (UTC kill), Bounty (kill ladder), Side '
+        '• Five slots: Daily (kill), Bounty (kill ladder), Side '
         '(bosses, elites, floors, or gold), Week (ISO-week goal), '
         'Contract (big goal).\n'
-        '• Daily returns next UTC day after you claim; Week returns next ISO week.\n'
+        '• Daily returns next day after you claim; Week returns next ISO week.\n'
         '• Bounty ladder climbs as you grow; top rung repeats.\n'
         '• Every 3rd quest claimed adds +5 essence.\n'
         '• MENU · QUESTS (or the badge on MENU) when claims are ready.\n'
@@ -343,7 +343,7 @@ abstract final class GameGuides {
         'Daily Run — one hunt at a time.\n'
         '• Clear the floor for +25e base; Dawn Tithe can add more. Then return to hub.\n'
         '• May let you visit a locked zone for the day.\n'
-        '• Claim once per UTC day — not the same as CLAIM VAULT.',
+        '• Claim once per day — not the same as CLAIM VAULT.',
   );
 
   static const GuideTopic _midgameApex = GuideTopic(
@@ -402,14 +402,14 @@ abstract final class GameGuides {
       title: 'THREE DAILIES',
       body:
           'Three different systems — not the same button:\n\n'
-          '• Daily Vault — UTC day on the hub hunt. One PUSH floor fills it '
+          '• Daily Vault — day on the hub hunt. One PUSH floor fills it '
           '(FARM does not). Or time KEY +2. Or a Gauntlet clear. Then CLAIM VAULT '
           'for essence + 1 Cinder.\n'
           "• Daily Run — one free seeded floor scaled from yesterday's PUSH "
           '(hub DAILY RUN) for +25e base; Dawn Tithe can add more. Separate from the vault.\n'
           '• Quests — MENU · QUESTS board (Daily / Bounty / Side / Week / Contract). '
           'CLAIM QUESTS on the hub hunt when rewards are ready.\n\n'
-          'The hub hunt always picks one job. Vault reset and Daily Run reset at UTC midnight. '
+          'The hub hunt always picks one job. Vault reset and Daily Run reset at midnight. '
           'Daily Run unlocks after your first Ascend (or endgame). Before that, the hub hunt '
           'stays on Grow the party / one cave today.',
     ),
@@ -552,7 +552,7 @@ abstract final class GameGuides {
           '• Three dailies (not the same): Daily Vault (PUSH clear / KEY +2 / Gauntlet clear → essence + 1 Cinder), '
           'Daily Run (+25e base from yesterday PUSH), Quests Daily on MENU · QUESTS.\n'
           '• ENDGAME tab: KEY → Gauntlet → Ranked GR → Farm Rift → Ashen Crown.\n'
-          '• Clocks: UTC midnight (vault + Daily Run), ISO week (KEY affix), calendar month (vault bonus), Play month (boards).',
+          '• Clocks: midnight (vault + Daily Run), ISO week (KEY affix), calendar month (vault bonus), Play month (boards).',
     ),
     GuideTopic(
       id: 'classes',
@@ -638,7 +638,7 @@ abstract final class GameGuides {
       body:
           'ESSENCE → PETS.\n\n'
           '• Hatch with essence or EGG · 10 Cinders; merge same species + rarity to rank up.\n'
-          '• Errands: limited sends per UTC day (Bigger Shipment raises cap).\n'
+          '• Errands: limited sends per day (Bigger Shipment raises cap).\n'
           '• Active pet chips damage in combat; bond adds AP over time.\n'
           '• Favorite while active boosts passives (gold / loot / XP).\n'
           '• Pets survive Ascend.',
@@ -663,7 +663,7 @@ abstract final class GameGuides {
       body:
           'MENU → QUESTS.\n\n'
           '• Five slots: Daily, Bounty, Side, Week, Contract (endgame hunts when Lv${GameLogic.maxHeroLevel}).\n'
-          '• Daily / Week reset after claim (UTC day / ISO week). Every 3rd claim +5 essence.\n'
+          '• Daily / Week reset after claim (day / ISO week). Every 3rd claim +5 essence.\n'
           '• REROLL Daily/Side twice per day (ad or Ad-free instant).\n'
           '• MENU badge or hub CLAIM QUESTS when rewards are ready.\n'
           '• Dungeon CLAIM chip gathers all ready quests (long-press opens the list).',
@@ -672,7 +672,7 @@ abstract final class GameGuides {
       id: 'weekly',
       title: 'DAILY VAULT',
       body:
-          'Daily Vault is the UTC-day chase — separate from Daily Run and Quests.\n\n'
+          'Daily Vault is the day chase — separate from Daily Run and Quests.\n\n'
           '• Fill with one PUSH clear (not FARM), timed KEY +2, or Gauntlet clear; CLAIM VAULT pays essence + 1 Cinder.\n'
           '• Check-in row: days 1–6 large prize, day 7 jackpot; missed day does not reset the row.\n'
           '• First vault claim each calendar month pays a season bonus.\n'
@@ -739,7 +739,7 @@ abstract final class GameGuides {
           'A free one-floor Daily Run on the hub — separate from Daily Vault and Quests.\n\n'
           '• Unlocks after your first Ascend (or endgame). Floor scales from yesterday\'s PUSH.\n'
           '• Clear for +25e base; Dawn Tithe can add more.\n'
-          '• Claim once per UTC day — not CLAIM VAULT.\n'
+          '• Claim once per day — not CLAIM VAULT.\n'
           '• Hub hunt may point here when the run is ready.\n'
           '• May preview a locked zone for the day.',
     ),

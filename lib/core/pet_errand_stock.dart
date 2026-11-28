@@ -73,6 +73,6 @@ abstract final class PetErrandStock {
   static String stockLine(GameState state, {DateTime? now}) {
     final left = creditsRemaining(state, now: now);
     final max = maxCredits(rollDay(state.metaDepth, now: now));
-    return '$left of $max errands left today (UTC)';
+    return '$left of $max errands left today';
   }
 }

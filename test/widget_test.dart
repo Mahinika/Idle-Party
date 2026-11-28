@@ -158,8 +158,9 @@ void main() {
     await tester.tap(find.text('ENDGAME').first);
     await tester.pump();
     expect(find.textContaining('GR1'), findsWidgets);
-    expect(find.textContaining('FARM R'), findsWidgets);
-    expect(find.textContaining('GAUNTLET'), findsWidgets);
+    expect(find.text('DAILY RUN'), findsWidgets);
+    expect(find.textContaining('FARM R'), findsNothing);
+    expect(find.textContaining('GAUNTLET F'), findsNothing);
 
     await tester.tap(find.text('PATH').last);
     await tester.pump();

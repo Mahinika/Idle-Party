@@ -1,18 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Local saves stay on the device. Play Games cloud save is the other-device path. -->
+<!-- Auto Backup keeps the save-file copies only. Shared preferences,
+     databases, and external files (ad id, Play credentials) stay out. -->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude domain="root" path="." />
-        <exclude domain="file" path="." />
-        <exclude domain="database" path="." />
-        <exclude domain="sharedpref" path="." />
-        <exclude domain="external" path="." />
+        <include domain="file" path="idle_party_backup/slot_0.json" />
+        <include domain="file" path="idle_party_backup/slot_1.json" />
+        <include domain="file" path="idle_party_backup/slot_2.json" />
+        <include domain="file" path="idle_party_backup/slot_3.json" />
+        <include domain="file" path="idle_party_backup/slot_4.json" />
+        <exclude domain="root" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
     </cloud-backup>
     <device-transfer>
-        <exclude domain="root" path="." />
-        <exclude domain="file" path="." />
-        <exclude domain="database" path="." />
-        <exclude domain="sharedpref" path="." />
-        <exclude domain="external" path="." />
+        <include domain="file" path="idle_party_backup/slot_0.json" />
+        <include domain="file" path="idle_party_backup/slot_1.json" />
+        <include domain="file" path="idle_party_backup/slot_2.json" />
+        <include domain="file" path="idle_party_backup/slot_3.json" />
+        <include domain="file" path="idle_party_backup/slot_4.json" />
+        <exclude domain="root" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
     </device-transfer>
 </data-extraction-rules>

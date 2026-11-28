@@ -22,9 +22,9 @@ class WhatsNewOverlay extends StatefulWidget {
   /// Current (or unseen) blocks. First hour: lead bullet only.
   static List<ChangelogRelease> visibleFocus(GameState state) {
     final unseen = MetaSystems.hasUnseenChangelog(state);
-    final current = MetaSystems.releases.isEmpty
+    final current = MetaSystems.playerNotes.isEmpty
         ? null
-        : MetaSystems.releases.first;
+        : MetaSystems.playerNotes.first;
     final focus = unseen
         ? MetaSystems.unseenReleases(state)
         : (current == null
@@ -37,7 +37,7 @@ class WhatsNewOverlay extends StatefulWidget {
   /// Older-version fold waits until first boss (KEY recap is not day-one).
   static bool showOlderVersions(GameState state) =>
       !MetaSystems.hasUnseenChangelog(state) &&
-      MetaSystems.releases.length > 1 &&
+      MetaSystems.playerNotes.length > 1 &&
       !GameLogic.plainPlayerChrome(state);
 
   /// Dialog host used by hub auto-show and Settings → Patch Notes.
@@ -89,19 +89,20 @@ class _WhatsNewOverlayState extends State<WhatsNewOverlay> {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
-    final older = MetaSystems.releases.length <= 1
+    final older = MetaSystems.playerNotes.length <= 1
         ? const <ChangelogRelease>[]
-        : MetaSystems.releases.sublist(1);
+        : MetaSystems.playerNotes.sublist(1);
     final focus = WhatsNewOverlay.visibleFocus(state);
 
     Widget noteLine(String entry) {
+    final shown = entry.replaceAll('UTC ', '').replaceAll('UTC-', '');
       return Padding(
         padding: const EdgeInsets.only(bottom: 6),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('•  ', style: GameTheme.readable(color: GameTheme.torch)),
-            Expanded(child: Text(entry, style: GameTheme.readable())),
+            Expanded(child: Text(shown, style: GameTheme.readable())),
           ],
         ),
       );

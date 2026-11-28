@@ -92,7 +92,7 @@ void main() {
     final clock = DateTime.utc(2026, 11, 21, 12);
     final seeded = GameLogic.createInitialState(now: clock);
     final state = seeded.copyWith(
-      bossVictories: 1,
+      bossVictories: 2,
       essence: 100,
       inDungeon: true,
       inGauntlet: true,

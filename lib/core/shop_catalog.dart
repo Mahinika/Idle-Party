@@ -4,6 +4,7 @@
 library;
 
 import 'ad_boost.dart';
+import 'remote_tune.dart';
 
 enum ShopOfferKind {
   /// Timed Full Boost (same ×2 gold / +ATK as POWERUPS ticket spend).
@@ -26,6 +27,9 @@ enum ShopOfferKind {
 
   /// One-time longer away: 16h cave catch-up and a 24h hub gold chest.
   longAway,
+
+  /// VIP perks. Catalog only until a Play product exists.
+  vipPass,
 }
 
 class ShopCatalogItem {
@@ -169,51 +173,35 @@ abstract final class ShopCatalog {
       permMask: AdBoost.permAll,
     ),
     ShopCatalogItem(
-      id: 'starter_boost_6h',
-      name: 'Starter boost',
-      description:
-          '+6 hours Scroll of Battle (×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK). '
-          'Same as SCROLLS tickets — once per save.',
-      kind: ShopOfferKind.boostHours,
-      boostHours: 6,
-      oneTime: true,
-    ),
-    ShopCatalogItem(
-      id: 'boost_12h',
-      name: '12-hour boost',
-      description:
-          '+12 hours Scroll of Battle (×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK). '
-          'Stacks up to 24 hours, same as tickets.',
-      kind: ShopOfferKind.boostHours,
-      boostHours: 12,
-    ),
-    ShopCatalogItem(
       id: 'ad_free',
-      name: 'Ad-free welcome',
+      name: 'Ad-free',
       description:
-          'Hides SCROLLS ads and every WATCH AD button. '
-          '+2 Ad Tickets once, five free tickets each day, '
-          'lantern bonus gold on tap (at least 2 hours of hub gold), '
-          'Welcome Back gold and essence ×3 (at least 30 minutes of hub gold), '
-          'five free CAMP levels each day, '
-          'and free Daily or Side quest rerolls. Permanent.',
+          'Skips rewarded ads. Each claim pays the same reward a watch would: '
+          'an Ad Ticket, lantern gold, Welcome Back ×3, a CAMP level, '
+          'or a quest reroll. Permanent.',
       shelfBullets: [
-        'No SCROLLS ads or WATCH buttons',
-        'Daily tickets + lantern + Welcome Back bonuses',
-        'Free quest rerolls · permanent on this save',
+        'No rewarded ads',
+        'Same reward as watching',
+        'Permanent on this save',
       ],
       kind: ShopOfferKind.adFree,
       boostHours: 0,
       oneTime: true,
     ),
     ShopCatalogItem(
-      id: 'day_boost_24h',
-      name: 'Day pack',
+      id: 'vip_pass',
+      name: 'VIP pass',
       description:
-          '+24 hours Scroll of Battle (fills the stack from empty). '
-          'Best boost value per hour — same ×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK as tickets.',
-      kind: ShopOfferKind.boostHours,
-      boostHours: 24,
+          'Five Ad Tickets a day, lantern gold on tap, Welcome Back ×3, '
+          'five free CAMP levels a day, and free quest rerolls. '
+          'Shown only after a Play product exists.',
+      shelfBullets: [
+        '5 tickets a day',
+        'Lantern gold and Welcome Back ×3',
+        'Free CAMP levels and quest rerolls',
+      ],
+      kind: ShopOfferKind.vipPass,
+      oneTime: true,
     ),
     ShopCatalogItem(
       id: 'long_away',
@@ -274,7 +262,14 @@ abstract final class ShopCatalog {
       )
       .toList();
 
-  /// Timed hour packs — kept for restore / old Play SKUs, not listed in SHOP.
+  /// Removed hour-pack product ids. A Play restore of one of these is ignored.
+  static const Set<String> retiredProductIds = {
+    'starter_boost_6h',
+    'boost_12h',
+    'day_boost_24h',
+  };
+
+  /// Timed hour packs — none are offered. Old saves keep shopStarterClaimed.
   static List<ShopCatalogItem> get timePacks =>
       offered.where((e) => e.kind == ShopOfferKind.boostHours).toList();
 
@@ -298,6 +293,9 @@ abstract final class ShopCatalog {
 
   static bool _onShelf(ShopCatalogItem item, Set<String> listed) {
     if (item.kind == ShopOfferKind.boostHours) return false;
+    if (item.kind == ShopOfferKind.vipPass) {
+      return RemoteTune.vipPassListed && listed.contains(item.id);
+    }
     if (shelfAlwaysIds.contains(item.id)) return true;
     if (item.id == 'cinder_pouch' || item.id == 'season_pass_premium') {
       return listed.contains(item.id);
@@ -314,6 +312,9 @@ abstract final class ShopCatalog {
     if (playChargeableIds.contains(id)) return true;
     final item = byId[id];
     if (item == null || item.kind == ShopOfferKind.boostHours) return false;
+    if (item.kind == ShopOfferKind.vipPass) {
+      return RemoteTune.vipPassListed && playLists;
+    }
     if (item.kind == ShopOfferKind.permScroll ||
         item.kind == ShopOfferKind.cinders ||
         item.kind == ShopOfferKind.seasonPass) {

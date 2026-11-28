@@ -132,7 +132,10 @@ void main() {
     );
     expect(legacy.metaDepth.checkInDay, 1);
     expect(ReturnWeek.todayTitle(legacy), 'Sandy Caverns · CAMP');
-    final ascended = GameLogic.ascend(week(4).copyWith(essence: 40), now: now);
+    final ascended = GameLogic.ascend(
+      week(4).copyWith(essence: 40, bossVictories: 2),
+      now: now,
+    );
     expect(ascended.ascensionLevel, 1);
     expect(ascended.metaDepth.checkInDay, 4);
     expect(ReturnWeek.active(ascended), isFalse);

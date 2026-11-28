@@ -9,6 +9,7 @@ import '../models/proficiency.dart';
 import 'dungeon_generator.dart';
 import 'equipment_factory.dart';
 import 'game_logic.dart';
+import 'remote_tune.dart';
 import 'game_state.dart';
 import 'gear/drop_tables.dart';
 import 'keystone.dart';
@@ -33,6 +34,28 @@ abstract final class LootPipeline {
         n.contains('stolen coin');
   }
 
+  /// First-boss flag: one rare-or-better piece, no dust skip.
+  static List<LootDrop> _guaranteedRareKill({
+    required int battleNumber,
+    required int ascensionLevel,
+    required List<PartyHero>? party,
+    required String dungeonId,
+    required int hardmodeLevel,
+  }) {
+    var rarity = _rarityForBattle(battleNumber, hardmodeLevel: hardmodeLevel);
+    if (rarity.index < LootRarity.rare.index) rarity = LootRarity.rare;
+    return <LootDrop>[
+      _rollGearDrop(
+        battleNumber: battleNumber,
+        rarity: rarity,
+        party: party,
+        dungeonId: dungeonId,
+        ascensionLevel: ascensionLevel,
+        hardmodeLevel: hardmodeLevel,
+      ),
+    ];
+  }
+
   /// Per-kill loot: gear (or Faded Dust). No room fillers — those are
   /// [rollFloorClearLoot] once per clear.
   static List<LootDrop> rollKillLoot(
@@ -43,8 +66,18 @@ abstract final class LootPipeline {
     List<PartyHero>? party,
     String dungeonId = 'sandy',
     EnemyRole enemyRole = EnemyRole.normal,
+    bool guaranteeRare = false,
   }) {
     final hm = hardmodeLevel.clamp(0, Keystone.maxLevel);
+    if (guaranteeRare) {
+      return _guaranteedRareKill(
+        battleNumber: battleNumber,
+        ascensionLevel: ascensionLevel,
+        party: party,
+        dungeonId: dungeonId,
+        hardmodeLevel: hm,
+      );
+    }
     final kill = DropTables.current.killLoot;
     final roleSkipRelief = kill.roleSkipRelief.forRole(enemyRole);
 
@@ -682,11 +715,16 @@ abstract final class LootPipeline {
     final share = unit?.rewardShare ?? 1.0;
     final crowdSkip =
         share < 1.0 && GameLogic.random.nextDouble() >= share;
+    final guarantee =
+        RemoteTune.guaranteedFirstBossDrop &&
+        GameLogic.firstBossPending(state) &&
+        enemyRole == EnemyRole.boss;
     final drops = state.inGreaterRift || crowdSkip
         ? const <LootDrop>[]
         : rollKillLoot(
             state.battleNumber,
             ascensionLevel: state.ascensionLevel,
+            guaranteeRare: guarantee,
             lootFindPercent: state.combatLootFindPercent,
             hardmodeLevel: Keystone.combatLevel(state),
             party: state.heroes,

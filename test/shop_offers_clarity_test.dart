@@ -27,7 +27,7 @@ void main() {
     state = ShopHubOffer.ensureWindow(state, now: now);
     final unowned = ShopHubOffer.featuredItem(state, now: now, playListsAdFree: true);
     expect(unowned?.id, 'ad_free');
-    expect(ShopHubOffer.featuredTitle(unowned!), 'Ad-free welcome');
+    expect(ShopHubOffer.featuredTitle(unowned!), 'Ad-free');
 
     final adFree = ShopCatalog.byId['ad_free']!;
     state = ShopBilling.applyPurchase(state, adFree, now: now);

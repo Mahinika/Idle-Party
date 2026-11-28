@@ -871,7 +871,7 @@ void main() {
     expect(visible.bottom, lessThanOrEqualTo(640));
   });
 
-  test('ad-free Welcome Back is ×3 with a 30 minute floor and does not stack on Rest', () {
+  test('ad-free Welcome Back is ×3 with a minutes-away floor and does not stack on Rest', () {
     final now = DateTime.utc(2026, 8, 21, 12);
     final played = GameLogic.createInitialState(now: now).copyWith(
       bossVictories: 1,
@@ -888,7 +888,7 @@ void main() {
       played,
       const Duration(minutes: 10),
     );
-    final floor = GoldIncome.hubGoldPerMinute(played) * AdOffer.welcomeFloorMinutes;
+    final floor = GoldIncome.hubGoldPerMinute(played) * 10;
     final expected =
         plain.goldGained +
         (plain.goldGained * (AdOffer.welcomeMul - 1) > floor

@@ -28,7 +28,7 @@ void main() {
     );
     expect(
       lines[1],
-      'Lose: gold, regular gear, market listings, loadouts, GOLD tracks, and this run\'s floors.',
+      'Lost: gold, forge tracks, market listings, loadouts, and this run\'s floors. Worn and stashed gear resets to starter pieces. Heroes and Apex gear stay.',
     );
     final reward =
         GameLogic.ascendEssenceReward(1) +
@@ -58,7 +58,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Gain: AL1'), findsOneWidget);
-    expect(find.textContaining('Lose: gold, regular gear'), findsOneWidget);
+    expect(find.textContaining('Lost: gold, forge tracks'), findsOneWidget);
     expect(find.textContaining('market listings'), findsOneWidget);
     expect(find.textContaining('loadouts'), findsOneWidget);
     expect(find.textContaining('Essence:'), findsOneWidget);

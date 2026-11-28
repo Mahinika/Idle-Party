@@ -287,7 +287,7 @@ abstract final class WispGift {
     }
     final clock = now ?? DateTime.now().toUtc();
     if (!canTapToday(state.metaDepth, now: clock)) {
-      return 'Gold lantern · 0 left today (UTC).';
+      return 'Gold lantern · 0 left today.';
     }
     if (hasPendingChoice(state.metaDepth)) {
       return 'Gold lantern · pending gold — tap the flame when the fight resumes.';

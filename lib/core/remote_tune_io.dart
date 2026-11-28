@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-
 import 'app_analytics.dart';
 import 'firebase_boot.dart';
 import 'flutter_test_env_stub.dart'
@@ -28,11 +26,7 @@ Future<void> refresh() {
 
 Future<void> _refresh() async {
   try {
-    final allowed = await ConsentInformation.instance.canRequestAds();
-    if (!allowed) {
-      RemoteTune.reset();
-      return;
-    }
+    // Installation id only. Ad consent does not gate this fetch.
     await FirebaseBoot.ensureInitialized();
     final rc = FirebaseRemoteConfig.instance;
     await rc.setConfigSettings(
@@ -43,7 +37,8 @@ Future<void> _refresh() async {
       ),
     );
     await rc.setDefaults(RemoteTune.defaults);
-    await rc.fetchAndActivate();
+    // Last session's fetch applies now. This fetch waits for the next launch.
+    await rc.activate();
     RemoteTune.apply(
       dailyCap: rc.getInt(RemoteTune.keyDailyCap),
       firstDelaySec: rc.getInt(RemoteTune.keyFirstDelaySec),
@@ -55,8 +50,15 @@ Future<void> _refresh() async {
       welcomeBackFirstReturnShort:
           rc.getBool(RemoteTune.keyWelcomeBackFirstReturnShort),
       townEnabled: rc.getBool(RemoteTune.keyTownEnabled),
+      guaranteedFirstBoss: rc.getBool(RemoteTune.keyGuaranteedFirstBoss),
+      vipPassListed: rc.getBool(RemoteTune.keyVipPassListed),
+      liveEventId: rc.getString(RemoteTune.keyLiveEventId),
+      liveEventMul: rc.getDouble(RemoteTune.keyLiveEventMul),
+      liveEventStart: rc.getString(RemoteTune.keyLiveEventStart),
+      liveEventEnd: rc.getString(RemoteTune.keyLiveEventEnd),
       fromRemote: true,
     );
+    await rc.fetch();
     final shop = RemoteTune.shopFeaturedId;
     await AppAnalytics.logEvent('remote_tune', {
       'wisp_cap': RemoteTune.wispDailyCap,

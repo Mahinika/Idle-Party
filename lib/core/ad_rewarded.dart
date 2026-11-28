@@ -95,4 +95,7 @@ abstract final class AdRewarded {
 
   /// SETTINGS → AD PRIVACY. Lets EU players change or withdraw AdMob consent.
   static Future<void> showPrivacyOptions() => impl.showPrivacyOptions();
+
+  /// UMP form. Called after the first fight and before a rewarded request.
+  static Future<void> presentConsentIfNeeded() => impl.presentConsentIfNeeded();
 }

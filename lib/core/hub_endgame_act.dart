@@ -1,3 +1,4 @@
+import 'game_state.dart';
 import 'greater_rift.dart';
 import 'hub_chase.dart';
 
@@ -19,6 +20,7 @@ class HubEndgameNode {
     required this.chaseKind,
     required this.mapX,
     required this.mapY,
+    this.dailyPreview = false,
   });
 
   final HubEndgameHunt hunt;
@@ -34,6 +36,9 @@ class HubEndgameNode {
   /// Normalized center on the ENDGAME board (not the 15-zone path).
   final double mapX;
   final double mapY;
+
+  /// Shown on the board as a preview. It is not a hunt enter button.
+  final bool dailyPreview;
 }
 
 abstract final class HubEndgameAct {
@@ -91,6 +96,60 @@ abstract final class HubEndgameAct {
       mapX: 0.50,
       mapY: 0.80,
     ),
+  ];
+
+  static const HubEndgameNode dailyRunPreview = HubEndgameNode(
+    hunt: HubEndgameHunt.gauntlet,
+    shortLabel: 'DAILY RUN',
+    title: 'Daily Run',
+    blurb: 'One cave each day. A look at the endgame board.',
+    portraitDungeonId: 'sandy',
+    enterLabel: 'DAILY RUN',
+    chaseKind: HubChaseKind.dailyVaultProgress,
+    mapX: 0.50,
+    mapY: 0.62,
+    dailyPreview: true,
+  );
+
+  /// The one hunt this save has not started yet. Ashen stays once the
+  /// others have a best.
+  static HubEndgameNode nextFromBests({
+    required int gauntletBestFloor,
+    required int riftBestTier,
+    required int grBestTier,
+  }) {
+    if (gauntletBestFloor <= 0) return nodeFor(HubEndgameHunt.gauntlet);
+    if (riftBestTier <= 0) return nodeFor(HubEndgameHunt.farmRift);
+    if (grBestTier <= 0) return nodeFor(HubEndgameHunt.rankedGr);
+    return nodeFor(HubEndgameHunt.ashen);
+  }
+
+  static HubEndgameNode nextMilestone(GameState state) {
+    final md = state.metaDepth;
+    return nextFromBests(
+      gauntletBestFloor: md.gauntletBestFloor,
+      riftBestTier: md.riftBestTier,
+      grBestTier: md.grBestTier,
+    );
+  }
+
+  /// ENDGAME page: the next hunt, plus the Daily Run preview.
+  static List<HubEndgameNode> pageNodes(GameState state) => <HubEndgameNode>[
+    nextMilestone(state),
+    dailyRunPreview,
+  ];
+
+  static List<HubEndgameNode> pageFromBests({
+    required int gauntletBestFloor,
+    required int riftBestTier,
+    required int grBestTier,
+  }) => <HubEndgameNode>[
+    nextFromBests(
+      gauntletBestFloor: gauntletBestFloor,
+      riftBestTier: riftBestTier,
+      grBestTier: grBestTier,
+    ),
+    dailyRunPreview,
   ];
 
   static HubEndgameNode nodeFor(HubEndgameHunt hunt) {

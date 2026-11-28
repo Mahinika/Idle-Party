@@ -1,3 +1,5 @@
+import 'roi2_persist.dart';
+
 /// KEY / Ranked GR / Farm Rift save bound. Keep in sync with Keystone.maxLevel / GreaterRift.maxTier / Rift.maxTier.
 const int kEndlessLadderBound = 999;
 
@@ -349,6 +351,7 @@ class MetaDepthState {
     this.cinderPouchDoubled = false,
     this.paidSeasonPass = false,
     this.adFree = false,
+    this.roi2 = const Roi2Persist(),
     this.rewardedWatchCount = 0,
     this.adFreeNudgeShown = false,
     this.campAdUtc = '',
@@ -728,6 +731,21 @@ class MetaDepthState {
   /// Permanent SHOP ad-free purchase. Survives Ascend. Billing grants later.
   final bool adFree;
 
+  /// VIP split, local day clock, and lantern park. Survives Ascend.
+  final Roi2Persist roi2;
+
+  /// Old Ad-free bundle (tickets, auto lantern, Welcome ×3, CAMP, rerolls).
+  ///
+  /// A save that bought Ad-free before the split has [Roi2Persist.vipPass].
+  /// An in-memory Ad-free flag that has not been through the split still
+  /// counts, so existing tests and unsaved grants keep the old perks. A new
+  /// purchase sets [Roi2Persist.vipPerkSplit] and leaves [Roi2Persist.vipPass]
+  /// false.
+  bool get hasVipPerks => roi2.vipPass || (adFree && !roi2.vipPerkSplit);
+
+  /// Skips the ad and pays the same reward a finished watch would.
+  bool get skipsAds => adFree;
+
   /// Finished rewarded watches (SCROLLS, WISP, Welcome Back, wipe). Survives Ascend.
   final int rewardedWatchCount;
 
@@ -1030,6 +1048,7 @@ class MetaDepthState {
     bool? cinderPouchDoubled,
     bool? paidSeasonPass,
     bool? adFree,
+    Roi2Persist? roi2,
     int? rewardedWatchCount,
     bool? adFreeNudgeShown,
     String? campAdUtc,
@@ -1240,6 +1259,7 @@ class MetaDepthState {
       cinderPouchDoubled: cinderPouchDoubled ?? this.cinderPouchDoubled,
       paidSeasonPass: paidSeasonPass ?? this.paidSeasonPass,
       adFree: adFree ?? this.adFree,
+      roi2: roi2 ?? this.roi2,
       rewardedWatchCount: rewardedWatchCount ?? this.rewardedWatchCount,
       adFreeNudgeShown: adFreeNudgeShown ?? this.adFreeNudgeShown,
       campAdUtc: campAdUtc ?? this.campAdUtc,
@@ -1443,6 +1463,7 @@ class MetaDepthState {
     'cinderPouchDoubled': cinderPouchDoubled,
     'paidSeasonPass': paidSeasonPass,
     'adFree': adFree,
+    'roi2': roi2.toJson(),
     'rewardedWatchCount': rewardedWatchCount,
     'adFreeNudgeShown': adFreeNudgeShown,
     'campAdUtc': campAdUtc,
@@ -1733,6 +1754,10 @@ class MetaDepthState {
       cinderPouchDoubled: (json['cinderPouchDoubled'] as bool?) ?? false,
       paidSeasonPass: (json['paidSeasonPass'] as bool?) ?? false,
       adFree: (json['adFree'] as bool?) ?? false,
+      roi2: Roi2Persist.fromJson(
+        json['roi2'],
+        adFree: (json['adFree'] as bool?) ?? false,
+      ),
       rewardedWatchCount: ((json['rewardedWatchCount'] as num?)?.toInt() ?? 0)
           .clamp(0, 9999),
       adFreeNudgeShown: (json['adFreeNudgeShown'] as bool?) ?? false,
