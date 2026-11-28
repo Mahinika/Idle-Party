@@ -478,6 +478,26 @@ void main() {
     expect(loaded.apexTargetProgress, 0);
   });
 
+  test('IP-020 reselecting the same craft goal does not reset the meter', () {
+    var state = GameLogic.createInitialState().copyWith(
+      metaDepth: const MetaDepthState(
+        apexCraftClassId: 'warrior',
+        apexCraftRoleTag: 'tank',
+        apexCraftSlot: 'weapon',
+        apexTargetMatId: 'shard_sandy',
+        apexTargetProgress: 72,
+      ),
+    );
+    state = GameLogic.setApexCraftGoal(
+      state,
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.tank,
+      slot: EquipmentSlot.weapon,
+    );
+    expect(state.metaDepth.apexTargetProgress, 72);
+    expect(state.metaDepth.apexTargetMatId, 'shard_sandy');
+  });
+
   test('craft goal and target mat changes reset target progress', () {
     var state = GameLogic.createInitialState().copyWith(
       metaDepth: const MetaDepthState(

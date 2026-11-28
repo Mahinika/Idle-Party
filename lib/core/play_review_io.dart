@@ -12,7 +12,7 @@ Future<bool> requestPlayInAppReview() async {
     await review.requestReview();
     return true;
   } catch (e, st) {
-    debugPrint('PlayReview request failed: $e\n$st');
+    if (kDebugMode) debugPrint('PlayReview request failed: $e\n$st');
     return false;
   }
 }

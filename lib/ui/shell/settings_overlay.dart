@@ -274,17 +274,19 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           builder: (context) {
             final wide = MediaQuery.sizeOf(context).width >= 400;
             final largeType = MediaQuery.textScalerOf(context).scale(1) > 1.2;
-            final percent = '${(state.uiTextScale * 100).round()}%';
+            final shown = state.uiTextScale.clamp(
+              kUiTextScaleMin,
+              kUiTextScaleMax,
+            );
+            final percent = '${(shown * 100).round()}%';
             final slider = MenuChrome.slider(
               label: 'UI text scale',
-              value: state.uiTextScale.clamp(
-                kUiTextScaleMin,
-                kUiTextScaleMax,
-              ),
+              value: shown,
               min: kUiTextScaleMin,
               max: kUiTextScaleMax,
               divisions: 13,
-              onChanged: director.setUiTextScale,
+              onChanged: director.previewUiTextScale,
+              onChangeEnd: director.setUiTextScale,
             );
             if (wide || !largeType) {
               return Row(

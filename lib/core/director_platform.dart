@@ -30,7 +30,8 @@ extension GameDirectorPlatform on GameDirector {
           showToast(toast, life: 2.6);
         }
       } catch (e, st) {
-        debugPrint('Friend referral failed: $e\n$st');
+        if (kDebugMode) debugPrint('Friend referral failed: $e\n$st');
+        CrashReport.recordNonFatal(e, st, reason: 'director_platform:friend');
       }
     });
     _friendChain = run;
@@ -883,7 +884,7 @@ extension GameDirectorPlatform on GameDirector {
         if (parsed != null) _state = parsed;
       }
     } catch (error, stack) {
-      debugPrint('save freeze could not read the durable file: $error\n$stack');
+      if (kDebugMode) debugPrint('save freeze could not read the durable file: $error\n$stack');
     }
     showToast(
       'Could not finish saving both copies. This device will not overwrite them.',

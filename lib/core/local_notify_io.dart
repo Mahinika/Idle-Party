@@ -82,7 +82,7 @@ Future<bool> requestPermission() async {
     final ok = await android.requestNotificationsPermission();
     return ok ?? false;
   } catch (e, st) {
-    debugPrint('notify permission: $e\n$st');
+    if (kDebugMode) debugPrint('notify permission: $e\n$st');
     return false;
   }
 }

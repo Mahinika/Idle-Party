@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/funnel_analytics.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/ui/shell/power_meta_pillars.dart';
 import 'package:idle_party/ui/shell/settings_overlay.dart';
@@ -11,6 +12,18 @@ void main() {
   test('credits name the studio and owned art', () {
     expect(MoreList.creditsBody, contains('Cognifox Studio'));
     expect(MoreList.creditsBody.toLowerCase(), isNot(contains('kenney')));
+  });
+
+  test('UI text scale clamps to kUiTextScaleMax (1.45)', () async {
+    final director = GameDirector.preview();
+    addTearDown(director.dispose);
+    await director.boot();
+    director.setUiTextScale(9.0);
+    expect(director.state.uiTextScale, kUiTextScaleMax);
+    director.previewUiTextScale(1.3);
+    expect(director.state.uiTextScale, 1.3);
+    director.setUiTextScale(kUiTextScaleMax);
+    expect(director.state.uiTextScale, kUiTextScaleMax);
   });
 
   testWidgets('settings splits sound display bag and account into local tabs', (

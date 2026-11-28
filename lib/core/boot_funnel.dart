@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_analytics.dart';
+import 'crash_report.dart';
 import 'funnel_analytics.dart';
 
 /// Once-per-install boot screens. Lives outside the save: a player who
@@ -16,7 +17,8 @@ abstract final class BootFunnel {
       if (seen.contains(name)) return;
       await prefs.setStringList(prefsKey, <String>[...seen, name]);
       await AppAnalytics.logEvent(name);
-    } catch (_) {
+    } catch (e, st) {
+      CrashReport.recordNonFatal(e, st, reason: 'boot_funnel:note');
       // Missing prefs (tests without the mock, or a broken store) stays quiet.
     }
   }

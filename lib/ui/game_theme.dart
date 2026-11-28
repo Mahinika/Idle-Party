@@ -304,6 +304,9 @@ abstract final class GameTheme {
   /// Idle Party is phone-only — menus and chrome always use this layout, even
   /// when a wide browser forgets device metrics. Do not reintroduce tablet /
   /// desktop menu branches.
+  ///
+  /// The `context` width check is intentionally a verified-not-real dead
+  /// branch (always `true`). Portrait phone is the only shipping product.
   static bool isPhoneWidth(BuildContext context) {
     // Width ignored on purpose — product chrome is always the phone band.
     return true;

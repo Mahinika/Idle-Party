@@ -267,7 +267,7 @@ abstract final class ApexForge {
       if (!ApexCraft.craftSlotsFor(classId, role).contains(slot)) return null;
       return (classId: classId, role: role, slot: slot);
     } catch (e, st) {
-      debugPrint('ApexForge craft goal parse failed: $e\n$st');
+      if (kDebugMode) debugPrint('ApexForge craft goal parse failed: $e\n$st');
       return null;
     }
   }

@@ -8,6 +8,10 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- IP-048–222: Crashlytics non-fatals on save/friend/boot catches, release `debugPrint` gated behind `kDebugMode`, post-frame measure guards on fight chrome/docks, deferred install-referrer read, shop restore idempotency test.
+- Fixlist batch 2: d7/d14/d30 funnel events, boss_clear and daily_run_complete analytics, Crashlytics non-fatals on IO catches, dungeon.mp3 and town preview assets out of APK, text-scale persist on drag end, analyzer infos, and fixlist status doc.
+- IP-383 / IP-402: LEAVE explains bag merge gold spend and hunt consolation essence (+Ne) in toast copy.
+- Fixlist batch 3: CrashReport on save/swap/friend paths, kDebugMode-gated release logs, post-frame perf guards, full 95-item status doc.
 - Pre-Sunday UI polish: fight HUD drops in-cave hunt lines and CLAIM over the floor, F# CLEAR clears on the next floor, loot names spawn above the party, tomorrow vault copy names shelf not wallet gold, shorter SHOP header and Play wait text, two-line hero/gear names, 360×640 @1.45 layout on home and wallet.
 - Copy polish (#136): shorter title tagline, one NEW PARTY start button, town FORGE · CRAFT naming, OPEN TRAIN on welcome back, plain ESSENCE and CRAFT lines, INN lock text matches roster size, Patch Notes no longer auto-covers the town square, and a clearer cave-cleared boss toast when no next zone opens.
 - **Hero range / positioning:** Option A′ ranges + melee arc v2 (per-spec arc radius/step, tank stand, lone-melee rank fallback, combat arc / swarm rank); see `docs/RANGE_POSITIONING_AUDIT.md`.

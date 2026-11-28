@@ -100,8 +100,9 @@ Future<void> init() async {
     await _flushUserProps();
     debugPrint('Firebase Analytics ready');
   } catch (e, st) {
+    CrashReport.recordNonFatal(e, st, reason: 'app_analytics_io:init');
     // Missing google-services.json / Firebase project → stay quiet.
-    debugPrint('Firebase Analytics init skipped: $e\n$st');
+    if (kDebugMode) debugPrint('Firebase Analytics init skipped: $e\n$st');
     _analytics = null;
     _ready = false;
   }
@@ -122,7 +123,8 @@ Future<void> syncConsent() async {
     // it once; this covers the path where no form ran.
     await _applyMeasurementConsent();
   } catch (e, st) {
-    debugPrint('Firebase Analytics consent sync failed: $e\n$st');
+    CrashReport.recordNonFatal(e, st, reason: 'app_analytics_io:consent');
+    if (kDebugMode) debugPrint('Firebase Analytics consent sync failed: $e\n$st');
   }
 }
 
@@ -163,7 +165,8 @@ Future<void> logEvent(String name, [Map<String, Object>? params]) async {
       parameters: AnalyticsGuard.params(params),
     );
   } catch (e, st) {
-    debugPrint('Firebase Analytics logEvent($name) failed: $e\n$st');
+    CrashReport.recordNonFatal(e, st, reason: 'app_analytics_io:log_event');
+    if (kDebugMode) debugPrint('Firebase Analytics logEvent($name) failed: $e\n$st');
   }
 }
 
@@ -176,7 +179,10 @@ Future<void> setUserProperty(String name, String value) async {
   try {
     await analytics.setUserProperty(name: safe.name, value: safe.value);
   } catch (e, st) {
-    debugPrint('Firebase Analytics user property ${safe.name} failed: $e\n$st');
+    CrashReport.recordNonFatal(e, st, reason: 'app_analytics_io:user_prop');
+    if (kDebugMode) {
+      debugPrint('Firebase Analytics user property ${safe.name} failed: $e\n$st');
+    }
   }
 }
 
@@ -187,9 +193,12 @@ Future<void> _flushUserProps() async {
     try {
       await analytics.setUserProperty(name: entry.key, value: entry.value);
     } catch (e, st) {
-      debugPrint(
-        'Firebase Analytics user property ${entry.key} failed: $e\n$st',
-      );
+      CrashReport.recordNonFatal(e, st, reason: 'app_analytics_io:flush_prop');
+      if (kDebugMode) {
+        debugPrint(
+          'Firebase Analytics user property ${entry.key} failed: $e\n$st',
+        );
+      }
     }
   }
 }
@@ -202,7 +211,8 @@ void syncCrashContext({required String zoneId, required String appVersion}) {
       FirebaseCrashlytics.instance.setCustomKey('app_version', appVersion),
     );
   } catch (e, st) {
-    debugPrint('Crashlytics setCustomKey failed: $e\n$st');
+    CrashReport.recordNonFatal(e, st, reason: 'app_analytics_io:crash_key');
+    if (kDebugMode) debugPrint('Crashlytics setCustomKey failed: $e\n$st');
   }
 }
 

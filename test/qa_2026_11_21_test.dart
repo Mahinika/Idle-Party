@@ -100,6 +100,19 @@ void main() {
     );
   });
 
+  test('IP-072 save label level matches active party mean after role migration', () {
+    var state = GameLogic.createInitialState();
+    final roster = [
+      for (var i = 0; i < state.heroRoster.length; i++)
+        state.heroRoster[i].copyWith(level: 10),
+    ];
+    state = state.copyWith(heroRoster: roster);
+    expect(GameLogic.partyMeanLevel(state), 10);
+    final raw = jsonEncode(state.toJson());
+    expect(SaveSlotSummary.fromBlob(0, raw).partyLevel, 10);
+    expect(SaveSlotSummary.fromState(0, state).partyLevel, 10);
+  });
+
   test('save list level is the active party, then refreshes on SAVES', () {
     const raw =
         '{"partyName":"The Party","dungeonId":"sandy",'

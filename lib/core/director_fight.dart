@@ -681,8 +681,10 @@ extension GameDirectorFight on GameDirector {
     _syncMeasurementContext();
     _syncHubIdleTimer();
     final payoffs = LogicNotices.takeMetaPayoffs();
-    if (payoffs.isNotEmpty) {
-      showToast(payoffs.join(' · '), life: 3.0);
+    final bagLine = LogicNotices.takeBagCleanup().combatLine;
+    final leaveHints = <String>[...payoffs, ?bagLine];
+    if (leaveHints.isNotEmpty) {
+      showToast(leaveHints.join(' · '), life: 3.0);
     } else if (clearedExit && _state.homeLayout == HomeLayout.home) {
       showToast('$leaveCaveName cleared · back in town', life: 2.8);
     } else if (hadSpeedBoost) {

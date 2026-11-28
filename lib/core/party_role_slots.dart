@@ -111,7 +111,7 @@ abstract final class PartyRoleSlots {
 
   /// Active heroes with empty slots removed (combat / counts).
   static List<PartyHero> filledActiveHeroes(GameState state) => [
-        for (final h in slotHeroes(state)) if (h case final hero?) hero,
+        for (final h in slotHeroes(state)) ?h,
       ];
 
   /// First open slot index for [specId], or null when every matching slot is full.

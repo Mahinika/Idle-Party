@@ -506,7 +506,7 @@ GameState _resolveGreaterRiftFail(GameState state) {
   );
   final over = GreaterRift.formatTimer(state.grTimerMs - state.grParMs);
   LogicNotices.addMetaPayoffs([
-    'Ranked GR$tier · $over over par',
+    'Ranked GR$tier · $over over par · +${essence}e',
   ]);
   return GameLogic.exitToHubHealed(next);
 }

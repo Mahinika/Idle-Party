@@ -102,6 +102,17 @@ void main() {
     expect(AudioFailureReport.claim(''), isFalse);
   });
 
+  test('CrashReport.recordNonFatal is a no-op under flutter test', () {
+    expect(
+      () => CrashReport.recordNonFatal(
+        StateError('save'),
+        StackTrace.empty,
+        reason: 'game_storage:test',
+      ),
+      returnsNormally,
+    );
+  });
+
   test('audio failure report is a no-op under flutter test', () {
     AudioFailureReport.debugReset();
     addTearDown(AudioFailureReport.debugReset);

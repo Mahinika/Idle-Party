@@ -164,7 +164,7 @@ abstract final class HeroRigPainter {
         await warmHero(hero);
       } catch (e, st) {
         assert(() {
-          debugPrint('HeroRigPainter.warmParty failed: $e\n$st');
+          if (kDebugMode) debugPrint('HeroRigPainter.warmParty failed: $e\n$st');
           return true;
         }());
       }
@@ -197,7 +197,7 @@ abstract final class HeroRigPainter {
         images[path] = await DecodedImageCache.load(path, targetWidth: 128);
       } catch (e, st) {
         assert(() {
-          debugPrint('HeroRigPainter.warmHero decode failed: $e\n$st');
+          if (kDebugMode) debugPrint('HeroRigPainter.warmHero decode failed: $e\n$st');
           return true;
         }());
       }

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'crash_report.dart';
 import 'game_storage.dart';
 
 /// What a durable swap did to the two parties.
@@ -30,7 +31,10 @@ abstract final class SaveSwap {
     try {
       return await _recover(storage, slot: slot);
     } catch (error, stack) {
-      debugPrint('SaveSwap recover failed: $error\n$stack');
+      if (kDebugMode) {
+        debugPrint('SaveSwap recover failed: $error\n$stack');
+      }
+      CrashReport.recordNonFatal(error, stack, reason: 'save_swap:recover');
       return SaveSwapOutcome.unresolved;
     }
   }
@@ -48,7 +52,14 @@ abstract final class SaveSwap {
     try {
       return await _migrateLegacy(storage);
     } catch (error, stack) {
-      debugPrint('SaveSwap legacy journal failed: $error\n$stack');
+      if (kDebugMode) {
+        debugPrint('SaveSwap legacy journal failed: $error\n$stack');
+      }
+      CrashReport.recordNonFatal(
+        error,
+        stack,
+        reason: 'save_swap:legacy_journal',
+      );
       return true;
     }
   }
@@ -102,13 +113,17 @@ abstract final class SaveSwap {
     try {
       before = await storage.loadActiveRaw();
     } catch (error, stack) {
-      debugPrint('SaveSwap could not read before the swap: $error\n$stack');
+      if (kDebugMode) {
+        debugPrint('SaveSwap could not read before the swap: $error\n$stack');
+      }
+      CrashReport.recordNonFatal(error, stack, reason: 'save_swap:read_before');
       return SaveSwapOutcome.unresolved;
     }
     try {
       return await body();
     } catch (error, stack) {
-      debugPrint('SaveSwap failed: $error\n$stack');
+      if (kDebugMode) debugPrint('SaveSwap failed: $error\n$stack');
+      CrashReport.recordNonFatal(error, stack, reason: 'save_swap:commit');
       try {
         await storage.reloadDurable();
         final journal = await storage.loadExtra(
@@ -126,7 +141,14 @@ abstract final class SaveSwap {
         }
         return outcome;
       } catch (nested, nestedStack) {
-        debugPrint('SaveSwap reconcile failed: $nested\n$nestedStack');
+        if (kDebugMode) {
+          debugPrint('SaveSwap reconcile failed: $nested\n$nestedStack');
+        }
+        CrashReport.recordNonFatal(
+          nested,
+          nestedStack,
+          reason: 'save_swap:reconcile',
+        );
         return SaveSwapOutcome.unresolved;
       }
     }
@@ -425,7 +447,14 @@ abstract final class SaveSwap {
       final choice = await _chooseRecover(storage, index, storedPhase);
       return choice.step != _RecoverStep.unresolved;
     } catch (error, stack) {
-      debugPrint('SaveSwap retryCouldFinish failed: $error\n$stack');
+      if (kDebugMode) {
+        debugPrint('SaveSwap retryCouldFinish failed: $error\n$stack');
+      }
+      CrashReport.recordNonFatal(
+        error,
+        stack,
+        reason: 'save_swap:retry_could_finish',
+      );
       // A read that throws is not proof the record can never finish.
       return true;
     }
@@ -824,9 +853,12 @@ abstract final class SaveSwap {
       }
       return SaveSwapOutcome.unresolved;
     } catch (error, stack) {
-      debugPrint(
-        'SaveSwap cleanup failed after the parties landed: $error\n$stack',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          'SaveSwap cleanup failed after the parties landed: $error\n$stack',
+        );
+      }
+      CrashReport.recordNonFatal(error, stack, reason: 'save_swap:cleanup');
       try {
         await storage.reloadDurable();
         final journal = await storage.loadExtra(
@@ -842,8 +874,15 @@ abstract final class SaveSwap {
           return SaveSwapOutcome.committed;
         }
       } catch (nested, nestedStack) {
-        debugPrint(
-          'SaveSwap could not re-read the parties: $nested\n$nestedStack',
+        if (kDebugMode) {
+          debugPrint(
+            'SaveSwap could not re-read the parties: $nested\n$nestedStack',
+          );
+        }
+        CrashReport.recordNonFatal(
+          nested,
+          nestedStack,
+          reason: 'save_swap:cleanup_reread',
         );
       }
       return SaveSwapOutcome.unresolved;
