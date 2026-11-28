@@ -477,6 +477,32 @@ class _ShopRow extends StatelessWidget {
     };
   }
 
+  static void _showPackDetails(
+    BuildContext context,
+    String title,
+    String body,
+  ) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: GameTheme.sheet,
+        title: Text(title, style: GameTheme.section(color: GameTheme.torchHot)),
+        content: SingleChildScrollView(
+          child: Text(body, style: GameTheme.hint(color: GameTheme.parchmentDim)),
+        ),
+        actions: [
+          GameButton(
+            label: 'CLOSE',
+            style: GameButtonStyle.grey,
+            expanded: false,
+            dense: true,
+            onPressed: () => Navigator.of(ctx).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
   static String _permEffect(int mask) => switch (mask) {
     AdBoost.permAtk => '+${AdBoost.attackPercent}% ATK',
     AdBoost.permGold => '×${AdBoost.goldMul} gold',
@@ -499,9 +525,12 @@ class _ShopRow extends StatelessWidget {
         ? (featuredPrimary ? 'BUY NOW' : 'BUY')
         : 'UNAVAILABLE';
     final cardTitle = titleOverride ?? shortTitle(item);
+    final detailBody = NavCopy.playerText(item.description, layout);
     final semanticsLabel = owned
         ? '$cardTitle · owned'
-        : '$cardTitle · $priceLabel · ${NavCopy.playerText(item.description, layout)}';
+        : '$cardTitle · $priceLabel · $detailBody';
+    final useShelfBullets =
+        !compact && item.shelfBullets.isNotEmpty && !owned;
     return Semantics(
       button: canBuy || owned,
       label: semanticsLabel,
@@ -543,23 +572,44 @@ class _ShopRow extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (useShelfBullets)
+                  GameButton(
+                    label: 'INFO',
+                    style: GameButtonStyle.ghost,
+                    expanded: false,
+                    dense: true,
+                    onPressed: () => _showPackDetails(context, cardTitle, detailBody),
+                  ),
               ],
             ),
             const SizedBox(height: 2),
-            Text(
-              tag(item, cinderPouchDoubled: cinderPouchDoubled),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.hint(color: GameTheme.mossLit),
-            ),
-            if (!compact) ...[
-              const SizedBox(height: 4),
-              // Same hint size as the SHOP intro and tags; the full terms
-              // stay (no line cap) because this is what the player buys.
+            if (useShelfBullets)
+              ...[
+                for (final line in item.shelfBullets)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Text(
+                      '• $line',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    ),
+                  ),
+              ]
+            else ...[
               Text(
-                NavCopy.playerText(item.description, layout),
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
+                tag(item, cinderPouchDoubled: cinderPouchDoubled),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.hint(color: GameTheme.mossLit),
               ),
+              if (!compact) ...[
+                const SizedBox(height: 4),
+                Text(
+                  detailBody,
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
+                ),
+              ],
             ],
             const SizedBox(height: 8),
             if (featuredPrimary && canBuy)

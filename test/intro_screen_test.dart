@@ -260,7 +260,7 @@ void main() {
     expect(director.state.partyName, 'Cave Company');
     expect(director.state.gold, 4242);
     expect(director.state.highestFloorCleared, 1);
-    expect(find.textContaining('Floor 2'), findsWidgets);
+    expect(find.textContaining('floor 2'), findsWidgets);
     expect(find.text('Grow the party'), findsNothing);
     await tester.pump(const Duration(milliseconds: 500));
   });
@@ -297,8 +297,8 @@ void main() {
     expect(find.text('Overwrite save?'), findsNothing);
 
     expect(find.byType(NewGamePartyPicker), findsNothing);
-    // Hub CTA and the first-run tip both say ENTER DUNGEON.
-    expect(find.text('ENTER DUNGEON'), findsWidgets);
+    expect(director.state.inDungeon, isTrue);
+    expect(director.state.dungeonId, 'sandy');
     expect(director.state.heroes.length, 3);
     expect(director.activeSaveSlot, 2);
     expect(director.saveSlots[0].occupied, isTrue);
@@ -513,7 +513,7 @@ void main() {
     expect(find.byType(StartMenuScreen), findsNothing);
     expect(director.state.partyName, 'Cave Company');
     expect(director.state.gold, 4242);
-    expect(find.textContaining('Floor 2'), findsWidgets);
+    expect(find.textContaining('floor 2'), findsWidgets);
 
     director.requestStartMenu();
     await tester.pump();

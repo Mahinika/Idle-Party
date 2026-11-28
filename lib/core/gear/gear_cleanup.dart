@@ -3,6 +3,7 @@ import 'dart:math';
 import '../../models/hero.dart';
 import '../../models/loot.dart';
 import '../../visual/equipment_visual_resolver.dart';
+import '../economy_service.dart';
 import '../game_logic.dart';
 import '../game_state.dart';
 import '../logic_notices.dart';
@@ -97,6 +98,14 @@ abstract final class GearCleanup {
       }
     }
     return n;
+  }
+
+  /// Suggested auto-sell iLvl cap from what the party wears (stays below upgrades).
+  static int? recommendAutoSellCeiling(GameState state) {
+    final worn = partyWornIlvl(state);
+    if (worn == null) return null;
+    if (worn <= 5) return 8;
+    return (worn - 2).clamp(1, 99);
   }
 
   /// Median worn item level (flasks skipped). The sell slider's reference.
@@ -244,6 +253,8 @@ abstract final class GearCleanup {
     if (keepIds.contains(item.id)) return true;
 
     if (manualClean) {
+      final plan = GearBiSPlanner.planBiSAssignments(state);
+      if (plan.any((p) => p.itemId == item.id)) return true;
       final matches = forSell
           ? matchesIlvlRarityFilter(
               item,
@@ -591,39 +602,34 @@ abstract final class GearCleanup {
     bool manualClean = false,
     Set<String> keepIds = const {},
   }) {
+    final beforeLen = state.gearStash.length;
     var gold = state.gold;
     var lifetime = state.lifetimeGoldEarned;
-    var stash = List<EquipmentItem>.from(state.gearStash);
-    final beforeLen = stash.length;
     var gained = 0;
-    var guard = 0;
-    while (guard < 64) {
-      guard++;
-      final probe = state.copyWith(gearStash: stash, gold: gold);
-      EquipmentItem? sellItem;
-      for (final item in stash) {
-        if (!shouldKeepWhenCleaning(
-          probe,
-          item,
-          forSell: true,
-          unstickBag: unstickBag,
-          manualClean: manualClean,
-          keepIds: keepIds,
-        )) {
-          sellItem = item;
-          break;
-        }
+    final kept = <EquipmentItem>[];
+    for (final item in state.gearStash) {
+      if (shouldKeepWhenCleaning(
+        state,
+        item,
+        forSell: true,
+        unstickBag: unstickBag,
+        manualClean: manualClean,
+        keepIds: keepIds,
+      )) {
+        kept.add(item);
+        continue;
       }
-      if (sellItem == null) break;
-      final value = LootPipeline.equipmentGoldValue(sellItem);
+      final value = LootPipeline.equipmentGoldValue(item);
       gold += value;
       lifetime += value;
       gained += value;
-      stash = stash.where((g) => g.id != sellItem!.id).toList();
     }
-    LogicNotices.recordAutoSell(sold: beforeLen - stash.length, gold: gained);
+    if (gained > 0) {
+      EconomyService.logGoldDelta(gained, source: 'auto_sell');
+    }
+    LogicNotices.recordAutoSell(sold: beforeLen - kept.length, gold: gained);
     return state.copyWith(
-      gearStash: stash,
+      gearStash: kept,
       gold: gold,
       lifetimeGoldEarned: lifetime,
       lastUpdated: DateTime.now(),

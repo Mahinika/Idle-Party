@@ -54,6 +54,7 @@ class FloaterReserve {
 abstract final class FloaterBannerStack {
   static const double clusterRadiusTiles = 1.0;
   static const double gapTiles = 0.08;
+  static const int maxVisibleStack = 2;
 
   /// Non-speech label top sits this many tiles above the floater centre,
   /// matching [floaterLabelAnchor].
@@ -179,7 +180,9 @@ abstract final class FloaterBannerStack {
       });
       final placedTops = <double>[];
       final placedBots = <double>[];
-      for (final i in members) {
+      for (var rank = 0; rank < members.length; rank++) {
+        final i = members[rank];
+        if (rank >= maxVisibleStack) continue;
         final h = banners[i].heightTiles;
         final authored = banners[i].y;
         final obstacles = <({double top, double bottom})>[

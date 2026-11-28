@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
     as test_env;
+import 'firebase_boot.dart';
 import 'friend_referral.dart';
 
 /// Firebase friend list. Soft-fails when Auth or Firestore is off.
@@ -19,9 +19,7 @@ class FirestoreFriendReferralGateway implements FriendReferralGateway {
   Future<FirebaseFirestore?> _db() async {
     if (!_androidLive) return null;
     try {
-      if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp();
-      }
+      await FirebaseBoot.ensureInitialized();
       final auth = FirebaseAuth.instance;
       if (auth.currentUser == null) {
         await auth.signInAnonymously();

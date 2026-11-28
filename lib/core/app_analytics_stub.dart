@@ -20,3 +20,11 @@ Future<void> logEvent(String name, [Map<String, Object>? params]) async {}
 Future<void> setUserProperty(String name, String value) async {}
 
 void syncCrashContext({required String zoneId, required String appVersion}) {}
+
+Future<void> adImpression({
+  required String adFormat,
+  required String adUnitName,
+  double? value,
+  String? currency,
+  String? placement,
+}) async {}

@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'app_analytics.dart';
+import 'firebase_boot.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart' as test_env;
 import 'remote_tune.dart';
@@ -33,7 +33,7 @@ Future<void> _refresh() async {
       RemoteTune.reset();
       return;
     }
-    await Firebase.initializeApp();
+    await FirebaseBoot.ensureInitialized();
     final rc = FirebaseRemoteConfig.instance;
     await rc.setConfigSettings(
       RemoteConfigSettings(

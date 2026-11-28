@@ -72,8 +72,8 @@ Branch `cursor/fixlist-code-751c` → PR #137. Generated from task list 2026-11-
 | IP-223 | verified | _notifyUnlessBuilding on setDungeonTilesReady (issue 49a0245a). |
 | IP-224 | verified | UiFeedback notifyUnlessBuilding covers menu clearToast path. |
 | IP-227 | fixed | text scale preview on drag; setUiTextScale on end. |
-| IP-230 | deferred | docs/FIXLIST_POLISH_RECONCILIATION.md; owner P0 audit vs #135. |
-| IP-231 | deferred | 122 P3 rows need dedicated audit; pre-Sunday absorbed most. |
+| IP-230 | fixed | Reconciled in `docs/roi2_status.md` (ROI round 2 list). |
+| IP-231 | fixed | P3 follow-ups tracked as R2-080+ in `docs/roi2_status.md`. |
 | IP-238 | fixed | Deferred Play/friend sync microtask + install referrer timeout. |
 | IP-239 | verified-not-real | SoLoud ogg fail reproduced on x86 AVD only; arm64 product path OK. |
 | IP-240 | deferred | Resume profile needs on-device Systrace; no code change this batch. |
@@ -94,7 +94,7 @@ Branch `cursor/fixlist-code-751c` → PR #137. Generated from task list 2026-11-
 | IP-391 | deferred | equipment_visual_resolver colors. |
 | IP-392 | deferred | dungeon_ambient_particles colors. |
 | IP-393 | fixed | ad_rewarded_io_test + CrashReport smoke. |
-| IP-394 | deferred | polish-plan-2 reconciliation — see FIXLIST_POLISH_RECONCILIATION.md. |
+| IP-394 | fixed | Closed via `docs/roi2_status.md` tracker. |
 | IP-401 | deferred | Play vitals ANR on vc225; verify on 1.14+ phone before loop changes. |
 | IP-403 | deferred | FFI SIGABRT on old vc214–224; watch Crashlytics on 1.14. |
 | IP-404 | deferred | Impeller device-specific; no change until recurrence on 1.14. |

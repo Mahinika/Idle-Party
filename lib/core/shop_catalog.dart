@@ -39,6 +39,7 @@ class ShopCatalogItem {
     this.bagSlots = 0,
     this.permMask = 0,
     this.cinderGrant = 0,
+    this.shelfBullets = const [],
   });
 
   /// Play Console product id — must match Console exactly.
@@ -61,6 +62,9 @@ class ShopCatalogItem {
 
   /// Cinders granted when [kind] is [ShopOfferKind.cinders].
   final int cinderGrant;
+
+  /// Short SHOP row bullets; full copy stays in [description].
+  final List<String> shelfBullets;
 
   /// Repeatable boost packs — `buyConsumable`. Everything else is non-consumable.
   bool get isConsumable =>
@@ -193,6 +197,11 @@ abstract final class ShopCatalog {
           'Welcome Back gold and essence ×3 (at least 30 minutes of hub gold), '
           'five free CAMP levels each day, '
           'and free Daily or Side quest rerolls. Permanent.',
+      shelfBullets: [
+        'No SCROLLS ads or WATCH buttons',
+        'Daily tickets + lantern + Welcome Back bonuses',
+        'Free quest rerolls · permanent on this save',
+      ],
       kind: ShopOfferKind.adFree,
       boostHours: 0,
       oneTime: true,

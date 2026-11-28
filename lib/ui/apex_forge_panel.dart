@@ -312,13 +312,6 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           '$goalLabel${_pieceWhere(state, existingItem)}',
           style: GameTheme.readable(color: GameTheme.torchHot),
         ),
-        if (existingItem != null && ownedRank < rankCap) ...[
-          const SizedBox(height: 2),
-          Text(
-            'Upgrade cost → R$pricingRank',
-            style: GameTheme.hint(color: GameTheme.parchmentDim),
-          ),
-        ],
         const SizedBox(height: 2),
         Text(
           ApexCraft.maxRankLabel(state.ascensionLevel),

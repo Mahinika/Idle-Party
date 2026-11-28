@@ -95,6 +95,8 @@ Future<AdWatchResult> showRewarded({required String placement}) async {
     return AdWatchResult.failed;
   }
 
+  _wireRewardedPaidEvent(ad, placement: placement);
+
   final finished = Completer<AdWatchResult>();
   var earned = false;
 
@@ -215,10 +217,26 @@ Future<void> _requestConsent({required bool askConsent}) async {
   unawaited(lockImmersiveUi());
 }
 
+void _wireRewardedPaidEvent(RewardedAd ad, {String? placement}) {
+  ad.onPaidEvent = (Ad view, double valueMicros, PrecisionType precision, String currencyCode) {
+    final value = valueMicros / 1000000.0;
+    unawaited(
+      AppAnalytics.adImpression(
+        adFormat: 'rewarded',
+        adUnitName: AdConfig.rewardedUnitId,
+        value: value,
+        currency: currencyCode,
+        placement: placement,
+      ),
+    );
+  };
+}
+
 Future<void> _preload({String? placement}) async {
   if (_ready != null || !_sdkReady) return;
   final ad = await _loadAd(placement: placement, failReason: 'preload');
   if (ad == null) return;
+  _wireRewardedPaidEvent(ad, placement: placement);
   _ready = ad;
   _readyAt = DateTime.now();
 }

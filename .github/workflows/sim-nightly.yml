@@ -8,7 +8,36 @@ on:
   workflow_dispatch:
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run_sims: ${{ steps.main.outputs.run_sims }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip when main has no new commit since last green run
+        id: main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run_sims=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch origin main --depth=1
+          main_sha="$(git rev-parse origin/main)"
+          last_sha="$(gh api "repos/${{ github.repository }}/actions/workflows/sim-nightly.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].head_sha // empty')"
+          if [ -n "$last_sha" ] && [ "$last_sha" = "$main_sha" ]; then
+            echo "main ($main_sha) unchanged since last green sim ($last_sha); skip"
+            echo "run_sims=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_sims=true" >> "$GITHUB_OUTPUT"
+          fi
+
   sims:
+    needs: gate
+    if: needs.gate.outputs.run_sims == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
