@@ -708,6 +708,8 @@ class SpatialBurst {
     this.life = 0.35,
     this.argb = 0xFFFFC14A,
     this.radius = 0.55,
+    this.vx = 0,
+    this.vy = 0,
     this.angle,
     this.slash = false,
     this.kind = SpatialBurstKind.blast,
@@ -720,6 +722,10 @@ class SpatialBurst {
   double x;
   double y;
   double life;
+
+  /// Spark motion for the boss loot fountain. Combat does not read these.
+  double vx;
+  double vy;
   final int argb;
   final double radius;
 
@@ -974,6 +980,10 @@ class SpatialWorld {
   double? guideY;
   double guideTimer;
   double godHandCooldown;
+
+  /// Seconds left on a boss-kill freeze. Presentation only. Combat
+  /// stats, gold, and drops do not advance while this is above zero.
+  double hitStopSec = 0;
   double mendTimer;
   int activeChamber;
   final Set<int> openGateIds;
@@ -1371,6 +1381,8 @@ abstract final class SpatialCombat {
     double? angle,
     bool slash = false,
     double life = 0.48,
+    double vx = 0,
+    double vy = 0,
     SpatialBurstKind kind = SpatialBurstKind.blast,
     bool crisp = false,
     double? x2,
@@ -1389,6 +1401,8 @@ abstract final class SpatialCombat {
         angle: angle,
         slash: slash || kind == SpatialBurstKind.slash,
         life: life,
+        vx: vx,
+        vy: vy,
         kind: slash ? SpatialBurstKind.slash : kind,
         crisp: crisp,
         x2: x2,
@@ -1396,6 +1410,29 @@ abstract final class SpatialCombat {
         paintId: paintId,
       ),
     );
+  }
+
+  /// Sparks that arc up and fall. Not loot. Drops stay on [GroundLoot].
+  static void spawnBossLootFountain(
+    SpatialWorld world,
+    double x,
+    double y,
+  ) {
+    const count = 8;
+    for (var i = 0; i < count; i++) {
+      final ang = -math.pi * 0.5 + (i - (count - 1) / 2) * 0.22;
+      spawnBurst(
+        world,
+        x: x,
+        y: y - 0.2,
+        argb: i.isEven ? 0xFFFFE08A : 0xFFFFF6C8,
+        radius: 0.16,
+        life: 0.62,
+        vx: math.cos(ang) * 2.6,
+        vy: math.sin(ang) * 3.6,
+        kind: SpatialBurstKind.spark,
+      );
+    }
   }
 
   static void spawnRing(
@@ -1987,6 +2024,11 @@ abstract final class SpatialCombat {
     world.floaters.removeWhere((f) => f.life <= 0);
     for (final b in world.bursts) {
       b.life -= dt;
+      if (b.vx == 0 && b.vy == 0) continue;
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      b.vy += 7.5 * dt;
+      b.vx *= 0.98;
     }
     world.bursts.removeWhere((b) => b.life <= 0);
     for (final g in world.groundFx) {
@@ -3279,6 +3321,12 @@ abstract final class SpatialCombat {
     GameState state, {
     required double dt,
   }) {
+    if (world.hitStopSec > 0) {
+      final slice = math.min(dt, world.hitStopSec);
+      world.hitStopSec = math.max(0, world.hitStopSec - dt);
+      _tickFloaters(world, slice);
+      return _stepResult(world, state);
+    }
     CombatAudioFeel.tick(world, dt);
     world.relicBossDamageMul = state.relicBossDamageMul;
     world.relicLowHpDr = state.relicLowHpDr;
@@ -5143,6 +5191,7 @@ abstract final class SpatialCombat {
           radius: 0.85,
           life: 0.38,
         );
+        spawnBossLootFountain(world, enemy.x, enemy.y);
       } else if (enemy.role == EnemyRole.elite) {
         spawnRing(
           world,

@@ -31,6 +31,7 @@ import 'onboarding_funnel.dart';
 import 'build_stamp.dart';
 import 'crash_report.dart';
 import 'debug_play_log.dart';
+import 'boss_hit_stop.dart';
 import 'fight_frame_budget.dart';
 import 'funnel_analytics.dart';
 import 'game_logic.dart';
@@ -973,8 +974,8 @@ class GameDirector extends ChangeNotifier {
   }
 
   void setHomeLayout(HomeLayout layout) {
-    if (_state.homeLayout == layout) return;
-    _applyUpgrade(_state.copyWith(homeLayout: layout));
+    if (_state.homeLayout == HomeLayout.home) return;
+    _applyUpgrade(_state.copyWith(homeLayout: HomeLayout.home));
   }
 
   void setHomePanelFull(bool value) {
@@ -1047,9 +1048,9 @@ class GameDirector extends ChangeNotifier {
         hapticsEnabled: true,
         keepScreenAwake: true,
         soundMuted: false,
-        sfxVolume: 0.45,
+        sfxVolume: kNewInstallSfxVolume,
         ambienceVolume: 0.20,
-        musicVolume: 0.22,
+        musicVolume: kNewInstallMusicVolume,
       ),
     );
   }

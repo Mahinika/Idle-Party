@@ -47,3 +47,16 @@ Play base price stays whatever is live. These are local list prices to type into
 | Poland (PLN) | 19.99 | 14.99 | 29.99 |
 
 Robert sets the real Play prices. Do not publish from this file.
+
+## R2-084 New mission types (draft only)
+
+Not in the game. No new `MissionType`, no reward change, no save field. These sit beside the live board (defeat, bosses, gold, floors, elites, and the endgame types). Rewards use the same shape as a depth-0 normal job today: gold about 28–45, essence about 3–4, then the existing tier multipliers if Robert turns them on later.
+
+| Type | Target at a fresh board | Gold | Essence |
+|------|-------------------------|------|---------|
+| Open chests | 2 chests | 32 | 3 |
+| Drink a flask in a fight | 3 flasks | 24 | 3 |
+| Clear a floor without a wipe | 1 floor | 36 | 4 |
+| Wear a budget upgrade | 2 pieces | 28 | 3 |
+
+Daily slot only. They do not replace the week or bounty jobs. Robert approves the list before any of it is built.

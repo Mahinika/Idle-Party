@@ -27,13 +27,13 @@ abstract final class GameAudio {
   static bool hapticsEnabled = true;
 
   /// Master SFX gain 0..1 (default 0.45).
-  static double sfxVolume = 0.45;
+  static double sfxVolume = 0.70;
 
   /// Ambience gain 0..1 (default 0.20).
   static double ambienceVolume = 0.20;
 
   /// Background music gain 0..1 (default 0.22).
-  static double musicVolume = 0.22;
+  static double musicVolume = 0.40;
 
   /// Per play-id floor so the same weapon does not hammer.
   /// Short enough that a kill and a crit still speak after a swing.

@@ -91,8 +91,8 @@ Branch: `cursor/roi2-approved-6fa7` → base `cursor/roi2-fixes-747b` (PR #142, 
 | R2-081 | deferred-with-real-reason | Body text already uses the bundled OFL VT323 face. A second face needs an owner pick |
 | R2-082 | deferred-with-real-reason | `roi2.batterySaver` is saved and round-trips. Skipping particles is a fight-look change and needs an A56 check |
 | R2-083 | fixed | `test/roi2_approved_test.dart` round-trips every roi2 field and a missing map |
-| R2-084 | deferred-with-real-reason | Needs owner approval. New mission types are content |
-| R2-085 | draft-doc | `docs/roi2_daily_vault.md`. Payout unchanged. The +161 claim is 1.00× one defined active day |
+| R2-084 | draft-doc | Types, targets, and rewards in `docs/roi2_proposals.md`. Not built |
+| R2-085 | declined | Owner kept the payout. The pin test and `docs/roi2_daily_vault.md` stay |
 | R2-086 | deferred-with-real-reason | The watch path already toasts “Loading ad…”. An 8s second line is a widget change across every ad button |
 | R2-087 | deferred-with-real-reason | Town torch labels wait on the town art board |
 | R2-088 | fixed | Parent branch |
@@ -105,8 +105,8 @@ Branch: `cursor/roi2-approved-6fa7` → base `cursor/roi2-fixes-747b` (PR #142, 
 | R2-095 | deferred-with-real-reason | `flutter pub outdated` shows no patch that stays inside the current constraints. Major bumps are not patch-level |
 | R2-096 | draft-doc | `docs/roi2_ab_tests.md`. Nothing created in Firebase |
 | R2-097 | deferred-with-real-reason | GA4 / BigQuery needs the owner's console |
-| R2-098 | deferred-with-real-reason | Needs owner approval. Hit-stop is a fight-feel change |
-| R2-099 | deferred-with-real-reason | Needs owner approval. Default volume is a player setting |
+| R2-098 | approved-implemented | 75 ms boss hit-stop, skipped at 2×/4× and on Minimal VFX. Loot fountain is sparks only. Camera taus unchanged |
+| R2-099 | approved-implemented | New installs use SFX 0.70 and music 0.40. A saved volume, or a missing key, stays at 0.45 / 0.22 |
 | R2-100 | deferred-with-real-reason | Referral card after the boss card needs the A56 hub sequence |
 | R2-101 | draft-doc | Local price table in `docs/roi2_proposals.md`. Not entered in Play |
 | R2-102 | approved-implemented | Local midnight, one zone change per day, migration hold so today is not paid twice |
@@ -120,7 +120,7 @@ Branch: `cursor/roi2-approved-6fa7` → base `cursor/roi2-fixes-747b` (PR #142, 
 | R2-110 | draft-doc | Non-English listings say the game is English only |
 | R2-111 | deferred-with-real-reason | Class silhouettes wait on the town art board (R2-118) |
 | R2-112 | approved-implemented | Live event keys default off. Gold is unchanged when the multiplier is 1 |
-| R2-113 | deferred-with-real-reason | Needs owner approval. Retiring the classic shell is a migration |
+| R2-113 | approved-implemented | Classic JSON loads as the home shell. Gold, name, and heroes stay. The layout toggle is gone |
 | R2-114 | deferred-with-real-reason | NavCopy is a repo-wide string rename with no player change |
 | R2-115 | deferred-with-real-reason | `flutter analyze lib test --no-fatal-infos` is clean aside from two existing infos. Turning on stricter lints is a repo-wide edit, and tests stay enabled |
 | R2-116 | deferred-with-real-reason | Do not rewrite git history |
@@ -142,4 +142,4 @@ Branch: `cursor/roi2-approved-6fa7` → base `cursor/roi2-fixes-747b` (PR #142, 
 | R2-132 | fixed | `GameLogic.debugNow` plus `DayClock` / `ClockGuard` seams. Offline credit uses them |
 | R2-133 | fixed | Parent called this verified-not-real |
 
-*Counts: approved-implemented 26 · fixed 46 · draft-doc 12 · declined 9 · deferred-with-real-reason 34.*
+*Counts: approved-implemented 29 · fixed 46 · draft-doc 12 · declined 10 · deferred-with-real-reason 30.*

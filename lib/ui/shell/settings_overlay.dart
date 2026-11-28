@@ -13,7 +13,6 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/local_reminders.dart';
 import '../../core/game_state.dart';
-import '../../core/home_layout.dart';
 import '../../core/nav_copy.dart';
 import '../../models/dungeon_zoom.dart';
 import '../game_icon.dart';
@@ -577,13 +576,6 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         ],
         if (kDebugMode || BuildStamp.gitSha.isNotEmpty) ...[
           const SizedBox(height: 8),
-          _SettingsToggle(
-            label: 'NEW LAYOUT (BETA)',
-            value: state.homeLayout == HomeLayout.home,
-            onChanged: (on) {
-              director.setHomeLayout(on ? HomeLayout.home : HomeLayout.classic);
-            },
-          ),
           _SettingsToggle(
             label: 'FULL FIGHT PANEL',
             value: state.homePanelFull,

@@ -603,9 +603,15 @@ void main() {
     );
 
     final classicJson = Map<String, dynamic>.from(state.toJson())
-      ..['homeLayout'] = 'classic';
+      ..['homeLayout'] = 'classic'
+      ..['gold'] = 4242
+      ..['partyName'] = 'Classic Party';
     final classic = GameLogic.stateFromJson(classicJson);
-    expect(classic.homeLayout, HomeLayout.classic);
+    expect(classic.homeLayout, HomeLayout.home);
+    expect(classic.gold, 4242);
+    expect(classic.partyName, 'Classic Party');
+    expect(classic.heroes, isNotEmpty);
+    expect(classic.toJson()['homeLayout'], 'home');
 
     final ascended = GameLogic.ascend(loaded, now: DateTime(2026, 9, 21));
     expect(ascended.homeLayout, HomeLayout.home);

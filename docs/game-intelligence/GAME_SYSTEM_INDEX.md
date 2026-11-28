@@ -6,9 +6,9 @@ Claims cite the type and file that own the rule. This is not a design wishlist.
 New phone saves with no prior save boot into `HomeLayout.home` and
 `homePanelFull: true` (`GameDirector.startNewGame` in
 `lib/core/director_save.dart`). `PlayShell` then builds `HomeShell`
-(`lib/ui/shell/play_shell.dart`). Classic hub + `DungeonTopHud` stays
-available from SETTINGS **NEW LAYOUT (BETA)** when a git stamp or debug
-build is present (`SettingsOverlay` in `lib/ui/shell/settings_overlay.dart`).
+(`lib/ui/shell/play_shell.dart`). A save that stored classic loads as
+home (`HomeLayout.fromJson`). The SETTINGS layout toggle is gone. The
+classic hub still builds only when a test sets `homeLayout` in memory.
 
 | System | Rule owner | Player mutation | What it does |
 |---|---|---|---|
