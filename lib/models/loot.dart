@@ -181,7 +181,7 @@ class EquipmentItem {
   /// [SpecRoleTag.name] this Apex piece was crafted for.
   final String? apexRoleTag;
 
-  /// Apex upgrade rank (1–3). 0 when not Apex.
+  /// Apex upgrade rank (1–7, gated by Ascend). 0 when not Apex.
   final int apexRank;
 
   int get resolvedArmor => armorBonus + defenseBonus;
@@ -557,9 +557,7 @@ class EquipmentItem {
       handed: handed ?? this.handed,
       offHandKind: offHandKind ?? this.offHandKind,
       iconId: iconId ?? this.iconId,
-      visualSetId: clearVisualSetId
-          ? null
-          : (visualSetId ?? this.visualSetId),
+      visualSetId: clearVisualSetId ? null : (visualSetId ?? this.visualSetId),
       affixPrefixId: affixPrefixId ?? this.affixPrefixId,
       affixSuffixId: affixSuffixId ?? this.affixSuffixId,
       setId: clearSetId ? null : (setId ?? this.setId),
