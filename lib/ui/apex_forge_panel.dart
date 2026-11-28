@@ -813,34 +813,55 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         : (def?.name ?? matId);
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: InkWell(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: '$label, $have of $need',
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: MenuChrome.listCard(selected: selected),
-          child: Row(
-            children: [
-              GameIcon.asset(_matIcon(family), size: 16),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: MenuChrome.listCard(selected: selected),
+                child: Row(
                   children: [
-                    Text(
-                      '$label  $have/$need',
-                      style: GameTheme.section(color: have >= need
-                            ? GameTheme.clear
-                            : GameTheme.bloodLit),
-                    ),
-                    if (have < need)
-                      Text(
-                        _farmSources(state, matId),
-                        style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    GameIcon.asset(_matIcon(family), size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$label  $have/$need',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GameTheme.section(
+                              color: have >= need
+                                  ? GameTheme.clear
+                                  : GameTheme.bloodLit,
+                            ),
+                          ),
+                          if (have < need)
+                            Text(
+                              _farmSources(state, matId),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GameTheme.hint(
+                                color: GameTheme.parchmentDim,
+                              ),
+                            ),
+                        ],
                       ),
+                    ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

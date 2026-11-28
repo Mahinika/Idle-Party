@@ -4,6 +4,7 @@ import '../models/hero.dart';
 import 'game_theme.dart';
 import 'hero_doll_sprite.dart';
 import 'menu_chrome.dart';
+import 'web_click_bridge.dart';
 
 /// LOOK race grid (Cataclysm 12). New Party picks sex on the same tab.
 class HeroLookRow extends StatelessWidget {
@@ -121,38 +122,53 @@ class _RaceCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+    final semantics = selected ? '$label, selected' : label;
+    return WebClickScope(
+      label: semantics,
+      onPressed: onTap,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: semantics,
         onTap: onTap,
-        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-        child: DecoratedBox(
-          decoration: MenuChrome.cardBox(selected: selected, inset: true),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final dollSize = (constraints.maxHeight - 16).clamp(20.0, 96.0);
-                return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (doll != null)
-                  HeroDollSprite(hero: doll!, size: dollSize),
-                SizedBox(
-                  width: constraints.maxWidth,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: GameTheme.hint(color: selected
-                          ? GameTheme.torchHot
-                          : GameTheme.parchmentDim),
-                  ),
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: DecoratedBox(
+              decoration: MenuChrome.cardBox(selected: selected, inset: true),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final dollSize =
+                        (constraints.maxHeight - 16).clamp(20.0, 96.0);
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (doll != null)
+                          HeroDollSprite(hero: doll!, size: dollSize),
+                        SizedBox(
+                          width: constraints.maxWidth,
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: GameTheme.hint(
+                              color: selected
+                                  ? GameTheme.torchHot
+                                  : GameTheme.parchmentDim,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
-              ],
-            );
-              },
+              ),
             ),
           ),
         ),

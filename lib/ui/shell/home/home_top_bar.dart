@@ -303,7 +303,7 @@ class HomeTopBar extends StatelessWidget {
                 SizedBox(height: textScale > 1.4 ? 0 : 1),
                 Text(
                   chase,
-                  maxLines: textScale <= 1.2 ? 2 : 1,
+                  maxLines: textScale <= GameTheme.typeScaleMax ? 2 : 1,
                   softWrap: true,
                   overflow: TextOverflow.ellipsis,
                   style: GameTheme.hint(color: GameTheme.parchmentDim),
@@ -318,7 +318,7 @@ class HomeTopBar extends StatelessWidget {
                         ? const SizedBox.shrink()
                         : Text(
                             chase,
-                            maxLines: textScale <= 1.2 ? 2 : 1,
+                            maxLines: textScale <= GameTheme.typeScaleMax ? 2 : 1,
                             softWrap: true,
                             overflow: TextOverflow.ellipsis,
                             style: GameTheme.hint(color: GameTheme.parchmentDim),

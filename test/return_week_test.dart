@@ -209,7 +209,7 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(
       find.textContaining(
-        'Tomorrow: Sandy Caverns · essence and gold for CAMP and TRAIN',
+        'Tomorrow: Sandy Caverns · CAMP + TRAIN packs',
       ),
       findsWidgets,
     );

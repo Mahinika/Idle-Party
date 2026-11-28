@@ -98,6 +98,7 @@ Widget partyCcChipSuffix(
     child: Text(
       labels.join('·'),
       maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: GameTheme.combat(color: partyCcChipColor(labels)),
     ),
   );
@@ -144,7 +145,7 @@ class PartyHudSpecLine extends StatelessWidget {
         Flexible(
           child: Text(
             spec,
-            maxLines: 1,
+            maxLines: 2,
             softWrap: false,
             overflow: TextOverflow.ellipsis,
             style: GameTheme.combat(color: color),
@@ -810,6 +811,7 @@ class DungeonFlaskButton extends StatelessWidget {
                             key: PartyCornerHud.flaskCountKey,
                             maxLines: 1,
                             softWrap: false,
+                            overflow: TextOverflow.ellipsis,
                             style: GameTheme.combat(color: labelColor),
                           ),
                         ],
@@ -1031,7 +1033,7 @@ class _KitSidePanel extends StatelessWidget {
                   Flexible(
                     child: Text(
                       ClassKits.resourceLabelForSpec(hero.specId),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
@@ -1548,7 +1550,7 @@ class _PartyRow extends StatelessWidget {
                           Flexible(
                             child: Text(
                               ClassKits.resourceLabelForSpec(hero.specId),
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: GameTheme.hint(
                                 color: GameTheme.parchmentDim,
@@ -1561,6 +1563,7 @@ class _PartyRow extends StatelessWidget {
                               child: Text(
                                 _runicPipLabel(resource),
                                 maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: GameTheme.combat(
                                   color: Color(
                                     ClassKits.resourceColorForSpec(hero.specId),

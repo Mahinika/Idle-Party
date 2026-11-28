@@ -61,8 +61,8 @@ abstract final class ReturnWeek {
       3 => 'Embers for RELICS',
       4 => 'Cinders for RELICS',
       5 => 'tickets for SCROLLS',
-      6 => 'essence and gold for CAMP and TRAIN',
-      _ => 'jackpot for CAMP, TRAIN, and SCROLLS',
+      6 => 'CAMP + TRAIN packs',
+      _ => 'CAMP, TRAIN, SCROLLS jackpot',
     };
     return 'Tomorrow: $cave · $hint';
   }

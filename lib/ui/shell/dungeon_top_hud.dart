@@ -595,6 +595,7 @@ class DungeonTopHud extends StatelessWidget {
                 child: Text(
                   snap.chipLabel,
                   maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GameTheme.combat(color: GameTheme.parchmentDim),
                 ),
               ),
@@ -920,7 +921,7 @@ class DungeonTopHud extends StatelessWidget {
               child: Text(
                 coachLine,
                 textAlign: TextAlign.right,
-                maxLines: awayLine != null ? 2 : 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.hint(color: GameTheme.torchHot),
               ),
