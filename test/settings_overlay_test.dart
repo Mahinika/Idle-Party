@@ -66,6 +66,7 @@ void main() {
     ).state;
     state = FunnelAnalytics.onFirstEnter(state, now, dungeonId: 'sandy').state;
     state = FunnelAnalytics.onFirstReward(state).state;
+    state = state.copyWith(bossVictories: 1);
     final director = GameDirector.preview(initialState: state);
     addTearDown(director.dispose);
 

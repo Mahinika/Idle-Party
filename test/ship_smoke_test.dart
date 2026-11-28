@@ -255,19 +255,27 @@ void main() {
 
   test('guides cover World Path endgame zones and Ashen Crown honesty', () {
     final world = GameGuides.topics.firstWhere((t) => t.id == 'world_path');
-    expect(world.body.toLowerCase(), contains('tidehold'));
-    expect(world.body.toLowerCase(), contains('ashen'));
-    expect(world.body.toLowerCase(), contains('hollow grove'));
-    expect(world.body.toLowerCase(), contains('stormwake'));
-    expect(world.body.toLowerCase(), contains('rimeglass'));
-    expect(world.body.toLowerCase(), contains('blightfen'));
-    expect(world.body.toLowerCase(), contains('brassvault'));
-    expect(world.body.toLowerCase(), contains('mothveil'));
+    expect(world.body.toLowerCase(), contains('continent'));
     expect(world.body.toLowerCase(), contains('endgame'));
-    expect(world.body.toLowerCase(), contains('tab'));
-    expect(world.body.toLowerCase(), contains('party mean level'));
+    expect(world.body.toLowerCase(), contains('mean level'));
     expect(world.body.toLowerCase(), contains('gold does not unlock'));
     expect(world.body.toLowerCase(), isNot(contains('lifetime gold')));
+
+    final midWorld = GameGuides.topicsFor(
+      GameLogic.createInitialState().copyWith(
+        bossVictories: 2,
+        highestFloorCleared: 12,
+      ),
+    ).firstWhere((t) => t.id == 'world_path');
+    final mid = midWorld.body.toLowerCase();
+    expect(mid, contains('tidehold'));
+    expect(mid, contains('ashen'));
+    expect(mid, contains('hollow grove'));
+    expect(mid, contains('stormwake'));
+    expect(mid, contains('rimeglass'));
+    expect(mid, contains('blightfen'));
+    expect(mid, contains('brassvault'));
+    expect(mid, contains('mothveil'));
 
     expect(GameGuides.topics.any((t) => t.id == 'loadouts'), isFalse);
     expect(GameGuides.topics.any((t) => t.id == 'constellation'), isTrue);
@@ -278,24 +286,27 @@ void main() {
 
     final keystone = GameGuides.topics.firstWhere((t) => t.id == 'hardmode');
     expect(keystone.body.toLowerCase(), contains('ashen'));
-    expect(keystone.body.toLowerCase(), contains('farm rift'));
-    expect(keystone.body.toLowerCase(), contains('pack'));
+    expect(keystone.body.toLowerCase(), contains('pack mix'));
+    expect(keystone.body.toLowerCase(), contains('ashen crown'));
 
     final ascend = GameGuides.topics.firstWhere((t) => t.id == 'ascend');
     expect(ascend.body, contains('AL20'));
     expect(ascend.body, contains('${GameLogic.maxHeroLevel}'));
-    expect(ascend.body.toLowerCase(), contains('not from al20 alone'));
+    expect(
+      ascend.body.toLowerCase(),
+      contains('endgame hunts still need every active hero'),
+    );
 
     final gates = GameGuides.topics.firstWhere((t) => t.id == 'gates');
     expect(gates.body, contains('${GameLogic.maxHeroLevel}'));
     expect(gates.body.toLowerCase(), contains('daily vault'));
     expect(gates.body.toLowerCase(), contains('daily run'));
     expect(gates.body.toLowerCase(), contains('quests daily'));
-    expect(gates.body.toLowerCase(), contains('specialization unlocks'));
+    expect(gates.body.toLowerCase(), contains('specs'));
     expect(gates.body.toLowerCase(), isNot(contains('wotlk')));
 
     final rift = GameGuides.topics.firstWhere((t) => t.id == 'rift');
-    expect(rift.body.toLowerCase(), contains('loot farm rift'));
+    expect(rift.body.toLowerCase(), contains('farm rift'));
     expect(rift.body.toLowerCase(), isNot(contains('nephalem')));
 
     final armor = GameGuides.topics.where((t) => t.id == 'armor_sets');
@@ -343,8 +354,13 @@ void main() {
   test('guides and Ascend roadmap stay honest for TODAY chase', () {
     final vault = GameGuides.topics.firstWhere((t) => t.id == 'weekly');
     expect(vault.title.toUpperCase(), contains('DAILY'));
-    expect(vault.body.toUpperCase(), contains('HUB HUNT'));
-    expect(vault.body.toUpperCase(), contains('READY'));
+    expect(vault.body.toUpperCase(), contains('DAILY VAULT'));
+    expect(vault.body.toUpperCase(), contains('CLAIM VAULT'));
+
+    final dayTwoVault = GameGuides.topicsFor(
+      GameLogic.createInitialState().copyWith(bossVictories: 1),
+    ).firstWhere((t) => t.id == 'weekly');
+    expect(dayTwoVault.body.toLowerCase(), contains('hub hunt'));
 
     expect(AscendRoadmap.unlockAtAl(1), contains('Alleyblade'));
     expect(AscendRoadmap.unlockAtAl(1), contains('Dawnward'));
@@ -370,17 +386,17 @@ void main() {
 
     final classes = GameGuides.topics.firstWhere((t) => t.id == 'classes');
     expect(classes.body, contains('AL2'));
-    expect(classes.body, contains('Packbond'));
-    expect(classes.body, contains('Dawnward'));
-    expect(classes.body, contains('ESSENCE BLESSING'));
+    expect(classes.body, contains('5th party slot'));
+    expect(classes.body, contains('GEAR → ROSTER'));
+    expect(AscendRoadmap.unlockAtAl(2)!.toLowerCase(), contains('packbond'));
 
     final forge = GameGuides.topics.firstWhere((t) => t.id == 'forge');
     expect(forge.body, contains('ESSENCE'));
-    expect(forge.body.toLowerCase(), contains('reset when you ascend'));
+    expect(forge.body.toLowerCase(), contains('resets on ascend'));
     expect(forge.body.toUpperCase(), isNot(contains('REBORN')));
 
     final ascendGuide = GameGuides.topics.firstWhere((t) => t.id == 'ascend');
-    expect(ascendGuide.body.toLowerCase(), contains('empty bag'));
+    expect(ascendGuide.body.toLowerCase(), contains('bag resets'));
     expect(ascendGuide.body.toUpperCase(), contains('REBORN'));
     expect(ascendGuide.body.toLowerCase(), contains('wallet gold'));
 
@@ -390,7 +406,7 @@ void main() {
     expect(sanctuary.body, contains('CAMP'));
     expect(sanctuary.body, contains('BLESSING'));
     expect(sanctuary.body, contains('God Hand'));
-    expect(sanctuary.body.toUpperCase(), contains('REBORN'));
+    expect(sanctuary.body.toUpperCase(), contains('STAR NODES'));
     expect(sanctuary.body, isNot(contains('PRESTIGE')));
 
     final shop = GameGuides.topics.firstWhere((t) => t.id == 'prestige_shop');
@@ -402,16 +418,17 @@ void main() {
     expect(shop.body.toLowerCase(), contains('one door'));
 
     final pets = GameGuides.topics.firstWhere((t) => t.id == 'pets');
-    expect(pets.body.toLowerCase(), contains('same rarity'));
-    expect(pets.body.toLowerCase(), contains('looks only'));
+    expect(pets.body.toLowerCase(), contains('same species + rarity'));
+    expect(pets.body.toLowerCase(), contains('survive ascend'));
 
     final combinator = GameGuides.topics.firstWhere((t) => t.id == 'combinator');
     expect(combinator.body.toLowerCase(), contains('charm'));
     expect(combinator.body.toLowerCase(), contains('gold'));
 
     final bag = GameGuides.topics.firstWhere((t) => t.id == 'bag_equip');
-    expect(bag.body.toLowerCase(), contains('weapons are a hard gate'));
-    expect(bag.body.toLowerCase(), contains('no daggers'));
+    expect(bag.body.toLowerCase(), contains('equip best'));
+    expect(bag.body.toLowerCase(), contains('sell junk'));
+    expect(bag.body.toLowerCase(), contains('bis kept'));
 
     final powerups = GameGuides.topics.firstWhere((t) => t.id == 'powerups');
     expect(powerups.title, 'SCROLLS');
@@ -419,7 +436,7 @@ void main() {
     expect(powerups.body.toLowerCase(), contains('scrolls'));
     expect(powerups.body.toLowerCase(), contains('ad ticket'));
     expect(powerups.body.toLowerCase(), contains('scroll of battle'));
-    expect(powerups.body.toLowerCase(), contains('24 hours'));
+    expect(powerups.body.toLowerCase(), contains('24h'));
   });
 
   test('late zones tide brass veil have distinct layout identity', () {

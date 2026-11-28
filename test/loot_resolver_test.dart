@@ -150,7 +150,7 @@ void main() {
     expect(GearCleanup.shouldAutoSellOnPickup(state, junkChest), isTrue);
   });
 
-  test('manual CLEAN BAG sells filter matches even when upgrade backup', () {
+  test('manual CLEAN BAG keeps upgrade backups when BiS guard applies', () {
     final worn = EquipmentItem(
       id: 'worn_chest',
       name: 'Worn',
@@ -179,8 +179,8 @@ void main() {
     expect(GearCleanup.shouldKeepInBag(state, backup), isTrue);
 
     final cleaned = GameLogic.cleanBagJunk(state, manualClean: true);
-    expect(cleaned.gearStash.any((g) => g.id == 'backup_chest'), isFalse);
-    expect(cleaned.gold, greaterThan(state.gold));
+    expect(cleaned.gearStash.any((g) => g.id == 'backup_chest'), isTrue);
+    expect(cleaned.gold, state.gold);
     expect(GearCleanup.cleanSellPreviewCount(state), 1);
     expect(GearCleanup.autoSellPreviewCount(state), 0);
   });

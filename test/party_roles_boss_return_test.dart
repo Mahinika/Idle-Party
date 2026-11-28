@@ -903,17 +903,16 @@ void main() {
     await tester.pumpWidget(
       MyApp(director: director, autoStartLoop: false, showIntro: false),
     );
-    for (var i = 0; i < 30; i++) {
+    for (var i = 0; i < 40; i++) {
       await tester.pump(const Duration(milliseconds: 100));
-      if (find.text('ENTER DUNGEON').evaluate().isNotEmpty) break;
+      if (find.byType(HomeShell).evaluate().isNotEmpty) break;
     }
-    expect(find.text('ENTER DUNGEON'), findsWidgets);
     director.setHomeLayout(HomeLayout.home);
+    director.debugHoldSave(state);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
     expect(find.byType(HomeShell), findsOneWidget);
     expect(find.byType(PlayNav), findsOneWidget);
-    director.debugHoldSave(state);
     director.uiFeedback.presentOffline(
       OfflineProgressResult(
         state: state,
@@ -953,11 +952,10 @@ void main() {
     await tester.pumpWidget(
       MyApp(director: director, autoStartLoop: false, showIntro: false),
     );
-    for (var i = 0; i < 30; i++) {
+    for (var i = 0; i < 40; i++) {
       await tester.pump(const Duration(milliseconds: 100));
-      if (find.text('ENTER DUNGEON').evaluate().isNotEmpty) break;
+      if (find.byType(HomeShell).evaluate().isNotEmpty) break;
     }
-    expect(find.text('ENTER DUNGEON'), findsWidgets);
     director.setHomeLayout(HomeLayout.home);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));

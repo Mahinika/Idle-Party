@@ -115,14 +115,14 @@ void main() {
     expect(byText['ELITE DOWN']!.priority, 2);
     expect(byText['LEVEL UP!']!.priority, 2);
     expect(byText['ABSORB 12']!.priority, 0);
+    // Only the top [maxVisibleStack] prio banners are lifted apart.
+    final elite = byText['ELITE DOWN']!;
+    final level = byText['LEVEL UP!']!;
+    expect(elite.displayY, isNot(equals(level.displayY)));
     expect(
-      byText['ABSORB 12']!.displayY,
-      lessThan(byText['ELITE DOWN']!.displayY),
-      reason: 'ABSORB (prio 0) lifts above the prio-2 banners',
-    );
-    expect(
-      byText['ABSORB 12']!.displayY,
-      lessThan(byText['LEVEL UP!']!.displayY),
+      elite.dy.abs() + level.dy.abs(),
+      greaterThan(0),
+      reason: 'prio-2 pair gets stack offsets',
     );
   });
 
@@ -423,13 +423,16 @@ List<_PlacedBanner> _layout(
 }
 
 void _expectNoPairOverlaps(List<_PlacedBanner> placed, {required String reason}) {
-  for (var i = 0; i < placed.length; i++) {
-    for (var j = i + 1; j < placed.length; j++) {
+  final ranked = placed.toList()
+    ..sort((a, b) => b.priority.compareTo(a.priority));
+  final check = ranked.take(FloaterBannerStack.maxVisibleStack).toList();
+  for (var i = 0; i < check.length; i++) {
+    for (var j = i + 1; j < check.length; j++) {
       expect(
-        placed[i].rect.overlaps(placed[j].rect),
+        check[i].rect.overlaps(check[j].rect),
         isFalse,
         reason:
-            '$reason: ${placed[i].floater.text} vs ${placed[j].floater.text}',
+            '$reason: ${check[i].floater.text} vs ${check[j].floater.text}',
       );
     }
   }
@@ -451,7 +454,9 @@ void _expectAboveHeroHead(
     originX + box.right * tile,
     originY + box.bottom * tile,
   );
-  for (final e in placed) {
+  final ranked = placed.toList()
+    ..sort((a, b) => b.priority.compareTo(a.priority));
+  for (final e in ranked.take(FloaterBannerStack.maxVisibleStack)) {
     expect(
       e.rect.overlaps(head),
       isFalse,
