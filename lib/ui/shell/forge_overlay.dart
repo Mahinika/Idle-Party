@@ -43,9 +43,9 @@ class ForgeOverlay extends StatefulWidget {
       return 'Run gold power resets when you start over. Buy the row tagged BEST when unsure.';
     }
     if (showCamp) {
-      return 'Forge gold and bag gold reset when you Ascend. Blessing on Essence does not.';
+      return 'TRAIN gold buys and bag gold reset when you Ascend. Blessing on Essence does not.';
     }
-    return 'Forge gold and bag gold reset when you Ascend. Blessing does not.';
+    return 'TRAIN gold buys and bag gold reset when you Ascend. Blessing does not.';
   }
 
   /// One-line sheet totals for the FORGE header (fits narrow home panel).

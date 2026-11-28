@@ -309,7 +309,7 @@ class PowerUpgradePriceChip extends StatelessWidget {
           if (captionLine != null)
             Text(
               captionLine,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: GameTheme.readable(color: GameTheme.torchHot),

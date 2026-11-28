@@ -189,7 +189,7 @@ abstract final class ShopCatalog {
       description:
           'Permanent — hides SCROLLS ads and every WATCH AD button. '
           '+2 Ad Tickets once, one free ticket each day, '
-          'WISP bonus gold without watching, three free CAMP levels each day, '
+          'lantern bonus gold without watching, three free CAMP levels each day, '
           'and free Daily or Side quest rerolls.',
       kind: ShopOfferKind.adFree,
       boostHours: 0,

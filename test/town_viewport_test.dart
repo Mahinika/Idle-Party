@@ -195,7 +195,7 @@ void main() {
       await pumpTown(tester);
       sandy.dispose();
       expect(find.byKey(townHellWashKey), findsOneWidget);
-      expect(find.text('GUILD'), findsOneWidget);
+      expect(find.text('QUESTS'), findsOneWidget);
       expect(find.text('ENTER'), findsOneWidget);
       await tapBuilding(tester, TownBuildingId.forge);
       expect(
@@ -211,7 +211,7 @@ void main() {
       director = GameDirector.preview(initialState: newTown());
       router = MenuRouter();
       await pumpTown(tester);
-      expect(find.text('GUILD'), findsOneWidget);
+      expect(find.text('QUESTS'), findsOneWidget);
       expect(find.text('CRAFT'), findsWidgets);
       expect(find.text('MARKET'), findsOneWidget);
       expect(find.text('INN'), findsOneWidget);
@@ -481,7 +481,7 @@ void main() {
       router = MenuRouter();
       await pumpTown(tester, size: TownPreview.shortSize);
       expect(find.text('CRAFT'), findsWidgets);
-      expect(find.text('GUILD'), findsOneWidget);
+      expect(find.text('QUESTS'), findsOneWidget);
       expect(find.text('ENTER'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });

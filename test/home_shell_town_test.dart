@@ -114,7 +114,7 @@ void main() {
     expect(find.text('CRAFT'), findsWidgets);
     expect(find.text('MARKET'), findsOneWidget);
     expect(find.text('INN'), findsOneWidget);
-    expect(find.text('GUILD'), findsOneWidget);
+    expect(find.text('QUESTS'), findsOneWidget);
     expect(find.text('VAULT'), findsOneWidget);
     expect(find.text('FORGE opens after the first boss (F2).'), findsNothing);
     expect(tester.takeException(), isNull);

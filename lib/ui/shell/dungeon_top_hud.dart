@@ -66,7 +66,7 @@ String _packJobBit(SpatialWorld? world) {
   if (awake.isEmpty && sleep <= 0) {
     return room != null ? ' · $room' : _floorMoodBit(world);
   }
-  final next = sleep > 0 ? ' · $sleep to the gate' : '';
+  final next = sleep > 0 ? ' · $sleep to gate' : '';
   if (awake.isEmpty) {
     return room != null ? ' · $room$next' : '${_floorMoodBit(world)}$next';
   }
@@ -139,9 +139,10 @@ String homeFightPlateKicker({
   final awaitingExit = world?.awaitingExit == true;
   final partyDown = state.isPartyDefeated || director.awaitingWipeChoice;
   if (partyDown) {
-    return state.inGauntlet || state.inAnyRiftMode
+    final wipedPlace = state.inGauntlet || state.inAnyRiftMode
         ? 'WIPED · End → hub'
         : 'WIPED · Retry / Hub';
+    return NavCopy.playerText(wipedPlace, state.homeLayout);
   }
   if (awaitingExit) {
     return '$zoneShort · GO stairs';
@@ -513,9 +514,12 @@ class DungeonTopHud extends StatelessWidget {
     final fightBit = bossBit.isNotEmpty ? bossBit : _packJobBit(world);
     final partyDown = state.isPartyDefeated || director.awaitingWipeChoice;
     final placeLine = partyDown
-        ? (state.inGauntlet || state.inAnyRiftMode
-              ? 'WIPED · End → hub'
-              : 'WIPED · Retry / Hub')
+        ? NavCopy.playerText(
+            state.inGauntlet || state.inAnyRiftMode
+                ? 'WIPED · End → hub'
+                : 'WIPED · Retry / Hub',
+            state.homeLayout,
+          )
         : awaitingExit
         ? '$zoneShort · F$floor · GO stairs'
         : state.inGauntlet
@@ -777,7 +781,7 @@ class DungeonTopHud extends StatelessWidget {
                   children: [
                     Text(
                       placeLine,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: GameTheme.hint(
                         color: awaitingExit || state.isPartyDefeated

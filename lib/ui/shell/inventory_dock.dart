@@ -39,7 +39,8 @@ class InventoryDock extends StatefulWidget {
   static const double bagPinnedMinHeight = 480;
 
   /// One empty-bag line; the MARKET nudge is a chip there, a link otherwise.
-  static const String emptyBagLine = 'Bag empty — farm for loot.';
+  static const String emptyBagLine =
+      'Bag empty — farm for loot or try MARKET.';
 
   static const Key bagGoldBuyKey = ValueKey('bag-gold-buy');
 

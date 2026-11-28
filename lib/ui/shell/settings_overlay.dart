@@ -154,7 +154,9 @@ class _SettingsOverlayState extends State<SettingsOverlay>
   Widget _scrollPage(_SettingsPage page, Widget child) {
     return SingleChildScrollView(
       key: PageStorageKey<String>('settings-${page.name}'),
-      padding: ShellLayout.scrollBodyPadding,
+      padding: ShellLayout.scrollBodyPadding.copyWith(
+        bottom: ShellLayout.scrollBodyPadding.bottom + GameTheme.primaryTouch,
+      ),
       child: child,
     );
   }
@@ -273,7 +275,8 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         Builder(
           builder: (context) {
             final wide = MediaQuery.sizeOf(context).width >= 400;
-            final largeType = MediaQuery.textScalerOf(context).scale(1) > 1.2;
+            final osScale = MediaQuery.textScalerOf(context).scale(1);
+            final largeType = osScale > 1.2;
             final percent = '${(state.uiTextScale * 100).round()}%';
             final slider = MenuChrome.slider(
               label: 'UI text scale',
@@ -285,6 +288,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
               max: kUiTextScaleMax,
               divisions: 13,
               onChanged: director.setUiTextScale,
+              semanticsValue: '${(state.uiTextScale * 100).round()} percent',
             );
             if (wide || !largeType) {
               return Row(

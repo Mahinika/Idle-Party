@@ -287,10 +287,16 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Pick a hero and slot, then craft Apex gear. Weapon first. '
-          'Bosses fill the meter for the target you set here.',
-          style: GameTheme.hint(color: GameTheme.parchmentDim),
+        MenuChrome.fold(
+          title: 'Pick a hero and slot, then craft Apex gear.',
+          subtitle: 'Weapon first. Bosses fill the meter for the target you set here.',
+          children: [
+            Text(
+              'Opening this sheet saves that goal. Keeps through Ascend. '
+              'DPS roll Crit + Haste; healers Mp5 + Crit + Haste.',
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         MenuChrome.sectionLabelScoped('HERO'),
