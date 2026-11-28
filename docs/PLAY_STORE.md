@@ -214,9 +214,9 @@ Same Firebase project. The Android app fetches after the ads consent check. A mi
 
 | Key | Type | Shipped | Allowed |
 |-----|------|---------|---------|
-| `wisp_daily_cap` | Number | 6 | 1–12 |
+| `wisp_daily_cap` | Number | 8 | 1–12 |
 | `wisp_first_delay_sec` | Number | 90 | 15–3600 |
-| `wisp_interval_sec` | Number | 600 | 60–3600 |
+| `wisp_interval_sec` | Number | 480 | 60–3600 |
 | `wisp_visible_sec` | Number | 10 | 5–30 |
 | `shop_featured_id` | String | empty | a SHOP product id, such as `ad_free` |
 

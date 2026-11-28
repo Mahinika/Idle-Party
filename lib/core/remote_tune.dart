@@ -18,10 +18,10 @@ abstract final class RemoteTune {
       'welcome_back_first_return_short';
   static const String keyTownEnabled = 'town_enabled';
 
-  static const int defaultDailyCap = 6;
+  static const int defaultDailyCap = 8;
   static const bool defaultTownEnabled = true;
   static const int defaultFirstDelaySec = 90;
-  static const int defaultIntervalSec = 10 * 60;
+  static const int defaultIntervalSec = 8 * 60;
   static const int defaultVisibleSec = 10;
 
   static int _dailyCap = defaultDailyCap;

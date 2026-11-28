@@ -47,15 +47,18 @@ follow `save-migrate`.
 - **SCROLLS:** never start an ad mid-fight. Hub FAB shows with SHOP
   (`MenuTabs.showScrolls`). One ad = +1 ticket. Magnitudes do not stack;
   time extends up to 24 h.
-- **Ad-free:** hide WATCH, one free ticket per UTC day, WISP gives the big
-  gold pile on tap (no time boost).
+- **Ad-free:** hide WATCH, five free tickets per UTC day, WISP gives the big
+  gold pile on tap (at least 2 hours of hub gold, no time boost), Welcome
+  Back gold and essence are ×3 automatically (at least 30 minutes of hub
+  gold), and CAMP grants five free levels a day.
 - **WISP choice:** WATCH AD = bigger gold only. NO THANKS = keep the small
   pile. No 1h ×2 gold from WISP.
 - **WISP amounts:** best cleared zone at earned depth (about 10 WATCH
   floors for a new party, about 60 at a full clear on AL20) plus ~4% wallet
   soft floor for WATCH. Not the Sandy farm floor, and not a Gauntlet floor.
-- **WISP cadence (release):** first after 90 s, then every 10 min, visible
-  10 s, max 6 taps per UTC day. Those are the shipped defaults. Firebase
+- **WISP cadence (release):** first after 90 s, then every 8 min, visible
+  10 s, max 8 taps per UTC day. WATCH gold is at least 2 hours of hub gold.
+  Those are the shipped defaults. Firebase
   Remote Config can replace them inside the ranges in `RemoteTune` (gold
   piles stay in code). Debug builds stay on the 20 s loop until a published
   WISP number differs. Empty `shop_featured_id` lights the forever-scrolls

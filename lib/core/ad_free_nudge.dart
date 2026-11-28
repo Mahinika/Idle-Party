@@ -5,7 +5,7 @@ import 'shop_catalog.dart';
 
 /// Where the Ad-free line is allowed to sit.
 ///
-/// SCROLLS on the hub, and CAMP once today's three free levels are used.
+/// SCROLLS on the hub, and CAMP once today's free levels are used.
 /// Welcome Back and the fight never qualify.
 enum AdFreeNudgePlace { scrolls, camp, welcomeBack, fight }
 
@@ -21,7 +21,7 @@ abstract final class AdFreeNudge {
   static const String productId = 'ad_free';
 
   static const String line =
-      'Tired of ads? Ad-free hides every video and gives a free ticket each day';
+      'Tired of ads? Ad-free hides every video and gives five free tickets each day';
 
   /// Play returned [productId], this binary is a sideload QA APK, or a
   /// debug build is proving the CAMP row on a phone.

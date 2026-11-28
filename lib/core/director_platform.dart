@@ -138,6 +138,9 @@ extension GameDirectorPlatform on GameDirector {
     if (adFree) {
       _grantWispWatchReward(toast: true);
     }
+    if (WispGift.claimsToday(_state.metaDepth) == RemoteTune.wispDailyCap) {
+      _logDailyCap(AnalyticsEvents.placementWispGift, RemoteTune.wispDailyCap);
+    }
     _directorNotify();
     unawaited(_persistFlush());
   }
@@ -162,11 +165,13 @@ extension GameDirectorPlatform on GameDirector {
     unawaited(_persistFlush());
   }
 
-  /// Optional Welcome Back watch. Doubles [baseGold] and [baseEssence]
-  /// already credited. Skip, fail, or ad-free grants nothing.
+  /// Optional Welcome Back watch. Triples [baseGold] and [baseEssence]
+  /// already credited, with a hub-gold floor. Skip, fail, or ad-free
+  /// grants nothing here (Ad-free is applied when the trip is credited).
   Future<bool> watchWelcomeBackGoldAd(
     int baseGold, {
     int baseEssence = 0,
+    int secondsAway = 0,
   }) async {
     if ((baseGold <= 0 && baseEssence <= 0) ||
         _welcomeBackAdGranted ||
@@ -181,6 +186,8 @@ extension GameDirectorPlatform on GameDirector {
       showToast('Ads play on the Android app', life: 2.2);
       return false;
     }
+    final extraGold = AdOffer.welcomeExtraGold(_state, baseGold);
+    _armRewardedGrant(rewardGold: extraGold);
     _welcomeBackAdBusy = true;
     showToast('Loading ad…', life: 1.4);
     unawaited(AppAnalytics.welcomeBackAdTap());
@@ -208,18 +215,21 @@ extension GameDirectorPlatform on GameDirector {
             return false;
           }
           GameAudio.gold();
-          showToast('Welcome Back · loot doubled', life: 2.4);
+          showToast('Welcome Back · loot ×3', life: 2.4);
           unawaited(
             AppAnalytics.logEvent('welcome_back_ad', {
               'gold': gained,
               'essence': essence,
+              'seconds_bucket': AnalyticsEvents.offlineSecondsBucket(
+                secondsAway,
+              ),
             }),
           );
           return true;
         case AdWatchResult.skipped:
           unawaited(AppAnalytics.welcomeBackAdSkip());
           showToast(
-            'Watch the whole ad to double this trip\'s loot',
+            'Watch the whole ad to triple this trip\'s loot',
             life: 2.2,
           );
           return false;
@@ -249,6 +259,9 @@ extension GameDirectorPlatform on GameDirector {
       return;
     }
     showToast('Loading ad…', life: 1.4);
+    if (scripted == null) {
+      _armRewardedGrant(rewardGold: _state.metaDepth.wispPendingWatchGold);
+    }
     final result = scripted != null
         ? await scripted
         : await AdRewarded.showRewarded(
@@ -1046,6 +1059,7 @@ extension GameDirectorPlatform on GameDirector {
       return false;
     }
     showToast('Loading ad…', life: 1.4);
+    _armRewardedGrant(rewardGold: ReinstallPouch.goldAmount(_state));
     try {
       final result = await AdRewarded.showRewarded(
         placement: AnalyticsEvents.placementReinstallPouch,

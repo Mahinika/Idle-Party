@@ -133,6 +133,7 @@ extension GameDirectorFight on GameDirector {
       return;
     }
     showToast('Loading ad…', life: 1.4);
+    _armRewardedGrant(ticketsGranted: AdBoost.ticketsPerAd);
     final result = await AdRewarded.showRewarded(
       placement: AnalyticsEvents.placementWipeRetry,
     );
@@ -165,6 +166,7 @@ extension GameDirectorFight on GameDirector {
       return;
     }
     showToast('Loading ad…', life: 1.4);
+    _armRewardedGrant();
     final result = await AdRewarded.showRewarded(
       placement: AnalyticsEvents.placementWipeRevive,
     );

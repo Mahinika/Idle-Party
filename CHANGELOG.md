@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- Rewarded ads: WISP watch pays at least 2 hours of hub gold (8 a day, every 8 min), extra ticket ads cap at 8 per UTC day, Scroll of Gold lasts 4 hours, Welcome Back is ×3 with a 30-minute hub-gold floor, CAMP ads grant 5 free levels a day, and Ad-free matches those (5 daily tickets, automatic WISP and ×3 Welcome Back). Prices and the starter pouch stay the same.
 - Pre-Sunday UI polish: fight HUD drops in-cave hunt lines and CLAIM over the floor, F# CLEAR clears on the next floor, loot names spawn above the party, tomorrow vault copy names shelf not wallet gold, shorter SHOP header and Play wait text, two-line hero/gear names, 360×640 @1.45 layout on home and wallet.
 - Copy polish (#136): shorter title tagline, one NEW PARTY start button, town FORGE · CRAFT naming, OPEN TRAIN on welcome back, plain ESSENCE and CRAFT lines, INN lock text matches roster size, Patch Notes no longer auto-covers the town square, and a clearer cave-cleared boss toast when no next zone opens.
 - **Hero range / positioning:** Option A′ ranges + melee arc v2 (per-spec arc radius/step, tank stand, lone-melee rank fallback, combat arc / swarm rank); see `docs/RANGE_POSITIONING_AUDIT.md`.

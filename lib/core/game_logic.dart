@@ -689,7 +689,7 @@ class GameLogic {
   }
 
   /// Free CAMP levels from a rewarded ad, per UTC day.
-  static const int campAdDailyCap = 3;
+  static const int campAdDailyCap = 5;
 
   static int campAdClaimsToday(GameState state, {DateTime? now}) {
     final day = AdBoost.utcDayKey(now);
@@ -938,14 +938,17 @@ class GameLogic {
     return state.copyWith(metaDepth: state.metaDepth.copyWith(adTickets: next));
   }
 
-  /// Ad-free: claim +1 ticket once per UTC day without watching.
+  /// Ad-free: claim [AdBoost.adFreeDailyTickets] once per UTC day, no ad.
   static GameState claimAdFreeDailyTicket(GameState state, {DateTime? now}) {
     final clock = now ?? DateTime.now().toUtc();
     if (!AdBoost.canClaimAdFreeDaily(state.metaDepth, now: clock)) {
       return state;
     }
     final day = AdBoost.utcDayKey(clock);
-    final withTicket = grantAdTicket(state);
+    final withTicket = grantAdTicket(
+      state,
+      count: AdBoost.adFreeDailyTickets,
+    );
     return withTicket.copyWith(
       metaDepth: withTicket.metaDepth.copyWith(adFreeDailyClaimUtc: day),
     );
@@ -983,6 +986,25 @@ class GameLogic {
       metaDepth: withTicket.metaDepth.copyWith(
         scrollWellUtcDay: day,
         scrollWellBonusClaims: nextClaims,
+      ),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  /// One extra ticket ad after the daily well. Caps at [ScrollWell.extraAdCap].
+  /// Wipe tickets stay on [grantAdTicket] and do not move this counter.
+  static GameState grantExtraTicketAd(GameState state, {DateTime? now}) {
+    final clock = now ?? DateTime.now().toUtc();
+    if (!ScrollWell.canWatchExtraAd(state.metaDepth, now: clock)) return state;
+    final used = ScrollWell.extraAdsToday(state.metaDepth, now: clock);
+    final withTicket = grantAdTicket(state);
+    if (withTicket.metaDepth.adTickets == state.metaDepth.adTickets) {
+      return state;
+    }
+    return withTicket.copyWith(
+      metaDepth: withTicket.metaDepth.copyWith(
+        extraTicketAdsUtc: AdBoost.utcDayKey(clock),
+        extraTicketAdsToday: used + 1,
       ),
       lastUpdated: DateTime.now(),
     );
@@ -1069,19 +1091,26 @@ class GameLogic {
     );
   }
 
-  /// Welcome Back watch: double [baseGold] and [baseEssence] already credited.
-  /// No new save field. Ad-free and Forever Rest refuse.
+  /// Welcome Back watch: ×[AdOffer.welcomeMul] [baseGold] and [baseEssence]
+  /// already credited, with a hub-gold floor on the gold.
+  ///
+  /// No new save field. The watch itself refuses Ad-free (that path grants
+  /// the same pile automatically) and Forever Rest (already ×3).
   static GameState grantWelcomeBackWatchGold(
     GameState state,
     int baseGold, {
     int baseEssence = 0,
+    bool allowAdFree = false,
   }) {
     if (baseGold <= 0 && baseEssence <= 0) return state;
     final md = state.metaDepth;
-    if (md.adFree || AdBoost.hasPerm(md, AdBoost.permRest)) return state;
+    if ((!allowAdFree && md.adFree) ||
+        AdBoost.hasPerm(md, AdBoost.permRest)) {
+      return state;
+    }
     if (!showDailyChase(state)) return state;
-    final extraGold = baseGold > 0 ? baseGold : 0;
-    final extraEssence = baseEssence > 0 ? baseEssence : 0;
+    final extraGold = AdOffer.welcomeExtraGold(state, baseGold);
+    final extraEssence = AdOffer.welcomeExtraEssence(baseEssence);
     if (extraGold <= 0 && extraEssence <= 0) return state;
     return state.copyWith(
       gold: state.gold + extraGold,
@@ -3453,7 +3482,8 @@ class OfflineProgressResult {
   /// Welcome Back line for [materialsGained]. Empty when nothing dropped.
   String get materialsLine => ApexForge.materialGainLine(materialsGained);
 
-  /// Optional rewarded ad on this card. Doubles this trip's gold and essence.
+  /// Optional rewarded ad on this card. Triples this trip's gold and essence
+  /// (gold at least 30 minutes of hub income).
   /// Hidden before the first boss, when Rest already multiplied the gold,
   /// and for ad-free or Forever Rest.
   bool get welcomeBackAdOffer {

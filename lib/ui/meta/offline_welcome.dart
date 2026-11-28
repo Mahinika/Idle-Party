@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'dart:async' show unawaited;
 
+import '../../core/ad_offer.dart';
 import '../../core/ad_rewarded.dart';
 import '../../core/analytics_events.dart';
 import '../../core/chase_contract.dart';
@@ -315,8 +316,11 @@ Future<void> showOfflineProgressDialog(
             const SizedBox(height: 8),
             Text(
               _watchLootLine(
-                gold: summary.goldGained,
-                essence: summary.essenceGained,
+                gold: AdOffer.welcomeExtraGold(
+                  rewardState,
+                  summary.goldGained,
+                ),
+                essence: AdOffer.welcomeExtraEssence(summary.essenceGained),
                 stateGold: rewardState.gold,
                 stateEssence: rewardState.essence,
               ),
@@ -376,8 +380,8 @@ Future<void> showOfflineProgressDialog(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       ShellLayout.hint(
-                        'Optional. Watch an ad and this trip\'s gold and essence are doubled.',
-                        maxLines: 2,
+                        'Optional. Watch an ad and this trip\'s gold and essence are tripled (at least 30 minutes of hub gold).',
+                        maxLines: 3,
                       ),
                       const SizedBox(height: 6),
                       GameButton(
@@ -396,6 +400,7 @@ Future<void> showOfflineProgressDialog(
                                     .watchWelcomeBackGoldAd(
                                       summary.goldGained,
                                       baseEssence: summary.essenceGained,
+                                      secondsAway: summary.awayForSeconds,
                                     );
                                 if (!context.mounted) return;
                                 setLocal(() {
@@ -411,8 +416,8 @@ Future<void> showOfflineProgressDialog(
                                       if (essence > 0) '$essence essence',
                                     ];
                                     adNote = parts.isEmpty
-                                        ? 'Offline loot doubled.'
-                                        : 'Ad doubled ${parts.join(' and ')}.';
+                                        ? 'Offline loot ×3.'
+                                        : 'Ad tripled ${parts.join(' and ')}.';
                                   }
                                 });
                               },
@@ -489,7 +494,7 @@ String _watchLootLine({
       '${OfflineProgressResult.groupedCount(stateEssence + essence)} if you watch',
     );
   }
-  if (parts.isEmpty) return 'Watch doubles this trip\'s loot (2×).';
+  if (parts.isEmpty) return 'Watch triples this trip\'s loot (×3).';
   return parts.join(' · ');
 }
 
