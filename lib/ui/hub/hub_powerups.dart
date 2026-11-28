@@ -336,7 +336,7 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                 children: [
                   MenuChrome.sheetHandle(),
                   Text(
-                    widget.focus == PowerupsFocus.pouch ? 'POUCH' : 'SCROLLS',
+                    widget.focus == PowerupsFocus.pouch ? 'STARTER' : 'SCROLLS',
                     style: GameTheme.title(),
                   ),
                   ShellLayout.gap(6),
@@ -360,8 +360,8 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                   ShellLayout.gap(4),
                   ShellLayout.hint(
                     adFree
-                        ? 'Ad-free: no ads. Claim one free ticket each day, then spend it here.'
-                        : 'Watch for a ticket, then spend it here.',
+                        ? 'Ad-free: no ads. Claim one free Ad Ticket each day, then spend it here.'
+                        : 'Earn Ad Tickets from short ads, then spend them below.',
                   ),
                   ShellLayout.gap(6),
                   ShellLayout.divider(),
@@ -438,7 +438,7 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                                         CrossAxisAlignment.stretch,
                                     children: [
                                       Text(
-                                        'POUCH',
+                                        'STARTER',
                                         key: ScrollsSheet.pouchTitleKey,
                                         style: GameTheme.title(),
                                       ),
@@ -617,8 +617,8 @@ class _ScrollWellBlock extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           ladderDone
-              ? 'Daily bonus done. Extra WATCH ads still grant tickets.'
-              : '1 free ticket, then 2 ad steps each day.',
+              ? 'Daily bonus done. Extra ads still grant Ad Tickets.'
+              : '1 free Ad Ticket, then 2 ad steps each day.',
           style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
@@ -642,9 +642,9 @@ class _ScrollWellBlock extends StatelessWidget {
           const SizedBox(height: 8),
           if (realAds)
             GameButton(
-              label: 'WATCH AD · +1 TICKET',
-              style: GameButtonStyle.grey,
-              onPressed: onWatch,
+            label: 'WATCH AD · +1 TICKET',
+            style: GameButtonStyle.brown,
+            onPressed: onWatch,
             )
           else ...[
             Text(
@@ -797,7 +797,7 @@ class ReinstallPouchFab extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: GameTheme.clusterGap),
       child: GameButton(
         label: 'WATCH AD · +${formatGold(gold)} STARTER',
-        style: GameButtonStyle.grey,
+        style: GameButtonStyle.brown,
         tip: 'One-time gold after a fresh install',
         onPressed: onWatch,
       ),

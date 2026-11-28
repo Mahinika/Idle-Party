@@ -220,7 +220,7 @@ void main() {
     addTearDown(d.dispose);
     final def = DungeonCatalog.byId(d.state.dungeonId);
     final line = MapScreen.zoneDetail(d.state, def, open: true, mean: 5);
-    expect(line, contains('You are here'));
+    expect(line, contains('Here ·'));
     expect(line, contains('Party level 5'));
     expect(line, isNot(contains(' / ')));
   });

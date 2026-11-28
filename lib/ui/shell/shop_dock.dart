@@ -57,23 +57,42 @@ class ShopDock extends StatefulWidget {
   /// Home sheet: one pick + expand (matches SPLIT forge).
   final bool homeCompact;
 
+  /// One-line SHOP header; names only packs on the live shelf.
+  static String _paidShelfSummary({Set<String>? playListed}) {
+    final names = ShopCatalog.shelf(playListed: playListed)
+        .map((e) => e.name)
+        .toList();
+    if (names.isEmpty) return 'Paid packs below once Play connects.';
+    if (names.length <= 3) return '${names.join(', ')} below once Play connects.';
+    return '${names.take(3).join(', ')}, and more below once Play connects.';
+  }
+
   static String conveniencePolicyLead({
     required bool showEssence,
     HomeLayout layout = HomeLayout.classic,
-  }) => NavCopy.playerText(
-    'SCROLLS tickets live on the hub. Ad-free welcome, Long Away, Supporter, '
-        'Cinder pouch, and Season pass premium sell here when Play is connected.',
-    layout,
-  );
+    Set<String>? playListed,
+  }) {
+    final scrolls = layout == HomeLayout.home
+        ? 'SCROLLS tickets: fight rail.'
+        : 'SCROLLS tickets live on the hub.';
+    final lead = '$scrolls ${_paidShelfSummary(playListed: playListed)}';
+    return layout == HomeLayout.home ? lead : NavCopy.playerText(lead, layout);
+  }
 
   static String conveniencePolicyBody({
     required bool showEssence,
     HomeLayout layout = HomeLayout.classic,
+    Set<String>? playListed,
   }) {
     final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
+    final paid = _paidShelfSummary(playListed: playListed);
+    final scrolls = layout == HomeLayout.home
+        ? 'SCROLLS tickets: fight rail.'
+        : 'Free tickets are SCROLLS on the hub.';
     final raw =
-        'Free tickets are SCROLLS on the hub. '
-        'Paid packs are here once Play is connected. '
+        '$scrolls $paid '
+        'Bag space and pet errands use gold or Cinders in GEAR'
+        '${showEssence ? ' and ESSENCE' : ''} — not real money. '
         'Gold is under GOLD.$essenceBit';
     return NavCopy.playerText(raw, layout);
   }
@@ -84,6 +103,12 @@ class ShopDock extends StatefulWidget {
     HomeLayout layout = HomeLayout.classic,
   }) {
     final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
+    if (layout == HomeLayout.home) {
+      return 'SCROLLS tickets: fight rail. Paid packs list here once Play connects. '
+          'Bag space and pet errands use gold or Cinders in HEROES'
+          '${showEssence ? ' and ESSENCE' : ''} — not real money. '
+          'Gold buys TRAIN, CAMP and MARKET under the fight.$essenceBit';
+    }
     final raw =
         'Free tickets are SCROLLS on the hub. '
         'Paid packs are here once Play is connected. '
@@ -181,6 +206,7 @@ class _ShopDockState extends State<ShopDock> {
         final hint = ShopDock.conveniencePolicyLead(
           showEssence: MenuTabs.showCamp(state),
           layout: state.homeLayout,
+          playListed: playListed,
         );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -249,6 +275,12 @@ class _ShopDockState extends State<ShopDock> {
               ShopDock.conveniencePolicyBody(
                 showEssence: MenuTabs.showCamp(state),
                 layout: state.homeLayout,
+                playListed: ShopStore.productsReady
+                    ? {
+                        for (final item in ShopCatalog.offered)
+                          if (ShopStore.storeLists(item.id)) item.id,
+                      }
+                    : null,
               ),
               maxLines: 8,
             ),

@@ -595,7 +595,7 @@ void main() {
     );
     expect(
       InventoryDock.mergeFooterHint(plainEnglish: false).toLowerCase(),
-      contains('skips upgrades'),
+      contains('auto merge skips'),
     );
   });
 

@@ -56,15 +56,15 @@ class MapScreen extends StatefulWidget {
     required int mean,
   }) {
     final need = DungeonCatalog.unlockHeroLevel(def);
-    if (!open) return 'Party Lv$need or clear the previous cave';
+    if (!open) return 'Party level $need or clear the previous cave';
     final here = state.inDungeon && state.dungeonId == def.id;
     final cleared = def.number <= state.highestDungeonCleared;
-    return [
-      if (here) 'You are here · F${state.currentRoom.floorNumber}',
-      cleared ? 'Cleared' : 'Not cleared yet',
-      // Plain words, not "Lv1 / 1" (polish7 P026).
-      'Party level $mean, cave needs $need',
-    ].join(' · ');
+    final lines = <String>[
+      if (here) 'Here · F${state.currentRoom.floorNumber}',
+      cleared ? 'Cleared' : 'Not cleared',
+      'Party level $mean · needs level $need',
+    ];
+    return lines.join(' · ');
   }
 
   @override
@@ -249,8 +249,11 @@ class _MapScreenState extends State<MapScreen> {
                 : '$title. $body',
             child: InkWell(
               onTap: onTap,
-              child: Row(
-                children: [
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+                child: Row(
+                  children: [
                   if (portrait != null) ...[
                     // Locked hunts: the picture dims, like locked tiles.
                     Opacity(
@@ -299,7 +302,8 @@ class _MapScreenState extends State<MapScreen> {
                       tone: GameTheme.torchHot,
                     ),
                   ],
-                ],
+                  ],
+                ),
               ),
             ),
           ),

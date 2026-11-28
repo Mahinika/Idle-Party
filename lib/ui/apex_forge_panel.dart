@@ -287,10 +287,16 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Pick a hero and slot, then craft Apex gear. Weapon first. '
-          'Bosses fill the meter for the target you set here.',
-          style: GameTheme.hint(color: GameTheme.parchmentDim),
+        MenuChrome.fold(
+          title: 'Pick a hero and slot, then craft Apex gear.',
+          subtitle: 'Weapon first. Bosses fill the meter for the target you set here.',
+          children: [
+            Text(
+              'Opening this sheet saves that goal. Keeps through Ascend. '
+              'DPS roll Crit + Haste; healers Mp5 + Crit + Haste.',
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         MenuChrome.sectionLabelScoped('HERO'),
@@ -389,7 +395,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Worn gear that is not Apex counts as empty. Forge and blessings still apply.',
+                    'Worn gear that is not Apex counts as empty. TRAIN and blessings still apply.',
                     textAlign: TextAlign.center,
                     style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
@@ -532,8 +538,14 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           final selected = _apexClass == classId && _apexRole == role;
           // Name first, class second, as everywhere else (polish7 P004).
           final name = h.displayName(plainEnglish: false);
-          return MenuChrome.chip(
-            label: name == h.roleLabel ? name : '$name · ${h.roleLabel}',
+          final chipLabel =
+              name == h.roleLabel ? name : '$name · ${h.roleLabel}';
+          return Semantics(
+            button: true,
+            selected: selected,
+            label: chipLabel,
+            child: MenuChrome.chip(
+            label: chipLabel,
             selected: selected,
             onTap: () {
               final keepSlot =
@@ -545,6 +557,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                         EquipmentSlot.weapon);
               _setCraftGoal(classId, role, slot);
             },
+          ),
           );
           }),
       ],
@@ -565,11 +578,18 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           final rank =
               _existingPiece(state, _apexClass, _apexRole, slot)?.apexRank ?? 0;
           final next = ApexForge.nextSlotForPair(state, _apexClass, _apexRole);
-          return MenuChrome.chip(
-            label: _slotLabel(slot, _apexClass, _apexRole),
-            value: rank > 0 ? 'R$rank' : (slot == next ? 'NEXT' : null),
+          final chipLabel = _slotLabel(slot, _apexClass, _apexRole);
+          final chipValue = rank > 0 ? 'R$rank' : (slot == next ? 'NEXT' : null);
+          return Semantics(
+            button: true,
+            selected: _apexSlot == slot,
+            label: chipValue == null ? chipLabel : '$chipLabel $chipValue',
+            child: MenuChrome.chip(
+            label: chipLabel,
+            value: chipValue,
             selected: _apexSlot == slot,
             onTap: () => _setCraftGoal(_apexClass, _apexRole, slot),
+          ),
           );
           }),
       ],
@@ -793,34 +813,55 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         : (def?.name ?? matId);
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: InkWell(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: '$label, $have of $need',
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: MenuChrome.listCard(selected: selected),
-          child: Row(
-            children: [
-              GameIcon.asset(_matIcon(family), size: 16),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: MenuChrome.listCard(selected: selected),
+                child: Row(
                   children: [
-                    Text(
-                      '$label  $have/$need',
-                      style: GameTheme.section(color: have >= need
-                            ? GameTheme.clear
-                            : GameTheme.bloodLit),
-                    ),
-                    if (have < need)
-                      Text(
-                        _farmSources(state, matId),
-                        style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    GameIcon.asset(_matIcon(family), size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$label  $have/$need',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GameTheme.section(
+                              color: have >= need
+                                  ? GameTheme.clear
+                                  : GameTheme.bloodLit,
+                            ),
+                          ),
+                          if (have < need)
+                            Text(
+                              _farmSources(state, matId),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GameTheme.hint(
+                                color: GameTheme.parchmentDim,
+                              ),
+                            ),
+                        ],
                       ),
+                    ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

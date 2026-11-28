@@ -2,6 +2,7 @@ import '../models/town_building.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'menu_alerts.dart';
+import 'return_week.dart';
 
 /// Who may enter each town building, using existing unlocks only.
 ///
@@ -51,12 +52,24 @@ abstract final class TownAccess {
   }
 
   static String vaultCopy(GameState s) {
-    if (vaultClaimedToday(s)) return 'Vault claimed today.';
+    if (vaultClaimedToday(s)) return vaultClaimedDetail(s);
     if (vaultInSeason(s)) {
       final clears = s.metaDepth.dailyVaultClears;
       final target = GameLogic.dailyVaultClearTarget;
       return 'Daily Vault $clears/$target · keep clearing.';
     }
     return 'Daily Vault after the first boss.';
+  }
+
+  /// After claim: reset countdown and tomorrow’s cave (audit vault tap).
+  static String vaultClaimedDetail(GameState state) {
+    final now = DateTime.now().toUtc();
+    final next = DateTime.utc(now.year, now.month, now.day + 1);
+    final hours = next.difference(now).inHours.clamp(0, 48);
+    final reset = hours <= 1
+        ? 'Resets at UTC midnight.'
+        : 'Resets in ${hours}h (UTC).';
+    final cave = ReturnWeek.tomorrowTitle(state);
+    return 'Vault claimed today. $reset $cave';
   }
 }

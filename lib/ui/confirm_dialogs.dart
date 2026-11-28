@@ -9,6 +9,7 @@ import '../core/blessing_constellation.dart';
 import '../core/meta_systems.dart';
 import '../core/rift.dart';
 import '../core/greater_rift.dart';
+import '../core/home_layout.dart';
 import '../core/nav_copy.dart';
 import '../core/story_lore.dart';
 import '../models/dungeon_mode.dart';
@@ -249,6 +250,9 @@ Future<void> confirmLeaveDungeon(
         'Leave to hub now? This floor’s chamber progress is lost '
         '(PUSH climb resets from hub). $banked';
   }
+  final layout = state?.homeLayout ?? HomeLayout.classic;
+  final dialogTitle = NavCopy.playerText('Return to hub?', layout);
+  final dialogBody = NavCopy.playerText(body, layout);
   WebClickBridge.pushLayer();
   try {
     final ok = await showDialog<bool>(
@@ -258,9 +262,9 @@ Future<void> confirmLeaveDungeon(
       builder: (ctx) => PopScope(
         canPop: true,
         child: MenuChrome.dialog(
-          title: 'Return to hub?',
+          title: dialogTitle,
           content: Text(
-            body,
+            dialogBody,
             style: GameTheme.readable(color: GameTheme.parchment),
           ),
           actions: [

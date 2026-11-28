@@ -39,7 +39,8 @@ class InventoryDock extends StatefulWidget {
   static const double bagPinnedMinHeight = 480;
 
   /// One empty-bag line; the MARKET nudge is a chip there, a link otherwise.
-  static const String emptyBagLine = 'Bag empty — farm for loot.';
+  static const String emptyBagLine =
+      'Bag empty — farm for loot or try MARKET.';
 
   static const Key bagGoldBuyKey = ValueKey('bag-gold-buy');
 
@@ -90,11 +91,11 @@ class InventoryDock extends StatefulWidget {
     List<String> keptNames = const [],
   }) {
     if (plainEnglish) {
-      return 'Same-slot junk pairs › one stronger piece. Uses gold.';
+      return 'Same slot: two items → one stronger piece. Costs gold.';
     }
     final base =
-        'Same-slot junk pairs › one stronger piece (skips upgrades). Uses gold. '
-        'AUTO MERGE picks by raw power.';
+        'Pair same-slot junk into one stronger piece by raw power. Uses gold. '
+        'AUTO MERGE skips keeps.';
     if (keptCount <= 0) return base;
     final sample = keptNames.isEmpty ? '' : ' · e.g. ${keptNames.join(', ')}';
     return '$base Skips $keptCount keep${keptCount == 1 ? '' : 's'}$sample.';

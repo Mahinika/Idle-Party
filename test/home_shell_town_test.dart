@@ -114,7 +114,7 @@ void main() {
     expect(find.text('CRAFT'), findsWidgets);
     expect(find.text('MARKET'), findsOneWidget);
     expect(find.text('INN'), findsOneWidget);
-    expect(find.text('GUILD'), findsOneWidget);
+    expect(find.text('QUESTS'), findsOneWidget);
     expect(find.text('VAULT'), findsOneWidget);
     expect(find.text('FORGE opens after the first boss (F2).'), findsNothing);
     expect(tester.takeException(), isNull);
@@ -254,7 +254,7 @@ void main() {
     await tapBuilding(tester, TownBuildingId.vault);
     expect(director.state.essence, essenceAfter);
     expect(director.state.metaDepth.dailyVaultClaimed, isTrue);
-    expect(find.text('Vault claimed today.'), findsOneWidget);
+    expect(find.textContaining('Vault claimed today'), findsOneWidget);
     director.dispose();
     expect(tester.takeException(), isNull);
   });
@@ -321,6 +321,7 @@ void main() {
     expect(find.text('WATCH'), findsNothing);
     expect(find.text('WISP'), findsNothing);
     expect(find.text('POUCH'), findsNothing);
+    expect(find.text('STARTER'), findsNothing);
     // Town has no quick rail (F100); one-tap SCROLLS sits on the viewport.
     final railIds = FightSeamRails.visibleEntries(director.state, director)
         .map((e) => e.id)
@@ -350,7 +351,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Ad Tickets'), findsOneWidget);
     expect(
-      find.textContaining('Watch for a ticket').evaluate().isNotEmpty ||
+      find.textContaining('Earn Ad Tickets').evaluate().isNotEmpty ||
           find.textContaining('WATCH AD').evaluate().isNotEmpty,
       isTrue,
     );

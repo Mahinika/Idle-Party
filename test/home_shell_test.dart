@@ -32,10 +32,10 @@ void main() {
     expect(home.contains('MORE →'), isFalse);
     expect(home.contains('ESSENCE → CAMP'), isFalse);
     expect(home.contains('the hub'), isFalse);
-    expect(home.contains('FORGE under the fight'), isTrue);
+    expect(home.contains('TRAIN under the fight'), isTrue);
     expect(home.contains('HEROES → BAG'), isTrue);
     expect(home.contains('MENU →'), isTrue);
-    expect(home.contains('camp'), isTrue);
+    expect(home.contains('town'), isTrue);
     expect(
       NavCopy.playerText('Hub gold fills for 24 hours.', HomeLayout.home),
       'Camp gold fills for 24 hours.',
@@ -71,6 +71,11 @@ void main() {
       expect(text.contains('ESSENCE → CAMP'), isFalse, reason: topic.id);
       expect(text.contains('the hub'), isFalse, reason: topic.id);
     }
+  });
+
+  test('gold tracks job hint names train and market', () {
+    final router = MenuRouter()..open(MenuRoute.gold);
+    expect(router.jobHint, 'Train this run · Market');
   });
 
   test('home catalog ids are unique', () {

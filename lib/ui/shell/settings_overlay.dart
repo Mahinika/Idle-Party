@@ -8,7 +8,6 @@ import '../../core/ad_rewarded.dart';
 import '../../core/build_stamp.dart';
 import '../../core/community_links.dart';
 import '../../core/meta_systems.dart';
-import '../../core/ability_mastery.dart';
 import '../../core/game_audio.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
@@ -154,7 +153,9 @@ class _SettingsOverlayState extends State<SettingsOverlay>
   Widget _scrollPage(_SettingsPage page, Widget child) {
     return SingleChildScrollView(
       key: PageStorageKey<String>('settings-${page.name}'),
-      padding: ShellLayout.scrollBodyPadding,
+      padding: ShellLayout.scrollBodyPadding.copyWith(
+        bottom: ShellLayout.scrollBodyPadding.bottom + GameTheme.primaryTouch,
+      ),
       child: child,
     );
   }
@@ -273,7 +274,8 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         Builder(
           builder: (context) {
             final wide = MediaQuery.sizeOf(context).width >= 400;
-            final largeType = MediaQuery.textScalerOf(context).scale(1) > 1.2;
+            final osScale = MediaQuery.textScalerOf(context).scale(1);
+            final largeType = osScale > 1.2;
             final shown = state.uiTextScale.clamp(
               kUiTextScaleMin,
               kUiTextScaleMax,
@@ -287,6 +289,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
               divisions: 13,
               onChanged: director.previewUiTextScale,
               onChangeEnd: director.setUiTextScale,
+              semanticsValue: '${(shown * 100).round()} percent',
             );
             if (wide || !largeType) {
               return Row(
@@ -345,11 +348,6 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           label: state.vfxQuality.settingsLabel,
           hint: state.vfxQuality.settingsHint,
           onCycle: director.cycleVfxQuality,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          AbilityMastery.progressLine(state),
-          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         _SettingsCycle(

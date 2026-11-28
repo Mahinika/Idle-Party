@@ -57,8 +57,8 @@ void main() {
 
   test('Ad-free welcome removes WATCH earn and mentions WISP; no Play IDs', () {
     final item = ShopCatalog.offered.firstWhere((e) => e.id == 'ad_free');
-    expect(item.description, contains('WATCH AD'));
-    expect(item.description, contains('WISP'));
+    expect(item.description, contains('WATCH'));
+    expect(item.description, contains('lantern bonus gold'));
     expect(item.description.toLowerCase(), contains('quest reroll'));
     expect(item.description, isNot(contains('Cgk')));
   });

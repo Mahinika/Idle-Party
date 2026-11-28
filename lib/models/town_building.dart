@@ -56,13 +56,13 @@ class TownBuilding {
   static const List<TownBuilding> all = [
     TownBuilding(
       id: TownBuildingId.guild,
-      label: 'GUILD',
+      label: 'QUESTS',
       description: 'Claim jobs that are already done',
     ),
     TownBuilding(
       id: TownBuildingId.forge,
       label: 'CRAFT',
-      description: 'Town forge — Apex craft and upgrades',
+      description: 'CRAFT — Apex craft and upgrades',
     ),
     TownBuilding(
       id: TownBuildingId.market,
@@ -84,7 +84,7 @@ class TownBuilding {
   static const List<TownBuilding> backRow = [
     TownBuilding(
       id: TownBuildingId.guild,
-      label: 'GUILD',
+      label: 'QUESTS',
       description: 'Claim jobs that are already done',
     ),
     TownBuilding(
@@ -98,7 +98,7 @@ class TownBuilding {
     TownBuilding(
       id: TownBuildingId.forge,
       label: 'CRAFT',
-      description: 'Town forge — Apex craft and upgrades',
+      description: 'CRAFT — Apex craft and upgrades',
     ),
     TownBuilding(
       id: TownBuildingId.market,

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
+import '../../core/nav_copy.dart';
 import '../../models/enemy.dart';
 import '../../spatial/spatial_combat.dart';
 import '../game_theme.dart';
@@ -334,6 +335,7 @@ class TargetCornerHud extends StatelessWidget {
                   Text(
                     hpLabel,
                     maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 ],
@@ -345,7 +347,10 @@ class TargetCornerHud extends StatelessWidget {
       );
     } else if (wiped) {
       hpRow = Text(
-        state.inGauntlet || state.inAnyRiftMode ? 'End → hub' : 'Retry / Hub',
+        NavCopy.playerText(
+          state.inGauntlet || state.inAnyRiftMode ? 'End → hub' : 'Retry / Hub',
+          state.homeLayout,
+        ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: GameTheme.hint(color: GameTheme.parchmentDim),
@@ -448,6 +453,7 @@ class _TargetRoleTag extends StatelessWidget {
       child: Text(
         label,
         maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: GameTheme.combat(color: color),
       ),
     );

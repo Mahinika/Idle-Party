@@ -654,6 +654,7 @@ class MarketHeaderControls extends StatelessWidget {
               Text(
                 flaskCaption,
                 maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: GameTheme.hint(color: GameTheme.parchment),
               ),
             ],
@@ -668,6 +669,7 @@ class MarketHeaderControls extends StatelessWidget {
           child: Text(
             upgradesOnly ? filterUpgradesShort : filterAllShort,
             maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: GameTheme.hint(color: GameTheme.toggleOnAccent),
           ),
         ),
@@ -678,6 +680,7 @@ class MarketHeaderControls extends StatelessWidget {
             child: Text(
               'Fresh',
               maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: GameTheme.hint(color: GameTheme.mossLit),
             ),
           )
@@ -705,7 +708,12 @@ class MarketHeaderControls extends StatelessWidget {
                   children: [
                     const GameIcon.asset(UiIcon.gold, size: 14),
                     const SizedBox(width: 3),
-                    Text(compactGold(refreshCost), maxLines: 1, style: ink),
+                    Text(
+                      compactGold(refreshCost),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ink,
+                    ),
                   ],
                 );
                 if (MediaQuery.textScalerOf(context).scale(1) > 1.2) {
@@ -715,6 +723,7 @@ class MarketHeaderControls extends StatelessWidget {
                       Text(
                         'Reroll',
                         maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: ink.copyWith(height: 1.0),
                       ),
                       price,
@@ -724,7 +733,12 @@ class MarketHeaderControls extends StatelessWidget {
                 return Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Reroll ', maxLines: 1, style: ink),
+                    Text(
+                      'Reroll ',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ink,
+                    ),
                     price,
                   ],
                 );
