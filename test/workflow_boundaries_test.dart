@@ -3,12 +3,14 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('CI still compiles Kotlin and does not build an APK', () {
+  test('CI compiles Kotlin; release appbundle only on pull_request', () {
     final ci = File('.github/workflows/ci.yml').readAsStringSync();
     expect(ci, contains('compile-kotlin'));
     expect(ci, contains('gradle :app:compileDebugKotlin'));
     expect(ci, isNot(contains('flutter build apk')));
-    expect(ci, isNot(contains('flutter build appbundle')));
+    expect(ci, contains('release-appbundle-pr'));
+    expect(ci, contains("github.event_name == 'pull_request'"));
+    expect(ci, contains('flutter build appbundle'));
   });
 
   test('APK workflows stay on their existing triggers', () {

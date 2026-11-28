@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/dungeon_party_hud.dart';
@@ -210,6 +211,7 @@ Future<GameDirector> _fightDirector() async {
   final base = GameLogic.createInitialState();
   final director = GameDirector.preview(
     initialState: base.copyWith(
+      homeLayout: HomeLayout.classic,
       highestFloorCleared: 1,
       bossVictories: 1,
       // Entering a cave resets the floor counter. A real clear still

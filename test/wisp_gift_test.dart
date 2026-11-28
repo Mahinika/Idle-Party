@@ -71,6 +71,8 @@ void main() {
     state = WispGift.onWispTapped(state, nowMs: now);
     expect(state.gold, goldBefore + keep);
     expect(state.metaDepth.wispPendingWatchGold, watch);
+    expect(state.metaDepth.wispGiftClaimsToday, 0);
+    state = WispGift.dismissPending(state);
     expect(state.metaDepth.wispGiftClaimsToday, 1);
   });
 

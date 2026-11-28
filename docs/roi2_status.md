@@ -96,4 +96,6 @@ Play Console boards still missing dedicated ids for **2026-11+ KEY/Gauntlet** (r
 | R2-132 | deferred | Clock injection — cross-cutting |
 | R2-133 | verified-not-real | Single-player; doc acknowledged |
 
+**Goldens regenerated (intentional):** `test/town_preview_golden_test.dart`, `test/shell_screen_golden_test.dart` (town locks / nav / fight hint).
+
 *Counts (this table): fixed 38 · verified-not-real 5 · deferred 41 · needs-approval 4*

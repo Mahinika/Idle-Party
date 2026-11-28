@@ -1295,7 +1295,7 @@ void main() {
       },
     );
 
-    testWidgets('title PLAY and CUSTOMIZE stay on setup when the cache lies', (
+    testWidgets('title PLAY and CHOOSE PARTY stay on setup when the cache lies', (
       tester,
     ) async {
       final harness = await _installRejectingPrefs();
@@ -1323,6 +1323,8 @@ void main() {
       await harness.prefs.reload();
       expect(harness.prefs.getString('idle_party_save_slot_0'), isNull);
       store.throwWrites = false;
+      await tester.tap(find.text('Have a save?'));
+      await tester.pump();
       await tester.tap(find.text('CHOOSE PARTY'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 600));

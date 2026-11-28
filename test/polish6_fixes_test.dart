@@ -280,7 +280,7 @@ void main() {
 
   // Fynd 6: FARM/PUSH hint was 1.1–1.7:1 on lit sand.
   _testHome('fight mode hint sits on a dark capsule', (tester) async {
-    await _pump(tester, const Size(360, 780), 1);
+    await _pump(tester, const Size(360, 780), 1, fresh: true);
     final capsule = tester.widget<DecoratedBox>(
       find.byKey(FightFieldControls.modeHintKey),
     );
