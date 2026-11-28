@@ -94,7 +94,7 @@ class InventoryDock extends StatefulWidget {
       return 'Same slot: two items → one stronger piece. Costs gold.';
     }
     final base =
-        'Pair same-slot junk into one stronger piece. Uses gold. '
+        'Pair same-slot junk into one stronger piece by raw power. Uses gold. '
         'AUTO MERGE skips keeps.';
     if (keptCount <= 0) return base;
     final sample = keptNames.isEmpty ? '' : ' · e.g. ${keptNames.join(', ')}';

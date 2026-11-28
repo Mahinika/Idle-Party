@@ -2,6 +2,8 @@
 
 Base: `751c72ac`. UI-only batch (code/perf/audio on `cursor/fixlist-code-751c`).
 
+Task header cited **286** ROI rows; this table lists **292** explicit `IP-###` ids from the export (002–382, gaps omitted).
+
 Status values: **fixed** | **verified-not-real** | **skipped-needs-approval** | **deferred(reason)**
 
 | Item ID | Status | Notes |
@@ -37,7 +39,7 @@ Status values: **fixed** | **verified-not-real** | **skipped-needs-approval** | 
 | IP-040 | fixed | fixlist batch 2 copy/UI |
 | IP-041 | fixed | fixlist batch 2 copy/UI |
 | IP-042 | fixed | fixlist batch 2 copy/UI |
-| IP-043 | fixed | fixlist batch 2 copy/UI |
+| IP-043 | fixed | lib/ui/shell/inventory_dock.dart MERGE footer shortened; keeps raw-power honesty |
 | IP-061 | fixed | lib/ui/start_menu_screen.dart CHOOSE PARTY |
 | IP-062 | fixed | notify one LATER; test/local_reminders_test.dart |
 | IP-063 | fixed | lib/core/return_week.dart spendSentence TRAIN |
