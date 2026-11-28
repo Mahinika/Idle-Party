@@ -25,6 +25,7 @@ import '../models/vfx_quality.dart';
 import '../assets/kenney_assets.dart';
 import '../visual/rig/rig_ability_clips.dart';
 import 'combat_avoidance.dart';
+import 'combat_floater_layout.dart';
 import 'hideout_stash.dart';
 import 'party_room_mark.dart';
 import 'room_beat_callout.dart';
@@ -685,6 +686,13 @@ class SpatialFloater {
     this.vy = -2.1,
     this.priority = 0,
     this.kind = SpatialFloaterKind.combat,
+    this.placement = CombatFloaterPlacement.payoff,
+    this.sourceInitial = '',
+    this.mergeKey,
+    this.followActorId,
+    this.spawnAt = 0,
+    this.initialLife = 0.55,
+    this.isCrit = false,
   });
 
   double x;
@@ -692,13 +700,20 @@ class SpatialFloater {
   double life;
   double vx;
   double vy;
-  final String text;
-  final int argb;
+  String text;
+  int argb;
 
   /// 0 = routine damage, 1 = heal/ability, 2 = crit/loot/wipe-critical.
   final int priority;
 
   final SpatialFloaterKind kind;
+  CombatFloaterPlacement placement;
+  String sourceInitial;
+  String? mergeKey;
+  String? followActorId;
+  double spawnAt;
+  double initialLife;
+  bool isCrit;
 }
 
 class SpatialBurst {
@@ -878,6 +893,7 @@ class SpatialWorld {
     this.combatFloor = 1,
     this.affixBannerShown = false,
     this.combatElapsed = 0,
+    this.combatPace = 1,
     this.petMitigateFlat = 0,
     this.petHealBoost = 0,
     this.pendingAbilityCasts = 0,
@@ -956,6 +972,9 @@ class SpatialWorld {
 
   /// Mirrors [GameState.reducedVfx] for the current step (Full vs Lite/Minimal).
   bool reducedVfx = false;
+
+  /// Fight speed (1× or 2×) for merge windows and [FloaterHold].
+  double combatPace = 1;
 
   /// Per-step combat modifiers from [GameState] (not saved on the world).
   double relicBossDamageMul = 1;
@@ -1201,6 +1220,106 @@ abstract final class SpatialCombat {
   static const int _maxProjectiles = 36;
   static const int _maxGroundFx = 6;
 
+  static String? _nearestActorId(SpatialWorld world, double x, double y) {
+    SpatialActor? best;
+    var bestD = 0.85;
+    for (final a in [...world.heroes, ...world.enemies, ...world.pets]) {
+      if (!a.isAlive) continue;
+      final d = math.sqrt(math.pow(a.x - x, 2) + math.pow(a.y - y, 2));
+      if (d < bestD) {
+        bestD = d;
+        best = a;
+      }
+    }
+    return best?.id;
+  }
+
+  static SpatialActor? _actorByIdOrNearest(
+    SpatialWorld world,
+    String? id,
+    double x,
+    double y,
+  ) {
+    if (id != null) return _actorById(world, id);
+    final nearId = _nearestActorId(world, x, y);
+    if (nearId == null) return null;
+    return _actorById(world, nearId);
+  }
+
+  /// Re-layout floaters that were inserted without [spawnFloater] (e.g. goldens).
+  static void reconcileWorldFloaters(SpatialWorld world) {
+    for (final f in world.floaters) {
+      if (f.x == CombatFloaterLayout.laneLeftX ||
+          f.x == CombatFloaterLayout.laneRightX) {
+        continue;
+      }
+      final speech = f.kind == SpatialFloaterKind.speech;
+      final placement = CombatFloaterLayout.classify(
+        text: f.text,
+        argb: f.argb,
+        priority: f.priority,
+        healArgb: floaterHeal,
+        speech: speech,
+      );
+      final anchorX = f.x;
+      final anchorY = f.y;
+      var isCrit = f.isCrit;
+      if (placement == CombatFloaterPlacement.gutterHostile &&
+          (f.priority >= 2 || CombatFloaterLayout.isCritText(f.text))) {
+        isCrit = true;
+      }
+      f.followActorId ??= _nearestActorId(world, anchorX, anchorY);
+      if (f.sourceInitial.isEmpty) {
+        final credit = _actorByIdOrNearest(
+          world,
+          f.followActorId,
+          anchorX,
+          anchorY,
+        );
+        if (credit != null && placement == CombatFloaterPlacement.gutterBeneficial) {
+          f.sourceInitial = CombatFloaterLayout.heroInitial(credit.name);
+        }
+      }
+      f.placement = placement;
+      f.isCrit = isCrit;
+      if (placement == CombatFloaterPlacement.gutterBeneficial) {
+        f.x = CombatFloaterLayout.laneLeftX;
+        f.y = 0;
+        f.vx = 0;
+        f.vy = 0;
+        f.text = CombatFloaterLayout.formatLaneLabel(
+          placement: placement,
+          text: f.text,
+          sourceInitial: f.sourceInitial,
+          isCrit: false,
+        );
+      } else if (placement == CombatFloaterPlacement.gutterHostile) {
+        f.x = CombatFloaterLayout.laneRightX;
+        f.y = 0;
+        f.vx = 0;
+        f.vy = 0;
+        f.text = CombatFloaterLayout.formatLaneLabel(
+          placement: placement,
+          text: f.text,
+          sourceInitial: f.sourceInitial,
+          isCrit: isCrit,
+        );
+      } else if (placement == CombatFloaterPlacement.unitPill) {
+        f.y = anchorY + 0.35;
+        f.vx = 0;
+        f.vy = 0;
+        f.life = math.min(f.life, 0.42);
+        f.initialLife = f.life;
+      } else if (placement == CombatFloaterPlacement.payoff) {
+        f.y = anchorY - 0.35;
+        f.vy = -1.4;
+      } else if (placement == CombatFloaterPlacement.payoffBanner) {
+        f.y = anchorY - 1.2;
+        f.vy = -0.55;
+      }
+    }
+  }
+
   static void spawnFloater(
     SpatialWorld world, {
     required double x,
@@ -1210,6 +1329,12 @@ abstract final class SpatialCombat {
     double life = 0.55,
     int priority = 0,
     SpatialFloaterKind kind = SpatialFloaterKind.combat,
+    String sourceInitial = '',
+    String? mergeKey,
+    String? followActorId,
+    SpatialActor? onActor,
+    SpatialActor? creditActor,
+    VfxQuality? vfxQuality,
   }) {
     if (suppressHealFloater(text: text, argb: argb)) return;
     if (compactNumbers) {
@@ -1217,6 +1342,14 @@ abstract final class SpatialCombat {
     }
     // Skip empty / whitespace-only.
     if (text.isEmpty) return;
+
+    var anchorX = onActor?.x ?? x;
+    var anchorY = onActor?.y ?? y;
+    followActorId ??= onActor?.id;
+    followActorId ??= _nearestActorId(world, anchorX, anchorY);
+    if (creditActor != null) {
+      sourceInitial = CombatFloaterLayout.heroInitial(creditActor.name);
+    }
     // Pack shouts own the stage — routine cast tags step back.
     if (priority == 1 && _packShoutLive(world)) {
       priority = 0;
@@ -1227,74 +1360,174 @@ abstract final class SpatialCombat {
         if (f.kind == SpatialFloaterKind.speech) return;
       }
     }
-    // Combat spam: at most a few routine hit numbers on screen.
-    if (priority <= 0) {
-      var routine = 0;
-      for (final f in world.floaters) {
-        if (f.priority <= 0) routine++;
-      }
-      if (routine >= 4) return;
+
+    final speech = kind == SpatialFloaterKind.speech;
+    final placement = CombatFloaterLayout.classify(
+      text: text,
+      argb: argb,
+      priority: priority,
+      healArgb: floaterHeal,
+      speech: speech,
+    );
+    final isCrit =
+        placement == CombatFloaterPlacement.gutterHostile &&
+        (priority >= 2 || CombatFloaterLayout.isCritText(text));
+    final mitigationPill =
+        placement == CombatFloaterPlacement.unitPill &&
+        (CombatFloaterLayout.isMitigationWord(text) ||
+            CombatFloaterLayout.isAbsorbWord(text));
+    final quality = vfxQuality ??
+        (world.reducedVfx ? VfxQuality.lite : VfxQuality.full);
+    if (!CombatFloaterLayout.visibleAtQuality(
+      quality: quality,
+      placement: placement,
+      priority: priority,
+      mitigationPill: mitigationPill,
+    )) {
+      if (!mitigationPill) return;
     }
-    // Soft cap for mid-priority gold/XP so clear loot doesn't stack on heroes.
-    if (priority == 1) {
-      var mid = 0;
-      for (final f in world.floaters) {
-        if (f.priority == 1) mid++;
-      }
-      if (mid >= 3) return;
+
+    if (mergeKey == null && creditActor != null && onActor != null) {
+      mergeKey = switch (placement) {
+        CombatFloaterPlacement.gutterHostile =>
+          'hit:${creditActor.id}:${onActor.id}',
+        CombatFloaterPlacement.gutterBeneficial =>
+          'heal:${creditActor.id}:${onActor.id}',
+        _ => null,
+      };
     }
-    // One shoutout of the same word nearby (stops stacked OPEN / GO).
-    if (priority >= 2) {
+
+    if (mergeKey != null &&
+        (placement == CombatFloaterPlacement.gutterBeneficial ||
+            placement == CombatFloaterPlacement.gutterHostile)) {
+      final window = CombatFloaterLayout.mergeWindowForPace(_combatPace(world));
       for (final f in world.floaters) {
-        if (f.text == text &&
-            f.priority >= 2 &&
-            (f.x - x).abs() < 3.5 &&
-            (f.y - y).abs() < 3.5) {
+        if (f.mergeKey != mergeKey || f.placement != placement) continue;
+        final age = world.combatElapsed - f.spawnAt;
+        if (age > window) continue;
+        final merged = CombatFloaterLayout.mergeLaneText(
+          f.text,
+          CombatFloaterLayout.formatLaneLabel(
+            placement: placement,
+            text: text,
+            sourceInitial: sourceInitial,
+            isCrit: isCrit,
+          ),
+          hostile: placement == CombatFloaterPlacement.gutterHostile,
+        );
+        if (merged != null) {
+          f.text = merged;
+          f.life = life;
+          f.initialLife = life;
+          f.spawnAt = world.combatElapsed;
+          if (isCrit) {
+            f.isCrit = true;
+            f.argb = _floaterCrit;
+          }
           return;
         }
       }
     }
-    // One +g / +XP near a body. A second payoff on the same hero is dropped
-    // so the numbers do not pile up at text scale 1.0 or 1.45.
-    if (_walletFloater(text)) {
-      var wallets = 0;
-      for (final f in world.floaters) {
-        if (!_walletFloater(f.text)) continue;
-        wallets++;
-        if ((f.x - x).abs() < 2.2 && (f.y - y).abs() < 2.2) return;
-      }
-      if (wallets >= 2) return;
-      y -= 0.45;
-    }
-    // Stagger stack at the same tile so gold/XP/loot don't fully overlap.
-    var nearby = 0;
+
+    var laneCap = 0;
+    const maxLane = 6;
     for (final f in world.floaters) {
-      if ((f.x - x).abs() < 0.7 && (f.y - y).abs() < 1.0) nearby++;
+      if (f.placement == placement &&
+          (placement == CombatFloaterPlacement.gutterBeneficial ||
+              placement == CombatFloaterPlacement.gutterHostile)) {
+        laneCap++;
+      }
     }
-    final lane = nearby % 5;
-    final jx = (lane - 2) * 0.22;
-    final jy = (lane % 3) * 0.12;
-    final speech = kind == SpatialFloaterKind.speech;
+    if (laneCap >= maxLane &&
+        (placement == CombatFloaterPlacement.gutterBeneficial ||
+            placement == CombatFloaterPlacement.gutterHostile)) {
+      return;
+    }
+
+    // One shoutout of the same word nearby (stops stacked OPEN / GO).
+    if (priority >= 2 && placement == CombatFloaterPlacement.payoffBanner) {
+      for (final f in world.floaters) {
+        if (f.text == text &&
+            f.priority >= 2 &&
+            f.placement == CombatFloaterPlacement.payoffBanner) {
+          return;
+        }
+      }
+    }
+
+    var wx = anchorX;
+    var wy = anchorY;
+    var vx = 0.0;
+    var vy = 0.0;
+    var pillLife = life;
+
+    if (placement == CombatFloaterPlacement.gutterBeneficial) {
+      wx = CombatFloaterLayout.laneLeftX;
+      wy = 0;
+      text = CombatFloaterLayout.formatLaneLabel(
+        placement: placement,
+        text: text,
+        sourceInitial: sourceInitial,
+        isCrit: false,
+      );
+    } else if (placement == CombatFloaterPlacement.gutterHostile) {
+      wx = CombatFloaterLayout.laneRightX;
+      wy = 0;
+      text = CombatFloaterLayout.formatLaneLabel(
+        placement: placement,
+        text: text,
+        sourceInitial: sourceInitial,
+        isCrit: isCrit,
+      );
+    } else if (placement == CombatFloaterPlacement.unitPill) {
+      wx = anchorX;
+      wy = anchorY + 0.35;
+      pillLife = math.min(life, 0.42);
+    } else if (placement == CombatFloaterPlacement.payoff) {
+      wx = anchorX;
+      wy = anchorY - 0.35;
+      vy = -1.4;
+    } else if (placement == CombatFloaterPlacement.payoffBanner) {
+      wy = y - 1.2;
+      vy = -0.55;
+    } else if (placement == CombatFloaterPlacement.speech) {
+      vy = -0.55;
+    }
+
     world.floaters.add(
       SpatialFloater(
-        x: x + (speech ? 0 : jx),
-        y: y - (speech ? 0 : jy),
+        x: wx,
+        y: wy,
         text: text,
         argb: argb,
-        life: life,
-        vx: speech ? 0 : jx * 0.35,
-        vy: speech ? -0.55 : (-2.1 - lane * 0.08),
+        life: placement == CombatFloaterPlacement.unitPill ? pillLife : life,
+        vx: vx,
+        vy: vy,
         priority: priority,
         kind: kind,
+        placement: placement,
+        sourceInitial: sourceInitial,
+        mergeKey: mergeKey,
+        followActorId: followActorId,
+        spawnAt: world.combatElapsed,
+        initialLife: placement == CombatFloaterPlacement.unitPill ? pillLife : life,
+        isCrit: isCrit,
       ),
     );
+    assert(() {
+      if (placement == CombatFloaterPlacement.gutterBeneficial ||
+          placement == CombatFloaterPlacement.gutterHostile) {
+        assert(wx == CombatFloaterLayout.laneLeftX ||
+            wx == CombatFloaterLayout.laneRightX);
+      }
+      return true;
+    }());
+
     _trimFloaters(world);
   }
 
-  static bool _walletFloater(String text) {
-    if (!text.contains('+')) return false;
-    return text.contains('g') || text.contains('XP') || text.contains('xp');
-  }
+  static double _combatPace(SpatialWorld world) =>
+      world.combatPace <= 0 ? 1 : world.combatPace;
 
   /// Melee / bolt hit numbers — crits always, routine hits throttled.
   static void _spawnHitFloater(
@@ -1305,12 +1538,21 @@ abstract final class SpatialCombat {
     required bool isCrit,
     int? abilityArgb,
     math.Random? rng,
+    String? attackerId,
+    String? attackerName,
+    String? targetId,
   }) {
     if (dealt <= 0) return;
     // One unused roll keeps boss tells and crits on the same stream as when
     // routine hits were sometimes hidden. The number still always shows.
     rng?.nextDouble();
     final ability = abilityArgb != null;
+    final initial = attackerName != null
+        ? CombatFloaterLayout.heroInitial(attackerName)
+        : '';
+    final mergeKey = (attackerId != null && targetId != null)
+        ? 'hit:$attackerId:$targetId'
+        : null;
     spawnFloater(
       world,
       x: x,
@@ -1319,6 +1561,11 @@ abstract final class SpatialCombat {
       argb: isCrit ? _floaterCrit : (abilityArgb ?? floaterDamage),
       life: isCrit ? 0.55 : (ability ? 0.45 : 0.32),
       priority: isCrit ? 2 : (ability ? 1 : 0),
+      sourceInitial: initial,
+      mergeKey: mergeKey,
+      followActorId: targetId,
+      onActor: targetId != null ? _actorById(world, targetId) : null,
+      creditActor: attackerId != null ? _heroById(world, attackerId) : null,
     );
   }
 
@@ -1515,6 +1762,8 @@ abstract final class SpatialCombat {
         argb: 0xFF70F090,
         life: 1.2,
         priority: 2,
+        onActor: h,
+        creditActor: h,
       );
     }
   }
@@ -1862,6 +2111,8 @@ abstract final class SpatialCombat {
         argb: floaterHeal,
         life: 0.4,
         priority: 2,
+        onActor: lowest,
+        creditActor: healer ?? lowest,
       );
     }
   }
@@ -1874,6 +2125,7 @@ abstract final class SpatialCombat {
     hit.hp = math.min(hit.effectiveMaxHp, hit.hp + heal);
     final gained = hit.hp - before;
     if (gained > 0) {
+      final credit = _heroById(world, hit.hotCasterId) ?? hit;
       spawnFloater(
         world,
         x: hit.x,
@@ -1882,6 +2134,8 @@ abstract final class SpatialCombat {
         argb: floaterHeal,
         life: 0.45,
         priority: 2,
+        onActor: hit,
+        creditActor: credit,
       );
       spawnSpark(
         world,
@@ -2016,6 +2270,22 @@ abstract final class SpatialCombat {
   static void _tickFloaters(SpatialWorld world, double dt) {
     for (final f in world.floaters) {
       f.life -= dt;
+      if (f.followActorId != null &&
+          (f.placement == CombatFloaterPlacement.unitPill ||
+              f.placement == CombatFloaterPlacement.payoff)) {
+        final anchor = _actorById(world, f.followActorId!);
+        if (anchor != null) {
+          f.x = anchor.x;
+          if (f.placement == CombatFloaterPlacement.unitPill) {
+            f.y = anchor.y + 0.35;
+          }
+        }
+      }
+      if (f.placement == CombatFloaterPlacement.gutterBeneficial ||
+          f.placement == CombatFloaterPlacement.gutterHostile ||
+          f.placement == CombatFloaterPlacement.unitPill) {
+        continue;
+      }
       f.x += f.vx * dt;
       f.y += f.vy * dt;
       f.vx *= 0.92;
@@ -3160,6 +3430,19 @@ abstract final class SpatialCombat {
     return null;
   }
 
+  static SpatialActor? _actorById(SpatialWorld world, String id) {
+    for (final h in world.heroes) {
+      if (h.id == id) return h;
+    }
+    for (final e in world.enemies) {
+      if (e.id == id) return e;
+    }
+    for (final p in world.pets) {
+      if (p.id == id) return p;
+    }
+    return null;
+  }
+
   static SpatialStepResult _stepResult(
     SpatialWorld world,
     GameState state, {
@@ -3343,6 +3626,7 @@ abstract final class SpatialCombat {
     world.pulseTimer = math.max(0, world.pulseTimer - dt);
     world.guideTimer = math.max(0, world.guideTimer - dt);
     world.reducedVfx = state.reducedVfx;
+    world.combatPace = state.combatPace <= 0 ? 1.0 : state.combatPace.toDouble();
     world.spawnPersistentVfx = state.spawnPersistentVfx;
     _updateChambers(world, reducedVfx: state.reducedVfx, softLock: false);
     _pollBeatCallouts(world);
@@ -3517,6 +3801,14 @@ abstract final class SpatialCombat {
             hero.hp = math.min(hero.effectiveMaxHp, hero.hp + mend);
             final gained = hero.hp - before;
             if (gained > 0) {
+              SpatialActor? mendHealer;
+              for (final h in world.heroes) {
+                if (h.isAlive && actorIsHealer(h)) {
+                  mendHealer = h;
+                  break;
+                }
+              }
+              mendHealer ??= hero;
               spawnFloater(
                 world,
                 x: hero.x,
@@ -3525,6 +3817,8 @@ abstract final class SpatialCombat {
                 argb: floaterHeal,
                 life: 0.5,
                 priority: 2,
+                onActor: hero,
+                creditActor: mendHealer,
               );
             }
           }
@@ -4270,6 +4564,9 @@ abstract final class SpatialCombat {
               isCrit: isCrit,
               abilityArgb: abilityTag != null ? abilityTagArgb : null,
               rng: rng,
+              attackerId: hero.id,
+              attackerName: hero.name,
+              targetId: target.id,
             );
           }
           if (wasAlive && target.hp <= 0) {
@@ -4611,6 +4908,7 @@ abstract final class SpatialCombat {
                       priority: p.isCrit ? 2 : (p.labelArgb != null ? 1 : 0),
                     ) ||
                     !reducedVfx)) {
+              final caster = _heroById(world, p.casterId);
               _spawnHitFloater(
                 world,
                 x: v.x + (rng.nextDouble() - 0.5) * 0.25,
@@ -4619,6 +4917,9 @@ abstract final class SpatialCombat {
                 isCrit: p.isCrit,
                 abilityArgb: p.labelArgb,
                 rng: rng,
+                attackerId: p.casterId,
+                attackerName: caster?.name,
+                targetId: v.id,
               );
             }
             if (p.onHitHealCaster && p.casterId != null && dealt > 0) {

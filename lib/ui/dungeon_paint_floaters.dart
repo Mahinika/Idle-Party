@@ -17,6 +17,8 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
       }
     }
 
+    SpatialCombat.reconcileWorldFloaters(world);
+
     paintFloaterLabels(
       canvas: canvas,
       tile: tile,
@@ -26,6 +28,8 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
       visualFrame: visualFrame,
       showBursts: showBursts,
       showPriorityFloaters: showPriorityFloaters,
+      vfxQuality: vfxQuality,
+      viewWidthTiles: camera.visibleCols,
       inView: _inView,
       minLabelTop: camera.camY,
       maxLabelBottom: camera.camY + camera.visibleRows,

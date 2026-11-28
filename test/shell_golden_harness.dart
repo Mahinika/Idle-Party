@@ -417,27 +417,38 @@ void stageFightHitProof(GameDirector director) {
         radius: 0.8,
       ),
     );
-    world.floaters.add(
-      SpatialFloater(
-        x: foe.x,
-        y: foe.y - 0.35,
-        text: '18',
-        argb: 0xFFFFE8A0,
-        life: 0.7,
-        priority: 1,
-      ),
+    SpatialCombat.spawnFloater(
+      world,
+      x: foe.x,
+      y: foe.y,
+      text: '18',
+      argb: SpatialCombat.floaterDamage,
+      life: 0.7,
+      priority: 1,
+      onActor: foe,
+      creditActor: hero,
     );
-  }
-  world.floaters.add(
-    SpatialFloater(
-      x: hero.x,
-      y: hero.y - 0.7,
-      text: '8g',
-      argb: 0xFFFFD060,
+    SpatialCombat.spawnFloater(
+      world,
+      x: foe.x,
+      y: foe.y,
+      text: '+3g',
+      argb: 0xFFFFE08A,
       life: 0.8,
       priority: 2,
-    ),
-  );
+      onActor: foe,
+    );
+    SpatialCombat.spawnFloater(
+      world,
+      x: hero.x,
+      y: hero.y,
+      text: 'DODGE',
+      argb: 0xFF90E0A0,
+      life: 0.42,
+      priority: 2,
+      onActor: hero,
+    );
+  }
 }
 
 OfflineProgressResult welcomeBackGoldenSummary(GameState state) {

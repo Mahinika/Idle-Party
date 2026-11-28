@@ -1557,6 +1557,8 @@ abstract final class AbilityEffectRunner {
     );
     SpatialCombat.spawnFloater(
       world,
+      onActor: enemy,
+      creditActor: enemy,
       x: enemy.x,
       y: enemy.y - 0.4,
       text: '$dealt',
@@ -1661,6 +1663,8 @@ abstract final class AbilityEffectRunner {
     }
     SpatialCombat.spawnFloater(
       world,
+      onActor: enemy,
+      creditActor: enemy,
       x: enemy.x,
       y: enemy.y - 0.55,
       text: 'OVERLOAD $dealt',
@@ -2469,6 +2473,8 @@ abstract final class AbilityEffectRunner {
     if (reducedVfx || !important) return;
     SpatialCombat.spawnFloater(
       world,
+      onActor: hero,
+      creditActor: hero,
       x: hero.x,
       y: hero.y - 0.5,
       text: text.toUpperCase(),
@@ -2633,6 +2639,8 @@ abstract final class AbilityEffectRunner {
         hero.healingDone += gained;
         SpatialCombat.spawnFloater(
           world,
+      onActor: hero,
+      creditActor: hero,
           x: hero.x,
           y: hero.y - 0.4,
           text: '+$gained',
@@ -2652,6 +2660,8 @@ abstract final class AbilityEffectRunner {
         hero.buffTimers.remove('eclipse_arcane');
         SpatialCombat.spawnFloater(
           world,
+      onActor: hero,
+      creditActor: hero,
           x: hero.x,
           y: hero.y - 0.55,
           text: 'Solar',
@@ -2663,6 +2673,8 @@ abstract final class AbilityEffectRunner {
         hero.buffTimers.remove('eclipse_nature');
         SpatialCombat.spawnFloater(
           world,
+      onActor: hero,
+      creditActor: hero,
           x: hero.x,
           y: hero.y - 0.55,
           text: 'Lunar',
@@ -2784,6 +2796,8 @@ abstract final class AbilityEffectRunner {
     if (def.id == AbilityId.rip) {
       SpatialCombat.spawnFloater(
         world,
+      onActor: enemy,
+      creditActor: enemy,
         x: enemy.x,
         y: enemy.y - 0.55,
         text: 'RIP',

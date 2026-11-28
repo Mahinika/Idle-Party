@@ -13,7 +13,7 @@ import 'confirm_dialogs.dart';
 import 'meta/notify_opt_in.dart';
 import 'cave_atmosphere.dart';
 import '../assets/custom_assets.dart';
-import 'feedback_toast.dart';
+import 'shell/combat_fight_ticker.dart';
 import 'game_theme.dart';
 import 'menu_chrome.dart';
 import 'spatial_dungeon_view.dart';
@@ -24,7 +24,6 @@ import 'shell/dungeon_top_hud.dart';
 import 'shell/boost_ad_button.dart';
 import 'shell/home/director_select.dart';
 import 'shell/scroll_buff_stack.dart';
-import 'shell/wisp_gift_overlay.dart';
 
 /// Idle Party dungeon scene: full-bleed stage + corner HUD.
 /// Shared menu sheets + bottom bar are owned by [PlayShell], not this scene.
@@ -231,6 +230,11 @@ class _Is2ShellState extends State<Is2Shell> {
                   listenable: d.combatFrame,
                   builder: (context, _) => TargetCornerHud(director: d),
                 ),
+              if (!widget.homeChrome)
+                CombatFightTicker(
+                  director: d,
+                  routerOpen: router.isOpen,
+                ),
               Expanded(
                 child: _Is2CombatCornerChrome(
                   director: d,
@@ -360,29 +364,6 @@ class _Is2FightTopBarState extends State<_Is2FightTopBar> {
             onOpenContracts: () => widget.router.apply(NavIntent.quests),
             onOpenForge: () => widget.router.open(MenuRoute.gold),
             onOpenParty: () => widget.router.toggleGear(GearPanel.gear),
-          ),
-        if (d.dungeonTilesReady &&
-            d.toast != null &&
-            !widget.router.isOpen &&
-            !d.awaitingWipeChoice)
-          Padding(
-            padding: EdgeInsets.only(
-              top: d.isWispVisible
-                  ? WispGiftOverlay.toastTopClearance(
-                      context,
-                      hint: state.metaDepth.wispBossHold,
-                    )
-                  : 0,
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              child: FeedbackToast(
-                message: d.toast!,
-                kind: d.noticeKind,
-                maxLines: 2,
-                docked: true,
-              ),
-            ),
           ),
       ],
     );

@@ -186,6 +186,8 @@ void tickEnemySpecials(
     if (!reducedVfx || world.spawnPersistentVfx) {
       SpatialCombat.spawnFloater(
         world,
+      onActor: enemy,
+      creditActor: enemy,
         x: enemy.x,
         y: enemy.y - 0.45,
         text: 'ENRAGE',
@@ -283,6 +285,8 @@ void tickEnemySpecials(
       if (!reducedVfx || world.spawnPersistentVfx) {
         SpatialCombat.spawnFloater(
           world,
+      onActor: enemy,
+      creditActor: enemy,
           x: enemy.x,
           y: enemy.y - 0.4,
           text: EnemyFlavor.tankHowlTell(flavor),
@@ -317,6 +321,8 @@ void tickEnemySpecials(
     if (!reducedVfx || world.spawnPersistentVfx) {
       SpatialCombat.spawnFloater(
         world,
+      onActor: enemy,
+      creditActor: enemy,
         x: enemy.x,
         y: enemy.y - 0.4,
         text: EnemyFlavor.tankFortifyTell(flavor),
@@ -414,6 +420,8 @@ void _armMeleeTell(
   if (!reducedVfx || world.spawnPersistentVfx) {
     SpatialCombat.spawnFloater(
       world,
+      onActor: enemy,
+      creditActor: enemy,
       x: enemy.x,
       y: enemy.y - 0.4,
       text: text,
