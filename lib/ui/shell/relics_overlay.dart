@@ -95,7 +95,7 @@ class RelicsOverlay extends StatelessWidget {
                             ),
                             Text(
                               canDiscover
-                                  ? _pile(discoverCost, 'Ember', 'Embers')
+                                  ? 'next costs $discoverCost Embers'
                                   : 'Need ${discoverCost - md.embers} more Embers',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

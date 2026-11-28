@@ -9,7 +9,7 @@ enum ZoneMood { warm, dark, ice, wet, storm }
 ///
 /// Combat SFX are mastered CC0 recordings. Menu and loot stay owned synth.
 /// Each place has several CC0 or owned songs and does not loop one file.
-/// `music/dungeon.mp3` stays on disk as the spare and is not played.
+/// Spare `dungeon.mp3` lives under `tool/audio_spare/` (not in the APK).
 abstract final class AudioAssets {
   static const customSfxRoot = 'assets/custom/audio/sfx';
   static const ambienceRoot = 'assets/custom/audio/ambience';
@@ -19,7 +19,8 @@ abstract final class AudioAssets {
   static const hubMusic = '$musicRoot/hub.ogg';
 
   /// Spare from before the zone beds. Not in [allCatalogPaths].
-  static const legacyDungeonMusic = '$musicRoot/dungeon.mp3';
+  /// Marketing / tooling only — not bundled (`tool/audio_spare/dungeon.mp3`).
+  static const legacyDungeonMusic = 'tool/audio_spare/dungeon.mp3';
 
   static const bossMusic = '$musicRoot/boss.ogg';
   static const bossFairy = '$musicRoot/boss_fairy.ogg';

@@ -15,7 +15,7 @@ Shipped files are CC0 or owned. This note is written by `tool/audio_import/impor
 | `music/boss.ogg` | Owned synth (“Unresolved Crown”) | Owned |
 | `music/resolve.ogg` | Owned synth (“Floor Breath”) | Owned |
 | `music/down.ogg` | Owned synth (“The Drop”) | Owned |
-| `music/dungeon.mp3` | Owned ElevenLabs spare. Not played. | Owned |
+| dungeon.mp3 (spare) | Owned ElevenLabs. `tool/audio_spare/dungeon.mp3` — not in the APK | Owned |
 | `music/hub_town.ogg` | [Town Theme RPG](https://opengameart.org/content/town-theme-rpg) by cynicmusic | CC0 |
 | `music/hub_mystical.ogg` | [Mystical RPG Maker Town Theme](https://opengameart.org/content/mystical-rpg-maker-town-theme) by symphony | CC0 |
 | `music/dark_dungeon.ogg` | [Dungeon Ambience](https://opengameart.org/content/dungeon-ambience) by yd | CC0 |
@@ -61,7 +61,6 @@ Ambience pads are owned synth (`tool/audio_synth`). Every shipped file is listed
 - `music/dark_dungeon.ogg`
 - `music/dark_whispers.ogg`
 - `music/down.ogg`
-- `music/dungeon.mp3`
 - `music/hub.ogg`
 - `music/hub_mystical.ogg`
 - `music/hub_town.ogg`

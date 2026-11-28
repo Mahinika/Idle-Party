@@ -769,6 +769,7 @@ class _HubScreenState extends State<HubScreen>
         Text(
           track,
           maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: GameTheme.hint(color: GameTheme.torchHot),
         ),
       ],

@@ -21,6 +21,7 @@ import '../spatial/floor_blueprint.dart';
 import '../spatial/spatial_combat.dart';
 import 'game_audio.dart';
 import 'ad_boost.dart';
+import 'ad_offer.dart';
 import 'scroll_well.dart';
 import 'ad_free_nudge.dart';
 import 'ad_rewarded.dart';
@@ -28,6 +29,7 @@ import 'analytics_events.dart';
 import 'app_analytics.dart';
 import 'onboarding_funnel.dart';
 import 'build_stamp.dart';
+import 'crash_report.dart';
 import 'debug_play_log.dart';
 import 'fight_frame_budget.dart';
 import 'funnel_analytics.dart';
@@ -1014,6 +1016,14 @@ class GameDirector extends ChangeNotifier {
         uiTextScale: value.clamp(kUiTextScaleMin, kUiTextScaleMax),
       ),
     );
+  }
+
+  /// Live preview while dragging SETTINGS text scale (no save until [setUiTextScale]).
+  void previewUiTextScale(double value) {
+    final scaled = value.clamp(kUiTextScaleMin, kUiTextScaleMax);
+    if (_state.uiTextScale == scaled) return;
+    _state = _state.copyWith(uiTextScale: scaled);
+    _directorNotify();
   }
 
   void resetDisplayDefaults() {
@@ -2173,9 +2183,12 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(next);
     GameAudio.ui();
     showToast('${offer.label} · ready', life: 2.2);
+    unawaited(
+      AppAnalytics.scrollSpent(buffId: id.name, tickets: offer.ticketCost),
+    );
   }
 
-  /// Ad-free daily: +1 ticket without watching.
+  /// Ad-free daily: five tickets without watching.
   void claimAdFreeDailyTicket({DateTime? now}) {
     final before = _state.metaDepth.adTickets;
     final next = GameLogic.claimAdFreeDailyTicket(_state, now: now);
@@ -2185,7 +2198,10 @@ class GameDirector extends ChangeNotifier {
     }
     _applyUpgrade(next);
     GameAudio.ui();
-    showToast('Daily Ad Ticket claimed', life: 2.2);
+    showToast(
+      '${AdBoost.adFreeDailyTickets} daily Ad Tickets claimed',
+      life: 2.2,
+    );
   }
 
   /// SCROLLS Well step 1: free ticket (F2P, UTC day).
@@ -2227,9 +2243,36 @@ class GameDirector extends ChangeNotifier {
     unawaited(AppAnalytics.adFreeNudgeTap());
   }
 
-  /// Rewarded ad: one free level on the cheapest CAMP track. Three a day.
+  void _armRewardedGrant({
+    int rewardGold = 0,
+    int ticketsGranted = 0,
+    int? ticketsToday,
+  }) {
+    final per = GoldIncome.hubGoldPerMinute(_state);
+    final minutes = rewardGold <= 0 || per <= 0 ? 0 : rewardGold ~/ per;
+    AppAnalytics.armRewardedComplete(
+      RewardedCompleteContext(
+        rewardGold: rewardGold,
+        ticketsGranted: ticketsGranted,
+        incomeMinutes: minutes,
+        ticketsToday:
+            ticketsToday ?? ScrollWell.extraAdsToday(_state.metaDepth),
+        wispClaimsToday: WispGift.claimsToday(_state.metaDepth),
+      ),
+    );
+  }
+
+  void _logDailyCap(String placement, int cap) {
+    unawaited(AppAnalytics.adDailyCapHit(placement: placement, cap: cap));
+  }
+
+  /// Rewarded ad: one free level on the cheapest CAMP track. Five a day.
   Future<void> watchCampAd() async {
     if (GameLogic.campAdClaimsToday(_state) >= GameLogic.campAdDailyCap) {
+      _logDailyCap(
+        AnalyticsEvents.placementCampAd,
+        GameLogic.campAdDailyCap,
+      );
       showToast(
         '${GameLogic.campAdDailyCap}/${GameLogic.campAdDailyCap} free CAMP levels used today',
         life: 2.0,
@@ -2244,6 +2287,7 @@ class GameDirector extends ChangeNotifier {
       showToast('Ads play on the Android app', life: 2.2);
       return;
     }
+    _armRewardedGrant();
     showToast('Loading ad…', life: 1.4);
     final result = await AdRewarded.showRewarded(
       placement: AnalyticsEvents.placementCampAd,
@@ -2266,6 +2310,7 @@ class GameDirector extends ChangeNotifier {
     final before = GameLogic.campAdClaimsToday(_state);
     final next = GameLogic.grantCampAdLevel(_state);
     if (GameLogic.campAdClaimsToday(next) <= before) {
+      _logDailyCap(AnalyticsEvents.placementCampAd, GameLogic.campAdDailyCap);
       showToast(
         '${GameLogic.campAdDailyCap}/${GameLogic.campAdDailyCap} free CAMP levels used today',
         life: 2.0,
@@ -2284,6 +2329,12 @@ class GameDirector extends ChangeNotifier {
       _ => track,
     };
     final left = GameLogic.campAdDailyCap - GameLogic.campAdClaimsToday(next);
+    if (left <= 0) {
+      _logDailyCap(
+        AnalyticsEvents.placementCampAd,
+        GameLogic.campAdDailyCap,
+      );
+    }
     showToast(
       left > 0
           ? 'Free $trackName level · $left left today'
@@ -2292,13 +2343,56 @@ class GameDirector extends ChangeNotifier {
     );
   }
 
+  /// Playtest stand-in for an extra ticket ad after the well. Same daily cap.
+  void grantExtraTicketPreview() => _grantExtraTicketAd();
+
+  void _grantExtraTicketAd() {
+    final before = _state.metaDepth.adTickets;
+    final next = GameLogic.grantExtraTicketAd(_state);
+    if (next.metaDepth.adTickets <= before) {
+      _logDailyCap(AnalyticsEvents.placementPowerups, ScrollWell.extraAdCap);
+      showToast(ScrollWell.extraAdsLine(_state.metaDepth), life: 2.0);
+      return;
+    }
+    _applyUpgrade(next);
+    GameAudio.ui();
+    final used = ScrollWell.extraAdsToday(next.metaDepth);
+    showToast(
+      'Ad Ticket +1 · extra $used/${ScrollWell.extraAdCap}',
+      life: 2.2,
+    );
+    if (used >= ScrollWell.extraAdCap) {
+      _logDailyCap(AnalyticsEvents.placementPowerups, ScrollWell.extraAdCap);
+    }
+  }
+
   /// Android: show a rewarded ad, then +[AdBoost.ticketsPerAd] Ad Ticket.
+  ///
+  /// Well steps 2 and 3 stay on the ladder. After the well, extra ads cap
+  /// at [ScrollWell.extraAdCap] per UTC day. A watch before the well still
+  /// grants one ticket and does not spend that cap (wipe ads neither).
   Future<void> watchPowerupAd() async {
+    final wellAd = ScrollWell.canAdvanceWithAd(_state.metaDepth);
+    final extraAd = !wellAd && ScrollWell.ladderComplete(_state.metaDepth);
+    if (extraAd && !ScrollWell.canWatchExtraAd(_state.metaDepth)) {
+      if (!_state.metaDepth.adFree) {
+        _logDailyCap(
+          AnalyticsEvents.placementPowerups,
+          ScrollWell.extraAdCap,
+        );
+        showToast(ScrollWell.extraAdsLine(_state.metaDepth), life: 2.0);
+      }
+      return;
+    }
     if (!AdRewarded.realAdsAvailable) {
       showToast('Ads play on the Android app', life: 2.2);
       return;
     }
-    final wellAd = ScrollWell.canAdvanceWithAd(_state.metaDepth);
+    final extraToday = ScrollWell.extraAdsToday(_state.metaDepth);
+    _armRewardedGrant(
+      ticketsGranted: AdBoost.ticketsPerAd,
+      ticketsToday: extraAd ? extraToday + 1 : extraToday,
+    );
     showToast('Loading ad…', life: 1.4);
     final result = await AdRewarded.showRewarded(
       placement: wellAd
@@ -2322,6 +2416,8 @@ class GameDirector extends ChangeNotifier {
           unawaited(
             AppAnalytics.logEvent(AnalyticsEvents.scrollWellAd, {'step': step}),
           );
+        } else if (extraAd) {
+          _grantExtraTicketAd();
         } else {
           grantPowerupHour();
         }
@@ -2359,6 +2455,7 @@ class GameDirector extends ChangeNotifier {
       showToast('Ads play on the Android app', life: 2.2);
       return;
     }
+    _armRewardedGrant();
     showToast('Loading ad…', life: 1.4);
     final result = await AdRewarded.showRewarded(
       placement: AnalyticsEvents.placementQuestReroll,

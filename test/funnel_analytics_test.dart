@@ -107,6 +107,42 @@ void main() {
     expect(FunnelAnalytics.has(again.state, FunnelAnalytics.offlineGold), isTrue);
   });
 
+  test('d7 d14 d30 return fire once when days_since_install crosses', () {
+    var state = FunnelAnalytics.onNewInstall(
+      GameLogic.createInitialState(now: install),
+      install,
+    ).state;
+    final d7Day = FunnelAnalytics.onExistingSession(
+      state,
+      install.add(const Duration(days: 7)),
+    );
+    expect(
+      d7Day.events.map((e) => e.name),
+      containsAll([
+        FunnelAnalytics.d1Return,
+        FunnelAnalytics.d7Return,
+      ]),
+    );
+    state = d7Day.state;
+    final d14 = FunnelAnalytics.onExistingSession(
+      state,
+      install.add(const Duration(days: 14)),
+    );
+    expect(d14.events.single.name, FunnelAnalytics.d14Return);
+    final d30 = FunnelAnalytics.onExistingSession(
+      d14.state,
+      install.add(const Duration(days: 30)),
+    );
+    expect(d30.events.single.name, FunnelAnalytics.d30Return);
+    expect(
+      FunnelAnalytics.onExistingSession(
+        d30.state,
+        install.add(const Duration(days: 31)),
+      ).events,
+      isEmpty,
+    );
+  });
+
   test('d1_return fires on the next UTC day, not the same day', () {
     var state = FunnelAnalytics.onNewInstall(
       GameLogic.createInitialState(now: install),

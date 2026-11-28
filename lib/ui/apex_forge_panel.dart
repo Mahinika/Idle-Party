@@ -205,9 +205,10 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
       _apexSlot,
     );
     final ownedRank = existingItem?.apexRank ?? 0;
+    final rankCap = ApexCraft.maxRank(state.ascensionLevel);
     final pricingRank = existingItem == null
         ? 1
-        : (ownedRank < ApexCraft.maxRank ? ownedRank + 1 : ownedRank);
+        : (ownedRank < rankCap ? ownedRank + 1 : ownedRank);
     final fromRank = existingItem == null ? 0 : ownedRank;
     final recipeCosts = existingItem == null
         ? ApexCraft.absoluteCost(
@@ -216,7 +217,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
             slot: _apexSlot,
             rank: 1,
           )
-        : ownedRank >= ApexCraft.maxRank
+        : ownedRank >= rankCap
         ? const <String, int>{}
         : ApexCraft.upgradeDeltaCost(
             classId: _apexClass,
@@ -271,7 +272,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
               setState(() {});
             }
           : null;
-    } else if (ownedRank >= ApexCraft.maxRank) {
+    } else if (ownedRank >= rankCap) {
       primaryLabel = 'MAX RANK';
       primaryAction = null;
     } else {
@@ -287,10 +288,17 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Pick a hero and slot, then craft Apex gear. Weapon first. '
-          'Bosses fill the meter for the target you set here.',
-          style: GameTheme.hint(color: GameTheme.parchmentDim),
+        MenuChrome.fold(
+          title: 'Pick a hero and slot, then craft Apex gear.',
+          subtitle:
+              'Weapon first. Bosses fill the meter for the target you set here.',
+          children: [
+            Text(
+              'Opening this sheet saves that goal. Keeps through Ascend. '
+              'DPS roll Crit + Haste; healers Mp5 + Crit + Haste.',
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         MenuChrome.sectionLabelScoped('HERO'),
@@ -304,14 +312,24 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           '$goalLabel${_pieceWhere(state, existingItem)}',
           style: GameTheme.readable(color: GameTheme.torchHot),
         ),
-        if (existingItem != null && ownedRank < ApexCraft.maxRank) ...[
+        if (existingItem != null && ownedRank < rankCap) ...[
           const SizedBox(height: 2),
           Text(
             'Upgrade cost → R$pricingRank',
             style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         ],
-        ..._rankPreview(state, existingItem, pricingRank),
+        const SizedBox(height: 2),
+        Text(
+          ApexCraft.maxRankLabel(state.ascensionLevel),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
+        ),
+        if (ApexCraft.rankUnlockHint(state.ascensionLevel)
+            case final hint?) ...[
+          const SizedBox(height: 2),
+          Text(hint, style: GameTheme.hint(color: GameTheme.parchmentDim)),
+        ],
+        ..._rankPreview(state, existingItem, pricingRank, rankCap),
         const SizedBox(height: 6),
         for (final e in recipeCosts.entries)
           _matProgressRow(
@@ -347,15 +365,13 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         if (_craftBlockReason(
               existing: existingItem,
               ownedRank: ownedRank,
+              rankCap: rankCap,
               canAct: primaryAction != null,
               weaponGate: weaponGate,
             )
             case final reason?) ...[
           const SizedBox(height: 4),
-          Text(
-            reason,
-            style: GameTheme.hint(color: GameTheme.bloodLit),
-          ),
+          Text(reason, style: GameTheme.hint(color: GameTheme.bloodLit)),
         ],
         const SizedBox(height: 8),
         _materialsBag(state),
@@ -389,7 +405,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Worn gear that is not Apex counts as empty. Forge and blessings still apply.',
+                    'Worn gear that is not Apex counts as empty. TRAIN and blessings still apply.',
                     textAlign: TextAlign.center,
                     style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
@@ -432,8 +448,9 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     GameState state,
     EquipmentItem? existing,
     int pricingRank,
+    int rankCap,
   ) {
-    if (existing != null && existing.apexRank >= ApexCraft.maxRank) {
+    if (existing != null && existing.apexRank >= rankCap) {
       return [
         const SizedBox(height: 4),
         ApexHubPanel.statChips(existing.statsLine),
@@ -469,7 +486,6 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     ];
   }
 
-
   static String _statDelta(EquipmentItem from, EquipmentItem to) {
     final bits = <String>[];
     if (from.itemLevel != to.itemLevel) {
@@ -501,11 +517,12 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
   static String? _craftBlockReason({
     required EquipmentItem? existing,
     required int ownedRank,
+    required int rankCap,
     required bool canAct,
     required bool weaponGate,
   }) {
     if (canAct || weaponGate) return null;
-    if (existing != null && ownedRank >= ApexCraft.maxRank) return null;
+    if (existing != null && ownedRank >= rankCap) return null;
     return 'Need the materials above.';
   }
 
@@ -525,28 +542,41 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
       runSpacing: 6,
       children: [
         for (var i = 0; i < heroes.length; i++)
-          Builder(builder: (context) {
-          final h = heroes[i];
-          final classId = h.spec.classId;
-          final role = h.spec.roleTag;
-          final selected = _apexClass == classId && _apexRole == role;
-          // Name first, class second, as everywhere else (polish7 P004).
-          final name = h.displayName(plainEnglish: false);
-          return MenuChrome.chip(
-            label: name == h.roleLabel ? name : '$name · ${h.roleLabel}',
-            selected: selected,
-            onTap: () {
-              final keepSlot =
-                  selected &&
-                  ApexCraft.craftSlotsFor(classId, role).contains(_apexSlot);
-              final slot = keepSlot
-                  ? _apexSlot
-                  : (ApexForge.nextSlotForPair(state, classId, role) ??
-                        EquipmentSlot.weapon);
-              _setCraftGoal(classId, role, slot);
+          Builder(
+            builder: (context) {
+              final h = heroes[i];
+              final classId = h.spec.classId;
+              final role = h.spec.roleTag;
+              final selected = _apexClass == classId && _apexRole == role;
+              // Name first, class second, as everywhere else (polish7 P004).
+              final name = h.displayName(plainEnglish: false);
+              final chipLabel = name == h.roleLabel
+                  ? name
+                  : '$name · ${h.roleLabel}';
+              return Semantics(
+                button: true,
+                selected: selected,
+                label: chipLabel,
+                child: MenuChrome.chip(
+                  label: chipLabel,
+                  selected: selected,
+                  onTap: () {
+                    final keepSlot =
+                        selected &&
+                        ApexCraft.craftSlotsFor(
+                          classId,
+                          role,
+                        ).contains(_apexSlot);
+                    final slot = keepSlot
+                        ? _apexSlot
+                        : (ApexForge.nextSlotForPair(state, classId, role) ??
+                              EquipmentSlot.weapon);
+                    _setCraftGoal(classId, role, slot);
+                  },
+                ),
+              );
             },
-          );
-          }),
+          ),
       ],
     );
   }
@@ -560,18 +590,39 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
       runSpacing: 6,
       children: [
         for (var i = 0; i < slots.length; i++)
-          Builder(builder: (context) {
-          final slot = slots[i];
-          final rank =
-              _existingPiece(state, _apexClass, _apexRole, slot)?.apexRank ?? 0;
-          final next = ApexForge.nextSlotForPair(state, _apexClass, _apexRole);
-          return MenuChrome.chip(
-            label: _slotLabel(slot, _apexClass, _apexRole),
-            value: rank > 0 ? 'R$rank' : (slot == next ? 'NEXT' : null),
-            selected: _apexSlot == slot,
-            onTap: () => _setCraftGoal(_apexClass, _apexRole, slot),
-          );
-          }),
+          Builder(
+            builder: (context) {
+              final slot = slots[i];
+              final rank =
+                  _existingPiece(
+                    state,
+                    _apexClass,
+                    _apexRole,
+                    slot,
+                  )?.apexRank ??
+                  0;
+              final next = ApexForge.nextSlotForPair(
+                state,
+                _apexClass,
+                _apexRole,
+              );
+              final chipLabel = _slotLabel(slot, _apexClass, _apexRole);
+              final chipValue = rank > 0
+                  ? 'R$rank'
+                  : (slot == next ? 'NEXT' : null);
+              return Semantics(
+                button: true,
+                selected: _apexSlot == slot,
+                label: chipValue == null ? chipLabel : '$chipLabel $chipValue',
+                child: MenuChrome.chip(
+                  label: chipLabel,
+                  value: chipValue,
+                  selected: _apexSlot == slot,
+                  onTap: () => _setCraftGoal(_apexClass, _apexRole, slot),
+                ),
+              );
+            },
+          ),
       ],
     );
   }
@@ -793,34 +844,55 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         : (def?.name ?? matId);
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: InkWell(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: '$label, $have of $need',
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: MenuChrome.listCard(selected: selected),
-          child: Row(
-            children: [
-              GameIcon.asset(_matIcon(family), size: 16),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: MenuChrome.listCard(selected: selected),
+                child: Row(
                   children: [
-                    Text(
-                      '$label  $have/$need',
-                      style: GameTheme.section(color: have >= need
-                            ? GameTheme.clear
-                            : GameTheme.bloodLit),
-                    ),
-                    if (have < need)
-                      Text(
-                        _farmSources(state, matId),
-                        style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    GameIcon.asset(_matIcon(family), size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$label  $have/$need',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GameTheme.section(
+                              color: have >= need
+                                  ? GameTheme.clear
+                                  : GameTheme.bloodLit,
+                            ),
+                          ),
+                          if (have < need)
+                            Text(
+                              _farmSources(state, matId),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GameTheme.hint(
+                                color: GameTheme.parchmentDim,
+                              ),
+                            ),
+                        ],
                       ),
+                    ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -855,10 +927,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
             '${item.name}  R${item.apexRank}',
             style: GameTheme.section(color: GameTheme.torchHot),
           ),
-          Text(
-            status,
-            style: GameTheme.hint(color: GameTheme.parchmentDim),
-          ),
+          Text(status, style: GameTheme.hint(color: GameTheme.parchmentDim)),
           if (inVault) ...[
             const SizedBox(height: 4),
             GameButton(

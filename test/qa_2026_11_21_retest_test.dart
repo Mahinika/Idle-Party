@@ -160,28 +160,28 @@ void main() {
       ),
     );
     await tester.pump();
-    final level = tester.renderObject<RenderParagraph>(
-      find.byKey(const ValueKey('hero-tab-level-0')),
-    );
-    expect(level.text.toPlainText(), contains('Lv14'));
-    expect(level.didExceedMaxLines, isFalse);
-    final name = tester.renderObject<RenderParagraph>(
+    final chipText = tester.renderObject<RenderParagraph>(
       find.byKey(const ValueKey('hero-tab-name-0')),
     );
-    expect(name.didExceedMaxLines, isTrue);
-    final levelRect = tester.getRect(
-      find.byKey(const ValueKey('hero-tab-level-0')),
+    expect(chipText.text.toPlainText(), contains('Judic'));
+    expect(chipText.didExceedMaxLines, isTrue);
+    expect(
+      find.bySemanticsLabel(RegExp(r'Judic.*Lv14')),
+      findsOneWidget,
+    );
+    final textRect = tester.getRect(
+      find.byKey(const ValueKey('hero-tab-name-0')),
     );
     final chip = tester.getRect(
       find
           .ancestor(
-            of: find.byKey(const ValueKey('hero-tab-level-0')),
+            of: find.byKey(const ValueKey('hero-tab-name-0')),
             matching: find.byType(Container),
           )
           .first,
     );
-    expect(levelRect.right, lessThanOrEqualTo(chip.right + 0.5));
-    expect(levelRect.left, greaterThanOrEqualTo(chip.left));
+    expect(textRect.right, lessThanOrEqualTo(chip.right + 0.5));
+    expect(textRect.left, greaterThanOrEqualTo(chip.left));
   });
 
   testWidgets('CC badge stays inside its party chip', (tester) async {

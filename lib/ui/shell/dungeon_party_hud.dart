@@ -24,6 +24,7 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 import 'kit_hud_chips.dart';
+import 'party_cc_hint.dart';
 import 'shell_common.dart';
 
 /// Gold flash for the first beat after any cast, not only signature kits.
@@ -97,6 +98,7 @@ Widget partyCcChipSuffix(
     child: Text(
       labels.join('·'),
       maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: GameTheme.combat(color: partyCcChipColor(labels)),
     ),
   );
@@ -143,14 +145,19 @@ class PartyHudSpecLine extends StatelessWidget {
         Flexible(
           child: Text(
             spec,
-            maxLines: 1,
+            maxLines: 2,
             softWrap: false,
             overflow: TextOverflow.ellipsis,
             style: GameTheme.combat(color: color),
           ),
         ),
         const SizedBox(width: 4),
-        Text('L$level', maxLines: 1, style: GameTheme.combat(color: color)),
+        Text(
+          'L$level',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.combat(color: color),
+        ),
         if (extra.isNotEmpty) ...[
           const SizedBox(width: 4),
           Flexible(
@@ -809,6 +816,7 @@ class DungeonFlaskButton extends StatelessWidget {
                             key: PartyCornerHud.flaskCountKey,
                             maxLines: 1,
                             softWrap: false,
+                            overflow: TextOverflow.ellipsis,
                             style: GameTheme.combat(color: labelColor),
                           ),
                         ],
@@ -1030,7 +1038,7 @@ class _KitSidePanel extends StatelessWidget {
                   Flexible(
                     child: Text(
                       ClassKits.resourceLabelForSpec(hero.specId),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
@@ -1115,6 +1123,8 @@ class _HomePartyChip extends StatelessWidget {
     final bucket = partyRoleBucketFor(hero);
     final roleWord = hero.spec.roleTag.plainLabel;
     final cc = partyCcChipLabels(spatial);
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final ccTight = textScale > GameTheme.typeScaleMax;
     final named = name.trim().isNotEmpty;
     final who = named ? name.trim() : roleWord;
     final doll = dense ? 0.0 : 14.0;
@@ -1164,8 +1174,8 @@ class _HomePartyChip extends StatelessWidget {
                 'L$level',
                 key: PartyCornerHud.chipLevelKey,
                 maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 softWrap: false,
-                textScaler: TextScaler.noScaling,
                 style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
               if (selected) ...[
@@ -1176,6 +1186,7 @@ class _HomePartyChip extends StatelessWidget {
                   color: GameTheme.torchHot,
                 ),
               ],
+              if (ccTight) partyCcChipSuffix(spatial, size: 6, dotOnly: true),
               const SizedBox(width: 2),
               Expanded(
                 child: ClipRRect(
@@ -1190,15 +1201,32 @@ class _HomePartyChip extends StatelessWidget {
               ),
             ],
           ),
-          if (cc.isNotEmpty)
-            Text(
-              homeChipCcLabel(cc),
-              key: homeChipCcKey,
-              maxLines: 1,
-              softWrap: false,
-              overflow: TextOverflow.ellipsis,
-              textScaler: TextScaler.noScaling,
-              style: GameTheme.hint(color: partyCcChipColor(cc)),
+          if (cc.isNotEmpty && !ccTight)
+            Semantics(
+              hint: PartyCcHint.forLabels(cc),
+              child: GestureDetector(
+                onLongPress: () {
+                  final messenger = ScaffoldMessenger.maybeOf(context);
+                  messenger?.clearSnackBars();
+                  messenger?.showSnackBar(
+                    SnackBar(
+                      content: Text(PartyCcHint.forLabels(cc)),
+                      duration: const Duration(seconds: 4),
+                    ),
+                  );
+                },
+                child: Tooltip(
+                  message: PartyCcHint.forLabels(cc),
+                  child: Text(
+                    homeChipCcLabel(cc),
+                    key: homeChipCcKey,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.hint(color: partyCcChipColor(cc)),
+                  ),
+                ),
+              ),
             ),
         ],
       ),
@@ -1528,7 +1556,7 @@ class _PartyRow extends StatelessWidget {
                           Flexible(
                             child: Text(
                               ClassKits.resourceLabelForSpec(hero.specId),
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: GameTheme.hint(
                                 color: GameTheme.parchmentDim,
@@ -1541,6 +1569,7 @@ class _PartyRow extends StatelessWidget {
                               child: Text(
                                 _runicPipLabel(resource),
                                 maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: GameTheme.combat(
                                   color: Color(
                                     ClassKits.resourceColorForSpec(hero.specId),

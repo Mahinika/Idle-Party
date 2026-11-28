@@ -149,7 +149,43 @@ flutter:
     - assets/custom/dungeon/veil/tiles/
     - assets/custom/dungeon/veil/props/
     - assets/custom/dungeon/veil/hub_icon.png
-    - assets/custom/town/
+    # Bundled town art (preview/buildings_sheet stay repo-only for tools)
+    - assets/custom/town/alert.png
+    - assets/custom/town/approach.png
+    - assets/custom/town/backdrop.png
+    - assets/custom/town/contact.png
+    - assets/custom/town/folk.png
+    - assets/custom/town/forge_t0.png
+    - assets/custom/town/forge_t1.png
+    - assets/custom/town/forge_t2.png
+    - assets/custom/town/ground.png
+    - assets/custom/town/guild_t0.png
+    - assets/custom/town/guild_t1.png
+    - assets/custom/town/guild_t2.png
+    - assets/custom/town/herbs.png
+    - assets/custom/town/inn_t0.png
+    - assets/custom/town/inn_t1.png
+    - assets/custom/town/inn_t2.png
+    - assets/custom/town/lanterns.png
+    - assets/custom/town/market_t0.png
+    - assets/custom/town/market_t1.png
+    - assets/custom/town/market_t2.png
+    - assets/custom/town/meadow.png
+    - assets/custom/town/nameplate.png
+    - assets/custom/town/path_b.png
+    - assets/custom/town/path.png
+    - assets/custom/town/pennants.png
+    - assets/custom/town/scuff.png
+    - assets/custom/town/shrub.png
+    - assets/custom/town/thicket.png
+    - assets/custom/town/tree_round.png
+    - assets/custom/town/tree_tall.png
+    - assets/custom/town/vault_open.png
+    - assets/custom/town/vault_shut.png
+    - assets/custom/town/well.png
+    - assets/custom/town/wild.png
+    - assets/custom/town/worn.png
+    - assets/custom/town/yard_props.png
     - assets/data/
     - assets/fonts/
 

@@ -6,6 +6,9 @@ abstract final class ScrollWell {
   /// Free claim plus two ad steps.
   static const int bonusSteps = 3;
 
+  /// Extra WATCH ads after the well, per UTC day. Wipe tickets do not count.
+  static const int extraAdCap = 8;
+
   static MetaDepthState rollDay(MetaDepthState md, {DateTime? now}) {
     final day = AdBoost.utcDayKey(now);
     if (md.scrollWellUtcDay == day) return md;
@@ -29,6 +32,28 @@ abstract final class ScrollWell {
 
   static int bonusRemaining(MetaDepthState md, {DateTime? now}) =>
       (bonusSteps - bonusClaims(md, now: now)).clamp(0, bonusSteps);
+
+  /// Extra ticket ads already used today. A missing or stale day is 0.
+  static int extraAdsToday(MetaDepthState md, {DateTime? now}) {
+    final day = AdBoost.utcDayKey(now);
+    if (md.extraTicketAdsUtc != day) return 0;
+    return md.extraTicketAdsToday;
+  }
+
+  static int extraAdsRemaining(MetaDepthState md, {DateTime? now}) =>
+      (extraAdCap - extraAdsToday(md, now: now)).clamp(0, extraAdCap);
+
+  /// F2P only, and only after today's well ladder is finished.
+  static bool canWatchExtraAd(MetaDepthState md, {DateTime? now}) {
+    if (md.adFree) return false;
+    if (!ladderComplete(md, now: now)) return false;
+    return extraAdsToday(md, now: now) < extraAdCap;
+  }
+
+  static String extraAdsLine(MetaDepthState md, {DateTime? now}) {
+    final used = extraAdsToday(md, now: now);
+    return 'Extra tickets $used/$extraAdCap today';
+  }
 
   static String progressLine(MetaDepthState md, {DateTime? now}) {
     final claims = bonusClaims(md, now: now);

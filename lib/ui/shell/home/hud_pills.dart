@@ -104,6 +104,7 @@ class HexBadge extends StatelessWidget {
                 label,
                 maxLines: 1,
                 softWrap: false,
+                overflow: TextOverflow.ellipsis,
                 style: GameTheme.hint(color: GameTheme.parchment),
               ),
             ),
@@ -185,6 +186,7 @@ class HudDpsPill extends StatelessWidget {
             snap.chipLabel,
             maxLines: 1,
             softWrap: false,
+            overflow: TextOverflow.ellipsis,
             style: GameTheme.combat(color: GameTheme.parchment, height: 1.2),
           ),
         );

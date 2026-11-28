@@ -24,22 +24,22 @@ abstract final class ReturnWeek {
   /// Short shelf on the hunt title. One token per check-in day.
   static String shelf(CheckInPayout pay) => switch (pay.day) {
     1 => 'CAMP',
-    2 => 'FORGE',
+    2 => 'TRAIN',
     3 => 'EMBERS',
     4 => 'CINDERS',
     5 => 'SCROLLS',
-    6 => 'CAMP+FORGE',
+    6 => 'CAMP+TRAIN',
     _ => 'JACKPOT',
   };
 
   static String spendSentence(CheckInPayout pay) => switch (pay.day) {
     1 => 'Spend the essence in CAMP.',
-    2 => 'Spend the gold in FORGE.',
+    2 => 'Spend the gold in TRAIN.',
     3 => 'Spend the Embers on RELICS.',
     4 => 'Keep the Cinders for RELICS.',
     5 => 'Spend the tickets on SCROLLS.',
-    6 => 'Spend the essence in CAMP and the gold in FORGE.',
-    _ => 'Spend the jackpot in CAMP, FORGE, and SCROLLS.',
+    6 => 'Spend the essence in CAMP and the gold in TRAIN.',
+    _ => 'Spend the jackpot in CAMP, TRAIN, and SCROLLS.',
   };
 
   static String todayTitle(GameState state) {
@@ -57,12 +57,12 @@ abstract final class ReturnWeek {
     final cave = caveName(state);
     final hint = switch (pay.day) {
       1 => 'essence for CAMP',
-      2 => 'gold for FORGE',
+      2 => 'gold for TRAIN',
       3 => 'Embers for RELICS',
       4 => 'Cinders for RELICS',
       5 => 'tickets for SCROLLS',
-      6 => 'essence and gold for CAMP and FORGE',
-      _ => 'jackpot for CAMP, FORGE, and SCROLLS',
+      6 => 'CAMP + TRAIN packs',
+      _ => 'CAMP, TRAIN, SCROLLS jackpot',
     };
     return 'Tomorrow: $cave · $hint';
   }
@@ -75,14 +75,14 @@ abstract final class ReturnWeek {
         state.essence >= GameLogic.cheapestSanctuaryNextCost(state);
     final scrolls = state.metaDepth.adTickets > 0;
     final bits = <String>[
-      if (forge) 'FORGE',
+      if (forge) 'TRAIN',
       if (camp) 'CAMP',
       if (scrolls) 'SCROLLS',
     ];
     if (bits.isEmpty) return null;
     if (bits.length == 1) return '${bits.single} ready.';
     if (bits.length == 2) return '${bits[0]} and ${bits[1]} ready.';
-    return 'FORGE, CAMP, and SCROLLS ready.';
+    return 'TRAIN, CAMP, and SCROLLS ready.';
   }
 
   static String todayDetail(GameState state) {

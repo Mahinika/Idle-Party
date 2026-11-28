@@ -114,6 +114,7 @@ class _BagSlot extends StatelessWidget {
                                 child: Text(
                                   ilLabel,
                                   maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style:
                                       GameTheme.hint(
                                         color: GameTheme.parchment,

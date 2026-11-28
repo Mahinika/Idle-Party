@@ -298,7 +298,7 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                   ),
                                   const SizedBox(height: 8),
                                   GameButton(
-                                    label: 'CUSTOMIZE',
+                                    label: 'CHOOSE PARTY',
                                     style: GameButtonStyle.grey,
                                     tip: 'Pick class, race, and a party name',
                                     onPressed: _inputUnlocked

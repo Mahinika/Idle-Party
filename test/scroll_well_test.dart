@@ -51,7 +51,7 @@ void main() {
     expect(ScrollWell.canClaimFree(state.metaDepth, now: day), isFalse);
     expect(AdBoost.canClaimAdFreeDaily(state.metaDepth, now: day), isTrue);
     state = GameLogic.claimAdFreeDailyTicket(state, now: day);
-    expect(state.metaDepth.adTickets, 1);
+    expect(state.metaDepth.adTickets, AdBoost.adFreeDailyTickets);
     expect(state.metaDepth.scrollWellBonusClaims, 0);
   });
 
@@ -71,5 +71,41 @@ void main() {
     final legacy = MetaDepthState.fromJson(json);
     expect(legacy.scrollWellUtcDay, '');
     expect(legacy.scrollWellBonusClaims, 0);
+    expect(legacy.extraTicketAdsUtc, '');
+    expect(legacy.extraTicketAdsToday, 0);
+  });
+
+  test('extra ticket ads cap at 8 per UTC day and old saves start at 0', () {
+    var state = GameLogic.createInitialState(now: day);
+    state = GameLogic.claimScrollWellFree(state, now: day);
+    state = GameLogic.advanceScrollWellBonusAd(state, now: day);
+    state = GameLogic.advanceScrollWellBonusAd(state, now: day);
+    expect(ScrollWell.ladderComplete(state.metaDepth, now: day), isTrue);
+    expect(ScrollWell.canWatchExtraAd(state.metaDepth, now: day), isTrue);
+
+    for (var i = 0; i < ScrollWell.extraAdCap; i++) {
+      state = GameLogic.grantExtraTicketAd(state, now: day);
+    }
+    expect(ScrollWell.extraAdsToday(state.metaDepth, now: day), 8);
+    expect(state.metaDepth.adTickets, 3 + 8);
+    final blocked = GameLogic.grantExtraTicketAd(state, now: day);
+    expect(blocked.metaDepth.adTickets, state.metaDepth.adTickets);
+    expect(ScrollWell.canWatchExtraAd(blocked.metaDepth, now: day), isFalse);
+
+    final nextDay = day.add(const Duration(days: 1));
+    state = GameLogic.claimScrollWellFree(blocked, now: nextDay);
+    state = GameLogic.advanceScrollWellBonusAd(state, now: nextDay);
+    state = GameLogic.advanceScrollWellBonusAd(state, now: nextDay);
+    state = GameLogic.grantExtraTicketAd(state, now: nextDay);
+    expect(ScrollWell.extraAdsToday(state.metaDepth, now: nextDay), 1);
+
+    final wiped = GameLogic.grantAdTicket(blocked);
+    expect(wiped.metaDepth.adTickets, blocked.metaDepth.adTickets + 1);
+    expect(ScrollWell.extraAdsToday(wiped.metaDepth, now: day), 8);
+
+    final legacy = MetaDepthState.fromJson(<String, dynamic>{'adTickets': 4});
+    expect(legacy.extraTicketAdsToday, 0);
+    expect(legacy.extraTicketAdsUtc, '');
+    expect(legacy.adTickets, 4);
   });
 }

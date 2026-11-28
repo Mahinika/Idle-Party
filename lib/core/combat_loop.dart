@@ -77,12 +77,17 @@ extension GameDirectorCombatLoop on GameDirector {
           _spatialTimer = null;
           _spatial = null;
           _awaitingWipeChoice = false;
-          showToast(
-            _state.metaDepth.riftBestTier > 0
-                ? 'Rift resolved · best R${_state.metaDepth.riftBestTier}'
-                : 'Rift ended',
-            life: 3.0,
-          );
+          final payoffs = LogicNotices.takeMetaPayoffs();
+          if (payoffs.isNotEmpty) {
+            showToast(payoffs.join(' · '), life: 3.0);
+          } else {
+            showToast(
+              _state.metaDepth.riftBestTier > 0
+                  ? 'Rift resolved · best R${_state.metaDepth.riftBestTier}'
+                  : 'Rift ended',
+              life: 3.0,
+            );
+          }
           _notifyShell();
           unawaited(_persistFlush());
           _syncSituationMusic();
@@ -106,12 +111,17 @@ extension GameDirectorCombatLoop on GameDirector {
           _spatialTimer = null;
           _spatial = null;
           _awaitingWipeChoice = false;
-          showToast(
-            _state.metaDepth.grBestTier > 0
-                ? 'Greater Rift · best GR${_state.metaDepth.grBestTier}'
-                : 'Greater Rift ended',
-            life: 3.0,
-          );
+          final payoffs = LogicNotices.takeMetaPayoffs();
+          if (payoffs.isNotEmpty) {
+            showToast(payoffs.join(' · '), life: 3.0);
+          } else {
+            showToast(
+              _state.metaDepth.grBestTier > 0
+                  ? 'Greater Rift · best GR${_state.metaDepth.grBestTier}'
+                  : 'Greater Rift ended',
+              life: 3.0,
+            );
+          }
           _notifyShell();
           unawaited(_persistFlush());
           _syncSituationMusic();
@@ -310,6 +320,7 @@ extension GameDirectorCombatLoop on GameDirector {
         final gold = wasTreasure ? GameLogic.treasureGoldBudget(_state) : 0;
         final beforeDungeon = _state.highestDungeonCleared;
         final wasBoss = _state.currentRoom.type == RoomType.boss;
+        final wasDaily = MetaSystems.isActiveDailyRun(_state);
         final beforeClear = _state;
         // Combat: kill gear already on pickup; floor fillers roll here.
         // Treasure: also rolls chest gear (skipLootRoll: false).
@@ -338,6 +349,22 @@ extension GameDirectorCombatLoop on GameDirector {
               metaDepth: WispGift.armAfterFirstBoss(_state.metaDepth),
             );
           }
+          unawaited(
+            AppAnalytics.bossClear(
+              dungeonId: _state.dungeonId,
+              floor: floorNo,
+            ),
+          );
+        }
+        if (wasDaily &&
+            _state.dailyClaimed &&
+            !beforeClear.dailyClaimed) {
+          unawaited(
+            AppAnalytics.dailyRunComplete(
+              dungeonId: _state.dungeonId,
+              floor: floorNo,
+            ),
+          );
         }
         // Floor gold / XP / drops stay in the bottom log. Toasts are unlocks.
         final leveledHeroes = <int>[];

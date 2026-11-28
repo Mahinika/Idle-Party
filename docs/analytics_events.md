@@ -57,6 +57,13 @@ list is marked done and emits nothing.
 | `first_boss` | — | First boss clear. |
 | `first_upgrade` | — | First forge gold spend. |
 | `d1_return` | `days_since_install` | First open on a later UTC day. |
+| `d7_return` | `days_since_install` | First session on or after UTC day 7 (once). |
+| `d14_return` | `days_since_install` | First session on or after UTC day 14 (once). |
+| `d30_return` | `days_since_install` | First session on or after UTC day 30 (once). |
+| `boss_clear` | `dungeon_id`, `floor` | Every boss room clear (not first-boss funnel). |
+| `daily_run_complete` | `dungeon_id`, `floor` | Daily Run echo cleared and reward claimed. |
+| `notify_prompt_shown` | — | Away-reminder opt-in card shown. |
+| `notify_later` | — | Player tapped LATER on that card. |
 | `coach_step` | `tip_id` | First-session coach tip completed (`dismissTip`). |
 
 ## Welcome Back & rewarded ads
@@ -66,11 +73,11 @@ list is marked done and emits nothing.
 | `welcome_back` | `where`, `seconds`, `gold`, `seconds_bucket`, `gold_bucket`, and `step_index` on the first card this install | Every Welcome Back card. |
 | `welcome_back_ad_offer` | — | WATCH visible on card. |
 | `welcome_back_ad_tap` | — | WATCH tapped. |
-| `welcome_back_ad` | `gold`, `essence` | Watch finished; loot doubled. |
+| `welcome_back_ad` | `gold`, `essence`, `seconds_bucket` | Watch finished; loot tripled (gold at least 30 minutes of hub income). `seconds_bucket` uses the same ranges as `welcome_back`. |
 | `welcome_back_ad_skip` | — | User closed ad early. |
 | `rewarded_offer` | `placement` | Preload when offer UI shows. |
 | `rewarded_tap` | `placement` | User started a rewarded watch. |
-| `rewarded_complete` | `placement` | Full watch. |
+| `rewarded_complete` | `placement`, `reward_gold`, `tickets_granted`, `income_minutes`, `tickets_today`, `wisp_claims_today` | Full watch. Gold and ticket counts are 0 when that placement does not grant them. `income_minutes` is a bucket of hub-income minutes (`0`, `lt_30m`, `30_60m`, `1_2h`, `2_4h`, `4h_plus`). `tickets_today` is extra ticket ads used today; an extra-ticket watch counts itself. `wisp_claims_today` is lantern taps today. |
 | `rewarded_skip` | `placement` | Dismissed before reward. |
 | `rewarded_load_fail` | `placement`, `reason` (`preload`, `load`, `show`, `not_ready`, `timeout`) | One failure. A preload fail is not a second event. |
 
@@ -78,6 +85,8 @@ Placements: `welcome_back`, `reinstall_pouch`, `wisp_gift`, `powerups`, `camp_ad
 
 | Event | Params | When |
 |---|---|---|
+| `ad_daily_cap_hit` | `placement`, `cap` | A daily cap blocked another grant, or the grant that filled it (WISP, extra tickets, CAMP). |
+| `scroll_spent` | `buff_id`, `tickets` | A SCROLLS ticket was spent. `buff_id` is the catalog id (`atk`, `gold`, `xp`, `move`, `loot`, `speed`, `bundle`, `offline`). |
 | `scroll_well_free` | — | SCROLLS Daily Well: free Ad Ticket claimed (UTC day). |
 | `scroll_well_ad` | `step` (2 or 3) | Well bonus ad finished (+1 ticket). Free claim is step 1. |
 | `wipe_revive_cinders` | `cost`, `dungeon_id`, `floor`, `gauntlet` (0/1) | Wipe revive paid with Cinders. |
@@ -116,6 +125,7 @@ Placements: `welcome_back`, `reinstall_pouch`, `wisp_gift`, `powerups`, `camp_ad
 | Param | Values |
 |---|---|
 | `seconds_bucket` | `lt_1m`, `1_5m`, `5_15m`, `15_60m`, `1_4h`, `4_8h`, `8h_cap` |
+| `income_minutes` | `0`, `lt_30m`, `30_60m`, `1_2h`, `2_4h`, `4h_plus` |
 | `gold_bucket` | `0`, `1_49`, `50_199`, `200_999`, `1k_5k`, `5k_plus` |
 
 ## User properties

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../core/app_analytics.dart';
 import '../../core/game_director.dart';
 import '../../core/local_reminders.dart';
 import '../game_theme.dart';
@@ -26,6 +27,7 @@ class NotifyOptInOverlay extends StatelessWidget {
       barrierDismissible: true,
       barrierColor: MenuChrome.scrim,
       builder: (ctx) {
+        unawaited(AppAnalytics.notifyPromptShown());
         final size = MediaQuery.sizeOf(ctx);
         final maxW = math.min(380.0, size.width - 32);
         return Dialog(
@@ -46,11 +48,7 @@ class NotifyOptInOverlay extends StatelessWidget {
           ),
         );
       },
-    ).then((_) {
-      if (!director.state.metaDepth.notifyPrompted) {
-        director.declineNotifyOptIn();
-      }
-    }).whenComplete(WebClickBridge.popLayer);
+    ).whenComplete(WebClickBridge.popLayer);
   }
 
   void _yes(BuildContext context) {
@@ -59,8 +57,9 @@ class NotifyOptInOverlay extends StatelessWidget {
   }
 
   void _no(BuildContext context) {
+    unawaited(AppAnalytics.notifyLater());
     director.declineNotifyOptIn();
-    Navigator.of(context).maybePop();
+    Navigator.of(context).pop();
   }
 
   @override

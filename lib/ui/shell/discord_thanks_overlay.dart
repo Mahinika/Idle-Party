@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/community_links.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/home_layout.dart';
 import '../../core/hub_chase.dart';
 import '../first_session_tips.dart';
 import '../game_theme.dart';
@@ -23,6 +24,7 @@ class DiscordThanksOverlay extends StatelessWidget {
   static bool shouldOffer(GameDirector director) {
     if (director.state.seenTips.contains(tipId)) return false;
     final state = director.state;
+    if (state.homeLayout == HomeLayout.home && state.inDungeon) return false;
     if (state.inDungeon) {
       final world = director.spatial;
       if (world == null || !world.awaitingExit) return false;

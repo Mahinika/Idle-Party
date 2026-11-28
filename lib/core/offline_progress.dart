@@ -123,10 +123,10 @@ abstract final class OfflineProgress {
       seconds: seconds,
       autoEntered: autoEntered,
     );
-    final boosted = applyAwayBonus(state, raw);
+    final settled = _settleAwayGold(state, raw);
     return _offlineResultFrom(
       before: state,
-      progressed: boosted,
+      progressed: settled.state,
       seconds: seconds,
       secondsAway: away,
       roomsCleared: sim.roomsCleared,
@@ -135,7 +135,7 @@ abstract final class OfflineProgress {
       farmedSafeFloor: sim.farmedSafeFloor,
       wasInDungeon: true,
       autoEnteredCave: autoEntered,
-      awayGoldMultiplied: _restMultipliedGold(state, raw, boosted),
+      awayGoldMultiplied: settled.restMultiplied,
     );
   }
 
@@ -207,10 +207,10 @@ abstract final class OfflineProgress {
       // Hub AFK: sanctuary idle gold only — no ghost combat / boss farms.
       progressed = applyHubIdleProgress(state, seconds);
     }
-    final boosted = applyAwayBonus(state, progressed);
+    final settled = _settleAwayGold(state, progressed);
     return _offlineResultFrom(
       before: state,
-      progressed: boosted,
+      progressed: settled.state,
       seconds: seconds,
       secondsAway: away,
       hubChestCapSec: hubCap,
@@ -220,7 +220,37 @@ abstract final class OfflineProgress {
       farmedSafeFloor: farmedSafeFloor,
       wasInDungeon: prepared.inDungeon,
       autoEnteredCave: autoEntered,
-      awayGoldMultiplied: _restMultipliedGold(state, progressed, boosted),
+      awayGoldMultiplied: settled.restMultiplied,
+    );
+  }
+
+  /// Rest ×3 first. Ad-free then takes the Welcome Back ×3 and its floor
+  /// when Rest did not already multiply the gold, so the two never stack.
+  static ({GameState state, bool restMultiplied}) _settleAwayGold(
+    GameState before,
+    GameState progressed,
+  ) {
+    final boosted = applyAwayBonus(before, progressed);
+    final rest = _restMultipliedGold(before, progressed, boosted);
+    if (rest || !before.metaDepth.adFree) {
+      return (state: boosted, restMultiplied: rest);
+    }
+    if (!GameLogic.showDailyChase(before)) {
+      return (state: boosted, restMultiplied: false);
+    }
+    final baseGold = boosted.gold - before.gold;
+    final baseEssence = boosted.essence - before.essence;
+    if (baseGold <= 0 && baseEssence <= 0) {
+      return (state: boosted, restMultiplied: false);
+    }
+    return (
+      state: GameLogic.grantWelcomeBackWatchGold(
+        boosted,
+        baseGold,
+        baseEssence: baseEssence,
+        allowAdFree: true,
+      ),
+      restMultiplied: false,
     );
   }
 

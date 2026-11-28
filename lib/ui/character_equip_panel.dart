@@ -212,11 +212,20 @@ class CharacterEquipPanel extends StatelessWidget {
     Widget heroTab(int i) {
       final h = heroes[i];
       final active = i == index;
+      final fourHeroes = heroes.length >= 4;
       final role = h.displayName(
         plainEnglish: GameLogic.plainPlayerChrome(state),
       );
+      final nameChip = fourHeroes
+          ? (role.length <= 4 ? role : role.substring(0, 4))
+          : role;
       final level = 'Lv${h.level}';
-      final label = '$role · $level';
+      final label = fourHeroes ? '$nameChip · $level' : '$role · $level';
+      final textScale = MediaQuery.textScalerOf(context).scale(1);
+      final tightChip =
+          compact && textScale >= GameTheme.typeScaleMax - 0.01;
+      final visible =
+          fourHeroes || tightChip ? nameChip : '$role · $level';
       return Semantics(
         button: true,
         selected: active,
@@ -240,23 +249,13 @@ class CharacterEquipPanel extends StatelessWidget {
                   ],
                   Expanded(
                     child: Text(
-                      role,
+                      visible,
                       key: ValueKey('hero-tab-name-$i'),
                       maxLines: 1,
                       softWrap: false,
                       overflow: TextOverflow.ellipsis,
                       style: GameTheme.readable(color: GameTheme.torchHot),
                     ),
-                  ),
-                  // Level is a badge: it stays full size and does not scale,
-                  // so a long name ellipsizes instead of eating the last digit.
-                  Text(
-                    ' · $level',
-                    key: ValueKey('hero-tab-level-$i'),
-                    maxLines: 1,
-                    softWrap: false,
-                    textScaler: TextScaler.noScaling,
-                    style: GameTheme.readable(color: GameTheme.torchHot),
                   ),
                 ],
               ),
@@ -368,6 +367,7 @@ class CharacterEquipPanel extends StatelessWidget {
                         : 'HP ${hero.currentHp.clamp(0, maxHp)}/$maxHp',
                     textAlign: TextAlign.center,
                     maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GameTheme.section(color: GameTheme.parchmentDim),
                   ),
                 ],
@@ -509,6 +509,7 @@ class CharacterEquipPanel extends StatelessWidget {
                         key: CharacterEquipPanel.slotLegendKey,
                         textAlign: TextAlign.center,
                         maxLines: compact && big ? 3 : 2,
+                        overflow: TextOverflow.ellipsis,
                         style: GameTheme.hint(color: GameTheme.parchmentDim),
                       );
                     },

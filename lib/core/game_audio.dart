@@ -9,6 +9,7 @@ import 'package:flutter_soloud/flutter_soloud.dart';
 import '../models/loot.dart';
 import 'audio_assets.dart';
 import 'audio_failure_report.dart';
+import 'crash_report.dart';
 import 'audio_variation_bank.dart';
 import 'combat_feel.dart';
 import 'music_playback_plan.dart';
@@ -229,7 +230,7 @@ abstract final class GameAudio {
       _ready = true;
     } catch (e, st) {
       _initFailed = true;
-      debugPrint('GameAudio.init failed: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio.init failed: $e\n$st');
       // A missing native library throws on SoLoud.instance itself. Touching
       // it again here would escape this catch and fail the boot test.
       if (engineUp) {
@@ -263,7 +264,7 @@ abstract final class GameAudio {
       _downMusic ??= await soloud.loadAsset(AudioAssets.downMusic);
       _sfxReady = true;
     } catch (e, st) {
-      debugPrint('GameAudio.warmRemainingAssets failed: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio.warmRemainingAssets failed: $e\n$st');
       if (loading.isNotEmpty) {
         AudioFailureReport.loadFailed(loading, e, st);
       }
@@ -292,7 +293,7 @@ abstract final class GameAudio {
       }
     } catch (e, st) {
       final path = AudioAssets.dungeonAmbience(mood);
-      debugPrint('GameAudio mood load failed: $path: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio mood load failed: $path: $e\n$st');
       AudioFailureReport.loadFailed(path, e, st);
     }
   }
@@ -309,14 +310,14 @@ abstract final class GameAudio {
         try {
           await SoLoud.instance.disposeSource(source);
         } catch (e, st) {
-          debugPrint('GameAudio drop stale source failed: $path: $e\n$st');
+          if (kDebugMode) debugPrint('GameAudio drop stale source failed: $path: $e\n$st');
         }
         return null;
       }
       _byPath[path] = source;
       return source;
     } catch (e, st) {
-      debugPrint('GameAudio load failed: $path: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio load failed: $path: $e\n$st');
       // One retry. A cold start on the emulator can fail the first
       // loadAsset of bed_dark.ogg before the engine is ready to decode,
       // and a restart can dispose SoLoud under the in-flight load.
@@ -359,7 +360,7 @@ abstract final class GameAudio {
       try {
         await SoLoud.instance.disposeSource(source);
       } catch (e, st) {
-        debugPrint('GameAudio dispose track failed: $e\n$st');
+        if (kDebugMode) debugPrint('GameAudio dispose track failed: $e\n$st');
       }
     }
   }
@@ -384,7 +385,7 @@ abstract final class GameAudio {
       stopAmbience();
       SoLoud.instance.deinit();
     } catch (e, st) {
-      debugPrint('GameAudio disposeEngine failed: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio disposeEngine failed: $e\n$st');
     }
     _sourcesByPath.clear();
     _byPath.clear();
@@ -513,7 +514,8 @@ abstract final class GameAudio {
     if (!quiet) return false;
     try {
       return SoLoud.instance.getActiveVoiceCount() >= dropQuietLayersAt;
-    } catch (_) {
+    } catch (e, st) {
+      CrashReport.recordNonFatal(e, st, reason: 'game_audio:voice_count');
       return false;
     }
   }
@@ -531,7 +533,7 @@ abstract final class GameAudio {
         const Duration(milliseconds: 1500),
       );
     } catch (e, st) {
-      debugPrint('GameAudio encounter duck failed: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio encounter duck failed: $e\n$st');
     }
   }
 
@@ -632,7 +634,7 @@ abstract final class GameAudio {
         soloud.setPause(handle, false);
       }
     } catch (e, st) {
-      debugPrint('GameAudio play failed: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio play failed: $e\n$st');
       if (path.isNotEmpty) AudioFailureReport.playFailed(path, e, st);
     }
   }
@@ -758,7 +760,8 @@ abstract final class GameAudio {
     if (handle == null || !_ready) return false;
     try {
       return SoLoud.instance.getIsValidVoiceHandle(handle);
-    } catch (_) {
+    } catch (e, st) {
+      CrashReport.recordNonFatal(e, st, reason: 'game_audio:voice_live');
       return false;
     }
   }
@@ -817,7 +820,7 @@ abstract final class GameAudio {
       try {
         SoLoud.instance.stop(amb);
       } catch (e, st) {
-        debugPrint('GameAudio ambience stop failed: $e\n$st');
+        if (kDebugMode) debugPrint('GameAudio ambience stop failed: $e\n$st');
       }
     }
     if (!_ready || muted || _backgroundPaused) return;
@@ -839,7 +842,7 @@ abstract final class GameAudio {
       unawaited(_dropOtherAmbience());
     } catch (e, st) {
       _ambienceHandle = null;
-      debugPrint('GameAudio ambience start failed: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio ambience start failed: $e\n$st');
       final path = switch (_ambience) {
         AmbienceKind.hub => AudioAssets.hubAmbience,
         AmbienceKind.dungeon => AudioAssets.dungeonAmbience(_score.mood),
@@ -898,7 +901,7 @@ abstract final class GameAudio {
     } catch (e, st) {
       _musicHandle = null;
       _playing = MusicStem.none;
-      debugPrint('GameAudio music start failed: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio music start failed: $e\n$st');
       final path = switch (stem) {
         MusicStem.resolve => AudioAssets.resolveMusic,
         MusicStem.down => AudioAssets.downMusic,
@@ -936,7 +939,7 @@ abstract final class GameAudio {
           break;
       }
     } catch (e, st) {
-      debugPrint('GameAudio stem load failed: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio stem load failed: $e\n$st');
       if (loading.isNotEmpty) AudioFailureReport.loadFailed(loading, e, st);
     }
   }
@@ -984,7 +987,7 @@ abstract final class GameAudio {
       try {
         await SoLoud.instance.disposeSource(source);
       } catch (e, st) {
-        debugPrint('GameAudio ambience dispose failed: $e\n$st');
+        if (kDebugMode) debugPrint('GameAudio ambience dispose failed: $e\n$st');
       }
     }
   }
@@ -1017,11 +1020,11 @@ abstract final class GameAudio {
         try {
           SoLoud.instance.stop(handle);
         } catch (e, st) {
-          debugPrint('GameAudio fade stop failed: $e\n$st');
+          if (kDebugMode) debugPrint('GameAudio fade stop failed: $e\n$st');
         }
       });
     } catch (e, st) {
-      debugPrint('GameAudio music release failed: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio music release failed: $e\n$st');
     }
   }
 
@@ -1038,7 +1041,7 @@ abstract final class GameAudio {
       if (amb != null) soloud.stop(amb);
       if (mus != null) soloud.stop(mus);
     } catch (e, st) {
-      debugPrint('GameAudio stopAmbience failed: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio stopAmbience failed: $e\n$st');
     }
   }
 
@@ -1084,7 +1087,7 @@ abstract final class GameAudio {
     try {
       SoLoud.instance.setVolume(h, _effectiveAmbienceVolume());
     } catch (e, st) {
-      debugPrint('GameAudio ambience volume failed: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio ambience volume failed: $e\n$st');
     }
   }
 
@@ -1103,7 +1106,7 @@ abstract final class GameAudio {
       try {
         SoLoud.instance.setVolume(h, _musicGain(_playing));
       } catch (e, st) {
-        debugPrint('GameAudio music volume failed: $e\n$st');
+        if (kDebugMode) debugPrint('GameAudio music volume failed: $e\n$st');
       }
       return;
     }
@@ -1146,11 +1149,11 @@ abstract final class GameAudio {
             soloud.setVolume(mus, _musicGain(_playing));
           }
         } catch (e, st) {
-          debugPrint('GameAudio duck restore failed: $e\n$st');
+          if (kDebugMode) debugPrint('GameAudio duck restore failed: $e\n$st');
         }
       });
     } catch (e, st) {
-      debugPrint('GameAudio duck failed: $e\n$st');
+      if (kDebugMode) debugPrint('GameAudio duck failed: $e\n$st');
     }
   }
 

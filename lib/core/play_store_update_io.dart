@@ -14,7 +14,7 @@ Future<int?> probeAvailableVersionCode() async {
       return info.availableVersionCode;
     }
   } catch (e, st) {
-    debugPrint('PlayStoreUpdate check failed: $e\n$st');
+    if (kDebugMode) debugPrint('PlayStoreUpdate check failed: $e\n$st');
   }
   return null;
 }
@@ -31,7 +31,7 @@ Future<bool> startImmediatePlayUpdate() async {
     final result = await InAppUpdate.performImmediateUpdate();
     return result == AppUpdateResult.success;
   } catch (e, st) {
-    debugPrint('PlayStoreUpdate immediate failed: $e\n$st');
+    if (kDebugMode) debugPrint('PlayStoreUpdate immediate failed: $e\n$st');
     return false;
   }
 }
@@ -63,7 +63,7 @@ Future<bool> runFlexiblePlayUpdate({
     await complete();
     return true;
   } catch (e, st) {
-    debugPrint('PlayStoreUpdate flexible failed: $e\n$st');
+    if (kDebugMode) debugPrint('PlayStoreUpdate flexible failed: $e\n$st');
     return false;
   }
 }
@@ -83,7 +83,7 @@ Future<bool> startFlexiblePlayUpdate() async {
       complete: InAppUpdate.completeFlexibleUpdate,
     );
   } catch (e, st) {
-    debugPrint('PlayStoreUpdate start failed: $e\n$st');
+    if (kDebugMode) debugPrint('PlayStoreUpdate start failed: $e\n$st');
     return false;
   }
 }

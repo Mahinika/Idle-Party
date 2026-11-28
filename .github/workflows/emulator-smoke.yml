@@ -36,10 +36,10 @@ jobs:
             tag="${{ inputs.tag }}"
           else
             sha="${{ github.event.workflow_run.head_sha }}"
-            tag=$(gh release list --prerelease --limit 40 \
-              --json tagName,targetCommitish,createdAt \
+            tag=$(gh release list --limit 40 \
+              --json tagName,targetCommitish,isPrerelease \
               | jq -r --arg sha "$sha" '
-                  [.[] | select(.targetCommitish == $sha) | .tagName]
+                  [.[] | select(.isPrerelease == true and .targetCommitish == $sha) | .tagName]
                   | map(select(startswith("test-"))) | .[0] // empty')
             if [ -z "$tag" ]; then
               echo "No test-* prerelease for workflow SHA $sha." >&2

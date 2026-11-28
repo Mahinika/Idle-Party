@@ -6,6 +6,7 @@ import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/gold_income.dart';
+import 'package:idle_party/core/ad_boost.dart';
 import 'package:idle_party/core/ad_offer.dart';
 import 'package:idle_party/core/offline_progress.dart';
 import 'package:idle_party/ui/meta/offline_welcome.dart';
@@ -868,5 +869,63 @@ void main() {
     expect(viewRect.bottom, lessThanOrEqualTo(buttonRect.top + 1));
     expect(visible.bottom, lessThanOrEqualTo(buttonRect.top + 1));
     expect(visible.bottom, lessThanOrEqualTo(640));
+  });
+
+  test('ad-free Welcome Back is ×3 with a 30 minute floor and does not stack on Rest', () {
+    final now = DateTime.utc(2026, 8, 21, 12);
+    final played = GameLogic.createInitialState(now: now).copyWith(
+      bossVictories: 1,
+      autoCaveOnLeave: false,
+      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+        adFree: true,
+      ),
+    );
+    final plain = OfflineProgress.applyOfflineProgress(
+      played.copyWith(metaDepth: played.metaDepth.copyWith(adFree: false)),
+      const Duration(minutes: 10),
+    );
+    final auto = OfflineProgress.applyOfflineProgress(
+      played,
+      const Duration(minutes: 10),
+    );
+    final floor = GoldIncome.hubGoldPerMinute(played) * AdOffer.welcomeFloorMinutes;
+    final expected =
+        plain.goldGained +
+        (plain.goldGained * (AdOffer.welcomeMul - 1) > floor
+            ? plain.goldGained * (AdOffer.welcomeMul - 1)
+            : floor);
+    expect(auto.goldGained, expected);
+    expect(auto.goldGained, greaterThanOrEqualTo(plain.goldGained + floor));
+    expect(auto.welcomeBackAdOffer, isFalse);
+    if (plain.essenceGained > 0) {
+      expect(auto.essenceGained, plain.essenceGained * AdOffer.welcomeMul);
+    }
+
+    final hourPlain = OfflineProgress.applyOfflineProgress(
+      played.copyWith(metaDepth: played.metaDepth.copyWith(adFree: false)),
+      const Duration(hours: 1),
+    );
+    final hourAuto = OfflineProgress.applyOfflineProgress(
+      played,
+      const Duration(hours: 1),
+    );
+    expect(hourAuto.goldGained, hourPlain.goldGained * AdOffer.welcomeMul);
+
+    final armed = GameLogic.spendAdBuff(
+      GameLogic.grantAdTicket(played),
+      AdBuffId.offline,
+      nowMs: DateTime.now().millisecondsSinceEpoch,
+    );
+    final withRest = OfflineProgress.applyOfflineProgress(
+      armed,
+      const Duration(hours: 1),
+    );
+    final restOnly = OfflineProgress.applyOfflineProgress(
+      armed.copyWith(metaDepth: armed.metaDepth.copyWith(adFree: false)),
+      const Duration(hours: 1),
+    );
+    expect(withRest.awayGoldMultiplied, isTrue);
+    expect(withRest.goldGained, restOnly.goldGained);
+    expect(withRest.welcomeBackAdOffer, isFalse);
   });
 }

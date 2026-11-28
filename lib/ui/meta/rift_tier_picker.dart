@@ -107,20 +107,29 @@ class _RiftTierPickerDialogState extends State<RiftTierPickerDialog> {
               Listener(
                 onPointerUp: (_) => _stopHold(),
                 onPointerCancel: (_) => _stopHold(),
-                child: GestureDetector(
-                  onLongPressStart: _tier > widget.minTier
-                      ? (_) => _startHold(-1)
-                      : null,
-                  onLongPressEnd: (_) => _stopHold(),
-                  child: GameIconButton(
-                    glyph: UiGlyph.prev,
-                    label: widget.minusLabel,
+                child: Semantics(
+                  button: true,
+                  enabled: _tier > widget.minTier,
+                  label: widget.minusLabel,
+                  onTap: _tier > widget.minTier ? () => _set(_tier - 1) : null,
+                  excludeSemantics: true,
+                  child: GestureDetector(
+                    onLongPressStart: _tier > widget.minTier
+                        ? (_) => _startHold(-1)
+                        : null,
+                    onLongPressEnd: (_) => _stopHold(),
+                    child: ExcludeSemantics(
+                      child: GameIconButton(
+                        glyph: UiGlyph.prev,
+                        label: widget.minusLabel,
                     size: 18,
                     color: GameTheme.torchHot,
                     width: GameTheme.minTouch,
                     height: GameTheme.minTouch,
                     onPressed:
                         _tier > widget.minTier ? () => _set(_tier - 1) : null,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -134,19 +143,28 @@ class _RiftTierPickerDialogState extends State<RiftTierPickerDialog> {
               Listener(
                 onPointerUp: (_) => _stopHold(),
                 onPointerCancel: (_) => _stopHold(),
-                child: GestureDetector(
-                  onLongPressStart:
-                      _tier < widget.maxTier ? (_) => _startHold(1) : null,
-                  onLongPressEnd: (_) => _stopHold(),
-                  child: GameIconButton(
-                    glyph: UiGlyph.next,
-                    label: widget.plusLabel,
+                child: Semantics(
+                  button: true,
+                  enabled: _tier < widget.maxTier,
+                  label: widget.plusLabel,
+                  onTap: _tier < widget.maxTier ? () => _set(_tier + 1) : null,
+                  excludeSemantics: true,
+                  child: GestureDetector(
+                    onLongPressStart:
+                        _tier < widget.maxTier ? (_) => _startHold(1) : null,
+                    onLongPressEnd: (_) => _stopHold(),
+                    child: ExcludeSemantics(
+                      child: GameIconButton(
+                        glyph: UiGlyph.next,
+                        label: widget.plusLabel,
                     size: 18,
                     color: GameTheme.torchHot,
                     width: GameTheme.minTouch,
                     height: GameTheme.minTouch,
                     onPressed:
                         _tier < widget.maxTier ? () => _set(_tier + 1) : null,
+                      ),
+                    ),
                   ),
                 ),
               ),

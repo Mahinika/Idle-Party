@@ -56,6 +56,7 @@ extension GameDirectorSave on GameDirector {
       } catch (e, st) {
         DebugPlayLog.event('save', 'write failed: $e');
         debugPrint('save failed: $e\n$st');
+        CrashReport.recordNonFatal(e, st, reason: 'director_save:persist');
         return false;
       }
     });
@@ -100,6 +101,7 @@ extension GameDirectorSave on GameDirector {
         return true;
       } catch (e, st) {
         debugPrint('save turn failed: $e\n$st');
+        CrashReport.recordNonFatal(e, st, reason: 'director_save:enqueue');
         _blockSaveRecovery(
           'Saving is paused. The last save was interrupted before it could be confirmed.',
         );
@@ -365,6 +367,11 @@ extension GameDirectorSave on GameDirector {
         await _storage.reloadDurable();
       } catch (error, stack) {
         debugPrint('save recovery retry could not reload: $error\n$stack');
+        CrashReport.recordNonFatal(
+          error,
+          stack,
+          reason: 'director_save:recovery_reload',
+        );
         _blockSaveRecovery(
           'Saving is paused. The device copy could not be read back.',
         );
@@ -402,6 +409,11 @@ extension GameDirectorSave on GameDirector {
           confirmed = await _storage.save(_state);
         } catch (error, stack) {
           debugPrint('unproven retry save failed: $error\n$stack');
+          CrashReport.recordNonFatal(
+            error,
+            stack,
+            reason: 'director_save:unproven_retry',
+          );
         }
         if (!confirmed ||
             _storage.hasUnprovenWrite ||
@@ -959,6 +971,7 @@ extension GameDirectorSave on GameDirector {
     } catch (e, st) {
       DebugPlayLog.event('boot', 'failed: $e');
       debugPrint('boot failed: $e\n$st');
+      CrashReport.recordNonFatal(e, st, reason: 'director_save:boot');
       // A thrown inventory read is not proof the phone is empty.
       _phoneHadNoSaveAtBoot = false;
       _hasExistingSave = false;
@@ -982,7 +995,11 @@ extension GameDirectorSave on GameDirector {
   /// Called once the loading splash has been replaced. Doing this inside
   /// [boot] bound Play services while the spinner was still on screen.
   void wakePlatformAfterSplash() {
-    unawaited(syncFriendReferral());
+    unawaited(
+      Future<void>.microtask(() {
+        unawaited(syncFriendReferral());
+      }),
+    );
     unawaited(refreshPlayUpdateNotice());
     unawaited(LocalNotify.init());
     unawaited(rebindOptedInCloudBackup());
@@ -1336,6 +1353,11 @@ extension GameDirectorSave on GameDirector {
         saved = await _storage.save(snapshot);
       } catch (error, stack) {
         debugPrint('new game save failed: $error\n$stack');
+        CrashReport.recordNonFatal(
+          error,
+          stack,
+          reason: 'director_save:new_game_save',
+        );
         saved = false;
       }
       // A false or thrown commit is not accepted from a later read.
@@ -1372,6 +1394,11 @@ extension GameDirectorSave on GameDirector {
       return true;
     } catch (error, stack) {
       debugPrint('new game setup failed: $error\n$stack');
+      CrashReport.recordNonFatal(
+        error,
+        stack,
+        reason: 'director_save:new_game_setup',
+      );
       await _rollbackRecoveryNewGame(
         previous: previous,
         previousHas: previousHas,
@@ -1400,6 +1427,11 @@ extension GameDirectorSave on GameDirector {
       } catch (error, stack) {
         debugPrint(
           'new game rollback could not restore the slot: $error\n$stack',
+        );
+        CrashReport.recordNonFatal(
+          error,
+          stack,
+          reason: 'director_save:new_game_rollback_slot',
         );
       }
     }

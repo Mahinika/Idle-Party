@@ -175,6 +175,10 @@ class _TownViewportState extends State<TownViewport> {
           director.claimDailyVault();
           return;
         }
+        if (TownAccess.vaultClaimedToday(state)) {
+          _showLocked(building.label, TownAccess.vaultClaimedDetail(state));
+          return;
+        }
         _showLocked(building.label, TownAccess.lockedCopy(building.id, state));
     }
   }
@@ -286,14 +290,17 @@ class _TownViewportState extends State<TownViewport> {
                 : null));
     final showSecondaryEnter =
         !primaryIsEnter && enterLabel != null && zoneUnlocked;
+    final ascendRelevant = !GameLogic.isMaxAscension(state) &&
+        (state.bossVictories > 0 || state.ascensionLevel > 0);
     final showAscendBesideEnter = showSecondaryEnter &&
-        GameLogic.canAscend(state) &&
+        ascendRelevant &&
         plan.op != ChaseOp.confirmAscend;
     final showAscendBelow = !showSecondaryEnter &&
-        GameLogic.canAscend(state) &&
+        ascendRelevant &&
         plan.op != ChaseOp.confirmAscend &&
         plan.op != ChaseOp.enter &&
         plan.op != ChaseOp.enterKey;
+    final canAscendNow = GameLogic.canAscend(state);
     final enterPlan = _enterDungeonPlan(state, chase);
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -438,10 +445,17 @@ class _TownViewportState extends State<TownViewport> {
                               Expanded(
                                 child: GameButton(
                                   label: 'ASCEND',
-                                  style: GameButtonStyle.brown,
-                                  primary: true,
-                                  onPressed: () =>
-                                      confirmAscend(context, director),
+                                  style: canAscendNow
+                                      ? GameButtonStyle.brown
+                                      : GameButtonStyle.grey,
+                                  primary: canAscendNow,
+                                  tip: canAscendNow
+                                      ? null
+                                      : GameLogic.ascendTrackLabel(state),
+                                  onPressed: canAscendNow
+                                      ? () =>
+                                          confirmAscend(context, director)
+                                      : null,
                                 ),
                               ),
                             ],
@@ -452,9 +466,16 @@ class _TownViewportState extends State<TownViewport> {
                         const SizedBox(height: 6),
                         GameButton(
                           label: 'ASCEND',
-                          style: GameButtonStyle.brown,
-                          primary: true,
-                          onPressed: () => confirmAscend(context, director),
+                          style: canAscendNow
+                              ? GameButtonStyle.brown
+                              : GameButtonStyle.grey,
+                          primary: canAscendNow,
+                          tip: canAscendNow
+                              ? null
+                              : GameLogic.ascendTrackLabel(state),
+                          onPressed: canAscendNow
+                              ? () => confirmAscend(context, director)
+                              : null,
                         ),
                       ],
                       if (MenuTabs.showScrolls(state)) ...[
@@ -519,9 +540,13 @@ class _TownSquare extends StatelessWidget {
       quality: state.vfxQuality,
       disableAnimations: MediaQuery.disableAnimationsOf(context),
     );
-    final partyDoll = layout.lane.height >= 48 && size.width >= 360
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    var partyDoll = layout.lane.height >= 48 && size.width >= 360
         ? 40.0
         : (size.height < 380 ? 34.0 : 42.0);
+    if (textScale > GameTheme.typeScaleMax) {
+      partyDoll = math.min(partyDoll, 32.0);
+    }
     final folkYardHeight = TownFolkSheet.yardHeightForPartyDoll(partyDoll);
     final labels = <(String, Rect)>[
       (guild.label, layout.guildLabel),

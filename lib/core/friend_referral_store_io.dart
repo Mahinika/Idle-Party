@@ -28,7 +28,7 @@ class FirestoreFriendReferralGateway implements FriendReferralGateway {
       }
       return FirebaseFirestore.instance;
     } catch (e, st) {
-      debugPrint('Friend list unavailable: $e\n$st');
+      if (kDebugMode) debugPrint('Friend list unavailable: $e\n$st');
       return null;
     }
   }
@@ -58,7 +58,7 @@ class FirestoreFriendReferralGateway implements FriendReferralGateway {
         'at': FieldValue.serverTimestamp(),
       });
     } catch (e, st) {
-      debugPrint('Friend code register failed: $e\n$st');
+      if (kDebugMode) debugPrint('Friend code register failed: $e\n$st');
     }
   }
 
@@ -77,7 +77,7 @@ class FirestoreFriendReferralGateway implements FriendReferralGateway {
       final n = (snap.data()?['claims'] as num?)?.toInt() ?? 0;
       return n.clamp(0, FriendReferral.maxFriends);
     } catch (e, st) {
-      debugPrint('Friend code read failed: $e\n$st');
+      if (kDebugMode) debugPrint('Friend code read failed: $e\n$st');
       return null;
     }
   }
@@ -122,7 +122,7 @@ class FirestoreFriendReferralGateway implements FriendReferralGateway {
         return FriendClaimStatus.accepted;
       });
     } catch (e, st) {
-      debugPrint('Friend claim transaction failed: $e\n$st');
+      if (kDebugMode) debugPrint('Friend claim transaction failed: $e\n$st');
       return FriendClaimStatus.unavailable;
     }
   }

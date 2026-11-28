@@ -9,8 +9,8 @@ abstract final class NavCopy {
     if (layout != HomeLayout.home || text.isEmpty) return text;
     var next = text;
     next = next.replaceAll('ESSENCE → CAMP', 'CAMP under the fight');
-    next = next.replaceAll('GOLD → FORGE', 'FORGE under the fight');
-    next = next.replaceAll('GOLD →', 'FORGE under the fight →');
+    next = next.replaceAll('GOLD → FORGE', 'TRAIN under the fight');
+    next = next.replaceAll('GOLD →', 'TRAIN under the fight →');
     next = next.replaceAll('GEAR → BAG', 'HEROES → BAG');
     next = next.replaceAll('GEAR →', 'HEROES →');
     next = next.replaceAll('MORE →', 'MENU →');
@@ -19,10 +19,22 @@ abstract final class NavCopy {
     next = next.replaceAll('badge on MORE', 'badge on MENU');
     next = next.replaceAll('SCROLLS on the hub', 'SCROLLS on the fight rail');
     next = next.replaceAll('in GEAR', 'in HEROES');
-    next = next.replaceAll('Gold is under GOLD', 'Gold and forge sit under the fight');
+    next = next.replaceAll(
+      'Gold is under GOLD',
+      'Gold buys TRAIN, CAMP and MARKET under the fight.',
+    );
+    next = next.replaceAll('WIPED · End → hub', 'WIPED · End → town');
+    next = next.replaceAll('WIPED · Retry / Hub', 'WIPED · Retry / Town');
+    next = next.replaceAll('End → hub', 'End → town');
+    next = next.replaceAll('Retry / Hub', 'Retry / Town');
+    next = next.replaceAll('Return to hub?', 'Return to town?');
+    next = next.replaceAll('Leave to hub', 'Leave to town');
+    next = next.replaceAll('returns to the hub', 'returns to town');
+    next = next.replaceAll('resets from hub', 'resets from town');
+    next = next.replaceAll('from hub', 'from town');
     next = next.replaceAll('Hub gold', 'Camp gold');
     next = next.replaceAll('The hub', 'Camp');
-    next = next.replaceAll('the hub', 'camp');
+    next = next.replaceAll('the hub', 'town');
     return next;
   }
 }

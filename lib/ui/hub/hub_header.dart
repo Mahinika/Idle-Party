@@ -44,6 +44,7 @@ class HubOfflineBanner extends StatelessWidget {
     return Semantics(
       button: true,
       label: 'Open offline summary',
+      onTap: onDismiss,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
         child: Material(

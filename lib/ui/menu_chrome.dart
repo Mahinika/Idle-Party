@@ -1138,7 +1138,9 @@ abstract final class MenuChrome {
     required double max,
     required int divisions,
     required ValueChanged<double> onChanged,
+    ValueChanged<double>? onChangeEnd,
     String? label,
+    String? semanticsValue,
   }) {
     return _MenuSlider(
       value: value,
@@ -1146,7 +1148,9 @@ abstract final class MenuChrome {
       max: max,
       divisions: divisions,
       onChanged: onChanged,
+      onChangeEnd: onChangeEnd,
       label: label,
+      semanticsValue: semanticsValue,
     );
   }
 
@@ -1181,7 +1185,9 @@ class _MenuSlider extends StatelessWidget {
     required this.max,
     required this.divisions,
     required this.onChanged,
+    this.onChangeEnd,
     this.label,
+    this.semanticsValue,
   });
 
   final double value;
@@ -1189,7 +1195,9 @@ class _MenuSlider extends StatelessWidget {
   final double max;
   final int divisions;
   final ValueChanged<double> onChanged;
+  final ValueChanged<double>? onChangeEnd;
   final String? label;
+  final String? semanticsValue;
 
   void _setFromLocal(double localX, double width) {
     if (width <= 0) return;
@@ -1210,11 +1218,13 @@ class _MenuSlider extends StatelessWidget {
         return Semantics(
           slider: true,
           label: label ?? 'Slider',
-          value: '$pct percent',
+          value: semanticsValue ?? '$pct percent',
           child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapDown: (d) => _setFromLocal(d.localPosition.dx, w),
           onHorizontalDragUpdate: (d) => _setFromLocal(d.localPosition.dx, w),
+          onHorizontalDragEnd: (_) => onChangeEnd?.call(value),
+          onTapUp: (_) => onChangeEnd?.call(value),
           child: SizedBox(
             height: GameTheme.minTouch,
             child: Stack(

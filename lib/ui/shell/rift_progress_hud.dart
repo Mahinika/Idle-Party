@@ -106,6 +106,7 @@ class RiftProgressHud extends StatelessWidget {
             Text(
               clock,
               maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: GameTheme.combat(color: !farm && (pace == 'BEHIND' || overPar)
                     ? GameTheme.bloodLit
                     : (farm ? GameTheme.parchmentDim : GameTheme.parchment)),

@@ -15,6 +15,12 @@ abstract final class AnalyticsEvents {
   static const rewardedSkip = 'rewarded_skip';
   static const rewardedLoadFail = 'rewarded_load_fail';
 
+  /// A daily rewarded cap blocked another grant, or the grant that filled it.
+  static const adDailyCapHit = 'ad_daily_cap_hit';
+
+  /// A SCROLLS ticket was spent on a buff.
+  static const scrollSpent = 'scroll_spent';
+
   static const storeProductView = 'store_product_view';
   static const storePurchaseStart = 'store_purchase_start';
   static const storePurchaseCancel = 'store_purchase_cancel';
@@ -43,6 +49,10 @@ abstract final class AnalyticsEvents {
   static const questReroll = 'quest_reroll';
 
   static const notifyOpen = 'notify_open';
+  static const notifyPromptShown = 'notify_prompt_shown';
+  static const notifyLater = 'notify_later';
+  static const bossClear = 'boss_clear';
+  static const dailyRunComplete = 'daily_run_complete';
 
   /// Matches [FirstSessionTips.tips] ids (coach only, not boot intro).
   static const Set<String> coachTipIds = {
@@ -65,6 +75,17 @@ abstract final class AnalyticsEvents {
   static const placementQuestReroll = 'quest_reroll';
   static const placementWipeRetry = 'wipe_retry';
   static const placementWipeRevive = 'wipe_revive';
+
+  /// Hub-income minutes a gold reward is worth. Sent as [incomeMinutesBucket].
+  static String incomeMinutesBucket(int minutes) {
+    final m = minutes < 0 ? 0 : minutes;
+    if (m <= 0) return '0';
+    if (m < 30) return 'lt_30m';
+    if (m < 60) return '30_60m';
+    if (m < 120) return '1_2h';
+    if (m < 240) return '2_4h';
+    return '4h_plus';
+  }
 
   /// Offline away time on Welcome Back (seconds).
   static String offlineSecondsBucket(int seconds) {

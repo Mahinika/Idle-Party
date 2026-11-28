@@ -119,13 +119,17 @@ class HubPowerupsFab extends StatelessWidget {
                             'SCROLLS',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GameTheme.section(color: GameTheme.parchment),
+                            style: GameTheme.section(
+                              color: GameTheme.parchment,
+                            ),
                           ),
                           Text(
                             hint(state),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GameTheme.hint(color: GameTheme.parchmentDim),
+                            style: GameTheme.hint(
+                              color: GameTheme.parchmentDim,
+                            ),
                           ),
                         ],
                       ),
@@ -336,7 +340,7 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                 children: [
                   MenuChrome.sheetHandle(),
                   Text(
-                    widget.focus == PowerupsFocus.pouch ? 'POUCH' : 'SCROLLS',
+                    widget.focus == PowerupsFocus.pouch ? 'STARTER' : 'SCROLLS',
                     style: GameTheme.title(),
                   ),
                   ShellLayout.gap(6),
@@ -360,8 +364,8 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                   ShellLayout.gap(4),
                   ShellLayout.hint(
                     adFree
-                        ? 'Ad-free: no ads. Claim one free ticket each day, then spend it here.'
-                        : 'Watch for a ticket, then spend it here.',
+                        ? 'Ad-free: no ads. Claim five free Ad Tickets each day, then spend them here.'
+                        : 'Earn Ad Tickets from short ads, then spend them below.',
                   ),
                   ShellLayout.gap(6),
                   ShellLayout.divider(),
@@ -438,7 +442,7 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                                         CrossAxisAlignment.stretch,
                                     children: [
                                       Text(
-                                        'POUCH',
+                                        'STARTER',
                                         key: ScrollsSheet.pouchTitleKey,
                                         style: GameTheme.title(),
                                       ),
@@ -476,6 +480,7 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                               unawaited(director.watchPowerupAd());
                             },
                             onPreview: director.grantPowerupHour,
+                            onPreviewExtra: director.grantExtraTicketPreview,
                           ),
                           if (WispGift.unlocked(md)) ...[
                             const SizedBox(height: 8),
@@ -576,6 +581,7 @@ class _ScrollWellBlock extends StatelessWidget {
     required this.onClaimWellFree,
     required this.onWatch,
     required this.onPreview,
+    required this.onPreviewExtra,
   });
 
   final GameState state;
@@ -586,20 +592,22 @@ class _ScrollWellBlock extends StatelessWidget {
   final VoidCallback onClaimWellFree;
   final VoidCallback onWatch;
   final VoidCallback onPreview;
+  final VoidCallback onPreviewExtra;
 
   @override
   Widget build(BuildContext context) {
     if (adFree) {
       if (canDaily) {
         return GameButton(
-          label: 'CLAIM DAILY TICKET',
+          label: 'CLAIM ${AdBoost.adFreeDailyTickets} DAILY TICKETS',
           style: GameButtonStyle.brown,
           primary: true,
           onPressed: onClaimDaily,
         );
       }
       return Text(
-        'Today\'s free ticket is claimed. Next one after the daily reset.',
+        'Today\'s ${AdBoost.adFreeDailyTickets} free tickets are claimed. '
+        'Next ones after the daily reset.',
         style: GameTheme.section(color: GameTheme.parchmentDim),
       );
     }
@@ -609,6 +617,7 @@ class _ScrollWellBlock extends StatelessWidget {
     final ladderDone = ScrollWell.ladderComplete(md);
     final canFree = ScrollWell.canClaimFree(md);
     final canWellAd = ScrollWell.canAdvanceWithAd(md);
+    final extraLeft = ScrollWell.extraAdsRemaining(md);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -617,8 +626,8 @@ class _ScrollWellBlock extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           ladderDone
-              ? 'Daily bonus done. Extra WATCH ads still grant tickets.'
-              : '1 free ticket, then 2 ad steps each day.',
+              ? 'Daily bonus done. ${ScrollWell.extraAdsLine(md)}.'
+              : '1 free Ad Ticket, then 2 ad steps each day.',
           style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
@@ -638,12 +647,12 @@ class _ScrollWellBlock extends StatelessWidget {
             onPressed: onWatch,
           ),
         ],
-        if (ladderDone) ...[
+        if (ladderDone && extraLeft > 0) ...[
           const SizedBox(height: 8),
           if (realAds)
             GameButton(
               label: 'WATCH AD · +1 TICKET',
-              style: GameButtonStyle.grey,
+              style: GameButtonStyle.brown,
               onPressed: onWatch,
             )
           else ...[
@@ -655,9 +664,15 @@ class _ScrollWellBlock extends StatelessWidget {
             GameButton(
               label: 'PREVIEW +1 TICKET',
               style: GameButtonStyle.grey,
-              onPressed: onPreview,
+              onPressed: onPreviewExtra,
             ),
           ],
+        ] else if (ladderDone) ...[
+          const SizedBox(height: 8),
+          Text(
+            '${ScrollWell.extraAdsLine(md)}. More after the daily reset.',
+            style: GameTheme.section(color: GameTheme.parchmentDim),
+          ),
         ] else if (!canFree && !canWellAd && !realAds) ...[
           const SizedBox(height: 8),
           Text(
@@ -775,8 +790,7 @@ Widget scrollsSheetForTest({
   required GameDirector director,
   MenuRouter? router,
   PowerupsFocus focus = PowerupsFocus.none,
-}) =>
-    _PowerupsSheet(director: director, router: router, focus: focus);
+}) => _PowerupsSheet(director: director, router: router, focus: focus);
 
 /// One WATCH gold pile after a fresh install with no prior save file.
 class ReinstallPouchFab extends StatelessWidget {
@@ -797,7 +811,7 @@ class ReinstallPouchFab extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: GameTheme.clusterGap),
       child: GameButton(
         label: 'WATCH AD · +${formatGold(gold)} STARTER',
-        style: GameButtonStyle.grey,
+        style: GameButtonStyle.brown,
         tip: 'One-time gold after a fresh install',
         onPressed: onWatch,
       ),

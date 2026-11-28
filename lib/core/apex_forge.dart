@@ -207,19 +207,15 @@ abstract final class ApexForge {
   /// Persist the party default goal so boss clears fill the meter before CRAFT opens.
   static GameState _ensureDefaultCraftGoal(GameState state) {
     if (craftGoalFromState(state) != null) return state;
-    if (GameLogic.plainPlayerChrome(state) || state.heroes.isEmpty) return state;
+    if (GameLogic.plainPlayerChrome(state) || state.heroes.isEmpty) {
+      return state;
+    }
     final h = state.heroes.first;
     final classId = h.spec.classId;
     final role = h.spec.roleTag;
     if (!ApexCraft.isValidPair(classId, role)) return state;
-    final slot =
-        nextSlotForPair(state, classId, role) ?? EquipmentSlot.weapon;
-    return setApexCraftGoal(
-      state,
-      classId: classId,
-      role: role,
-      slot: slot,
-    );
+    final slot = nextSlotForPair(state, classId, role) ?? EquipmentSlot.weapon;
+    return setApexCraftGoal(state, classId: classId, role: role, slot: slot);
   }
 
   /// Zone-shard recipe pool grants a real named shard (current dungeon when
@@ -267,7 +263,7 @@ abstract final class ApexForge {
       if (!ApexCraft.craftSlotsFor(classId, role).contains(slot)) return null;
       return (classId: classId, role: role, slot: slot);
     } catch (e, st) {
-      debugPrint('ApexForge craft goal parse failed: $e\n$st');
+      if (kDebugMode) debugPrint('ApexForge craft goal parse failed: $e\n$st');
       return null;
     }
   }
@@ -386,12 +382,11 @@ abstract final class ApexForge {
     );
     final owned = _findApexItem(state, pieceId);
     final fromRank = owned?.apexRank ?? 0;
+    final cap = ApexCraft.maxRank(state.ascensionLevel);
     final toRank = owned == null
         ? 1
-        : (owned.apexRank < ApexCraft.maxRank
-              ? owned.apexRank + 1
-              : owned.apexRank);
-    if (owned != null && owned.apexRank >= ApexCraft.maxRank) return null;
+        : (owned.apexRank < cap ? owned.apexRank + 1 : owned.apexRank);
+    if (owned != null && owned.apexRank >= cap) return null;
     final shortages = sortedMatShortages(
       state,
       classId: goal.classId,
@@ -669,10 +664,35 @@ abstract final class ApexForge {
     return next;
   }
 
+  /// Rewrite every Apex piece's item level for [ascensionLevel].
+  ///
+  /// Rank, affixes, and effects stay. Called from Ascend and from Reborn
+  /// at the AL cap, after bag Apex has been moved into the vault.
+  static GameState rebakeOwnedForAscend(GameState state, int ascensionLevel) {
+    EquipmentItem bake(EquipmentItem item) {
+      if (!item.isApex) return item;
+      return ApexCraft.rebakeForAscend(item, ascensionLevel);
+    }
+
+    return state.copyWith(
+      apexVault: [for (final item in state.apexVault) bake(item)],
+      gearStash: [for (final item in state.gearStash) bake(item)],
+      heroRoster: [
+        for (final hero in state.heroRoster)
+          hero.copyWith(
+            equipped: {
+              for (final entry in hero.equipped.entries)
+                entry.key: bake(entry.value),
+            },
+          ),
+      ],
+    );
+  }
+
   static bool canUpgradeApex(GameState state, String itemId) {
     final item = _findApexItem(state, itemId);
     if (item == null || !item.isApex) return false;
-    if (item.apexRank >= ApexCraft.maxRank) return false;
+    if (item.apexRank >= ApexCraft.maxRank(state.ascensionLevel)) return false;
     final classId = HeroClassId.values.byName(item.apexClassId!);
     final role = SpecRoleTag.values.byName(item.apexRoleTag!);
     final costs = ApexCraft.upgradeDeltaCost(
@@ -700,13 +720,16 @@ abstract final class ApexForge {
       toRank: nextRank,
     );
     var next = _spendCraftMats(normalized, costs);
-    final upgraded = ApexCraft.buildItem(
-      classId: classId,
-      role: role,
-      slot: item.slot,
-      rank: nextRank,
-      ascensionLevel: normalized.ascensionLevel,
-    ).copyWith(id: item.id);
+    final upgraded = ApexCraft.withKeptAffixes(
+      ApexCraft.buildItem(
+        classId: classId,
+        role: role,
+        slot: item.slot,
+        rank: nextRank,
+        ascensionLevel: normalized.ascensionLevel,
+      ),
+      item,
+    );
 
     // Price and replace the copy the player is wearing. A vault twin is
     // not the piece the meter and the sheet just quoted.

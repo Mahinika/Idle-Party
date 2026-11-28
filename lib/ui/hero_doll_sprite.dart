@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../assets/custom_assets.dart';
@@ -155,7 +156,7 @@ class _HeroDollSpriteState extends State<HeroDollSprite>
       try {
         form = await DecodedImageCache.load(formPath, targetWidth: 96);
       } catch (e, st) {
-        debugPrint('HeroDollSprite form load failed: $e\n$st');
+        if (kDebugMode) debugPrint('HeroDollSprite form load failed: $e\n$st');
       }
       if (!mounted || gen != _loadGen) return;
       setState(() {
@@ -209,17 +210,19 @@ class _HeroDollSpriteState extends State<HeroDollSprite>
                 targetWidth: decodeW,
               );
             } catch (e2, st2) {
-              debugPrint(
-                'HeroDollSprite overlay load failed ($path): $e2\n$st2',
-              );
+              if (kDebugMode) {
+                debugPrint(
+                  'HeroDollSprite overlay load failed ($path): $e2\n$st2',
+                );
+              }
             }
           } else {
-            debugPrint('HeroDollSprite overlay load failed ($path): $e\n$st');
+            if (kDebugMode) debugPrint('HeroDollSprite overlay load failed ($path): $e\n$st');
           }
         }
       }
     } catch (e, st) {
-      debugPrint('HeroDollSprite body/overlays load failed: $e\n$st');
+      if (kDebugMode) debugPrint('HeroDollSprite body/overlays load failed: $e\n$st');
     }
 
     if (!mounted || gen != _loadGen) return;
@@ -228,7 +231,7 @@ class _HeroDollSpriteState extends State<HeroDollSprite>
     try {
       await HeroRigPainter.warmHero(widget.hero);
     } catch (e, st) {
-      debugPrint('HeroDollSprite rig warm failed: $e\n$st');
+      if (kDebugMode) debugPrint('HeroDollSprite rig warm failed: $e\n$st');
     }
     if (!mounted || gen != _loadGen) return;
     setState(() {

@@ -39,37 +39,48 @@ class _DungeonOfflineChromeState extends State<DungeonOfflineChrome> {
 
   @override
   Widget build(BuildContext context) {
-  final summary = widget.director.offlineSummary;
+    final summary = widget.director.offlineSummary;
     if (summary == null) return const SizedBox.shrink();
     if (widget.director.state.homeLayout == HomeLayout.home) {
       return const SizedBox.shrink();
     }
+    final semantics = '${summary.headline}. Tap for details';
     return Align(
       alignment: const Alignment(0, -0.55),
-      child: GestureDetector(
+      child: Semantics(
+        button: true,
+        label: semantics,
         onTap: () => showOfflineProgressDialog(context, widget.director),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: GameTheme.panel.withValues(alpha: 0.93),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: GameTheme.mossLit),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                summary.headline,
-                textAlign: TextAlign.center,
-                style: GameTheme.hint(color: GameTheme.mossLit),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+          child: GestureDetector(
+            onTap: () => showOfflineProgressDialog(context, widget.director),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: GameTheme.panel.withValues(alpha: 0.93),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: GameTheme.mossLit),
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Tap for details',
-                style: GameTheme.hint(color: GameTheme.parchmentDim),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    summary.headline,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.hint(color: GameTheme.mossLit),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Tap for details',
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

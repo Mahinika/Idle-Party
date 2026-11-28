@@ -447,6 +447,7 @@ class _HardmodeStepper extends StatelessWidget {
                   key: ChallengeToggles.valueKey,
                   textAlign: TextAlign.center,
                   maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GameTheme.button(
                     color: level > 0 ? GameTheme.torchHot : GameTheme.parchment,
                   ),

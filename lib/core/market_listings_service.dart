@@ -18,14 +18,27 @@ abstract final class MarketListingsService {
   static const int listingCount = 8;
   static const int targetedCount = 3;
   static const int refreshIntervalMs = 6 * 60 * 60 * 1000;
-  static const int paidRefreshBaseGold = 25000;
+  /// Paid reroll gold at [paidRefreshCapPartyLevel] (before Ascend bonus).
+  static const int paidRefreshCapGold = 25000;
+
+  /// Mean party level where the reroll reaches [paidRefreshCapGold].
+  static const int paidRefreshCapPartyLevel = 25;
+
+  static const int paidRefreshMinGold = 25;
   static const int targetedRerollAttempts = 8;
   static const int largeGapILvlThreshold = 12;
 
   static int nowMs() => DateTime.now().millisecondsSinceEpoch;
 
-  static int paidRefreshCost(GameState state) =>
-      paidRefreshBaseGold + state.ascensionLevel * 1000;
+  /// Scales with party level (quadratic to cap), then adds Ascend surcharge.
+  static int paidRefreshCost(GameState state) {
+    final level =
+        GameLogic.partyMeanLevel(state).clamp(1, paidRefreshCapPartyLevel);
+    final capSq = paidRefreshCapPartyLevel * paidRefreshCapPartyLevel;
+    final scaled = (paidRefreshCapGold * level * level) ~/ capSq;
+    final base = scaled.clamp(paidRefreshMinGold, paidRefreshCapGold);
+    return base + state.ascensionLevel * 1000;
+  }
 
   static bool isStale(GameState state, {int? nowMs}) {
     final now = nowMs ?? MarketListingsService.nowMs();

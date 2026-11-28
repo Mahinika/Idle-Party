@@ -8,7 +8,6 @@ import '../../core/ad_rewarded.dart';
 import '../../core/build_stamp.dart';
 import '../../core/community_links.dart';
 import '../../core/meta_systems.dart';
-import '../../core/ability_mastery.dart';
 import '../../core/game_audio.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
@@ -154,7 +153,9 @@ class _SettingsOverlayState extends State<SettingsOverlay>
   Widget _scrollPage(_SettingsPage page, Widget child) {
     return SingleChildScrollView(
       key: PageStorageKey<String>('settings-${page.name}'),
-      padding: ShellLayout.scrollBodyPadding,
+      padding: ShellLayout.scrollBodyPadding.copyWith(
+        bottom: ShellLayout.scrollBodyPadding.bottom + GameTheme.primaryTouch,
+      ),
       child: child,
     );
   }
@@ -273,18 +274,22 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         Builder(
           builder: (context) {
             final wide = MediaQuery.sizeOf(context).width >= 400;
-            final largeType = MediaQuery.textScalerOf(context).scale(1) > 1.2;
-            final percent = '${(state.uiTextScale * 100).round()}%';
+            final osScale = MediaQuery.textScalerOf(context).scale(1);
+            final largeType = osScale > 1.2;
+            final shown = state.uiTextScale.clamp(
+              kUiTextScaleMin,
+              kUiTextScaleMax,
+            );
+            final percent = '${(shown * 100).round()}%';
             final slider = MenuChrome.slider(
               label: 'UI text scale',
-              value: state.uiTextScale.clamp(
-                kUiTextScaleMin,
-                kUiTextScaleMax,
-              ),
+              value: shown,
               min: kUiTextScaleMin,
               max: kUiTextScaleMax,
               divisions: 13,
-              onChanged: director.setUiTextScale,
+              onChanged: director.previewUiTextScale,
+              onChangeEnd: director.setUiTextScale,
+              semanticsValue: '${(shown * 100).round()} percent',
             );
             if (wide || !largeType) {
               return Row(
@@ -293,9 +298,9 @@ class _SettingsOverlayState extends State<SettingsOverlay>
                   SizedBox(
                     width:
                         40 *
-                            MediaQuery.textScalerOf(context)
-                                .scale(1)
-                                .clamp(1.0, 2.0) +
+                            MediaQuery.textScalerOf(
+                              context,
+                            ).scale(1).clamp(1.0, 2.0) +
                         12,
                     child: Text(
                       percent,
@@ -345,14 +350,10 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           onCycle: director.cycleVfxQuality,
         ),
         const SizedBox(height: 8),
-        Text(
-          AbilityMastery.progressLine(state),
-          style: GameTheme.hint(color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 8),
         _SettingsCycle(
           label: state.combatPace >= 2 ? 'Fight speed 2×' : 'Fight speed 1×',
-          hint: 'How fast the cave plays. Gold while you are away does not change.',
+          hint:
+              'How fast the cave plays. Gold while you are away does not change.',
           onCycle: director.cycleCombatPace,
         ),
         const SizedBox(height: 8),

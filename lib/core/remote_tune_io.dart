@@ -64,14 +64,16 @@ Future<void> _refresh() async {
       'wisp_every_s': RemoteTune.wispIntervalMs ~/ 1000,
       'shop': shop.isEmpty ? 'default' : shop,
     });
-    debugPrint(
-      'Remote Config applied '
-      'cap=${RemoteTune.wispDailyCap} '
-      'first=${RemoteTune.wispFirstDelayMs ~/ 1000}s '
-      'every=${RemoteTune.wispIntervalMs ~/ 1000}s '
-      'shop=${shop.isEmpty ? 'default' : shop}',
-    );
+    if (kDebugMode) {
+      debugPrint(
+        'Remote Config applied '
+        'cap=${RemoteTune.wispDailyCap} '
+        'first=${RemoteTune.wispFirstDelayMs ~/ 1000}s '
+        'every=${RemoteTune.wispIntervalMs ~/ 1000}s '
+        'shop=${shop.isEmpty ? 'default' : shop}',
+      );
+    }
   } catch (e, st) {
-    debugPrint('Remote Config skipped: $e\n$st');
+    if (kDebugMode) debugPrint('Remote Config skipped: $e\n$st');
   }
 }

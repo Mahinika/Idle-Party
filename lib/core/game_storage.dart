@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/dungeon_def.dart';
 import 'debug_play_log.dart';
+import 'crash_report.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'save_needs_update.dart';
@@ -79,9 +80,18 @@ class SaveSlotSummary {
     }
   }
 
-  /// Active-party mean, matching [GameLogic.partyMeanLevel] / [GameState.heroes].
-  /// Empty active ids fall back to the whole roster. Display only.
+  /// Active-party mean for the title row. Uses the same migrate path as play
+  /// ([GameLogic.stateFromJson]) so labels match the fight party. Display only.
   static int partyLevelFromJson(Map<String, dynamic> json) {
+    try {
+      final state = GameLogic.stateFromJson(json);
+      return GameLogic.partyMeanLevel(state);
+    } catch (_) {
+      return _partyLevelFromJsonLegacy(json);
+    }
+  }
+
+  static int _partyLevelFromJsonLegacy(Map<String, dynamic> json) {
     final roster = json['heroRoster'];
     final levels = <String, int>{};
     if (roster is List) {
@@ -313,8 +323,9 @@ class SharedPreferencesGameStorage implements GameStorage {
       // A newer build wrote this file. Leave every copy where it is.
       return null;
     } catch (e, st) {
+      CrashReport.recordNonFatal(e, st, reason: 'game_storage:load');
       DebugPlayLog.event('save', 'load failed (quarantined): $e');
-      debugPrint('save load failed (quarantined): $e\n$st');
+      if (kDebugMode) debugPrint('save load failed (quarantined): $e\n$st');
       final rawV2 = prefs.getString(_saveKey);
       final rawV1 = prefs.getString(_legacySaveKey);
       if (rawV2 != null &&

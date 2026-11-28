@@ -30,6 +30,7 @@ class GoldDock extends StatefulWidget {
 class _GoldDockState extends State<GoldDock> with TickerProviderStateMixin {
   late final FlexTabs _tabs;
   List<GoldPanel> _visible = const [GoldPanel.tracks, GoldPanel.market];
+  GoldPanel? _resyncScheduled;
 
   @override
   void initState() {
@@ -53,15 +54,22 @@ class _GoldDockState extends State<GoldDock> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  void _schedulePanelResync(GoldPanel target) {
+    if (_resyncScheduled == target) return;
+    _resyncScheduled = target;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _resyncScheduled = null;
+      if (mounted && widget.panel != target) widget.onPanelChanged(target);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     _visible = MenuRouter.visibleGoldPanels(widget.director.state);
     final safeTab =
         _visible.contains(widget.panel) ? widget.panel : _visible.first;
     if (safeTab != widget.panel) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) widget.onPanelChanged(safeTab);
-      });
+      _schedulePanelResync(safeTab);
     }
     final pages = <({String label, Widget body})>[
       for (final tab in _visible)

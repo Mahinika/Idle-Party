@@ -1158,7 +1158,7 @@ class _FloorDressingPainter extends CustomPainter {
       ..filterQuality = FilterQuality.none
       ..isAntiAlias = false;
     final tile = math.min(size.width / map.cols, size.height / map.rows);
-    final srcOf = (ui.Image image) => Rect.fromLTWH(
+    Rect srcOf(ui.Image image) => Rect.fromLTWH(
       0,
       0,
       image.width.toDouble(),
