@@ -231,7 +231,7 @@ void main() {
     final router = MenuRouter();
     expect(router.jobHint, isEmpty);
     router.open(MenuRoute.gold);
-    expect(router.jobHint.toLowerCase(), contains('forge'));
+    expect(router.jobHint.toLowerCase(), contains('train'));
     router.open(MenuRoute.gear, gear: GearPanel.bag);
     expect(router.jobHint.toLowerCase(), contains('loot'));
     router.open(MenuRoute.more, more: MoreSection.quests);

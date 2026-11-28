@@ -221,6 +221,11 @@ class CharacterEquipPanel extends StatelessWidget {
           : role;
       final level = 'Lv${h.level}';
       final label = fourHeroes ? '$nameChip · $level' : '$role · $level';
+      final textScale = MediaQuery.textScalerOf(context).scale(1);
+      final tightChip =
+          compact && textScale >= GameTheme.typeScaleMax - 0.01;
+      final visible =
+          fourHeroes || tightChip ? nameChip : '$role · $level';
       return Semantics(
         button: true,
         selected: active,
@@ -244,7 +249,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   ],
                   Expanded(
                     child: Text(
-                      fourHeroes ? label : '$role · $level',
+                      visible,
                       key: ValueKey('hero-tab-name-$i'),
                       maxLines: 1,
                       softWrap: false,

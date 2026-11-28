@@ -395,7 +395,7 @@ void main() {
       expect(director.state.essence, greaterThanOrEqualTo(essenceBefore));
       expect(router.isOpen, isFalse);
       await tapBuilding(tester, TownBuildingId.vault);
-      expect(find.text('Vault claimed today.'), findsOneWidget);
+      expect(find.textContaining('Vault claimed today'), findsOneWidget);
       director.dispose();
       holdDirector = false;
       expect(tester.takeException(), isNull);

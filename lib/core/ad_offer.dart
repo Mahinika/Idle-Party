@@ -7,7 +7,7 @@ abstract final class AdOffer {
   static const String welcomeLabel = 'Watch ad: 2× offline loot';
 
   /// Dungeon and hub HUD. One Ad Ticket. Hidden while another offer is up.
-  static const String hudLabel = 'SCROLLS';
+  static const String hudLabel = 'WATCH';
 
   /// After the first boss, with no combat scroll running, and no other ad
   /// offer already on screen. A live fight is not a break.
