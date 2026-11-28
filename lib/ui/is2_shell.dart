@@ -153,7 +153,8 @@ class _Is2ShellState extends State<Is2Shell> {
   double _partyStripHeight(BuildContext context, GameDirector d) {
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final partyRows = d.state.combatHeroes.length.clamp(1, 5);
-    return partyRows * 32.0 * textScale +
+    final rowHeight = (32.0 * textScale).clamp(28.0, 46.0);
+    return partyRows * rowHeight +
         (GameLogic.canUseConsumable(d.state)
             ? DungeonFlaskButton.stripReserve
             : 0);

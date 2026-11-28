@@ -1016,6 +1016,14 @@ class GameDirector extends ChangeNotifier {
     );
   }
 
+  /// Live preview while dragging SETTINGS text scale (no save until [setUiTextScale]).
+  void previewUiTextScale(double value) {
+    final scaled = value.clamp(kUiTextScaleMin, kUiTextScaleMax);
+    if (_state.uiTextScale == scaled) return;
+    _state = _state.copyWith(uiTextScale: scaled);
+    _directorNotify();
+  }
+
   void resetDisplayDefaults() {
     _applyUpgrade(
       _state.copyWith(
