@@ -95,3 +95,25 @@
 | IP-093 | fixed | Implemented this batch. |
 | IP-094 | deferred | PR #132/#134/#136 still open; gh close blocked (token). Close manually when #135 merges. |
 | IP-095 | fixed | Implemented this batch. |
+
+Rows below are tracked on the same branch; full IP-096…405 ledger is still open in ROI order.
+
+| id | status | notes |
+|---|---|---|
+| IP-147 | fixed | Same as IP-019 (`DecodedImageCache.clear`). |
+| IP-148 | fixed | Same as IP-019. |
+| IP-151 | fixed | Flaky coach tolerance (`test/ship_smoke_test.dart`). |
+| IP-162 | fixed | `boss_clear` analytics. |
+| IP-163 | fixed | `daily_run_complete` analytics. |
+| IP-164 | fixed | `notify_prompt_shown` / `notify_later`. |
+| IP-186 | fixed | MARKET reroll scales with party Lv² (batch 1). |
+| IP-190 | fixed | Analyzer infos (batch 2). |
+| IP-191 | fixed | Analyzer infos (batch 2). |
+| IP-192 | fixed | Analyzer infos (batch 2). |
+| IP-193 | fixed | Analyzer infos (batch 2). |
+| IP-196 | fixed | Party strip height clamp. |
+| IP-227 | fixed | Text scale persists on drag end. |
+| IP-383 | fixed | LEAVE toast surfaces pending bag merge (−Ng). |
+| IP-393 | fixed | Shop/ad regression test batch 2. |
+| IP-395 | fixed | Status doc + related hygiene (batch 2). |
+| IP-402 | fixed | LEAVE / GR over-par names consolation +Ne. |
