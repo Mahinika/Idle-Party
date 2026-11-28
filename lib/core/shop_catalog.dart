@@ -187,9 +187,12 @@ abstract final class ShopCatalog {
       id: 'ad_free',
       name: 'Ad-free welcome',
       description:
-          'Hides SCROLLS ads and WATCH buttons. +2 Ad Tickets once, '
-          '1 free ticket daily, lantern bonus gold, 3 free CAMP levels, '
-          'and free quest rerolls. Permanent.',
+          'Hides SCROLLS ads and every WATCH AD button. '
+          '+2 Ad Tickets once, five free tickets each day, '
+          'lantern bonus gold on tap (at least 2 hours of hub gold), '
+          'Welcome Back gold and essence ×3 (at least 30 minutes of hub gold), '
+          'five free CAMP levels each day, '
+          'and free Daily or Side quest rerolls. Permanent.',
       kind: ShopOfferKind.adFree,
       boostHours: 0,
       oneTime: true,

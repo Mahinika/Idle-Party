@@ -38,7 +38,7 @@ void main() {
     expect(find.textContaining('War Altar'), findsWidgets);
   });
 
-  testWidgets('CAMP offers Ad-free after the third free level', (
+  testWidgets('CAMP offers Ad-free after today\'s free levels are used', (
     tester,
   ) async {
     final now = DateTime.now().toUtc();

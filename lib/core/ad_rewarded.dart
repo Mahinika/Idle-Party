@@ -2,6 +2,7 @@ import 'ad_rewarded_stub.dart'
     if (dart.library.io) 'ad_rewarded_io.dart'
     as impl;
 
+import 'app_analytics.dart';
 import 'game_audio.dart';
 
 enum AdWatchResult { rewarded, skipped, failed, unavailable, busy }
@@ -76,6 +77,8 @@ abstract final class AdRewarded {
       return _showRewarded(placement: placement).whenComplete(() {
         _inFlight--;
         GameAudio.resyncAfterInterrupt();
+        // A skip, a fail, or a test hook never logs rewarded_complete.
+        AppAnalytics.discardArmedReward();
       });
     } catch (error) {
       _inFlight--;

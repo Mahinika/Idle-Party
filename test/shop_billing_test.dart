@@ -18,6 +18,20 @@ import 'package:idle_party/ui/shell/shop_dock.dart';
 void main() {
   final now = DateTime.utc(2026, 9, 5, 12);
 
+  test('ad-free copy names the approved rewards and does not change the sku', () {
+    final item = ShopCatalog.byId['ad_free']!;
+    expect(item.id, 'ad_free');
+    expect(item.oneTime, isTrue);
+    expect(item.kind, ShopOfferKind.adFree);
+    expect(item.description, contains('five free tickets each day'));
+    expect(item.description, contains('at least 2 hours of hub gold'));
+    expect(item.description, contains('×3'));
+    expect(item.description, contains('at least 30 minutes of hub gold'));
+    expect(item.description, contains('five free CAMP levels'));
+    expect(item.description, contains('WATCH AD'));
+    expect(item.description.toLowerCase(), isNot(contains('price')));
+  });
+
   test('ad_free persists, grants tickets, and marks owned', () {
     var state = GameLogic.createInitialState(now: now);
     final item = ShopCatalog.offered.firstWhere((e) => e.id == 'ad_free');

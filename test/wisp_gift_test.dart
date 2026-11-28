@@ -1,6 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/gold_income.dart';
 import 'package:idle_party/core/wisp_gift.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/meta_depth.dart';
@@ -196,16 +199,22 @@ void main() {
     );
   });
 
-  test('fresh watch is ten early floors, not a floor-10 jackpot', () {
+  test('fresh watch is at least ten early floors and two hours of hub gold', () {
     final state = GameLogic.createInitialState();
     final floor1 = WispGift.floorGold(state, dungeonId: 'sandy', floor: 1);
-    final floor10 = WispGift.floorGold(state, dungeonId: 'sandy', floor: 10);
+    final fromFloors = floor1 * WispGift.watchFloorsFresh;
+    final hubFloor =
+        GoldIncome.hubGoldPerMinute(state) * WispGift.watchHubFloorMinutes;
     expect(WispGift.earnedReferenceFloor(state), 1);
     expect(WispGift.watchFloorCount(state), WispGift.watchFloorsFresh);
     expect(WispGift.keepFloorCount(state), 1);
     expect(WispGift.keepGold(state), floor1);
-    expect(WispGift.watchGold(state), floor1 * WispGift.watchFloorsFresh);
-    expect(WispGift.watchGold(state), lessThan(floor10 * 30));
+    expect(WispGift.watchHubFloorMinutes, 120);
+    expect(WispGift.releaseDailyCap, 8);
+    expect(WispGift.releaseIntervalMs, 8 * 60 * 1000);
+    expect(WispGift.watchGold(state), greaterThanOrEqualTo(fromFloors));
+    expect(WispGift.watchGold(state), greaterThanOrEqualTo(hubFloor));
+    expect(WispGift.watchGold(state), max(fromFloors, hubFloor));
   });
 
   test('watch gold grows from a new party to a long save', () {

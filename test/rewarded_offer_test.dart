@@ -148,7 +148,7 @@ void main() {
     director.dispose();
   });
 
-  testWidgets('Welcome Back preloads and names 2× loot', (tester) async {
+  testWidgets('Welcome Back preloads and names 3× loot', (tester) async {
     final state = GameLogic.createInitialState(
       now: DateTime.utc(2026, 8, 8),
     ).copyWith(bossVictories: 1);
@@ -178,8 +178,8 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.text('Watch ad: 2× offline loot'), findsOneWidget);
-    expect(find.textContaining('gold and essence are doubled'), findsOneWidget);
+    expect(find.text('Watch ad: 3× offline loot'), findsOneWidget);
+    expect(find.textContaining('gold and essence are tripled'), findsOneWidget);
     expect(AdRewarded.prepareOfferCalls, greaterThan(0));
     director.dispose();
   });

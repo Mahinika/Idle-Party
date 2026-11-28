@@ -3,7 +3,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 
 void main() {
-  test('a free CAMP ad level does not spend essence and caps at 3 a day', () {
+  test('a free CAMP ad level does not spend essence and caps at 5 a day', () {
     final now = DateTime.utc(2026, 11, 5, 12);
     final start = GameLogic.createInitialState(now: now).copyWith(
       essence: 40,
@@ -19,21 +19,22 @@ void main() {
         s.metaDepth.sanctuaryXpLevel;
 
     var state = start;
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < GameLogic.campAdDailyCap; i++) {
       state = GameLogic.grantCampAdLevel(state, now: now);
     }
-    expect(levels(state), 3);
+    expect(GameLogic.campAdDailyCap, 5);
+    expect(levels(state), 5);
     expect(state.essence, 40);
-    expect(GameLogic.campAdClaimsToday(state, now: now), 3);
+    expect(GameLogic.campAdClaimsToday(state, now: now), 5);
 
     final blocked = GameLogic.grantCampAdLevel(state, now: now);
-    expect(levels(blocked), 3);
+    expect(levels(blocked), 5);
 
     final tomorrow = GameLogic.grantCampAdLevel(
       state,
       now: now.add(const Duration(days: 1)),
     );
-    expect(levels(tomorrow), 4);
+    expect(levels(tomorrow), 6);
     expect(
       GameLogic.campAdClaimsToday(
         tomorrow,

@@ -65,14 +65,14 @@ flowchart LR
   (ATK), gold coin, tome (XP), boots (walk), chest (loot), wand (haste),
   campfire (rest). Gray when off, full color + remaining time when on.
 - Tap FAB → bottom sheet with blocks:
-  1. **THE WELL** — 1 free ticket + 2 ad steps per UTC day, then extra WATCH ads
-     still grant tickets (unlimited).
+  1. **THE WELL** — 1 free ticket + 2 ad steps per UTC day, then 8 extra WATCH
+     ads per UTC day.
   2. **WISP** — daily lantern cap in the cave (see [wisp_gift.dart](../lib/core/wisp_gift.dart)).
   3. **Spend** — catalog rows (below).
 - After the third finished rewarded watch (SCROLLS, WISP, CAMP, Welcome
   Back, or wipe — preview tickets do not count), one quiet line can show:
-  `Tired of ads? Ad-free is a one-time purchase`. It opens SHOP. Once per
-  save, on SCROLLS or on CAMP after today's three free levels are used.
+  `Tired of ads? Ad-free hides every video and gives five free tickets each day`. It opens SHOP. Once per
+  save, on SCROLLS or on CAMP after today's five free levels are used.
   Hidden on Welcome Back, hidden over the fight itself, hidden for Ad-free
   and Forever Rest, and hidden until Play returns `ad_free`. A sideload QA
   APK (git SHA compiled in, package `com.idleparty.app.test`) may show the
@@ -92,8 +92,8 @@ Visibility gates:
 |------|-------|
 | Tickets per finished ad | **1** |
 | Daily Well (F2P) | **1** free ticket + **2** ad steps per UTC day (`scrollWellBonusClaims` 0→3) |
-| Extra WATCH after Well | **Unlimited** (same +1 ticket ad) |
-| Soft earn cap | **None** on extra WATCH after Well (revisit if AL20 feels mandatory) |
+| Extra WATCH after Well | **8** per UTC day (same +1 ticket ad). Wipe tickets do not count |
+| Soft earn cap | Extra WATCH stops at 8/day |
 | Ticket persist | Survives Ascend / REBORN (with other meta) |
 | Max stack per buff | **24h** remaining (same as `AdBoost.maxStackMs`) |
 
@@ -110,7 +110,7 @@ Effects stay **same for tickets and SHOP**. Do **not** ship +100% ATK or a paid-
 | Id | Label | Effect | Duration | Cost | Notes |
 |----|-------|--------|----------|------|-------|
 | `atk` | Scroll of Damage | **+40% ATK** | **2 hours** | **1** ticket | Combat push |
-| `gold` | Scroll of Gold | **×2 gold** (kills, chests, hub AFK) | **2 hours** | **1** ticket | Same ×2 magnitude |
+| `gold` | Scroll of Gold | **×2 gold** (kills, chests, hub AFK) | **4 hours** | **1** ticket | Same ×2 magnitude. Other splits stay 2h |
 | `xp` | Scroll of XP | **+50% party XP** | **2 hours** | **1** ticket | Combat XP (live + AFK catch-up) |
 | `move` | Scroll of Speed | **+30% walk speed** | **2 hours** | **1** ticket | Dungeon travel |
 | `loot` | Scroll of Loot | **+40% item find** | **2 hours** | **1** ticket | Additive with pet / STAR loot |

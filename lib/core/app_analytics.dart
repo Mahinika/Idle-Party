@@ -165,8 +165,50 @@ abstract final class AppAnalytics {
   static Future<void> rewardedTap(String placement) =>
       logEvent(AnalyticsEvents.rewardedTap, {'placement': placement});
 
-  static Future<void> rewardedComplete(String placement) =>
-      logEvent(AnalyticsEvents.rewardedComplete, {'placement': placement});
+  static RewardedCompleteContext? _armedReward;
+
+  /// Snapshot of the grant this watch will pay. Consumed by [rewardedComplete].
+  static void armRewardedComplete(RewardedCompleteContext context) {
+    _armedReward = context;
+  }
+
+  /// Drops a snapshot the platform did not log (skip, fail, or a test hook).
+  static void discardArmedReward() {
+    _armedReward = null;
+  }
+
+  static RewardedCompleteContext _takeArmedReward() {
+    final context = _armedReward ?? const RewardedCompleteContext();
+    _armedReward = null;
+    return context;
+  }
+
+  static Future<void> rewardedComplete(
+    String placement, {
+    RewardedCompleteContext? context,
+  }) {
+    final reward = context ?? _takeArmedReward();
+    return logEvent(AnalyticsEvents.rewardedComplete, {
+      'placement': placement,
+      ...reward.params,
+    });
+  }
+
+  static Future<void> adDailyCapHit({
+    required String placement,
+    required int cap,
+  }) => logEvent(AnalyticsEvents.adDailyCapHit, {
+    'placement': placement,
+    'cap': cap,
+  });
+
+  static Future<void> scrollSpent({
+    required String buffId,
+    required int tickets,
+  }) => logEvent(AnalyticsEvents.scrollSpent, {
+    'buff_id': buffId,
+    'tickets': tickets,
+  });
 
   static Future<void> rewardedSkip(String placement) =>
       logEvent(AnalyticsEvents.rewardedSkip, {'placement': placement});
@@ -256,4 +298,32 @@ abstract final class AppAnalytics {
   /// Seconds this foreground stint lasted. Sent when the app backgrounds.
   static Future<void> sessionLength(int seconds) =>
       logEvent('session_length', {'seconds': seconds});
+}
+
+/// Numbers attached to [AnalyticsEvents.rewardedComplete].
+///
+/// [incomeMinutes] is hub-income minutes; the event sends a bucket.
+/// [ticketsToday] is extra ticket ads used today after this grant.
+class RewardedCompleteContext {
+  const RewardedCompleteContext({
+    this.rewardGold = 0,
+    this.ticketsGranted = 0,
+    this.incomeMinutes = 0,
+    this.ticketsToday = 0,
+    this.wispClaimsToday = 0,
+  });
+
+  final int rewardGold;
+  final int ticketsGranted;
+  final int incomeMinutes;
+  final int ticketsToday;
+  final int wispClaimsToday;
+
+  Map<String, Object> get params => {
+    'reward_gold': rewardGold,
+    'tickets_granted': ticketsGranted,
+    'income_minutes': AnalyticsEvents.incomeMinutesBucket(incomeMinutes),
+    'tickets_today': ticketsToday,
+    'wisp_claims_today': wispClaimsToday,
+  };
 }
