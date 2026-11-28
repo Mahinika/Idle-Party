@@ -42,7 +42,43 @@ void main() {
       GameLogic.upgradeCostFor(state, PartyUpgradeType.attack),
       18 + 20 * 25,
     );
-    expect(MarketListingsService.paidRefreshCost(state), 25000 + 20 * 1000);
+    final atCap = _partyAtLevel(state, MarketListingsService.paidRefreshCapPartyLevel);
+    expect(
+      MarketListingsService.paidRefreshCost(atCap.copyWith(ascensionLevel: 20)),
+      MarketListingsService.paidRefreshCapGold + 20 * 1000,
+    );
+  });
+
+  test('IP-186 market reroll scales with party level and caps at 25k base', () {
+  var state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 22));
+    expect(
+      MarketListingsService.paidRefreshCost(_partyAtLevel(state, 1)),
+      40,
+    );
+    expect(
+      MarketListingsService.paidRefreshCost(_partyAtLevel(state, 3)),
+      360,
+    );
+    expect(
+      MarketListingsService.paidRefreshCost(_partyAtLevel(state, 5)),
+      1000,
+    );
+    expect(
+      MarketListingsService.paidRefreshCost(_partyAtLevel(state, 10)),
+      4000,
+    );
+    expect(
+      MarketListingsService.paidRefreshCost(_partyAtLevel(state, 20)),
+      16000,
+    );
+    expect(
+      MarketListingsService.paidRefreshCost(_partyAtLevel(state, 25)),
+      25000,
+    );
+    expect(
+      MarketListingsService.paidRefreshCost(_partyAtLevel(state, 100)),
+      25000,
+    );
   });
 
   test('daily vault and hub essence pace up at endgame', () {
@@ -106,4 +142,11 @@ void main() {
       newAchievementEssence(pushClear) + GameLogic.pushClearEssence(boss: boss),
     );
   });
+}
+
+GameState _partyAtLevel(GameState state, int level) {
+  final roster = [
+    for (final h in state.heroRoster) h.copyWith(level: level),
+  ];
+  return state.copyWith(heroRoster: roster);
 }
