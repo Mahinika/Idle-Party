@@ -60,7 +60,7 @@ void main() {
       expect(TownNavPolicy.isDuplicatePowerupShortcut('menu_wisp'), isTrue);
     });
 
-    test('live catalog still badges WATCH/WISP as SCROLLS duplicates', () {
+    test('live catalog WATCH/WISP duplicate SCROLLS sheet but keep labels', () {
       final watch = HomeCatalog.entries.where((e) => e.id == 'watch').single;
       final wisp = HomeCatalog.entries.where((e) => e.id == 'wisp').single;
       final scrolls = HomeCatalog.entries.where((e) => e.id == 'scrolls').single;

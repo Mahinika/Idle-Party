@@ -427,6 +427,7 @@ class _CountPip extends StatelessWidget {
         child: Text(
           text,
           maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: GameTheme.hint(
             color: GameTheme.parchment,
           ).copyWith(height: 1.0),

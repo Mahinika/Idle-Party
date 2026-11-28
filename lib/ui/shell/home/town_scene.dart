@@ -87,7 +87,8 @@ class TownSceneLayout {
     final w = size.width;
     final h = size.height;
     final labelH = math.min(14 * textScale + 6, 40).toDouble();
-    final partyH = h < 380 ? 46.0 : 54.0;
+    final partyH = (h < 380 ? 46.0 : 54.0) +
+        (textScale > GameTheme.typeScaleMax ? 8.0 : 0.0);
     final skyMin = h < 380 ? 16.0 : 28.0;
     final skyCap = h < 380 ? 56.0 : 84.0;
     // A yard tall enough for one row of townsfolk when the square allows it.
@@ -188,7 +189,8 @@ class TownSceneLayout {
       painter.dispose();
 
       final lh = math.min(labelH, math.max(10.0, b.height - 4));
-      final top = math.max(b.top, b.bottom - lh - 2);
+      final lift = textScale > GameTheme.typeScaleMax ? 6.0 : 0.0;
+      final top = math.max(b.top, b.bottom - lh - 2 - lift);
       final height = math.min(lh, b.bottom - top);
       var lw = math.max(neededW, 28.0);
       lw = math.min(lw, w - edge * 2);

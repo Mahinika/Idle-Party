@@ -139,7 +139,7 @@ class _WispTapTargetState extends State<_WispTapTarget>
       onPressed: widget.onTap,
       child: Semantics(
         button: true,
-        label: 'WISP. Tap for gold',
+        label: 'WISP · Tap for gold',
         onTap: widget.onTap,
         excludeSemantics: true,
         child: Material(
@@ -185,7 +185,7 @@ class _WispTapTargetState extends State<_WispTapTarget>
                             child: SizedBox(
                               width: widget.hintWidth,
                               child: Text(
-                                'Tap for gold',
+                                'WISP · Tap for gold',
                                 textAlign: TextAlign.center,
                                 maxLines: 2,
                                 softWrap: true,

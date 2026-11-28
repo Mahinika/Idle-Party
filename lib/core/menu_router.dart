@@ -332,7 +332,7 @@ class MenuRouter extends ChangeNotifier {
 
     MenuRoute.gold => switch (_goldPanel) {
 
-      GoldPanel.tracks => 'Forge this run · Market',
+      GoldPanel.tracks => 'Train this run · Market',
 
       GoldPanel.market => 'Flasks · buy upgrades',
 

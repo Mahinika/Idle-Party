@@ -119,7 +119,7 @@ void main() {
     expect(find.byType(BootIntroScreen), findsNothing);
     expect(find.byType(StartMenuScreen), findsOneWidget);
     expect(find.text('PLAY'), findsOneWidget);
-    expect(find.text('CUSTOMIZE'), findsOneWidget);
+    expect(find.text('CHOOSE PARTY'), findsOneWidget);
     expect(find.text('CONTINUE'), findsNothing);
 
     await tester.tap(find.text('PLAY'));
@@ -330,12 +330,12 @@ void main() {
     expect(find.byType(StartMenuScreen), findsOneWidget);
     expect(find.text('CONTINUE'), findsNothing);
     expect(find.text('PLAY'), findsOneWidget);
-    expect(find.text('CUSTOMIZE'), findsOneWidget);
+    expect(find.text('CHOOSE PARTY'), findsOneWidget);
     expect(find.text('SAVE 1'), findsNothing);
     expect(find.text('RESTORE SAVE'), findsOneWidget);
     expect(director.hasExistingSave, isFalse);
 
-    await tester.tap(find.text('CUSTOMIZE'));
+    await tester.tap(find.text('CHOOSE PARTY'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -375,7 +375,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    await tester.tap(find.text('CUSTOMIZE'));
+    await tester.tap(find.text('CHOOSE PARTY'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 

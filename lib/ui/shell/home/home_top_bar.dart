@@ -223,6 +223,7 @@ class HomeTopBar extends StatelessWidget {
                       child: Text(
                         fast ? '2×' : '1×',
                         maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GameTheme.button(
                           size: GameTheme.typeButtonDense,
                           color: fast
@@ -271,6 +272,7 @@ class HomeTopBar extends StatelessWidget {
                                     : Text(
                                         'MENU',
                                         maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         softWrap: false,
                                         textAlign: TextAlign.center,
                                         style: GameTheme.hint(
@@ -303,7 +305,7 @@ class HomeTopBar extends StatelessWidget {
                 SizedBox(height: textScale > 1.4 ? 0 : 1),
                 Text(
                   chase,
-                  maxLines: textScale <= 1.2 ? 2 : 1,
+                  maxLines: textScale <= GameTheme.typeScaleMax ? 2 : 1,
                   softWrap: true,
                   overflow: TextOverflow.ellipsis,
                   style: GameTheme.hint(color: GameTheme.parchmentDim),
@@ -318,7 +320,7 @@ class HomeTopBar extends StatelessWidget {
                         ? const SizedBox.shrink()
                         : Text(
                             chase,
-                            maxLines: textScale <= 1.2 ? 2 : 1,
+                            maxLines: textScale <= GameTheme.typeScaleMax ? 2 : 1,
                             softWrap: true,
                             overflow: TextOverflow.ellipsis,
                             style: GameTheme.hint(color: GameTheme.parchmentDim),
@@ -362,17 +364,13 @@ class HomeTopBar extends StatelessWidget {
       );
     }
     if (route == MenuRoute.essence) {
-      final embers = essencePanel == EssencePanel.keep;
       return (
-        embers ? 'Embers' : 'Cinders',
-        formatCount(embers ? state.metaDepth.embers : state.metaDepth.cinders),
+        'Cinders',
+        formatCount(state.metaDepth.cinders),
         () {
-          router.essencePanel = embers
-              ? EssencePanel.keep
-              : EssencePanel.relics;
           if (!router.homeAtSub) router.pushSub();
         },
-        embers ? UiIcon.embers : UiIcon.cinders,
+        UiIcon.cinders,
       );
     }
     if (route == MenuRoute.map) {

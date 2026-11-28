@@ -113,7 +113,7 @@ class FightFieldControls extends StatelessWidget {
     const pushLabel = 'PUSH';
     final modeHint = plain
         ? FirstSessionTips.farmPushPlain
-        : 'FARM loops. PUSH climbs.';
+        : 'FARM loops loot. PUSH climbs.';
     final osScale = WidgetsBinding.instance.platformDispatcher.textScaleFactor;
     final seamFitsExtras = osScale <= GameTheme.typeScaleMax;
     final full = state.homePanelFull;
@@ -309,7 +309,6 @@ class FightFieldControls extends StatelessWidget {
                             FightFieldControls.panelToggleFaceText(full: full),
                             maxLines: 1,
                             overflow: TextOverflow.clip,
-                            textScaler: TextScaler.noScaling,
                             style: GameTheme.readable(
                               color: GameTheme.torchHot,
                             ).copyWith(fontSize: 11, height: 1),

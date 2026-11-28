@@ -169,7 +169,7 @@ void main() {
           expect(find.text('CRAFT'), findsWidgets);
           expect(find.text('MARKET'), findsWidgets);
           expect(find.text('INN'), findsWidgets);
-          expect(find.text('GUILD'), findsWidgets);
+          expect(find.text('QUESTS'), findsWidgets);
           expect(
             tester.getSize(find.text('CRAFT').first).height,
             greaterThan(10),

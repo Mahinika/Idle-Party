@@ -325,13 +325,12 @@ void main() {
     final (director, router) = await _pump(tester, const Size(360, 780), 1.45);
     router.open(MenuRoute.gear, gear: GearPanel.gear);
     await _settle(tester);
-    for (final h in director.state.heroes) {
-      // Chips carry the hero name since audit F010.
-      final role = find.text(h.displayName(plainEnglish: false));
-      expect(role, findsWidgets);
-      final r = tester.getRect(role.first);
+    for (var i = 0; i < director.state.heroes.length; i++) {
+      final tab = find.byKey(ValueKey('hero-tab-name-$i'));
+      expect(tab, findsOneWidget);
+      final r = tester.getRect(tab);
       expect(r.right, lessThanOrEqualTo(360));
-      _expectWhole(tester, role.first);
+      _expectWhole(tester, tab);
     }
   });
 

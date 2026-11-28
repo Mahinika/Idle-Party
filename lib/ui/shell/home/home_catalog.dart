@@ -89,7 +89,8 @@ abstract final class HomeCatalog {
       place: HomePlace.leftRail,
       order: 30,
       icon: UiIcon.gold,
-      label: 'POUCH',
+      label: 'STARTER',
+      accessibilityLabel: 'Starter gold pouch',
       visible: (s, _) => ReinstallPouch.showOffer(s),
       badge: (_) => true,
       open: (context, director, _) => openPowerupsSheet(
@@ -306,7 +307,8 @@ abstract final class HomeCatalog {
       place: HomePlace.menuGrid,
       order: 85,
       icon: UiIcon.gold,
-      label: 'POUCH',
+      label: 'STARTER',
+      accessibilityLabel: 'Starter gold pouch',
       visible: (s, _) => ReinstallPouch.showOffer(s),
       badge: (_) => true,
       open: (context, director, _) => openPowerupsSheet(

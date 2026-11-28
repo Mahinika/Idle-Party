@@ -4,7 +4,7 @@ import 'game_logic.dart';
 import 'game_state.dart';
 import 'keystone.dart';
 
-/// In-game guide copy for MORE → INFO.
+/// In-game guide copy for MENU → INFO.
 abstract final class GameGuides {
   /// Early topics before the first boss (plain chrome).
   static const Set<String> firstHourTopicIds = {
@@ -16,7 +16,7 @@ abstract final class GameGuides {
     'world_path',
   };
 
-  /// KEY / Gauntlet / Rift / Ashen — MORE → INFO hides these until party max.
+  /// KEY / Gauntlet / Rift / Ashen — MENU → INFO hides these until party max.
   static const Set<String> endgameTopicIds = {
     'gauntlet',
     'rift',
@@ -194,7 +194,7 @@ abstract final class GameGuides {
         '• Bottom tabs (same bar in hub and dungeon): GEAR, GOLD (tracks + '
         'market), SHOP (ad-free, Long Away, Supporter), ESSENCE (tracks / '
         'lasting buys / Embers relics / pets), MORE. QUESTS and Craft live as rows '
-        'inside MORE when they unlock.\n'
+        'inside MENU when they unlock.\n'
         '• In a dungeon the sixth slot is LEAVE (back to hub).\n'
         '• Gold buys supplies and run power. Essence buys lasting CAMP power; '
         'relics use Embers and Cinders.\n'
@@ -239,7 +239,7 @@ abstract final class GameGuides {
         '(FARM does not, including a FARM boss). Then CLAIM VAULT for essence + 1 Cinder.\n'
         '• Daily Run — one free seeded floor scaled from yesterday\'s PUSH '
         '(hub DAILY RUN) for +25e base; Dawn Tithe can add more. Separate from the vault.\n'
-        '• Quests — MORE · QUESTS board (Daily / Bounty / Side / Week / Contract). '
+        '• Quests — MENU · QUESTS board (Daily / Bounty / Side / Week / Contract). '
         'CLAIM QUESTS on the hub hunt when rewards are ready.\n\n'
         'The hub hunt always picks one job. Vault reset and Daily Run reset at UTC midnight. '
         'Daily Run unlocks after your first Ascend (or when every active hero hits max level). '
@@ -281,7 +281,7 @@ abstract final class GameGuides {
         '• Keep: hero levels/XP, open zones, essence, Embers, Cinders, relics, CAMP, '
         'pets, God Hand, Apex, soulbound gear, shop buys, ad tickets, Star Nodes, '
         'settings, unlocked specs, 5th party slot, lifetime gold, constellation / meta season.\n'
-        '• Reset: wallet gold, GOLD → FORGE, bag and worn drops, market, floor height '
+        '• Reset: wallet gold, TRAIN under the fight, bag and worn drops, market, floor height '
         '(starter gear back on).\n'
         '• Boss victories toward the next Ascend clear. Ascend also pays Embers.\n'
         '• At AL20, ESSENCE lasting buys offer optional REBORN (same bag wipe, AL stays 20, '
@@ -326,11 +326,11 @@ abstract final class GameGuides {
         '• Daily returns next UTC day after you claim; Week returns next ISO week.\n'
         '• Bounty ladder climbs as you grow; top rung repeats.\n'
         '• Every 3rd quest claimed adds +5 essence.\n'
-        '• MORE · QUESTS (or the badge on MORE) when claims are ready.\n'
+        '• MENU · QUESTS (or the badge on MENU) when claims are ready.\n'
         '• Hub CLAIM QUESTS claims ready rewards from the hub hunt line.\n'
         '• The dungeon top CLAIM chip claims all ready quests at once '
         '(visible in combat too; long-press opens the list).\n'
-        '• QUESTS is a MORE board — not a PATH cave.',
+        '• QUESTS is a MENU board — not a PATH cave.',
   );
 
   static const GuideTopic _midgameDaily = GuideTopic(
@@ -352,7 +352,7 @@ abstract final class GameGuides {
     id: 'apex',
     title: 'CRAFT',
     body:
-        'MORE → CRAFT.\n\n'
+        'MENU → CRAFT.\n\n'
         '• Tap a party hero, then a slot — recipe and CRAFT / UPGRADE sit under that.\n'
         '• Tap a recipe mat to lock the farm target (meter sits on the recipe).\n'
         '• Zone Shards are a pool: any dungeon boss shard pays the recipe.\n'
@@ -389,15 +389,15 @@ abstract final class GameGuides {
           '• Bottom tabs (same bar in hub and dungeon): GEAR, GOLD (run power + '
           'market), SHOP (ad-free, Long Away, Supporter), ESSENCE (CAMP / '
           'BLESSING / Embers relics / pets), MORE. QUESTS and Craft live as rows '
-          'inside MORE. When the party is max level, KEY joins the hub bar as a '
-          'sixth tab after MORE — SHOP stays. In a dungeon the sixth slot is '
+          'inside MENU. When the party is max level, KEY joins the hub bar as a '
+          'sixth tab after MENU — SHOP stays. In a dungeon the sixth slot is '
           'LEAVE instead of KEY.\n'
           '• Gold buys supplies and run power. Essence buys lasting CAMP power; '
           'relics use Embers and Cinders.\n'
           '• Four currencies: gold (run power, resets on Ascend), essence '
           '(lasting power), Embers (relics; from bosses and Ascend), Cinders '
           '(Daily Vault and Ad Tickets; bag space, eggs, relic trades).\n'
-          '• In a dungeon the bar is GEAR · GOLD · SHOP · ESSENCE · MORE · LEAVE '
+          '• In a dungeon the bar is GEAR · GOLD · SHOP · ESSENCE · MENU · LEAVE '
           '(back to hub). Set KEY from the hub before you enter.\n'
           '• A number on a button means something waits inside — GEAR 3 means '
           '3 better items for the party. No number means nothing to do there.\n'
@@ -425,7 +425,7 @@ abstract final class GameGuides {
           'for essence + 1 Cinder.\n'
           "• Daily Run — one free seeded floor scaled from yesterday's PUSH "
           '(hub DAILY RUN) for +25e base; Dawn Tithe can add more. Separate from the vault.\n'
-          '• Quests — MORE · QUESTS board (Daily / Bounty / Side / Week / Contract). '
+          '• Quests — MENU · QUESTS board (Daily / Bounty / Side / Week / Contract). '
           'CLAIM QUESTS on the hub hunt when rewards are ready.\n\n'
           'The hub hunt always picks one job. Vault reset and Daily Run reset at UTC midnight. '
           'Daily Run unlocks after your first Ascend (or endgame). Before that, the hub hunt '
@@ -511,7 +511,7 @@ abstract final class GameGuides {
           '• Styles trade damage vs radius — not a second talent tree.\n'
           '• Mastery under BLESSING: claim +12 essence and a title at Hand 5 (Hand of Embers), '
           'CD 4 (Swift Smash), and 100 smashes (Hundred Blows).\n'
-          '• Spellcraft (MORE → SETTINGS): lifetime ability casts add a small party-wide '
+          '• Spellcraft (MENU → SETTINGS): lifetime ability casts add a small party-wide '
           'bonus to ability damage.\n'
           '• Upgrades use essence and survive Ascend.',
     ),
@@ -600,7 +600,7 @@ abstract final class GameGuides {
           '• Check RESULT preview (rarity, iLvl, SCORE jump) and gold cost, then MERGE.\n'
           '• AUTO MERGE: repeatedly merges junk pairs of the same slot '
           '(skips BiS / clear upgrades) while you can afford the cost.\n'
-          '• Apex gear cannot MERGE — rank it up under MORE → CRAFT.\n'
+          '• Apex gear cannot MERGE — rank it up under MENU → CRAFT.\n'
           '• Combinator Charm in ESSENCE → BLESSING (permanent buys) lowers MERGE gold (−3g per luck).\n'
           '• Both inputs are consumed.',
     ),
@@ -621,12 +621,12 @@ abstract final class GameGuides {
       title: 'GOLD',
       body:
           'GOLD tab — spend wallet gold on run power and the market.\n\n'
-          '• FORGE: party AP/Armor/STA/MOVE/HASTE/CRIT/MASTERY. '
+          '• TRAIN under the fight: party AP/Armor/STA/MOVE/HASTE/CRIT/MASTERY. '
           'Pick ×1 / 5% / 25% / 50% / 100% of wallet gold per tap, or '
           'SPEND ALL · EVEN to split gold round-robin across every track. '
           'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}). '
           'Harder kills (higher enemy level than the hero) pay more XP; heroes far behind the party catch up faster.\n'
-          'Gold FORGE buys reset when you Ascend. '
+          'TRAIN gold buys reset when you Ascend. '
           'AP, HASTE, and MOVE speed up clears — see Essence for rates. '
           'One gold buy is similar punch: AP hits, Armor soaks, STA is HP, '
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
@@ -642,7 +642,7 @@ abstract final class GameGuides {
       title: 'POWER SHELVES',
       body:
           'AP / Armor / STA come from three shelves — do not stack them up wrong.\n\n'
-          '• GOLD tracks (GOLD → FORGE) — run-only power bought with wallet gold. Wipes on Ascend. '
+          '• GOLD tracks (TRAIN under the fight) — run-only power bought with wallet gold. Wipes on Ascend. '
           'Wipe advice points here (or GOLD → MARKET listings) when the sim proves a gap.\n'
           '• Ascend Blessing — stacks each Ascend (+AP/Armor/STA/gold forever). '
           'Readout on ESSENCE → BLESSING. Not Star Nodes.\n'
@@ -651,7 +651,7 @@ abstract final class GameGuides {
           'Cinders come from the Daily Vault or Ad Tickets — salvage or '
           'trade a few Embers. Not essence buys.\n\n'
           'Gear, Apex, AL flats, and Star Nodes add sheet power on top. '
-          'After Ascend, rebuild GOLD → FORGE first — Blessing and essence shelves stay.',
+          'After Ascend, rebuild TRAIN under the fight first — Blessing and essence shelves stay.',
     ),
     GuideTopic(
       id: 'gates',
@@ -660,7 +660,7 @@ abstract final class GameGuides {
           'Two different gates — do not mix them up.\n\n'
           '• AL20 (Ascension cap): raise AL with Ascend, stack Ascend Blessing, '
           'unlock specializations, spend Star Nodes, optional REBORN. Wipes your run bag '
-          '(gold, GOLD → FORGE, normal gear).\n'
+          '(gold, TRAIN under the fight, normal gear).\n'
           '• Party Lv${GameLogic.maxHeroLevel} (endgame): every active hero at max level '
           'unlocks KEY, Gauntlet, Ranked GR, Farm Rifts, '
           'and Ashen Crown. AL20 alone is not enough.\n'
@@ -672,7 +672,7 @@ abstract final class GameGuides {
           'it still shows Vault 0/1 until you fill it.\n'
           '• Daily Run — one free seeded floor scaled from yesterday\'s PUSH '
           'for +25e base; Dawn Tithe can add more.\n'
-          '• Quests Daily — MORE · QUESTS kill board; CLAIM QUESTS when ready.\n\n'
+          '• Quests Daily — MENU · QUESTS kill board; CLAIM QUESTS when ready.\n\n'
           'Four season clocks (all optional — the hub hunt picks one job):\n'
           '• UTC midnight — vault + Daily Run reset.\n'
           '• ISO week — KEY affix rotation + local week goal.\n'
@@ -778,7 +778,7 @@ abstract final class GameGuides {
       id: 'apex',
       title: 'CRAFT',
       body:
-          'MORE → CRAFT.\n\n'
+          'MENU → CRAFT.\n\n'
           '• Tap a party hero, then a slot — recipe and CRAFT / UPGRADE sit under that.\n'
           '• Tap a recipe mat to lock the farm target (meter sits on the recipe).\n'
           '• Zone Shards are a pool: any dungeon boss shard pays the recipe '
@@ -802,7 +802,7 @@ abstract final class GameGuides {
           '• GEAR: opens on Upgrades. Tap a row to buy. Switch to All gear if you want '
           'the full stock. Free refresh every 6 hours, or pay gold to reroll.\n'
           '• The hub hunt can chase Market when an affordable listing beats your gear.\n'
-          '• Wipe advice may point at GOLD when listings beat GOLD → FORGE for the same gap.\n'
+          '• Wipe advice may point at GOLD when listings beat TRAIN under the fight for the same gap.\n'
           '• Buy flasks and bandages with gold.\n'
           '• Clear a full bag with BAG → SELL JUNK, MERGE, or BAG → FILTERS.\n'
           '• Keep at least one flask for tough floors and bosses.\n'
@@ -855,11 +855,11 @@ abstract final class GameGuides {
           '• Every 3rd quest claimed adds +5 essence.\n'
           '• REROLL on Daily and Side (2 per UTC day): F2P watches an ad; Ad-free is instant. '
           'Progress on the slot survives wipes.\n'
-          '• MORE · QUESTS (or the badge on MORE) when claims are ready.\n'
+          '• MENU · QUESTS (or the badge on MENU) when claims are ready.\n'
           '• Hub CLAIM QUESTS claims ready rewards from the hub hunt line.\n'
           '• The dungeon top CLAIM chip claims all ready quests at once '
           '(visible in combat too; long-press opens the list).\n'
-          '• QUESTS is a MORE board — not a hub ENDGAME hunt.',
+          '• QUESTS is a MENU board — not a hub ENDGAME hunt.',
     ),
     GuideTopic(
       id: 'weekly',
@@ -977,7 +977,7 @@ abstract final class GameGuides {
           '• Keep: hero levels/XP, open zones, essence, Embers, Cinders, relics, CAMP, '
           'pets, God Hand, Apex, soulbound gear, shop buys, ad tickets, Star Nodes, '
           'settings, unlocked specs, 5th party slot, lifetime gold, constellation / meta season.\n'
-          '• Reset: wallet gold, GOLD → FORGE, bag and worn drops, market, floor height '
+          '• Reset: wallet gold, TRAIN under the fight, bag and worn drops, market, floor height '
           '(starter gear back on).\n'
           '• Boss victories toward the next Ascend clear. Ascend also pays Embers.\n'
           '• At AL20, ESSENCE → BLESSING offers optional REBORN (same bag wipe, AL stays 20, '
@@ -1003,7 +1003,7 @@ abstract final class GameGuides {
       id: 'codex',
       title: 'CODEX & ACHIEVEMENTS',
       body:
-          'MORE → INFO (codex + trophies).\n\n'
+          'MENU → INFO (codex + trophies).\n\n'
           '• Codex records monsters and items you have seen.\n'
           '• Achievements track milestones and grant rewards.\n'
           '• Discovery happens automatically as you play.',
@@ -1021,7 +1021,7 @@ abstract final class GameGuides {
           'mute + SFX/Ambience/Music volume + haptics, keep screen on in dungeon, Full / Lite / Minimal VFX '
           '(Minimal = reduce motion), colorblind floaters, '
           'bag auto-sell / auto-disassemble.\n'
-          '• MORE → INFO brings you back here anytime.\n'
+          '• MENU → INFO brings you back here anytime.\n'
           '• Escape / back closes overlays.',
     ),
   ];

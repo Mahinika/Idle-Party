@@ -46,11 +46,7 @@ class NotifyOptInOverlay extends StatelessWidget {
           ),
         );
       },
-    ).then((_) {
-      if (!director.state.metaDepth.notifyPrompted) {
-        director.declineNotifyOptIn();
-      }
-    }).whenComplete(WebClickBridge.popLayer);
+    ).whenComplete(WebClickBridge.popLayer);
   }
 
   void _yes(BuildContext context) {
@@ -60,7 +56,7 @@ class NotifyOptInOverlay extends StatelessWidget {
 
   void _no(BuildContext context) {
     director.declineNotifyOptIn();
-    Navigator.of(context).maybePop();
+    Navigator.of(context).pop();
   }
 
   @override

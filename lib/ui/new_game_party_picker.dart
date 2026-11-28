@@ -13,6 +13,7 @@ import 'hero_doll_sprite.dart';
 import 'hero_look_row.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
+import 'web_click_bridge.dart';
 
 /// Pick exactly [GameLogic.starterPartySize] heroes: slot 1 tank, slot 2 healer,
 /// slot 3 DPS (starter kits only). Each slot keeps its own [HeroRace] and
@@ -552,67 +553,85 @@ class _SlotCard extends StatelessWidget {
       1 => 'HEALER',
       _ => 'DPS',
     };
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+    final slotLabel = def == null
+        ? '$role slot ${index + 1}, empty'
+        : '${PartyHero.shownNameFor(hero?.name ?? def.defaultName)}, '
+            '${def.displaySpecName}, ${look.shortLabel}';
+    final semantics = selected ? '$slotLabel, selected' : slotLabel;
+    return WebClickScope(
+      label: semantics,
+      onPressed: onTap,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: semantics,
         onTap: onTap,
-        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-        child: DecoratedBox(
-          decoration: MenuChrome.cardBox(selected: selected),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
-            child: Column(
-              children: [
-                Opacity(
-                  opacity: dimmed ? 0.38 : 1,
-                  child: HeroDollSprite(
-                    hero: hero ??
-                        PartyHero.starting(
-                          name: 'Open',
-                          specId: HeroSpecId.protection,
-                          race: HeroRace.human,
-                        ),
-                    partyIndex: index,
-                    size: 48,
-                  ),
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: DecoratedBox(
+              decoration: MenuChrome.cardBox(selected: selected),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+                child: Column(
+                  children: [
+                    Opacity(
+                      opacity: dimmed ? 0.38 : 1,
+                      child: HeroDollSprite(
+                        hero: hero ??
+                            PartyHero.starting(
+                              name: 'Open',
+                              specId: HeroSpecId.protection,
+                              race: HeroRace.human,
+                            ),
+                        partyIndex: index,
+                        size: 48,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      def?.displayClassName ?? role,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.readable(color: GameTheme.parchment),
+                    ),
+                    Text(
+                      def?.displaySpecName ?? 'Pick spec',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    ),
+                    Text(
+                      def == null
+                          ? 'Open'
+                          : PartyHero.shownNameFor(
+                              hero?.name ?? def.defaultName,
+                            ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      look.shortLabel,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.hint(
+                        color: look == HeroRace.human
+                            ? GameTheme.parchmentDim
+                            : GameTheme.mossLit,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                // Name on top, class under it: the same order as the rest
-                // of the game (polish7 P004).
-                Text(
-                  def?.displayClassName ?? role,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.readable(color: GameTheme.parchment),
-                ),
-                Text(
-                  def?.displaySpecName ?? 'Pick spec',
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.hint(color: GameTheme.parchmentDim),
-                ),
-                Text(
-                  def == null
-                      ? 'Open'
-                      : PartyHero.shownNameFor(hero?.name ?? def.defaultName),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.hint(color: GameTheme.parchmentDim),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  look.shortLabel,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.hint(color: look == HeroRace.human
-                        ? GameTheme.parchmentDim
-                        : GameTheme.mossLit),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -638,49 +657,87 @@ class _SpecPickRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final semantics = taken
+        ? '${def.displaySpecName}, already picked'
+        : 'Pick ${def.displaySpecName}';
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-          child: DecoratedBox(
-            decoration: MenuChrome.listCard(),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              child: Row(
-                children: [
-                  HeroDollSprite(hero: preview, partyIndex: 0, size: 40),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      child: WebClickScope(
+        label: semantics,
+        onPressed: onTap,
+        child: Semantics(
+          button: true,
+          enabled: !taken,
+          label: semantics,
+          onTap: taken ? null : onTap,
+          excludeSemantics: true,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: taken ? null : onTap,
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+                child: DecoratedBox(
+                  decoration: MenuChrome.listCard(),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    child: Row(
                       children: [
-                        Text(
-                          def.displayClassName,
-                          style: GameTheme.readable(color: GameTheme.parchment),
+                        HeroDollSprite(hero: preview, partyIndex: 0, size: 40),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                def.displayClassName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GameTheme.readable(
+                                  color: GameTheme.parchment,
+                                ),
+                              ),
+                              Text(
+                                def.displaySpecName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GameTheme.hint(
+                                  color: GameTheme.parchmentDim,
+                                ),
+                              ),
+                              Text(
+                                def.kitDetailLine,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GameTheme.hint(
+                                  color: GameTheme.parchmentDim,
+                                ),
+                              ),
+                              Text(
+                                def.versusLine(versus),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GameTheme.hint(color: GameTheme.torchHot),
+                              ),
+                            ],
+                          ),
                         ),
                         Text(
-                          def.displaySpecName,
-                          style: GameTheme.hint(color: GameTheme.parchmentDim),
-                        ),
-                        Text(
-                          def.kitDetailLine,
-                          style: GameTheme.hint(color: GameTheme.parchmentDim),
-                        ),
-                        Text(
-                          def.versusLine(versus),
-                          style: GameTheme.hint(color: GameTheme.torchHot),
+                          taken ? 'SET' : 'PICK',
+                          style: GameTheme.section(
+                            color: taken
+                                ? GameTheme.mossLit
+                                : GameTheme.torchHot,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  Text(
-                    taken ? 'SET' : 'PICK',
-                    style: GameTheme.section(color: taken ? GameTheme.mossLit : GameTheme.torchHot),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

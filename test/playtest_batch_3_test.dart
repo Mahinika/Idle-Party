@@ -64,7 +64,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byKey(ScrollsSheet.pouchTitleKey), findsOneWidget);
-    expect(find.text('POUCH'), findsWidgets);
+    expect(find.text('STARTER'), findsWidgets);
     expect(find.text('SCROLLS'), findsNothing);
   });
 

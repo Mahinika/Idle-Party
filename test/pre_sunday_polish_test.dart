@@ -36,7 +36,7 @@ void main() {
   test('tomorrow card line names shelf, not wallet gold', () {
     final state = weekVaultClaimed();
     final line = ReturnWeek.tomorrowRewardLine(state);
-    expect(line, 'Tomorrow: Sandy Caverns · gold for FORGE');
+    expect(line, 'Tomorrow: Sandy Caverns · gold for TRAIN');
     final chase = HubChase.forState(state, now: now);
     expect(chase.detail, line);
     expect(chase.detail, isNot(contains(RegExp(r'\+[\d,]+ gold'))));
@@ -118,7 +118,7 @@ void main() {
     await tester.pump();
     expect(tester.takeException(), isNull);
     expect(
-      find.text('Tomorrow: Sandy Caverns · gold for FORGE'),
+      find.text('Tomorrow: Sandy Caverns · gold for TRAIN'),
       findsOneWidget,
     );
   });

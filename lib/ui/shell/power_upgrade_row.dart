@@ -309,7 +309,7 @@ class PowerUpgradePriceChip extends StatelessWidget {
           if (captionLine != null)
             Text(
               captionLine,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: GameTheme.readable(color: GameTheme.torchHot),
@@ -399,6 +399,7 @@ class QtyBadge extends StatelessWidget {
         child: Text(
           '×$quantity',
           maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: GameTheme.hint(color: GameTheme.toggleOnText),
         ),
       ),

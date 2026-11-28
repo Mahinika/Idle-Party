@@ -48,16 +48,21 @@ class OverlayScrim extends StatelessWidget {
             children: [
               // Tap outside the sheet to dismiss.
               Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
+                child: Semantics(
+                  button: true,
+                  label: 'Close',
                   onTap: onClose,
-                  child: calm
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onClose,
+                    child: calm
                       ? const SizedBox.expand(key: Key('scrim-static'))
                       : CaveAtmosphere.torchBloom(
                           intensity: 0.7,
                           alignment: const Alignment(0, 0.1),
                           sizeFactor: 0.85,
                         ),
+                  ),
                 ),
               ),
               // Phone product: full-width sheet (never the centered desktop card).

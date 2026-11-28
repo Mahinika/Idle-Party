@@ -56,6 +56,7 @@ class _HomePromptHostState extends State<HomePromptHost> {
   bool _offlineShowing = false;
   bool _cardShown = false;
   bool _returnWaiting = false;
+  bool _skipDiscordThisOffer = false;
   Object? _shownSummary;
   Future<void>? _offlineFlight;
 
@@ -165,6 +166,7 @@ class _HomePromptHostState extends State<HomePromptHost> {
       await showOfflineProgressDialog(context, director, router: router);
     } finally {
       _offlineShowing = false;
+      _skipDiscordThisOffer = true;
       final newer = director.offlineSummary;
       if (mounted && newer != null && !identical(newer, _shownSummary)) {
         _returnWaiting = true;
@@ -203,6 +205,10 @@ class _HomePromptHostState extends State<HomePromptHost> {
 
   Future<bool> _discordCard() async {
     if (_discord || !mounted) return false;
+    if (_skipDiscordThisOffer) {
+      _skipDiscordThisOffer = false;
+      return false;
+    }
     if (!HomePrompts.calm(director)) return false;
     if (!DiscordThanksOverlay.shouldOffer(director)) return false;
     _discord = true;

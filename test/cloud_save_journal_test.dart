@@ -1323,7 +1323,7 @@ void main() {
       await harness.prefs.reload();
       expect(harness.prefs.getString('idle_party_save_slot_0'), isNull);
       store.throwWrites = false;
-      await tester.tap(find.text('CUSTOMIZE'));
+      await tester.tap(find.text('CHOOSE PARTY'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 600));
       await tester.enterText(find.byType(TextField), 'Ember Test');

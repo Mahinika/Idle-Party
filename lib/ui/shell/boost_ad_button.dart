@@ -64,7 +64,7 @@ class _BoostAdButtonState extends State<BoostAdButton> {
             label: AdOffer.hudLabel,
             expanded: false,
             dense: true,
-            tip: 'Watch an ad for 1 Ad Ticket',
+            tip: 'Watch a short ad for 1 Ad Ticket',
             onPressed: () {
               unawaited(director.watchPowerupAd());
             },

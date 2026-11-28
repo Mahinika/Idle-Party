@@ -162,10 +162,10 @@ abstract final class WipeAdvice {
         adviceLine.contains('SHOP') ||
         adviceLine.contains('Shop') ||
         adviceLine.startsWith('GOLD:')) {
-      return 'HUB → GOLD → MARKET for the listing';
+      return 'MARKET under the fight for the listing';
     }
     if (adviceLine.startsWith('Use a flask')) {
-      return 'HUB → GOLD → MARKET for a flask';
+      return 'MARKET under the fight for a flask';
     }
     if (adviceLine.startsWith('Equip')) {
       return 'HUB → BAG to equip the upgrade';
