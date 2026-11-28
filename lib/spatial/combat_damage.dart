@@ -19,6 +19,7 @@ int combatApplyHeroIncomingDamage(
       life: 0.35,
       priority: 2,
       followActorId: hero.id,
+      onActor: hero,
     );
     return 0;
   }
@@ -48,6 +49,7 @@ int combatApplyHeroIncomingDamage(
         life: 0.35,
         priority: 2,
         followActorId: hero.id,
+        onActor: hero,
       );
     }
     if (blocked &&
@@ -108,6 +110,7 @@ int combatApplyHeroIncomingDamage(
         life: 0.4,
         priority: 2,
         followActorId: hero.id,
+        onActor: hero,
       );
     }
     if (dealt <= 0) {
@@ -140,6 +143,7 @@ int combatApplyHeroIncomingDamage(
       life: 0.4,
       priority: 2,
       followActorId: hero.id,
+      onActor: hero,
     );
   }
   if (dealt > 0) {

@@ -153,6 +153,8 @@ abstract final class KitNamedCasts {
           if (!reducedVfx) {
             SpatialCombat.spawnFloater(
               world,
+      onActor: hero,
+      creditActor: hero,
               x: hero.x,
               y: hero.y - 0.7,
               text: 'SWORD & BOARD',
@@ -164,6 +166,8 @@ abstract final class KitNamedCasts {
         if (!reducedVfx) {
           SpatialCombat.spawnFloater(
             world,
+      onActor: hero,
+      creditActor: hero,
             x: hero.x,
             y: hero.y - 0.5,
             text: def.shortLabel,
@@ -219,6 +223,8 @@ abstract final class KitNamedCasts {
         if (!reducedVfx) {
           SpatialCombat.spawnFloater(
             world,
+      onActor: hero,
+      creditActor: hero,
             x: hero.x,
             y: hero.y - 0.55,
             text: def.shortLabel,
@@ -244,6 +250,8 @@ abstract final class KitNamedCasts {
         if (!reducedVfx) {
           SpatialCombat.spawnFloater(
             world,
+      onActor: hero,
+      creditActor: hero,
             x: hero.x,
             y: hero.y - 0.55,
             text: def.shortLabel,
@@ -364,6 +372,8 @@ abstract final class KitNamedCasts {
         if (!reducedVfx) {
           SpatialCombat.spawnFloater(
             world,
+      onActor: target,
+      creditActor: target,
             x: target.x,
             y: target.y - 0.5,
             text: def.shortLabel,
@@ -391,6 +401,8 @@ abstract final class KitNamedCasts {
         if (!reducedVfx) {
           SpatialCombat.spawnFloater(
             world,
+      onActor: hero,
+      creditActor: hero,
             x: hero.x,
             y: hero.y - 0.5,
             text: def.shortLabel,
@@ -993,6 +1005,8 @@ abstract final class KitNamedCasts {
           );
           SpatialCombat.spawnFloater(
             world,
+      onActor: hero,
+      creditActor: hero,
             x: hero.x,
             y: hero.y - 0.5,
             text: 'KILLING SPREE',
@@ -1015,6 +1029,8 @@ abstract final class KitNamedCasts {
           );
           SpatialCombat.spawnFloater(
             world,
+      onActor: hero,
+      creditActor: hero,
             x: hero.x,
             y: hero.y - 0.45,
             text: 'SPRINT',
@@ -1040,6 +1056,8 @@ abstract final class KitNamedCasts {
           );
           SpatialCombat.spawnFloater(
             world,
+      onActor: hero,
+      creditActor: hero,
             x: hero.x,
             y: hero.y - 0.5,
             text: 'FLURRY',
@@ -1063,6 +1081,8 @@ abstract final class KitNamedCasts {
           );
           SpatialCombat.spawnFloater(
             world,
+      onActor: hero,
+      creditActor: hero,
             x: hero.x,
             y: hero.y - 0.45,
             text: 'SnD',

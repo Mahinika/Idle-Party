@@ -89,6 +89,9 @@ abstract final class CombatFloaterLayout {
         (text.contains('g') || text.contains('XP') || text.contains('xp'))) {
       return true;
     }
+    if (RegExp(r'^\+?\d+g$', caseSensitive: false).hasMatch(t.trim())) {
+      return true;
+    }
     return false;
   }
 

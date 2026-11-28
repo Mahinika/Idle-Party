@@ -1220,6 +1220,106 @@ abstract final class SpatialCombat {
   static const int _maxProjectiles = 36;
   static const int _maxGroundFx = 6;
 
+  static String? _nearestActorId(SpatialWorld world, double x, double y) {
+    SpatialActor? best;
+    var bestD = 0.85;
+    for (final a in [...world.heroes, ...world.enemies, ...world.pets]) {
+      if (!a.isAlive) continue;
+      final d = math.sqrt(math.pow(a.x - x, 2) + math.pow(a.y - y, 2));
+      if (d < bestD) {
+        bestD = d;
+        best = a;
+      }
+    }
+    return best?.id;
+  }
+
+  static SpatialActor? _actorByIdOrNearest(
+    SpatialWorld world,
+    String? id,
+    double x,
+    double y,
+  ) {
+    if (id != null) return _actorById(world, id);
+    final nearId = _nearestActorId(world, x, y);
+    if (nearId == null) return null;
+    return _actorById(world, nearId);
+  }
+
+  /// Re-layout floaters that were inserted without [spawnFloater] (e.g. goldens).
+  static void reconcileWorldFloaters(SpatialWorld world) {
+    for (final f in world.floaters) {
+      if (f.x == CombatFloaterLayout.laneLeftX ||
+          f.x == CombatFloaterLayout.laneRightX) {
+        continue;
+      }
+      final speech = f.kind == SpatialFloaterKind.speech;
+      final placement = CombatFloaterLayout.classify(
+        text: f.text,
+        argb: f.argb,
+        priority: f.priority,
+        healArgb: floaterHeal,
+        speech: speech,
+      );
+      final anchorX = f.x;
+      final anchorY = f.y;
+      var isCrit = f.isCrit;
+      if (placement == CombatFloaterPlacement.gutterHostile &&
+          (f.priority >= 2 || CombatFloaterLayout.isCritText(f.text))) {
+        isCrit = true;
+      }
+      f.followActorId ??= _nearestActorId(world, anchorX, anchorY);
+      if (f.sourceInitial.isEmpty) {
+        final credit = _actorByIdOrNearest(
+          world,
+          f.followActorId,
+          anchorX,
+          anchorY,
+        );
+        if (credit != null && placement == CombatFloaterPlacement.gutterBeneficial) {
+          f.sourceInitial = CombatFloaterLayout.heroInitial(credit.name);
+        }
+      }
+      f.placement = placement;
+      f.isCrit = isCrit;
+      if (placement == CombatFloaterPlacement.gutterBeneficial) {
+        f.x = CombatFloaterLayout.laneLeftX;
+        f.y = 0;
+        f.vx = 0;
+        f.vy = 0;
+        f.text = CombatFloaterLayout.formatLaneLabel(
+          placement: placement,
+          text: f.text,
+          sourceInitial: f.sourceInitial,
+          isCrit: false,
+        );
+      } else if (placement == CombatFloaterPlacement.gutterHostile) {
+        f.x = CombatFloaterLayout.laneRightX;
+        f.y = 0;
+        f.vx = 0;
+        f.vy = 0;
+        f.text = CombatFloaterLayout.formatLaneLabel(
+          placement: placement,
+          text: f.text,
+          sourceInitial: f.sourceInitial,
+          isCrit: isCrit,
+        );
+      } else if (placement == CombatFloaterPlacement.unitPill) {
+        f.y = anchorY + 0.35;
+        f.vx = 0;
+        f.vy = 0;
+        f.life = math.min(f.life, 0.42);
+        f.initialLife = f.life;
+      } else if (placement == CombatFloaterPlacement.payoff) {
+        f.y = anchorY - 0.35;
+        f.vy = -1.4;
+      } else if (placement == CombatFloaterPlacement.payoffBanner) {
+        f.y = anchorY - 1.2;
+        f.vy = -0.55;
+      }
+    }
+  }
+
   static void spawnFloater(
     SpatialWorld world, {
     required double x,
@@ -1232,6 +1332,8 @@ abstract final class SpatialCombat {
     String sourceInitial = '',
     String? mergeKey,
     String? followActorId,
+    SpatialActor? onActor,
+    SpatialActor? creditActor,
     VfxQuality? vfxQuality,
   }) {
     if (suppressHealFloater(text: text, argb: argb)) return;
@@ -1240,6 +1342,14 @@ abstract final class SpatialCombat {
     }
     // Skip empty / whitespace-only.
     if (text.isEmpty) return;
+
+    var anchorX = onActor?.x ?? x;
+    var anchorY = onActor?.y ?? y;
+    followActorId ??= onActor?.id;
+    followActorId ??= _nearestActorId(world, anchorX, anchorY);
+    if (creditActor != null) {
+      sourceInitial = CombatFloaterLayout.heroInitial(creditActor.name);
+    }
     // Pack shouts own the stage — routine cast tags step back.
     if (priority == 1 && _packShoutLive(world)) {
       priority = 0;
@@ -1275,6 +1385,16 @@ abstract final class SpatialCombat {
       mitigationPill: mitigationPill,
     )) {
       if (!mitigationPill) return;
+    }
+
+    if (mergeKey == null && creditActor != null && onActor != null) {
+      mergeKey = switch (placement) {
+        CombatFloaterPlacement.gutterHostile =>
+          'hit:${creditActor.id}:${onActor.id}',
+        CombatFloaterPlacement.gutterBeneficial =>
+          'heal:${creditActor.id}:${onActor.id}',
+        _ => null,
+      };
     }
 
     if (mergeKey != null &&
@@ -1335,8 +1455,8 @@ abstract final class SpatialCombat {
       }
     }
 
-    var wx = x;
-    var wy = y;
+    var wx = anchorX;
+    var wy = anchorY;
     var vx = 0.0;
     var vy = 0.0;
     var pillLife = life;
@@ -1360,10 +1480,12 @@ abstract final class SpatialCombat {
         isCrit: isCrit,
       );
     } else if (placement == CombatFloaterPlacement.unitPill) {
-      wy = y + 0.35;
+      wx = anchorX;
+      wy = anchorY + 0.35;
       pillLife = math.min(life, 0.42);
     } else if (placement == CombatFloaterPlacement.payoff) {
-      wy = y - 0.35;
+      wx = anchorX;
+      wy = anchorY - 0.35;
       vy = -1.4;
     } else if (placement == CombatFloaterPlacement.payoffBanner) {
       wy = y - 1.2;
@@ -1392,6 +1514,15 @@ abstract final class SpatialCombat {
         isCrit: isCrit,
       ),
     );
+    assert(() {
+      if (placement == CombatFloaterPlacement.gutterBeneficial ||
+          placement == CombatFloaterPlacement.gutterHostile) {
+        assert(wx == CombatFloaterLayout.laneLeftX ||
+            wx == CombatFloaterLayout.laneRightX);
+      }
+      return true;
+    }());
+
     _trimFloaters(world);
   }
 
@@ -1433,6 +1564,8 @@ abstract final class SpatialCombat {
       sourceInitial: initial,
       mergeKey: mergeKey,
       followActorId: targetId,
+      onActor: targetId != null ? _actorById(world, targetId) : null,
+      creditActor: attackerId != null ? _heroById(world, attackerId) : null,
     );
   }
 
@@ -1629,6 +1762,8 @@ abstract final class SpatialCombat {
         argb: 0xFF70F090,
         life: 1.2,
         priority: 2,
+        onActor: h,
+        creditActor: h,
       );
     }
   }
@@ -1976,6 +2111,8 @@ abstract final class SpatialCombat {
         argb: floaterHeal,
         life: 0.4,
         priority: 2,
+        onActor: lowest,
+        creditActor: healer ?? lowest,
       );
     }
   }
@@ -1988,6 +2125,7 @@ abstract final class SpatialCombat {
     hit.hp = math.min(hit.effectiveMaxHp, hit.hp + heal);
     final gained = hit.hp - before;
     if (gained > 0) {
+      final credit = _heroById(world, hit.hotCasterId) ?? hit;
       spawnFloater(
         world,
         x: hit.x,
@@ -1996,6 +2134,8 @@ abstract final class SpatialCombat {
         argb: floaterHeal,
         life: 0.45,
         priority: 2,
+        onActor: hit,
+        creditActor: credit,
       );
       spawnSpark(
         world,
@@ -3661,6 +3801,14 @@ abstract final class SpatialCombat {
             hero.hp = math.min(hero.effectiveMaxHp, hero.hp + mend);
             final gained = hero.hp - before;
             if (gained > 0) {
+              SpatialActor? mendHealer;
+              for (final h in world.heroes) {
+                if (h.isAlive && actorIsHealer(h)) {
+                  mendHealer = h;
+                  break;
+                }
+              }
+              mendHealer ??= hero;
               spawnFloater(
                 world,
                 x: hero.x,
@@ -3669,6 +3817,8 @@ abstract final class SpatialCombat {
                 argb: floaterHeal,
                 life: 0.5,
                 priority: 2,
+                onActor: hero,
+                creditActor: mendHealer,
               );
             }
           }

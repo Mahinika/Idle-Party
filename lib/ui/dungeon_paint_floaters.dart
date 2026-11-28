@@ -17,6 +17,8 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
       }
     }
 
+    SpatialCombat.reconcileWorldFloaters(world);
+
     paintFloaterLabels(
       canvas: canvas,
       tile: tile,
