@@ -10,7 +10,30 @@ import 'proficiency.dart';
 
 /// Apex crafting materials, pity, and class/role recipe templates.
 abstract final class ApexCraft {
-  static const int maxRank = 3;
+  /// Highest rank the forge can ever reach (AL20).
+  static const int absoluteMaxRank = 7;
+
+  /// Highest craft rank at [ascensionLevel].
+  ///
+  /// AL0–4 stays at 3. Each 5 Ascend levels opens one more rank:
+  /// AL5 → 4, AL10 → 5, AL15 → 6, AL20+ → 7.
+  static int maxRank(int ascensionLevel) {
+    final al = ascensionLevel < 0 ? 0 : ascensionLevel;
+    final unlocked = 3 + al ~/ 5;
+    return unlocked > absoluteMaxRank ? absoluteMaxRank : unlocked;
+  }
+
+  /// "Max rank 4" for the CRAFT sheet.
+  static String maxRankLabel(int ascensionLevel) =>
+      'Max rank ${maxRank(ascensionLevel)}';
+
+  /// When the next rank opens, or null once the piece can reach rank 7.
+  static String? rankUnlockHint(int ascensionLevel) {
+    final cap = maxRank(ascensionLevel);
+    if (cap >= absoluteMaxRank) return null;
+    final next = cap + 1;
+    return 'Rank $next unlocks at Ascend ${5 * (next - 3)}';
+  }
 
   static const double pityPBase = 0.04;
   static const int pitySoft = 40;
@@ -262,19 +285,15 @@ abstract final class ApexCraft {
       counts[id] = (counts[id] ?? 0) + 1;
     }
     if (order.isEmpty) return '';
-    return '+${[
-      for (final id in order) _countName(id, counts[id]!),
-    ].join(' · ')}';
+    return '+${[for (final id in order) _countName(id, counts[id]!)].join(' · ')}';
   }
 
   /// Welcome Back line. Empty when [gained] is empty.
   static String gainedLine(Map<String, int> gained) {
     if (gained.isEmpty) return '';
     final ids = gained.keys.toList()..sort();
-    return 'Craft materials · ${[
-      for (final id in ids)
-        if ((gained[id] ?? 0) > 0) _countName(id, gained[id]!),
-    ].join(' · ')}';
+    return 'Craft materials · ${[for (final id in ids)
+      if ((gained[id] ?? 0) > 0) _countName(id, gained[id]!)].join(' · ')}';
   }
 
   static String _countName(String id, int count) {
@@ -301,10 +320,9 @@ abstract final class ApexCraft {
   static Map<String, int> spendZoneShards(Map<String, int> bag, int qty) {
     if (qty <= 0) return bag;
     final next = Map<String, int>.from(bag);
-    final piles = next.entries
-        .where((e) => isZoneShardId(e.key) && e.value > 0)
-        .toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    final piles =
+        next.entries.where((e) => isZoneShardId(e.key) && e.value > 0).toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
     var left = qty;
     for (final e in piles) {
       if (left <= 0) break;
@@ -410,35 +428,30 @@ abstract final class ApexCraft {
   /// Zone shards are a pool ([shardAnyId]) — Mothveil/KEY/Rift shards pay
   /// the same as Sandy. Each rank adds a short, same-shaped tax so upgrades
   /// do not invent a new shopping list of early-zone mats.
+  ///
+  /// Ranks 1–3 are the original table. Ranks 4–7 keep that step (catalyst
+  /// equals the rank) so a higher rank always costs more than rank 3.
+  /// The AL cap in [maxRank] decides whether the forge will spend it.
   static Map<String, int> absoluteCost({
     required HeroClassId classId,
     required SpecRoleTag role,
     required EquipmentSlot slot,
     required int rank,
   }) {
-    final r = rank.clamp(1, maxRank);
+    final r = rank.clamp(1, absoluteMaxRank);
     final heavy = _heavySlot(slot);
-    final shards = switch (r) {
-      1 => heavy ? 2 : 1,
-      2 => heavy ? 4 : 2,
-      _ => heavy ? 6 : 4,
-    };
-    final cores = switch (r) {
-      1 => heavy ? 2 : 1,
-      2 => heavy ? 3 : 2,
-      _ => heavy ? 4 : 3,
-    };
+    // Heavy shards: 2, 4, 6, … Light: 1, then 2, 4, 6, …
+    final shards = heavy ? r * 2 : (r == 1 ? 1 : (r - 1) * 2);
+    // Heavy cores: 2, 3, 4, … Light: 1, 2, 3, …
+    final cores = heavy ? r + 1 : r;
     final costs = <String, int>{
       shardAnyId: shards,
       coreIdForRole(role): cores,
       catalystIdForClass(classId): r,
     };
     if (r >= 2 || slot == EquipmentSlot.weapon) {
-      costs[slagId] = switch (r) {
-        1 => 1,
-        2 => slot == EquipmentSlot.weapon ? 2 : 1,
-        _ => slot == EquipmentSlot.weapon ? 3 : 2,
-      };
+      // Weapon slag: 1, 2, 3, … Other slots start at rank 2: 1, 2, 3, …
+      costs[slagId] = slot == EquipmentSlot.weapon ? r : r - 1;
     }
     return costs;
   }
@@ -526,8 +539,7 @@ abstract final class ApexCraft {
       SpecRoleTag.caster => 'Arcana',
     };
     final slotLabel = switch (slot) {
-      EquipmentSlot.weapon =>
-        classId == HeroClassId.hunter ? 'Bow' : 'Edge',
+      EquipmentSlot.weapon => classId == HeroClassId.hunter ? 'Bow' : 'Edge',
       EquipmentSlot.offHand => switch (apexOffHandKind(classId, role)) {
         OffHandKind.shield => 'Bulwark',
         OffHandKind.frill => 'Tome',
@@ -548,6 +560,86 @@ abstract final class ApexCraft {
     return 'Apex $cls $roleLabel $slotLabel';
   }
 
+  /// Shown item level baked at craft time: 40 + AL×2 + rank×8 (+6 weapons).
+  static int itemLevelFor({
+    required int rank,
+    required int ascensionLevel,
+    required EquipmentSlot slot,
+  }) {
+    final r = rank.clamp(1, absoluteMaxRank);
+    return 40 +
+        ascensionLevel * 2 +
+        r * 8 +
+        (slot == EquipmentSlot.weapon ? 6 : 0);
+  }
+
+  /// Rank power on the drop budget. Rank 1 is 1.06; each rank adds 0.08.
+  static double powerMulFor(int rank) {
+    final r = rank.clamp(1, absoluteMaxRank);
+    return (106 + (r - 1) * 8) / 100;
+  }
+
+  /// Primary+armor budget after the rank multiplier (before the stat split).
+  static int powerBudget({
+    required int itemLevel,
+    required int rank,
+    required EquipmentSlot slot,
+    WeaponHanded? handed,
+  }) {
+    final base = EquipmentFactory.budgetForItemLevel(
+      itemLevel: itemLevel,
+      rarity: LootRarity.legendary,
+      slot: slot,
+      handed: handed,
+    );
+    return max(8, (base * powerMulFor(rank)).round());
+  }
+
+  /// Rebuild [item] at [ascensionLevel] and the same rank.
+  ///
+  /// Affixes and on-item effects stay. A piece with no class or role is
+  /// left as it was saved.
+  static EquipmentItem rebakeForAscend(EquipmentItem item, int ascensionLevel) {
+    if (!item.isApex || item.apexRank < 1) return item;
+    final className = item.apexClassId;
+    final roleName = item.apexRoleTag;
+    if (className == null || roleName == null) return item;
+    final classId = _enumByName(HeroClassId.values, className);
+    final role = _enumByName(SpecRoleTag.values, roleName);
+    if (classId == null || role == null) return item;
+    final fresh = buildItem(
+      classId: classId,
+      role: role,
+      slot: item.slot,
+      rank: item.apexRank,
+      ascensionLevel: ascensionLevel,
+    );
+    return withKeptAffixes(fresh, item);
+  }
+
+  /// Keep id, affixes, effects, and a saved look when a piece is rebuilt.
+  static EquipmentItem withKeptAffixes(
+    EquipmentItem fresh,
+    EquipmentItem prior,
+  ) {
+    return fresh.copyWith(
+      id: prior.id,
+      effectId: prior.effectId,
+      effectValue: prior.effectValue,
+      affixPrefixId: prior.affixPrefixId,
+      affixSuffixId: prior.affixSuffixId,
+      iconId: prior.iconId,
+      visualSetId: prior.visualSetId,
+    );
+  }
+
+  static T? _enumByName<T extends Enum>(List<T> values, String name) {
+    for (final value in values) {
+      if (value.name == name) return value;
+    }
+    return null;
+  }
+
   /// Build a legendary Apex piece at [rank] for AL scaling.
   static EquipmentItem buildItem({
     required HeroClassId classId,
@@ -562,14 +654,12 @@ abstract final class ApexCraft {
         ? ClassProficiency.preferredArmor(spec, 80)
         : null;
 
-    final powerMul = switch (rank.clamp(1, maxRank)) {
-      1 => 1.06,
-      2 => 1.14,
-      _ => 1.22,
-    };
-    final alBonus = ascensionLevel * 2;
-    final baseIlvl =
-        40 + alBonus + rank * 8 + (slot == EquipmentSlot.weapon ? 6 : 0);
+    final ranked = rank.clamp(1, absoluteMaxRank);
+    final baseIlvl = itemLevelFor(
+      rank: ranked,
+      ascensionLevel: ascensionLevel,
+      slot: slot,
+    );
 
     ArmorType? armorType;
     WeaponType? weaponType;
@@ -604,9 +694,7 @@ abstract final class ApexCraft {
         offHandKind = OffHandKind.frill;
       } else if (kind == OffHandKind.weapon) {
         offHandKind = OffHandKind.weapon;
-        weaponType = spec != null
-            ? _apexOneHandFor(spec).$1
-            : WeaponType.sword;
+        weaponType = spec != null ? _apexOneHandFor(spec).$1 : WeaponType.sword;
         handed = WeaponHanded.oneHand;
       } else {
         // Caller should not request OH when kind is null.
@@ -616,13 +704,12 @@ abstract final class ApexCraft {
 
     // Same ilvl→budget curve as dungeon drops (legendary quality + rank mul).
     // Armor is carved from the pool (not stacked on top) — matches EquipmentFactory.create.
-    final baseBudget = EquipmentFactory.budgetForItemLevel(
+    final budget = powerBudget(
       itemLevel: baseIlvl,
-      rarity: LootRarity.legendary,
+      rank: ranked,
       slot: slot,
       handed: handed,
     );
-    final budget = max(8, (baseBudget * powerMul).round());
 
     final needsArmor =
         slot.isArmorSlot ||
@@ -662,21 +749,21 @@ abstract final class ApexCraft {
     final secTier = max(0, (baseIlvl - 5) ~/ 18);
     switch (role) {
       case SpecRoleTag.tank:
-        crit = 2 + rank + secTier ~/ 2;
-        mastery = 1 + rank ~/ 2;
+        crit = 2 + ranked + secTier ~/ 2;
+        mastery = 1 + ranked ~/ 2;
       case SpecRoleTag.healer:
-        mp5 = 2 + rank + secTier ~/ 2;
-        crit = 1 + rank + secTier ~/ 3;
-        aspd = 1 + rank ~/ 2;
+        mp5 = 2 + ranked + secTier ~/ 2;
+        crit = 1 + ranked + secTier ~/ 3;
+        aspd = 1 + ranked ~/ 2;
       case SpecRoleTag.meleeDps:
-        crit = 3 + rank * 2 + secTier ~/ 2;
-        aspd = 2 + rank + secTier ~/ 2;
+        crit = 3 + ranked * 2 + secTier ~/ 2;
+        aspd = 2 + ranked + secTier ~/ 2;
       case SpecRoleTag.rangedDps:
-        crit = 4 + rank * 2 + secTier ~/ 2;
-        aspd = 3 + rank + secTier ~/ 2;
+        crit = 4 + ranked * 2 + secTier ~/ 2;
+        aspd = 3 + ranked + secTier ~/ 2;
       case SpecRoleTag.caster:
-        crit = 3 + rank * 2 + secTier ~/ 2;
-        aspd = 2 + rank ~/ 2;
+        crit = 3 + ranked * 2 + secTier ~/ 2;
+        aspd = 2 + ranked ~/ 2;
     }
     crit = EquipmentFactory.lootCritPercent(crit);
 
@@ -707,7 +794,7 @@ abstract final class ApexCraft {
       isApex: true,
       apexClassId: classId.name,
       apexRoleTag: role.name,
-      apexRank: rank.clamp(1, maxRank),
+      apexRank: ranked,
     );
     // Same look every rank — seed is the fixed piece id.
     return EquipmentVisualResolver.stampLook(

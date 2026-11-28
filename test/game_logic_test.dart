@@ -9,6 +9,7 @@ import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/logic_notices.dart';
 import 'package:idle_party/core/mission_board.dart';
 import 'package:idle_party/models/achievement_def.dart';
+import 'package:idle_party/models/apex_craft.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/dungeon_room.dart';
@@ -3963,6 +3964,84 @@ void main() {
     expect(GameLogic.forgeMoveGain, 2);
     expect(GameLogic.forgeHasteGain, 2);
     expect(GameLogic.forgeCritGain, 2);
+  });
+
+  test('Apex upgrade cap, rank cost, and Ascend rebake', () {
+    final rank3 = ApexCraft.absoluteCost(
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.tank,
+      slot: EquipmentSlot.weapon,
+      rank: 3,
+    );
+    final rank4 = ApexCraft.absoluteCost(
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.tank,
+      slot: EquipmentSlot.weapon,
+      rank: 4,
+    );
+    for (final entry in rank3.entries) {
+      expect(rank4[entry.key], greaterThan(entry.value));
+    }
+    expect(rank4['catalyst_warrior'], 4);
+
+    final mats = <String, int>{for (final m in ApexCraft.materials) m.id: 40};
+    var state = GameLogic.createInitialState(
+      now: DateTime(2026, 11, 28),
+    ).copyWith(craftMaterials: mats, ascensionLevel: 5);
+    state = GameLogic.craftApex(
+      state,
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.tank,
+      slot: EquipmentSlot.weapon,
+    );
+    final index = state.heroes.indexWhere(
+      (h) =>
+          h.spec.classId == HeroClassId.warrior &&
+          h.spec.roleTag == SpecRoleTag.tank,
+    );
+    final id = state.heroes[index].itemIn(EquipmentSlot.weapon)!.id;
+    final heroes = [...state.heroes];
+    heroes[index] = heroes[index].copyWith(
+      equipped: {
+        ...heroes[index].equipped,
+        EquipmentSlot.weapon: heroes[index]
+            .itemIn(EquipmentSlot.weapon)!
+            .copyWith(
+              effectId: GearEffectId.lifesteal,
+              effectValue: 5,
+              affixSuffixId: 'warded',
+            ),
+      },
+    );
+    state = state.copyWith(heroes: heroes);
+    for (var n = 0; n < 3; n++) {
+      state = GameLogic.upgradeApex(state, id);
+    }
+    expect(state.heroes[index].itemIn(EquipmentSlot.weapon)?.apexRank, 4);
+    expect(GameLogic.canUpgradeApex(state, id), isFalse);
+    expect(state.heroes[index].itemIn(EquipmentSlot.weapon)?.effectValue, 5);
+
+    state = state.copyWith(
+      bossVictories: GameLogic.bossesRequiredForAscension(5),
+    );
+    final before = state.heroes[index].itemIn(EquipmentSlot.weapon)!;
+    final ascended = GameLogic.ascend(state, now: DateTime(2026, 11, 28));
+    expect(ascended.ascensionLevel, 6);
+    final worn = ascended.heroes[index].itemIn(EquipmentSlot.weapon)!;
+    expect(worn.apexRank, 4);
+    expect(worn.itemLevel, greaterThan(before.itemLevel));
+    expect(
+      worn.itemLevel,
+      ApexCraft.itemLevelFor(
+        rank: 4,
+        ascensionLevel: 6,
+        slot: EquipmentSlot.weapon,
+      ),
+    );
+    expect(worn.effectId, GearEffectId.lifesteal);
+    expect(worn.effectValue, 5);
+    expect(worn.affixSuffixId, 'warded');
+    expect(GameLogic.canUpgradeApex(ascended, id), isFalse);
   });
 }
 

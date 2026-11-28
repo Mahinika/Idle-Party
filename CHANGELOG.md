@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- Apex rank follows Ascend: max rank stays 3 through AL4, then one more rank every 5 Ascend levels up to 7 at AL20. Ranks 4–7 keep the +0.08 power step and cost more materials than rank 3. Each Ascend rebakes Apex item level to the new AL at the same rank. CRAFT shows the current max rank and when the next rank unlocks.
 - Pre-Sunday UI polish: fight HUD drops in-cave hunt lines and CLAIM over the floor, F# CLEAR clears on the next floor, loot names spawn above the party, tomorrow vault copy names shelf not wallet gold, shorter SHOP header and Play wait text, two-line hero/gear names, 360×640 @1.45 layout on home and wallet.
 - Copy polish (#136): shorter title tagline, one NEW PARTY start button, town FORGE · CRAFT naming, OPEN TRAIN on welcome back, plain ESSENCE and CRAFT lines, INN lock text matches roster size, Patch Notes no longer auto-covers the town square, and a clearer cave-cleared boss toast when no next zone opens.
 - **Hero range / positioning:** Option A′ ranges + melee arc v2 (per-spec arc radius/step, tank stand, lone-melee rank fallback, combat arc / swarm rank); see `docs/RANGE_POSITIONING_AUDIT.md`.
