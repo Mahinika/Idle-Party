@@ -13,11 +13,12 @@ void main() {
     final after = File('test/goldens/after/fight_hit_a56.png');
     final minimal = File('test/goldens/after/fight_hit_min_a56.png');
     final ticker = File('test/goldens/widgets/combat_fight_ticker_a56.png');
-    final before = File('${artifacts.path}/combat-floater-fight-before-a56.png');
+    final before = File('test/goldens/before/fight_hit_a56.png');
     expect(after.existsSync(), isTrue);
     expect(minimal.existsSync(), isTrue);
     expect(ticker.existsSync(), isTrue);
     expect(before.existsSync(), isTrue);
+    before.copySync('${artifacts.path}/combat-floater-fight-before-a56.png');
     after.copySync('${artifacts.path}/combat-floater-fight-after-a56.png');
     minimal.copySync('${artifacts.path}/combat-floater-fight-minimal-a56.png');
     ticker.copySync('${artifacts.path}/combat-floater-fight-ticker-a56.png');
