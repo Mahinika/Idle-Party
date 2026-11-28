@@ -5,7 +5,6 @@ import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_router.dart';
-import 'package:idle_party/ui/game_icon.dart';
 import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/home/home_nav_bar.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
