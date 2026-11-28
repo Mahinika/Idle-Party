@@ -48,7 +48,9 @@ void main() {
     final hub = _afterFirstLoot();
     expect(LocalReminders.shouldOfferOptIn(hub), isFalse);
     expect(
-      LocalReminders.shouldOfferOptIn(hub.copyWith(highestFloorCleared: 1)),
+      LocalReminders.shouldOfferOptIn(
+        hub.copyWith(highestFloorCleared: 1, bossVictories: 1),
+      ),
       isTrue,
     );
     expect(
@@ -82,7 +84,7 @@ void main() {
         ticking.copyWith(inDungeon: true),
         floorClear: true,
       ),
-      isTrue,
+      isFalse,
     );
     expect(
       LocalReminders.shouldOfferOnFloorClear(

@@ -24,6 +24,7 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 import 'kit_hud_chips.dart';
+import 'party_cc_hint.dart';
 import 'shell_common.dart';
 
 /// Gold flash for the first beat after any cast, not only signature kits.
@@ -1115,6 +1116,8 @@ class _HomePartyChip extends StatelessWidget {
     final bucket = partyRoleBucketFor(hero);
     final roleWord = hero.spec.roleTag.plainLabel;
     final cc = partyCcChipLabels(spatial);
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final ccTight = textScale > GameTheme.typeScaleMax;
     final named = name.trim().isNotEmpty;
     final who = named ? name.trim() : roleWord;
     final doll = dense ? 0.0 : 14.0;
@@ -1165,7 +1168,6 @@ class _HomePartyChip extends StatelessWidget {
                 key: PartyCornerHud.chipLevelKey,
                 maxLines: 1,
                 softWrap: false,
-                textScaler: TextScaler.noScaling,
                 style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
               if (selected) ...[
@@ -1176,6 +1178,7 @@ class _HomePartyChip extends StatelessWidget {
                   color: GameTheme.torchHot,
                 ),
               ],
+              if (ccTight) partyCcChipSuffix(spatial, size: 6, dotOnly: true),
               const SizedBox(width: 2),
               Expanded(
                 child: ClipRRect(
@@ -1190,15 +1193,32 @@ class _HomePartyChip extends StatelessWidget {
               ),
             ],
           ),
-          if (cc.isNotEmpty)
-            Text(
-              homeChipCcLabel(cc),
-              key: homeChipCcKey,
-              maxLines: 1,
-              softWrap: false,
-              overflow: TextOverflow.ellipsis,
-              textScaler: TextScaler.noScaling,
-              style: GameTheme.hint(color: partyCcChipColor(cc)),
+          if (cc.isNotEmpty && !ccTight)
+            Semantics(
+              hint: PartyCcHint.forLabels(cc),
+              child: GestureDetector(
+                onLongPress: () {
+                  final messenger = ScaffoldMessenger.maybeOf(context);
+                  messenger?.clearSnackBars();
+                  messenger?.showSnackBar(
+                    SnackBar(
+                      content: Text(PartyCcHint.forLabels(cc)),
+                      duration: const Duration(seconds: 4),
+                    ),
+                  );
+                },
+                child: Tooltip(
+                  message: PartyCcHint.forLabels(cc),
+                  child: Text(
+                    homeChipCcLabel(cc),
+                    key: homeChipCcKey,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.hint(color: partyCcChipColor(cc)),
+                  ),
+                ),
+              ),
             ),
         ],
       ),

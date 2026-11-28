@@ -64,7 +64,7 @@ void main() {
       final watch = HomeCatalog.entries.where((e) => e.id == 'watch').single;
       final wisp = HomeCatalog.entries.where((e) => e.id == 'wisp').single;
       final scrolls = HomeCatalog.entries.where((e) => e.id == 'scrolls').single;
-      expect(watch.label, 'WATCH');
+      expect(watch.label, 'SCROLLS');
       expect(wisp.label, 'WISP');
       expect(scrolls.label, 'SCROLLS');
       expect(

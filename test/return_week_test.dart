@@ -38,11 +38,11 @@ void main() {
   test('days 1–7 name a different spend shelf on the same cave', () {
     const shelves = [
       'CAMP',
-      'FORGE',
+      'TRAIN',
       'EMBERS',
       'CINDERS',
       'SCROLLS',
-      'CAMP+FORGE',
+      'CAMP+TRAIN',
       'JACKPOT',
     ];
     final titles = <String>{};
@@ -73,7 +73,7 @@ void main() {
     expect(chase.title, 'Tomorrow: Sandy Caverns');
     expect(
       chase.detail,
-      'Tomorrow: Sandy Caverns · gold for FORGE',
+      'Tomorrow: Sandy Caverns · gold for TRAIN',
     );
     expect(chase.detail, isNot(contains('2,000')));
     expect(chase.detail, isNot(contains('2 000')));
@@ -101,8 +101,8 @@ void main() {
     expect(state.metaDepth.dailyVaultClaimed, isFalse);
     expect(state.metaDepth.checkInDay, 2);
     final chase = HubChase.forState(state, now: later);
-    expect(chase.title, 'Sandy Caverns · FORGE');
-    expect(chase.detail, contains('Spend the gold in FORGE'));
+    expect(chase.title, 'Sandy Caverns · TRAIN');
+    expect(chase.detail, contains('Spend the gold in TRAIN'));
   });
 
   test('gold, essence, and tickets name the shelf that can be spent now', () {
@@ -110,7 +110,7 @@ void main() {
     expect(ReturnWeek.readySpend(broke), isNull);
     final rich = week(5, gold: 50000, tickets: 3).copyWith(essence: 100);
     final ready = ReturnWeek.readySpend(rich);
-    expect(ready, contains('FORGE'));
+    expect(ready, contains('TRAIN'));
     expect(ready, contains('CAMP'));
     expect(ready, contains('SCROLLS'));
     expect(HubChase.forState(rich, now: now).detail, contains(ready!));
@@ -135,7 +135,7 @@ void main() {
 
   test('every cave name still fits the hunt button', () {
     for (final dungeon in DungeonCatalog.all) {
-      final title = '${dungeon.name} · CAMP+FORGE';
+      final title = '${dungeon.name} · CAMP+TRAIN';
       expect(title.length, lessThanOrEqualTo(30), reason: dungeon.name);
       final tomorrow = 'Tomorrow: ${dungeon.name}';
       expect(tomorrow.length, lessThanOrEqualTo(30), reason: dungeon.name);
@@ -174,7 +174,7 @@ void main() {
     );
     await tester.pump();
     expect(
-      find.textContaining('Tomorrow: Sandy Caverns · gold for FORGE'),
+      find.textContaining('Tomorrow: Sandy Caverns · gold for TRAIN'),
       findsWidgets,
     );
     expect(find.textContaining('keeps fighting while closed'), findsNothing);
@@ -209,7 +209,7 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(
       find.textContaining(
-        'Tomorrow: Sandy Caverns · essence and gold for CAMP and FORGE',
+        'Tomorrow: Sandy Caverns · essence and gold for CAMP and TRAIN',
       ),
       findsWidgets,
     );

@@ -395,7 +395,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Worn gear that is not Apex counts as empty. Forge and blessings still apply.',
+                    'Worn gear that is not Apex counts as empty. TRAIN and blessings still apply.',
                     textAlign: TextAlign.center,
                     style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
@@ -538,8 +538,14 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           final selected = _apexClass == classId && _apexRole == role;
           // Name first, class second, as everywhere else (polish7 P004).
           final name = h.displayName(plainEnglish: false);
-          return MenuChrome.chip(
-            label: name == h.roleLabel ? name : '$name · ${h.roleLabel}',
+          final chipLabel =
+              name == h.roleLabel ? name : '$name · ${h.roleLabel}';
+          return Semantics(
+            button: true,
+            selected: selected,
+            label: chipLabel,
+            child: MenuChrome.chip(
+            label: chipLabel,
             selected: selected,
             onTap: () {
               final keepSlot =
@@ -551,6 +557,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                         EquipmentSlot.weapon);
               _setCraftGoal(classId, role, slot);
             },
+          ),
           );
           }),
       ],
@@ -571,11 +578,18 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           final rank =
               _existingPiece(state, _apexClass, _apexRole, slot)?.apexRank ?? 0;
           final next = ApexForge.nextSlotForPair(state, _apexClass, _apexRole);
-          return MenuChrome.chip(
-            label: _slotLabel(slot, _apexClass, _apexRole),
-            value: rank > 0 ? 'R$rank' : (slot == next ? 'NEXT' : null),
+          final chipLabel = _slotLabel(slot, _apexClass, _apexRole);
+          final chipValue = rank > 0 ? 'R$rank' : (slot == next ? 'NEXT' : null);
+          return Semantics(
+            button: true,
+            selected: _apexSlot == slot,
+            label: chipValue == null ? chipLabel : '$chipLabel $chipValue',
+            child: MenuChrome.chip(
+            label: chipLabel,
+            value: chipValue,
             selected: _apexSlot == slot,
             onTap: () => _setCraftGoal(_apexClass, _apexRole, slot),
+          ),
           );
           }),
       ],

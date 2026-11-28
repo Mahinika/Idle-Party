@@ -59,12 +59,12 @@ class MapScreen extends StatefulWidget {
     if (!open) return 'Party Lv$need or clear the previous cave';
     final here = state.inDungeon && state.dungeonId == def.id;
     final cleared = def.number <= state.highestDungeonCleared;
-    return [
-      if (here) 'You are here · F${state.currentRoom.floorNumber}',
-      cleared ? 'Cleared' : 'Not cleared yet',
-      // Plain words, not "Lv1 / 1" (polish7 P026).
-      'Party level $mean, cave needs $need',
-    ].join(' · ');
+    final lines = <String>[
+      if (here) 'Here · F${state.currentRoom.floorNumber}',
+      cleared ? 'Cleared' : 'Not cleared',
+      'Party Lv$mean · needs Lv$need',
+    ];
+    return lines.join(' · ');
   }
 
   @override

@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- Fixlist UI (IP-022–228): SLOW chip hint, SCROLLS rail rename, MERGE copy, ASCEND ghost, vault claimed tap, quest reroll (ad) label, party chip text scale, shop blurbs, Apex CRAFT a11y, Cinders on ESSENCE bar, title CHOOSE PARTY, starter pouch label.
 - Fixlist UI copy: town QUESTS sign, TRAIN/MENU/MARKET player strings, hub→town via NavCopy, lantern and bag empty hints, Discord defer after offline return, relic discover line.
 - Pre-Sunday UI polish: fight HUD drops in-cave hunt lines and CLAIM over the floor, F# CLEAR clears on the next floor, loot names spawn above the party, tomorrow vault copy names shelf not wallet gold, shorter SHOP header and Play wait text, two-line hero/gear names, 360×640 @1.45 layout on home and wallet.
 - Copy polish (#136): shorter title tagline, one NEW PARTY start button, town FORGE · CRAFT naming, OPEN TRAIN on welcome back, plain ESSENCE and CRAFT lines, INN lock text matches roster size, Patch Notes no longer auto-covers the town square, and a clearer cave-cleared boss toast when no next zone opens.

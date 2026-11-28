@@ -7,6 +7,7 @@ import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/ui/shell/dungeon_party_hud.dart';
+import 'package:idle_party/ui/shell/party_cc_hint.dart';
 
 void main() {
   testWidgets('party strip fits a status chip without an overflow stripe', (
@@ -122,6 +123,41 @@ void main() {
     }
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('SLOW chip fits 360x640 at raw text scale 2', (tester) async {
+    final director = GameDirector.preview();
+    addTearDown(director.dispose);
+    final entered = GameLogic.enterDungeon(director.state);
+    final world = SpatialCombat.build(entered);
+    world.heroes.first.attackSlowTimer = 2;
+    director.debugAttachSpatial(world);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: Size(360, 640),
+            textScaler: TextScaler.linear(2),
+          ),
+          child: Scaffold(
+            body: PartyCornerHud(
+              director: director,
+              selectedHeroIndex: 0,
+              onSelectHero: (_) {},
+              onOpenEquip: () {},
+              homeRow: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  test('SLOW hint mentions 65% attack speed', () {
+    expect(PartyCcHint.slow, contains('65%'));
   });
 
   test('party CC chips list root slow and hex', () {

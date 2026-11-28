@@ -362,17 +362,13 @@ class HomeTopBar extends StatelessWidget {
       );
     }
     if (route == MenuRoute.essence) {
-      final embers = essencePanel == EssencePanel.keep;
       return (
-        embers ? 'Embers' : 'Cinders',
-        formatCount(embers ? state.metaDepth.embers : state.metaDepth.cinders),
+        'Cinders',
+        formatCount(state.metaDepth.cinders),
         () {
-          router.essencePanel = embers
-              ? EssencePanel.keep
-              : EssencePanel.relics;
           if (!router.homeAtSub) router.pushSub();
         },
-        embers ? UiIcon.embers : UiIcon.cinders,
+        UiIcon.cinders,
       );
     }
     if (route == MenuRoute.map) {

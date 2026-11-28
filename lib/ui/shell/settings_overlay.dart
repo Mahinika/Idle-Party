@@ -8,7 +8,6 @@ import '../../core/ad_rewarded.dart';
 import '../../core/build_stamp.dart';
 import '../../core/community_links.dart';
 import '../../core/meta_systems.dart';
-import '../../core/ability_mastery.dart';
 import '../../core/game_audio.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
@@ -347,11 +346,6 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           label: state.vfxQuality.settingsLabel,
           hint: state.vfxQuality.settingsHint,
           onCycle: director.cycleVfxQuality,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          AbilityMastery.progressLine(state),
-          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         _SettingsCycle(
