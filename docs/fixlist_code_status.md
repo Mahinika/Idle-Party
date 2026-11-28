@@ -1,119 +1,119 @@
-| id | status | notes |
-|---|---|---|
-| IP-001 | fixed | Landad före batch 2 (PR fixlist-code-751c). |
-| IP-002 | open | Ej i batch 2 (UI/copy scope). |
-| IP-003 | open | Ej i batch 2 (UI/copy scope). |
-| IP-004 | open | Ej i batch 2 (UI/copy scope). |
-| IP-005 | open | Ej i batch 2 (UI/copy scope). |
-| IP-006 | open | Ej i batch 2 (UI/copy scope). |
-| IP-007 | open | Ej i batch 2 (UI/copy scope). |
-| IP-008 | open | Ej i batch 2 (UI/copy scope). |
-| IP-009 | open | Ej i batch 2 (UI/copy scope). |
-| IP-010 | open | Ej i batch 2 (UI/copy scope). |
-| IP-011 | open | Ej i batch 2 (UI/copy scope). |
-| IP-012 | open | Ej i batch 2 (UI/copy scope). |
-| IP-013 | open | Ej i batch 2 (UI/copy scope). |
-| IP-014 | open | Ej i batch 2 (UI/copy scope). |
-| IP-015 | open | Ej i batch 2 (UI/copy scope). |
-| IP-016 | open | Ej i batch 2 (UI/copy scope). |
-| IP-017 | open | Ej i batch 2 (UI/copy scope). |
-| IP-018 | open | Ej i batch 2 (UI/copy scope). |
-| IP-019 | fixed | Landad före batch 2 (PR fixlist-code-751c). |
-| IP-020 | fixed | Landad före batch 2 (PR fixlist-code-751c). |
-| IP-021 | open | Ej i batch 2 (UI/copy scope). |
-| IP-022 | open | Ej i batch 2 (UI/copy scope). |
-| IP-023 | open | Ej i batch 2 (UI/copy scope). |
-| IP-024 | open | Ej i batch 2 (UI/copy scope). |
-| IP-025 | open | Ej i batch 2 (UI/copy scope). |
-| IP-026 | open | Ej i batch 2 (UI/copy scope). |
-| IP-027 | open | Ej i batch 2 (UI/copy scope). |
-| IP-028 | open | Ej i batch 2 (UI/copy scope). |
-| IP-029 | open | Ej i batch 2 (UI/copy scope). |
-| IP-030 | open | Ej i batch 2 (UI/copy scope). |
-| IP-031 | fixed | Implemented this batch. |
-| IP-032 | fixed | Implemented this batch. |
-| IP-033 | open | Ej i batch 2 (UI/copy scope). |
-| IP-034 | open | Ej i batch 2 (UI/copy scope). |
-| IP-035 | open | Ej i batch 2 (UI/copy scope). |
-| IP-036 | open | Ej i batch 2 (UI/copy scope). |
-| IP-037 | open | Ej i batch 2 (UI/copy scope). |
-| IP-038 | open | Ej i batch 2 (UI/copy scope). |
-| IP-039 | open | Ej i batch 2 (UI/copy scope). |
-| IP-040 | open | Ej i batch 2 (UI/copy scope). |
-| IP-041 | open | Ej i batch 2 (UI/copy scope). |
-| IP-042 | open | Ej i batch 2 (UI/copy scope). |
-| IP-043 | open | Ej i batch 2 (UI/copy scope). |
-| IP-044 | fixed | Implemented this batch. |
-| IP-045 | fixed | Implemented this batch. |
-| IP-046 | fixed | Implemented this batch. |
-| IP-047 | fixed | Implemented this batch. |
-| IP-048 | fixed | Implemented this batch. |
-| IP-049 | partial | CrashReport on ad/analytics/shop/game_storage/onboarding/friend (partial director_save/save_swap) |
-| IP-050 | partial | Core paths only this batch. |
-| IP-051 | partial | Core paths only this batch. |
-| IP-052 | partial | Core paths only this batch. |
-| IP-053 | partial | Core paths only this batch. |
-| IP-054 | partial | Core paths only this batch. |
-| IP-055 | partial | Core paths only this batch. |
-| IP-056 | fixed | Implemented this batch. |
-| IP-057 | fixed | Implemented this batch. |
-| IP-058 | fixed | Implemented this batch. |
-| IP-059 | verified | Already true in tree; dokumenterat. |
-| IP-060 | fixed | Implemented this batch. |
-| IP-061 | open | Ej i batch 2 (UI/copy scope). |
-| IP-062 | open | Ej i batch 2 (UI/copy scope). |
-| IP-063 | open | Ej i batch 2 (UI/copy scope). |
-| IP-064 | open | Ej i batch 2 (UI/copy scope). |
-| IP-065 | open | Ej i batch 2 (UI/copy scope). |
-| IP-066 | open | Ej i batch 2 (UI/copy scope). |
-| IP-067 | open | Ej i batch 2 (UI/copy scope). |
-| IP-068 | fixed | Implemented this batch. |
-| IP-069 | open | Ej i batch 2 (UI/copy scope). |
-| IP-070 | open | Ej i batch 2 (UI/copy scope). |
-| IP-071 | open | Ej i batch 2 (UI/copy scope). |
-| IP-072 | fixed | Landad före batch 2 (PR fixlist-code-751c). |
-| IP-073 | open | Ej i batch 2 (UI/copy scope). |
-| IP-074 | open | Ej i batch 2 (UI/copy scope). |
-| IP-075 | open | Ej i batch 2 (UI/copy scope). |
-| IP-076 | open | Ej i batch 2 (UI/copy scope). |
-| IP-077 | open | Ej i batch 2 (UI/copy scope). |
-| IP-078 | open | Ej i batch 2 (UI/copy scope). |
-| IP-079 | open | Ej i batch 2 (UI/copy scope). |
-| IP-080 | open | Ej i batch 2 (UI/copy scope). |
-| IP-081 | open | Ej i batch 2 (UI/copy scope). |
-| IP-082 | open | Ej i batch 2 (UI/copy scope). |
-| IP-083 | open | Ej i batch 2 (UI/copy scope). |
-| IP-084 | open | Ej i batch 2 (UI/copy scope). |
-| IP-085 | open | Ej i batch 2 (UI/copy scope). |
-| IP-086 | open | Ej i batch 2 (UI/copy scope). |
-| IP-087 | open | Ej i batch 2 (UI/copy scope). |
-| IP-088 | open | Ej i batch 2 (UI/copy scope). |
-| IP-089 | open | Ej i batch 2 (UI/copy scope). |
-| IP-090 | open | Ej i batch 2 (UI/copy scope). |
-| IP-091 | open | Ej i batch 2 (UI/copy scope). |
-| IP-092 | fixed | Implemented this batch. |
-| IP-093 | fixed | Implemented this batch. |
-| IP-094 | deferred | PR #132/#134/#136 still open; gh close blocked (token). Close manually when #135 merges. |
-| IP-095 | fixed | Implemented this batch. |
+# Fixlist code batch — status (95 ROI items)
 
-Rows below are tracked on the same branch; full IP-096…405 ledger is still open in ROI order.
+Branch `cursor/fixlist-code-751c` → PR #137. Generated from task list 2026-11-28.
 
 | id | status | notes |
 |---|---|---|
-| IP-147 | fixed | Same as IP-019 (`DecodedImageCache.clear`). |
-| IP-148 | fixed | Same as IP-019. |
-| IP-151 | fixed | Flaky coach tolerance (`test/ship_smoke_test.dart`). |
-| IP-162 | fixed | `boss_clear` analytics. |
-| IP-163 | fixed | `daily_run_complete` analytics. |
-| IP-164 | fixed | `notify_prompt_shown` / `notify_later`. |
-| IP-186 | fixed | MARKET reroll scales with party Lv² (batch 1). |
-| IP-190 | fixed | Analyzer infos (batch 2). |
-| IP-191 | fixed | Analyzer infos (batch 2). |
-| IP-192 | fixed | Analyzer infos (batch 2). |
-| IP-193 | fixed | Analyzer infos (batch 2). |
-| IP-196 | fixed | Party strip height clamp. |
-| IP-227 | fixed | Text scale persists on drag end. |
-| IP-383 | fixed | LEAVE toast surfaces pending bag merge (−Ng). |
-| IP-393 | fixed | Shop/ad regression test batch 2. |
-| IP-395 | fixed | Status doc + related hygiene (batch 2). |
-| IP-402 | fixed | LEAVE / GR over-par names consolation +Ne. |
+| IP-001 | fixed | emulator-smoke.yml gh JSON + jq isPrerelease filter. |
+| IP-019 | fixed | DecodedImageCache._disposed in release (also IP-147/IP-148). |
+| IP-031 | fixed | d7/d14/d30_return in funnel_analytics + docs. |
+| IP-032 | fixed | docs/GA4_KEY_EVENTS.md console steps. |
+| IP-044 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-045 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-046 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-047 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-048 | fixed | director_save catch → CrashReport.recordNonFatal. |
+| IP-049 | fixed | save_swap CrashReport + kDebugMode logs. |
+| IP-050 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-051 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-052 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-053 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-054 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-055 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-056 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-057 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-058 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-059 | verified | flutterErrorIsNonFatal treats RenderFlex overflow as non-fatal. |
+| IP-060 | fixed | dungeon.mp3 removed from APK pubspec. |
+| IP-068 | fixed | settings_overlay_test + qa_2026_11_21 @ 1.45. |
+| IP-147 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-148 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-151 | fixed | ship_smoke / first_climb_coach clock freeze. |
+| IP-154 | partial | shop_store_io_test covers billing codes + restore classification; no device Billing mock. |
+| IP-155 | partial | shouldGrantPurchase idempotency test; full restorePurchases wiring still device-side. |
+| IP-156 | deferred | Close #132/#134/#136 manually after #135 merges (agent token cannot close). |
+| IP-157 | verified-not-real | Cloud box has pinned Flutter; CI is analyze source of truth. |
+| IP-162 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-163 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-164 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-190 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-191 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-192 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-193 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-194 | fixed | town preview/buildings_sheet out of bundled pubspec list. |
+| IP-195 | verified-not-real | isPhoneWidth documented portrait-only; wide branch unused. |
+| IP-196 | fixed | is2_shell party row height clamp. |
+| IP-197 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-198 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-199 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-200 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-201 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-202 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-203 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-204 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-205 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-206 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-207 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-208 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-209 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-210 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-211 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-212 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-213 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-214 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-215 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-216 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-217 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-218 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-219 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-220 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-221 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-222 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-223 | verified | _notifyUnlessBuilding on setDungeonTilesReady (issue 49a0245a). |
+| IP-224 | verified | UiFeedback notifyUnlessBuilding covers menu clearToast path. |
+| IP-227 | fixed | text scale preview on drag; setUiTextScale on end. |
+| IP-230 | deferred | docs/FIXLIST_POLISH_RECONCILIATION.md; owner P0 audit vs #135. |
+| IP-231 | deferred | 122 P3 rows need dedicated audit; pre-Sunday absorbed most. |
+| IP-238 | fixed | Deferred Play/friend sync microtask + install referrer timeout. |
+| IP-239 | verified-not-real | SoLoud ogg fail reproduced on x86 AVD only; arm64 product path OK. |
+| IP-240 | deferred | Resume profile needs on-device Systrace; no code change this batch. |
+| IP-241 | fixed | Ui timer skips notifyListeners when no wisp/toast timers. |
+| IP-259 | fixed | _Is2FightTopBar post-frame guard for onMeasured. |
+| IP-260 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-261 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-262 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-263 | verified-not-real | inventory_dock post-frame is panel resync in state callback, not build spam. |
+| IP-264 | fixed | Done on cursor/fixlist-code-751c (PR #137). |
+| IP-384 | deferred | 447 hardcoded colors — GameTheme pass; UI agent / art week. |
+| IP-385 | deferred | zone_art palette extraction; not stability batch. |
+| IP-386 | deferred | dungeon_floor_layer colors; visual goldens. |
+| IP-387 | deferred | dungeon_paint_actors colors. |
+| IP-388 | deferred | dungeon_paint_projectiles colors. |
+| IP-389 | deferred | dungeon_tile_painter colors. |
+| IP-390 | deferred | dungeon_environment colors. |
+| IP-391 | deferred | equipment_visual_resolver colors. |
+| IP-392 | deferred | dungeon_ambient_particles colors. |
+| IP-393 | fixed | ad_rewarded_io_test + CrashReport smoke. |
+| IP-394 | deferred | polish-plan-2 reconciliation — see FIXLIST_POLISH_RECONCILIATION.md. |
+| IP-401 | deferred | Play vitals ANR on vc225; verify on 1.14+ phone before loop changes. |
+| IP-403 | deferred | FFI SIGABRT on old vc214–224; watch Crashlytics on 1.14. |
+| IP-404 | deferred | Impeller device-specific; no change until recurrence on 1.14. |
+| IP-405 | deferred | 58 constrained pub upgrades — separate branch before release. |
+
+## Robert add-ons (same PR, not in ROI-95 list)
+
+| id | status | notes |
+|---|---|---|
+| IP-020 | fixed | Same craft goal keeps apex meter (apex_craft_test). |
+| IP-072 | fixed | Save slot party mean level display. |
+| IP-186 | fixed | MARKET reroll Lv² scale (owner-approved economy). |
+| IP-383 | fixed | LEAVE toast explains bag merge spend. |
+| IP-402 | fixed | Hunt LEAVE / GR miss names +Ne essence. |
+
+## Counts (95 ROI ids)
+- deferred: 18
+- fixed: 68
+- partial: 2
+- verified: 3
+- verified-not-real: 4
+- **total:** 95

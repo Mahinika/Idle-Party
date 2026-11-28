@@ -682,10 +682,7 @@ extension GameDirectorFight on GameDirector {
     _syncHubIdleTimer();
     final payoffs = LogicNotices.takeMetaPayoffs();
     final bagLine = LogicNotices.takeBagCleanup().combatLine;
-    final leaveHints = <String>[
-      ...payoffs,
-      if (bagLine != null) bagLine,
-    ];
+    final leaveHints = <String>[...payoffs, ?bagLine];
     if (leaveHints.isNotEmpty) {
       showToast(leaveHints.join(' · '), life: 3.0);
     } else if (clearedExit && _state.homeLayout == HomeLayout.home) {
