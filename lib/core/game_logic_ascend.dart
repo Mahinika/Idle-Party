@@ -10,9 +10,7 @@ int _ascendShownEssence(int level) {
   if (n == 1) return shown;
   for (var lv = 2; lv <= n; lv++) {
     final linear =
-        7 +
-        (lv - 1) * 23 +
-        MetaSystems.ascendMilestoneReward(lv - 1, lv);
+        7 + (lv - 1) * 23 + MetaSystems.ascendMilestoneReward(lv - 1, lv);
     final halfAgain = (shown * 3 + 1) ~/ 2;
     shown = linear > halfAgain ? linear : halfAgain;
   }
@@ -35,29 +33,31 @@ GameState _applyPrestigeRunWipe(GameState state) {
   for (final item in state.gearStash) {
     if (item.isApex) apexVault.add(item);
   }
-  return ApexForge.normalizeApexDuplicates(state.copyWith(
-    gold: 0,
-    attackBonus: 0,
-    defenseBonus: 0,
-    vitalityBonus: 0,
-    moveSpeedBonus: 0,
-    attackSpeedBonus: 0,
-    critBonus: 0,
-    masteryBonus: 0,
-    gearStash: const <EquipmentItem>[],
-    marketListings: const <MarketListing>[],
-    loadouts: const <GearLoadout>[],
-    recentLoot: const <LootDrop>[],
-    highestFloorCleared: 0,
-    lastFloorClearSec: 0,
-    roomHappeningClaim: '',
-    heroRoster: [
-      for (final hero in state.heroRoster)
-        hero.copyWith(equipped: _starterKeepingApex(hero)),
-    ],
-    apexVault: apexVault,
-    clearEquipped: true,
-  ));
+  return ApexForge.normalizeApexDuplicates(
+    state.copyWith(
+      gold: 0,
+      attackBonus: 0,
+      defenseBonus: 0,
+      vitalityBonus: 0,
+      moveSpeedBonus: 0,
+      attackSpeedBonus: 0,
+      critBonus: 0,
+      masteryBonus: 0,
+      gearStash: const <EquipmentItem>[],
+      marketListings: const <MarketListing>[],
+      loadouts: const <GearLoadout>[],
+      recentLoot: const <LootDrop>[],
+      highestFloorCleared: 0,
+      lastFloorClearSec: 0,
+      roomHappeningClaim: '',
+      heroRoster: [
+        for (final hero in state.heroRoster)
+          hero.copyWith(equipped: _starterKeepingApex(hero)),
+      ],
+      apexVault: apexVault,
+      clearEquipped: true,
+    ),
+  );
 }
 
 Map<EquipmentSlot, EquipmentItem> _starterKeepingApex(PartyHero hero) {
@@ -208,7 +208,10 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
     lastUpdated: now ?? DateTime.now(),
   );
 
-  return _finishPrestigeState(withMeta, now: now);
+  return _finishPrestigeState(
+    ApexForge.rebakeOwnedForAscend(withMeta, nextLevel),
+    now: now,
+  );
 }
 
 /// AL20 optional Reborn: same bag wipe, AL and Blessing unchanged.
@@ -245,7 +248,10 @@ GameState _rebornAtCapGameState(GameState state, {DateTime? now}) {
     lastUpdated: now ?? DateTime.now(),
   );
   withMeta = BlessingConstellation.grantPoints(withMeta, 1);
-  return _finishPrestigeState(withMeta, now: now);
+  return _finishPrestigeState(
+    ApexForge.rebakeOwnedForAscend(withMeta, withMeta.ascensionLevel),
+    now: now,
+  );
 }
 
 GameState _finishPrestigeState(GameState withMeta, {DateTime? now}) {

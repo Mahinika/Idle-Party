@@ -218,7 +218,7 @@ stamina is STA.
 ## Ascend
 
 **Keeps:** hero levels/XP, open zones, essence, Embers, Cinders, relics, pets, sanctuary,
-God Hand, Apex, soulbound, settings, unlocked specs, full `metaDepth`
+God Hand, Apex (same rank; item level rebakes to the new AL), soulbound, settings, unlocked specs, full `metaDepth`
 (bests, blessings, constellation, Craft Trial, Spire Trophies, ad tickets and timers,
 shop entitlements, coupons, Play opt-in), plus AUTO EQUIP.
 
