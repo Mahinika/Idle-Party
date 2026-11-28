@@ -3,6 +3,7 @@ import 'dart:math';
 import '../models/loot.dart';
 import '../spatial/spatial_combat.dart';
 import 'ad_boost.dart';
+import 'ad_offer.dart';
 import 'comeback_chest.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
@@ -123,7 +124,7 @@ abstract final class OfflineProgress {
       seconds: seconds,
       autoEntered: autoEntered,
     );
-    final settled = _settleAwayGold(state, raw);
+    final settled = _settleAwayGold(state, raw, secondsAway: away);
     return _offlineResultFrom(
       before: state,
       progressed: settled.state,
@@ -207,7 +208,7 @@ abstract final class OfflineProgress {
       // Hub AFK: sanctuary idle gold only — no ghost combat / boss farms.
       progressed = applyHubIdleProgress(state, seconds);
     }
-    final settled = _settleAwayGold(state, progressed);
+    final settled = _settleAwayGold(state, progressed, secondsAway: away);
     return _offlineResultFrom(
       before: state,
       progressed: settled.state,
@@ -224,16 +225,21 @@ abstract final class OfflineProgress {
     );
   }
 
-  /// Rest ×3 first. Ad-free then takes the Welcome Back ×3 and its floor
+  /// Rest ×3 first. VIP then takes the Welcome Back ×3 and its floor
   /// when Rest did not already multiply the gold, so the two never stack.
+  /// The same 5-minute gate as the Welcome Back card applies.
   static ({GameState state, bool restMultiplied}) _settleAwayGold(
     GameState before,
-    GameState progressed,
-  ) {
+    GameState progressed, {
+    required int secondsAway,
+  }) {
     final boosted = applyAwayBonus(before, progressed);
     final rest = _restMultipliedGold(before, progressed, boosted);
-    if (rest || !before.metaDepth.adFree) {
+    if (rest || !before.metaDepth.hasVipPerks) {
       return (state: boosted, restMultiplied: rest);
+    }
+    if (secondsAway < AdOffer.welcomeCardMinMinutes * 60) {
+      return (state: boosted, restMultiplied: false);
     }
     if (!GameLogic.showDailyChase(before)) {
       return (state: boosted, restMultiplied: false);
@@ -249,6 +255,7 @@ abstract final class OfflineProgress {
         baseGold,
         baseEssence: baseEssence,
         allowAdFree: true,
+        minutesAway: secondsAway ~/ 60,
       ),
       restMultiplied: false,
     );

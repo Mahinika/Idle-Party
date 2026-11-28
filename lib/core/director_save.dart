@@ -12,13 +12,16 @@ enum RecoverySlotOpen {
   needsNewGame,
 }
 
+int _lastDurableWriteMs = 0;
+bool _saveFlushNow = false;
+
 /// Last [GameState.lastUpdated] we logged [AppAnalytics.welcomeBack] for.
 /// Stops a rebuild or a second credit pass from double-counting one return.
 DateTime? _welcomeAnalyticsCreditFrom;
 
 /// Save — extracted from GameDirector.
 extension GameDirectorSave on GameDirector {
-  void _persist() {
+  void _persist({bool immediate = false}) {
     // Title-screen placeholder and boot-failure empty state must not overwrite
     // a real save (hub idle used to write after 25s).
     if (!_hasExistingSave) return;
@@ -34,8 +37,23 @@ extension GameDirectorSave on GameDirector {
     // Snapshot when this turn runs, not when it was queued, and write those
     // bytes. A later cloud install cannot be overwritten by a stale capture,
     // and a grant cannot change the bytes after this turn has read them.
+    if (immediate) _saveFlushNow = true;
     _saveChain = _saveChain.then((_) async {
       if (_durableSaveBlocked) return false;
+      if (!immediate && !test_env.inFlutterTestProcess()) {
+        while (!_saveFlushNow) {
+          final wait = SaveFlushGate.delayMs(
+            nowMs: DateTime.now().millisecondsSinceEpoch,
+            lastWriteMs: _lastDurableWriteMs,
+            immediate: false,
+          );
+          if (wait <= 0) break;
+          await Future<void>.delayed(
+            Duration(milliseconds: wait < 50 ? wait : 50),
+          );
+        }
+      }
+      _saveFlushNow = false;
       final snapshot = _stampCloudClock(_state);
       _state = snapshot;
       try {
@@ -44,6 +62,18 @@ extension GameDirectorSave on GameDirector {
           DebugPlayLog.event('save', 'write failed: setString returned false');
           debugPrint('save failed: setString returned false');
           return false;
+        }
+        _lastDurableWriteMs = DateTime.now().millisecondsSinceEpoch;
+        final lastGood = snapshot.metaDepth.roi2.lastGoodSnapshotMs;
+        if (_lastDurableWriteMs - lastGood >= 30 * 60 * 1000) {
+          await _storage.snapshotActiveSlot(snapshot);
+          _state = _state.copyWith(
+            metaDepth: _state.metaDepth.copyWith(
+              roi2: _state.metaDepth.roi2.copyWith(
+                lastGoodSnapshotMs: _lastDurableWriteMs,
+              ),
+            ),
+          );
         }
         _rememberActiveSummary();
         PlayGamesBridge.notePartyPower(
@@ -128,7 +158,17 @@ extension GameDirectorSave on GameDirector {
   /// keeps ticking; a brief shade is not a Welcome Back.
   Future<bool> flushLifecycleWallet() {
     if (!_appPaused) _flushHubIdle();
-    return _persistFlush();
+    _persist(immediate: true);
+    return _saveChain;
+  }
+
+  Future<bool> restorePreviousSave() async {
+    final restored = await _storage.restorePreviousSlot();
+    if (restored == null) return false;
+    _state = restored;
+    _hasExistingSave = true;
+    _directorNotify();
+    return true;
   }
 
   void _applyFunnelTick(FunnelTick tick, {bool persist = true}) {
@@ -148,6 +188,7 @@ extension GameDirectorSave on GameDirector {
     final clock = now ?? DateTime.now();
     if (_funnelSessionReadyMs == 0) {
       _funnelSessionReadyMs = clock.millisecondsSinceEpoch;
+      AppAnalytics.markSessionStart();
     }
     final tick = newInstall
         ? FunnelAnalytics.onNewInstall(_state, clock)
@@ -1024,17 +1065,56 @@ extension GameDirectorSave on GameDirector {
     required bool showCard,
     bool Function()? stillCurrent,
   }) async {
-    final elapsed = DateTime.now().difference(saved.lastUpdated);
+    final now = DateTime.now();
+    final uptime = await ClockGuard.readUptimeMs();
+    final roi = saved.metaDepth.roi2;
+    final today = DayClock.effective(roi, now);
+    final lastDay = roi.lastSessionWallMs <= 0
+        ? today
+        : DayClock.ymd(
+            DateTime.fromMillisecondsSinceEpoch(
+              roi.lastSessionWallMs,
+              isUtc: true,
+            ),
+            DayClock.offsetMinutes(),
+          );
+    final verdict = ClockGuard.evaluate(
+      nowMs: now.millisecondsSinceEpoch,
+      highestWallMs: roi.highestWallMs,
+      uptimeMs: uptime,
+      lastUptimeMs: roi.lastSessionUptimeMs,
+      lastWallMs: roi.lastSessionWallMs,
+      dayJump: ClockGuard.dayJump(lastDay, today),
+    );
+    var credited = saved.copyWith(
+      metaDepth: saved.metaDepth.copyWith(
+        roi2: DayClock.noteZone(
+          ClockGuard.noteSession(
+            roi,
+            nowMs: now.millisecondsSinceEpoch,
+            uptimeMs: uptime,
+            verdict: verdict,
+            todayKey: today,
+            previousDayKey: lastDay,
+          ),
+          now,
+        ),
+      ),
+    );
+    var elapsed = now.difference(credited.lastUpdated);
+    if (verdict == ClockVerdict.clockBack || elapsed.isNegative) {
+      elapsed = Duration.zero;
+    }
     final pause = debugAwayCreditPause;
     if (pause != null) await pause;
-    if (stillCurrent != null && !stillCurrent()) return saved;
+    if (stillCurrent != null && !stillCurrent()) return credited;
     _welcomeBackAdGranted = false;
-    final offline = await _simulateAwayProgress(saved, elapsed);
-    if (stillCurrent != null && !stillCurrent()) return saved;
+    final offline = await _simulateAwayProgress(credited, elapsed);
+    if (stillCurrent != null && !stillCurrent()) return credited;
     return _finishAwayCredit(
       offline,
       showCard: showCard,
-      creditFrom: saved.lastUpdated,
+      creditFrom: credited.lastUpdated,
     );
   }
 

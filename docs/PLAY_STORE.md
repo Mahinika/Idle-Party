@@ -137,7 +137,7 @@ build; restart the app so Billing refreshes. A sideload does not grant a buy.
 ### Production AAB upload checklist (agent + owner)
 
 1. Confirm production track unlocked (IARC + ads declarations already submitted).
-2. `flutter build appbundle --release` with upload keystore (or tag `v*` after CI signing verified). That release packages native debug symbols (`ndk.debugSymbolLevel FULL`). Do not pass `--obfuscate`. Symbols for 225 cannot be uploaded later.
+2. `flutter build appbundle --release` with the **upload key** (or tag `v*` after CI signing verified). Play App Signing re-signs that AAB. The sideload test app (`com.idleparty.app.test`, `.github/workflows/test-apk-prerelease.yml`) uses a **separate test key** (`TEST_KEYSTORE_BASE64` → `android/test-upload-keystore.jks`). The release job uses `KEYSTORE_BASE64` → `android/upload-keystore.jks`. Cert SHA-256 fingerprints are not stored in the repo; they are not printed here. That release packages native debug symbols (`ndk.debugSymbolLevel FULL`). Do not pass `--obfuscate`. Symbols for 225 cannot be uploaded later.
 3. Upload with the Play Android Publisher API (one edit: images, text, AAB, production track). See `.cursor/skills/play-store-prep/reference.md`. `.github/workflows/play-upload.yml` sends only the tagged release AAB and the en-US / sv-SE notes, production at 5%. Dispatch it only when the owner asks that turn.
 4. Release notes from `docs/STORE_LISTING.md` (COMING LATER / POWER wipe honesty).
 5. Update this Operator status table (submitted vs live).

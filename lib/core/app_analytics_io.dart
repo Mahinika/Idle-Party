@@ -11,6 +11,7 @@ import 'firebase_boot.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
     as test_env;
+import 'immersive_ui.dart';
 import 'measurement_consent.dart';
 import 'remote_tune_boot.dart';
 import 'ump_consent_gate.dart';
@@ -89,13 +90,17 @@ Future<void> init() async {
   try {
     await FirebaseBoot.ensureInitialized();
     _analytics = FirebaseAnalytics.instance;
-    // Manifest keeps both off until syncConsent returns. After UMP, Analytics
-    // collection turns on (a decline still sends consent-mode pings).
-    // Crashlytics turns on only when ads can be requested.
-    await _analytics!.setAnalyticsCollectionEnabled(false);
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
+    // Consent Mode v2 denied until UMP. Collection is on so those pings
+    // exist. Crash reports are on for a later decline too, with no ad ID.
+    await _analytics!.setConsent(
+      analyticsStorageConsentGranted: false,
+      adStorageConsentGranted: false,
+      adUserDataConsentGranted: false,
+      adPersonalizationSignalsConsentGranted: false,
+    );
+    await _analytics!.setAnalyticsCollectionEnabled(true);
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
     _installCrashHandlers();
-    await syncConsent();
     _ready = true;
     await _flushUserProps();
     debugPrint('Firebase Analytics ready');
@@ -142,14 +147,13 @@ Future<void> _applyMeasurementConsent() async {
     adPersonalizationSignalsConsentGranted: consent.adPersonalization,
   );
   await analytics.setAnalyticsCollectionEnabled(consent.analyticsCollection);
-  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
-    consent.crashlytics,
-  );
+  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+  ImmersiveGate.allowed = canRequestAds;
   debugPrint('Firebase Analytics consent granted: ${consent.granted}');
 }
 
 /// Form closed. Apply the real answer, then fetch Remote Config.
-/// Remote Config still refuses the fetch when ads cannot be requested.
+/// The fetch does not wait on ad consent.
 Future<void> _resyncAfterConsentForm() async {
   await _applyMeasurementConsent();
   await RemoteTuneBoot.refresh();

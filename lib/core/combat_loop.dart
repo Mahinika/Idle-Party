@@ -52,6 +52,7 @@ extension GameDirectorCombatLoop on GameDirector {
           GameDirector._spatialDt * AdBoost.combatDtMul(_state.metaDepth);
       final dtMs = (dt * 1000).round();
 
+      final bossHpBefore = _livingBossHp(_spatial!);
       final result = SpatialCombat.step(_spatial!, _state, dt: dt);
       final before = _state;
       _spatial = result.world;
@@ -158,6 +159,16 @@ extension GameDirectorCombatLoop on GameDirector {
         GameAudio.kill();
         _feelKillCooldown = 0.22;
         pulseCombatShake(0.28);
+      }
+      if (_spatial != null &&
+          _bossDiedThisStep(bossHpBefore, _spatial!) &&
+          BossHitStop.allow(
+            pace: pace,
+            debugScale: _debugTimeScale,
+            vfx: _state.vfxQuality,
+            steps: steps,
+          )) {
+        _spatial!.hitStopSec = BossHitStop.seconds;
       }
 
       // Live auto-flask (same threshold as AFK): avg living HP < 35%.
@@ -355,6 +366,14 @@ extension GameDirectorCombatLoop on GameDirector {
               floor: floorNo,
             ),
           );
+        if (!_state.metaDepth.roi2.consentPrompted) {
+          _state = _state.copyWith(
+            metaDepth: _state.metaDepth.copyWith(
+              roi2: _state.metaDepth.roi2.copyWith(consentPrompted: true),
+            ),
+          );
+          unawaited(AdRewarded.presentConsentIfNeeded());
+        }
         }
         if (wasDaily &&
             _state.dailyClaimed &&
@@ -661,6 +680,21 @@ String? bestNewDropName(GameState before, GameState after) {
   if (best == null) return null;
   final name = best!.name.trim();
   return name.isEmpty ? best!.combatPopLabel : name;
+}
+
+Map<SpatialActor, int> _livingBossHp(SpatialWorld world) {
+  return <SpatialActor, int>{
+    for (final enemy in world.enemies)
+      if (enemy.role.name == 'boss' && enemy.hp > 0) enemy: enemy.hp,
+  };
+}
+
+bool _bossDiedThisStep(Map<SpatialActor, int> before, SpatialWorld world) {
+  for (final enemy in before.keys) {
+    if (!world.enemies.contains(enemy)) continue;
+    if (enemy.hp <= 0) return true;
+  }
+  return false;
 }
 
 LootRarity _bestNewLootRarity(GameState before, GameState after) {

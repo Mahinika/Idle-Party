@@ -342,7 +342,7 @@ void main() {
     json['partyName'] = 'sh1t';
     expect(GameLogic.stateFromJson(json).partyName, 'The Party');
 
-    final ready = named.copyWith(bossVictories: 1);
+    final ready = named.copyWith(bossVictories: 2);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 23));
     expect(ascended.partyName, 'The Ember Guard');
     expect(ascended.ascensionLevel, 1);
@@ -488,7 +488,7 @@ void main() {
       HeroRace.nightElf,
     );
 
-    final ready = state.copyWith(bossVictories: 1);
+    final ready = state.copyWith(bossVictories: 2);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 9, 20));
     expect(ascended.heroes.every((h) => h.race == HeroRace.nightElf), isTrue);
     expect(
@@ -525,7 +525,7 @@ void main() {
     expect(legacy.alwaysShowEnemyHp, isFalse);
 
     final ascended = GameLogic.ascend(
-      loaded.copyWith(bossVictories: 1),
+      loaded.copyWith(bossVictories: 2),
       now: DateTime(2026, 9, 21),
     );
     expect(ascended.hideHealFloaters, isTrue);
@@ -581,7 +581,7 @@ void main() {
     state = state.copyWith(
       homeLayout: HomeLayout.home,
       homePanelFull: true,
-      bossVictories: 1,
+      bossVictories: 2,
     );
     final loaded = GameLogic.stateFromJson(state.toJson());
     expect(loaded.homeLayout, HomeLayout.home);
@@ -603,9 +603,15 @@ void main() {
     );
 
     final classicJson = Map<String, dynamic>.from(state.toJson())
-      ..['homeLayout'] = 'classic';
+      ..['homeLayout'] = 'classic'
+      ..['gold'] = 4242
+      ..['partyName'] = 'Classic Party';
     final classic = GameLogic.stateFromJson(classicJson);
-    expect(classic.homeLayout, HomeLayout.classic);
+    expect(classic.homeLayout, HomeLayout.home);
+    expect(classic.gold, 4242);
+    expect(classic.partyName, 'Classic Party');
+    expect(classic.heroes, isNotEmpty);
+    expect(classic.toJson()['homeLayout'], 'home');
 
     final ascended = GameLogic.ascend(loaded, now: DateTime(2026, 9, 21));
     expect(ascended.homeLayout, HomeLayout.home);

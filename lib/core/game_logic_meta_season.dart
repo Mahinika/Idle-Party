@@ -74,8 +74,8 @@ GameState _ensureWeeklyContract(GameState state, {DateTime? now}) {
 }
 
 GameState _ensureDailyVault(GameState state, {DateTime? now}) {
-  final t = (now ?? DateTime.now()).toUtc();
-  final day = MetaSystems.dailyDateKey(t);
+  final t = now ?? DateTime.now();
+  final day = MetaSystems.dailyDateKey(t, state.metaDepth.roi2);
   var next = _rollPushPeaks(state, now: t);
   final md = next.metaDepth;
   if (md.dailyVaultDate == day) return next;
@@ -106,8 +106,8 @@ GameState _ensureDailyVault(GameState state, {DateTime? now}) {
 
 /// Archives yesterday's PUSH peak when the UTC day rolls.
 GameState _rollPushPeaks(GameState state, {DateTime? now}) {
-  final t = (now ?? DateTime.now()).toUtc();
-  final today = MetaSystems.dailyDateKey(t);
+  final t = now ?? DateTime.now();
+  final today = MetaSystems.dailyDateKey(t, state.metaDepth.roi2);
   final md = state.metaDepth;
   if (md.pushPeakDate.isEmpty || md.pushPeakDate == today) return state;
   return state.copyWith(
@@ -127,9 +127,9 @@ GameState _notePushPeak(
   DateTime? now,
 }) {
   if (floor <= 0) return state;
-  final t = (now ?? DateTime.now()).toUtc();
+  final t = now ?? DateTime.now();
   var next = _rollPushPeaks(state, now: t);
-  final today = MetaSystems.dailyDateKey(t);
+  final today = MetaSystems.dailyDateKey(t, next.metaDepth.roi2);
   final md = next.metaDepth;
   final peak =
       md.pushPeakDate == today ? max(md.pushPeakFloor, floor) : floor;

@@ -13,7 +13,6 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/local_reminders.dart';
 import '../../core/game_state.dart';
-import '../../core/home_layout.dart';
 import '../../core/nav_copy.dart';
 import '../../models/dungeon_zoom.dart';
 import '../game_icon.dart';
@@ -463,6 +462,20 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         SaveTransferSection(director: director),
         const SizedBox(height: 12),
         GameButton(
+          label: 'RESTORE PREVIOUS',
+          tip: 'Put back the last backup of this save',
+          style: GameButtonStyle.grey,
+          onPressed: () async {
+            final ok = await director.restorePreviousSave();
+            if (!context.mounted) return;
+            director.showToast(
+              ok ? 'Previous save restored' : 'No previous save',
+              life: 2.2,
+            );
+          },
+        ),
+        const SizedBox(height: 8),
+        GameButton(
           label: 'SAVES',
           tip: 'Open the title screen to continue, start, or switch saves',
           style: GameButtonStyle.grey,
@@ -563,13 +576,6 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         ],
         if (kDebugMode || BuildStamp.gitSha.isNotEmpty) ...[
           const SizedBox(height: 8),
-          _SettingsToggle(
-            label: 'NEW LAYOUT (BETA)',
-            value: state.homeLayout == HomeLayout.home,
-            onChanged: (on) {
-              director.setHomeLayout(on ? HomeLayout.home : HomeLayout.classic);
-            },
-          ),
           _SettingsToggle(
             label: 'FULL FIGHT PANEL',
             value: state.homePanelFull,

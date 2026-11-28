@@ -392,7 +392,8 @@ void main() {
         .firstWhere((t) => t.id == 'weekly');
     expect(weekly.title, 'DAILY VAULT');
     expect(weekly.body.toUpperCase(), isNot(contains('ISO')));
-    expect(weekly.body, contains('UTC midnight'));
+    expect(weekly.body, contains('midnight'));
+    expect(weekly.body, isNot(contains('UTC')));
     expect(weekly.body.toLowerCase(), contains('+ 1 cinder'));
   });
 

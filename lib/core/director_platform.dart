@@ -88,36 +88,43 @@ extension GameDirectorPlatform on GameDirector {
     if (_wispChoiceOpen) return;
     // First boss: stay on screen until the tap. The 10s window is too easy
     // to miss in the middle of the next floor.
-    if (schedule.wispBossHold) {
+    // Park until tapped. A missed window used to burn the day's lantern.
+    if (schedule.wispBossHold || schedule.roi2.goldLanternReady) {
       if (_wispVisibleRemainingMs <= 0) {
         _wispSpawnArmed = true;
-        _wispTappedThisWindow = false;
         _wispVisibleRemainingMs = WispGift.visibleMs;
+        if (!schedule.roi2.goldLanternReady) {
+          _state = _state.copyWith(
+            metaDepth: schedule.copyWith(
+              roi2: schedule.roi2.copyWith(goldLanternReady: true),
+            ),
+          );
+        }
         _directorNotify();
       }
       return;
     }
     if (_wispVisibleRemainingMs > 0) {
       if (!_wispMenuPaused) {
-        final next = _wispVisibleRemainingMs - deltaMs;
-        if (next <= 0) {
-          _wispVisibleRemainingMs = 0;
-          _wispSpawnArmed = false;
-          if (!_wispTappedThisWindow) {
-            _applyUpgrade(WispGift.onWispMissed(_state, nowMs: now));
-          }
-          _directorNotify();
-        } else {
-          _wispVisibleRemainingMs = next;
-        }
+        _wispVisibleRemainingMs = 0;
+        _state = _state.copyWith(
+          metaDepth: schedule.copyWith(
+            roi2: schedule.roi2.copyWith(goldLanternReady: true),
+          ),
+        );
+        _directorNotify();
       }
       return;
     }
     if (WispGift.shouldSpawn(schedule, now)) {
       if (!_wispSpawnArmed) {
         _wispSpawnArmed = true;
-        _wispTappedThisWindow = false;
         _wispVisibleRemainingMs = WispGift.visibleMs;
+        _state = _state.copyWith(
+          metaDepth: schedule.copyWith(
+            roi2: schedule.roi2.copyWith(goldLanternReady: true),
+          ),
+        );
         _directorNotify();
       }
     } else {
@@ -130,14 +137,20 @@ extension GameDirectorPlatform on GameDirector {
     if (WispGift.hasPendingChoice(_state.metaDepth)) return;
     _wispVisibleRemainingMs = 0;
     _wispSpawnArmed = false;
-    _wispTappedThisWindow = true;
-    final adFree = _state.metaDepth.adFree;
+    final vip = _state.metaDepth.hasVipPerks;
+    if (_state.metaDepth.roi2.goldLanternReady) {
+      _state = _state.copyWith(
+        metaDepth: _state.metaDepth.copyWith(
+          roi2: _state.metaDepth.roi2.copyWith(goldLanternReady: false),
+        ),
+      );
+    }
     final keepBefore = _state.gold;
     _applyUpgrade(WispGift.onWispTapped(_state));
     final keep = _state.gold - keepBefore;
     GameAudio.gold();
     showToast('WISP · +$keep gold', life: 2.2);
-    if (adFree) {
+    if (vip) {
       _grantWispWatchReward(toast: true);
     }
     if (WispGift.claimsToday(_state.metaDepth) == RemoteTune.wispDailyCap) {
@@ -182,13 +195,33 @@ extension GameDirectorPlatform on GameDirector {
     }
     if (_isLoading) return false;
     final md = _state.metaDepth;
-    if (md.adFree || AdBoost.hasPerm(md, AdBoost.permRest)) return false;
+    if (md.hasVipPerks || AdBoost.hasPerm(md, AdBoost.permRest)) return false;
+    if (md.adFree) {
+      _welcomeBackAdGranted = true;
+      _applyUpgrade(
+        GameLogic.grantWelcomeBackWatchGold(
+          _state,
+          baseGold,
+          baseEssence: baseEssence,
+          allowAdFree: true,
+          minutesAway: secondsAway ~/ 60,
+        ),
+      );
+      GameAudio.gold();
+      showToast('Welcome Back · loot ×3', life: 2.4);
+      unawaited(_persistFlush());
+      return true;
+    }
     if (!GameLogic.showDailyChase(_state)) return false;
     if (!AdRewarded.realAdsAvailable) {
       showToast('Ads play on the Android app', life: 2.2);
       return false;
     }
-    final extraGold = AdOffer.welcomeExtraGold(_state, baseGold);
+    final extraGold = AdOffer.welcomeExtraGold(
+      _state,
+      baseGold,
+      minutesAway: secondsAway ~/ 60,
+    );
     _armRewardedGrant(rewardGold: extraGold);
     _welcomeBackAdBusy = true;
     showToast('Loading ad…', life: 1.4);
@@ -208,6 +241,7 @@ extension GameDirectorPlatform on GameDirector {
               _state,
               baseGold,
               baseEssence: baseEssence,
+              minutesAway: secondsAway ~/ 60,
             ),
           );
           final gained = _state.gold - beforeGold;

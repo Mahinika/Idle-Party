@@ -9,8 +9,8 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:allowBackup="false"
-        android:fullBackupContent="false"
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
         android:dataExtractionRules="@xml/data_extraction_rules"
         tools:replace="android:allowBackup,android:fullBackupContent,android:dataExtractionRules">
         <activity
@@ -77,6 +77,10 @@
             android:value="false" />
         <meta-data
             android:name="firebase_crashlytics_collection_enabled"
+            android:value="false" />
+        <!-- Crash reports do not collect an advertising ID. -->
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
             android:value="false" />
         <!-- FirebaseInitProvider calls FirebaseApp.initializeApp on the main
              thread before the first frame. Crashlytics and Firebase Sessions

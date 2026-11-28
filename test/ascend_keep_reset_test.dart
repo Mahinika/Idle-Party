@@ -69,7 +69,7 @@ void main() {
           now: DateTime.utc(2026, 9, 1),
           partyName: 'The Ember Guard',
         ).copyWith(
-          bossVictories: 1,
+          bossVictories: 2,
           gold: 4321,
           lifetimeGoldEarned: 9000,
           essence: 40,

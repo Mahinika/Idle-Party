@@ -629,6 +629,16 @@ class _GameHomePageState extends State<GameHomePage>
     _continueGame();
   }
 
+  Future<void> _restorePrevious() async {
+    final ok = await _director.restorePreviousSave();
+    if (!mounted) return;
+    _director.showToast(
+      ok ? 'Previous save restored' : 'No previous save',
+      life: 2.2,
+    );
+    if (ok) setState(() {});
+  }
+
   Future<void> _eraseSlot(int index) async {
     if (_phase != _AppPhase.pickSave) return;
     if (index < 0 || index >= _director.saveSlots.length) return;
@@ -848,6 +858,7 @@ class _GameHomePageState extends State<GameHomePage>
           activeSlot: _director.activeSaveSlot,
           onOpenSlot: (index) => unawaited(_openSlot(index)),
           onEraseSlot: (index) => unawaited(_eraseSlot(index)),
+          onRestorePrevious: () => unawaited(_restorePrevious()),
           onBack: () => setState(() => _phase = _AppPhase.startMenu),
         ),
       );

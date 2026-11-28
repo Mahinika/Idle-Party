@@ -9,16 +9,34 @@ abstract final class AdOffer {
   /// Welcome Back multiplies that trip's gold and essence by this.
   static const int welcomeMul = 3;
 
-  /// The watch pays at least this many minutes of hub gold.
+  /// The watch floor never counts more than this many minutes of hub gold.
   static const int welcomeFloorMinutes = 30;
+
+  /// Welcome Back card stays hidden under this absence (R2-059).
+  static const int welcomeCardMinMinutes = 5;
+
+  /// Floor minutes: the absence, capped at [welcomeFloorMinutes].
+  static int floorMinutesFor(int minutesAway) {
+    if (minutesAway < 0) return 0;
+    if (minutesAway > welcomeFloorMinutes) return welcomeFloorMinutes;
+    return minutesAway;
+  }
 
   /// Extra gold the watch adds on top of [baseGold] already credited.
   ///
-  /// ×[welcomeMul] of the trip, and never under [welcomeFloorMinutes] of hub
-  /// gold. Scroll of Rest stays its own ×3 and does not call this.
-  static int welcomeExtraGold(GameState state, int baseGold) {
+  /// ×[welcomeMul] of the trip, and never under min(30, minutes away) of hub
+  /// gold. Omit [minutesAway] only when the caller does not know the absence;
+  /// that path keeps the 30-minute cap. Scroll of Rest stays its own ×3.
+  static int welcomeExtraGold(
+    GameState state,
+    int baseGold, {
+    int? minutesAway,
+  }) {
     final scaled = baseGold > 0 ? baseGold * (welcomeMul - 1) : 0;
-    final floor = GoldIncome.hubGoldPerMinute(state) * welcomeFloorMinutes;
+    final minutes = minutesAway == null
+        ? welcomeFloorMinutes
+        : floorMinutesFor(minutesAway);
+    final floor = GoldIncome.hubGoldPerMinute(state) * minutes;
     return max(scaled, floor);
   }
 

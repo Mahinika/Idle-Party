@@ -71,6 +71,21 @@ class ChangelogRelease {
     return 'VERSION $version — $when';
   }
 
+  /// In-app notes hide refactors. The full [releases] list is unchanged.
+  ChangelogRelease get playerFacing {
+    if (technical.isEmpty) return this;
+    return ChangelogRelease(
+      version: version,
+      date: date,
+      summary: summary,
+      bullets: _notes,
+      added: added,
+      changed: changed,
+      fixed: fixed,
+      known: known,
+    );
+  }
+
   /// First hour: the new-player lead, not KEY / endgame recap.
   ChangelogRelease get leadOnly {
     final lines = bullets;
@@ -83,6 +98,25 @@ class ChangelogRelease {
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
   static const String currentVersion = '1.14.0';
+
+  /// Last three player-facing versions. Dev-only bullets stay in [releases].
+  static List<ChangelogRelease> get playerNotes {
+    final out = <ChangelogRelease>[];
+    for (final release in releases) {
+      final face = release.playerFacing;
+      final hasPlayer =
+          (face.summary != null && face.summary!.isNotEmpty) ||
+          face.added.isNotEmpty ||
+          face.changed.isNotEmpty ||
+          face.fixed.isNotEmpty ||
+          face.known.isNotEmpty ||
+          face.notes.isNotEmpty;
+      if (!hasPlayer) continue;
+      out.add(face);
+      if (out.length == 3) break;
+    }
+    return out;
+  }
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[

@@ -465,7 +465,7 @@ void main() {
   test('ascend resets forge tracks', () {
     final ready = GameLogic.createInitialState(now: DateTime(2026, 8, 3))
         .copyWith(
-          bossVictories: 1,
+          bossVictories: 2,
           attackBonus: 4,
           moveSpeedBonus: 10,
           attackSpeedBonus: 8,
@@ -511,7 +511,7 @@ void main() {
     final allClear = initial.copyWith(highestDungeonCleared: 14);
     expect(GameLogic.recommendedDungeonId(allClear), 'veil');
 
-    final ready = mid.copyWith(bossVictories: 1);
+    final ready = mid.copyWith(bossVictories: 2);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 4));
     expect(ascended.dungeonId, 'goblin');
   });
@@ -611,9 +611,11 @@ void main() {
     expect(GameLogic.canAscend(initial), isFalse);
     expect(identical(GameLogic.ascend(initial), initial), isTrue);
 
-    final ready = initial.copyWith(bossVictories: 1);
+    final one = initial.copyWith(bossVictories: 1);
+    expect(GameLogic.canAscend(one), isFalse);
+    final ready = initial.copyWith(bossVictories: 2);
     expect(GameLogic.canAscend(ready), isTrue);
-    expect(GameLogic.ascendTrackLabel(initial), 'Ascend 0/1');
+    expect(GameLogic.ascendTrackLabel(initial), 'Ascend 0/2');
     expect(GameLogic.ascendTrackLabel(ready), 'Ascend ready');
     final mid = initial.copyWith(ascensionLevel: 2, bossVictories: 1);
     expect(GameLogic.ascendTrackLabel(mid), 'Ascend 1/3');
@@ -678,7 +680,7 @@ void main() {
         .copyWith(
           gold: 500,
           essence: 12,
-          bossVictories: 1,
+          bossVictories: 2,
           attackBonus: 4,
           unlockedRelics: <String>[GameLogic.warBannerRelic],
           equipped: <EquipmentSlot, EquipmentItem>{
@@ -723,7 +725,7 @@ void main() {
   test('ascend Blessing stacks ATK DEF VIT and gold', () {
     var state = GameLogic.createInitialState(
       now: DateTime(2026, 7, 4),
-    ).copyWith(bossVictories: 1);
+    ).copyWith(bossVictories: 2);
     state = GameLogic.ascend(state, now: DateTime(2026, 7, 5));
     expect(state.metaDepth.ascendBlessings, 1);
     expect(state.ascendBlessingAttackBonus, GameLogic.ascendBlessingAtk);
@@ -762,7 +764,7 @@ void main() {
     final pet = const Pet(id: 'p_meta', name: 'Cub', attackBonus: 1);
     var ready = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
         .copyWith(
-          bossVictories: 1,
+          bossVictories: 2,
           essence: 20,
           lifetimeGoldEarned: 12000,
           highestDungeonCleared: 1,
@@ -819,7 +821,7 @@ void main() {
     ).copyWith(id: 'soulbound_old', name: 'Soulbound Old');
     var ready = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
         .copyWith(
-          bossVictories: 1,
+          bossVictories: 2,
           highestFloorCleared: 12,
           soulboundFragments: 4,
           soulboundItem: heirloom,
@@ -3203,7 +3205,7 @@ void main() {
   test('ascend refreshes mission board for new depth', () {
     final ready = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
         .copyWith(
-          bossVictories: 1,
+          bossVictories: 2,
           highestDungeonCleared: 2,
           missions: GameLogic.createMissionBoard(
             ascensionLevel: 0,
@@ -3513,7 +3515,7 @@ void main() {
     expect(state.sanctuaryGoldLevel, 1);
     expect(GameLogic.applyGoldGain(state, 100), 105);
 
-    final ready = state.copyWith(bossVictories: 1);
+    final ready = state.copyWith(bossVictories: 2);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 7, 5));
     // Prestige wipe: worn drops gone, starter gear back; pet / camp stay.
     expect(

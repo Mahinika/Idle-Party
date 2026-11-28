@@ -10,3 +10,5 @@ Future<AdWatchResult> showRewarded({required String placement}) async =>
     AdWatchResult.unavailable;
 
 Future<void> showPrivacyOptions() async {}
+
+Future<void> presentConsentIfNeeded() async {}

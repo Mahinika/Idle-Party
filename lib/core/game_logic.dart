@@ -17,6 +17,7 @@ import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
 import 'ad_boost.dart';
+import 'day_migrate.dart';
 import 'scroll_well.dart';
 import 'ad_offer.dart';
 import 'relic_ids.dart';
@@ -695,7 +696,7 @@ class GameLogic {
   static const int campAdDailyCap = 5;
 
   static int campAdClaimsToday(GameState state, {DateTime? now}) {
-    final day = AdBoost.utcDayKey(now);
+    final day = AdBoost.utcDayKey(now, state.metaDepth.roi2);
     if (state.metaDepth.campAdUtc != day) return 0;
     return state.metaDepth.campAdClaims;
   }
@@ -719,7 +720,7 @@ class GameLogic {
     };
     if (identical(next, state)) return state;
     final depth = next.metaDepth.copyWith(
-      campAdUtc: AdBoost.utcDayKey(now),
+      campAdUtc: AdBoost.utcDayKey(now, next.metaDepth.roi2),
       campAdClaims: used + 1,
     );
     return next.copyWith(metaDepth: depth);
@@ -825,9 +826,12 @@ class GameLogic {
       _gameLogicContinueAfterWipe(state);
 
   /// Bosses needed this run before Ascend unlocks.
-  /// AL 0 → 1 boss, AL 1 → 2 bosses, etc.
-  static int bossesRequiredForAscension(int ascensionLevel) =>
-      ascensionLevel + 1;
+  /// The button stays secondary until 2 bosses. Later Ascend levels ask
+  /// for one more than the Ascend level when that is already above 2.
+  static int bossesRequiredForAscension(int ascensionLevel) {
+    final stepped = ascensionLevel + 1;
+    return stepped < 2 ? 2 : stepped;
+  }
 
   static bool canAscend(GameState state) =>
       !isMaxAscension(state) &&
@@ -941,13 +945,13 @@ class GameLogic {
     return state.copyWith(metaDepth: state.metaDepth.copyWith(adTickets: next));
   }
 
-  /// Ad-free: claim [AdBoost.adFreeDailyTickets] once per UTC day, no ad.
+  /// VIP: claim [AdBoost.adFreeDailyTickets] once per local day, no ad.
   static GameState claimAdFreeDailyTicket(GameState state, {DateTime? now}) {
-    final clock = now ?? DateTime.now().toUtc();
+    final clock = now ?? DateTime.now();
     if (!AdBoost.canClaimAdFreeDaily(state.metaDepth, now: clock)) {
       return state;
     }
-    final day = AdBoost.utcDayKey(clock);
+    final day = AdBoost.utcDayKey(clock, state.metaDepth.roi2);
     final withTicket = grantAdTicket(
       state,
       count: AdBoost.adFreeDailyTickets,
@@ -1097,22 +1101,27 @@ class GameLogic {
   /// Welcome Back watch: ×[AdOffer.welcomeMul] [baseGold] and [baseEssence]
   /// already credited, with a hub-gold floor on the gold.
   ///
-  /// No new save field. The watch itself refuses Ad-free (that path grants
-  /// the same pile automatically) and Forever Rest (already ×3).
+  /// VIP grants this automatically. Plain Ad-free uses the same pile when
+  /// the player taps the card (no ad). Forever Rest is already ×3.
   static GameState grantWelcomeBackWatchGold(
     GameState state,
     int baseGold, {
     int baseEssence = 0,
     bool allowAdFree = false,
+    int? minutesAway,
   }) {
     if (baseGold <= 0 && baseEssence <= 0) return state;
     final md = state.metaDepth;
-    if ((!allowAdFree && md.adFree) ||
+    if ((!allowAdFree && md.hasVipPerks) ||
         AdBoost.hasPerm(md, AdBoost.permRest)) {
       return state;
     }
     if (!showDailyChase(state)) return state;
-    final extraGold = AdOffer.welcomeExtraGold(state, baseGold);
+    final extraGold = AdOffer.welcomeExtraGold(
+      state,
+      baseGold,
+      minutesAway: minutesAway,
+    );
     final extraEssence = AdOffer.welcomeExtraEssence(baseEssence);
     if (extraGold <= 0 && extraEssence <= 0) return state;
     return state.copyWith(
@@ -2524,6 +2533,7 @@ class GameLogic {
         next.hardmodeLevel > 0) {
       next = _beginKeystoneRun(next);
     }
+    next = DayMigrate.apply(next, _clock());
     return MetaSystems.evaluateAchievements(
       syncSpecUnlocks(
         ensureRogueHero(
@@ -3516,7 +3526,7 @@ class OfflineProgressResult {
       return false;
     }
     final md = state.metaDepth;
-    if (md.adFree || AdBoost.hasPerm(md, AdBoost.permRest)) return false;
+    if (md.hasVipPerks || AdBoost.hasPerm(md, AdBoost.permRest)) return false;
     return GameLogic.showDailyChase(state);
   }
 

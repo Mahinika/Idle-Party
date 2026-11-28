@@ -31,12 +31,19 @@ import 'onboarding_funnel.dart';
 import 'build_stamp.dart';
 import 'crash_report.dart';
 import 'debug_play_log.dart';
+import 'boss_hit_stop.dart';
 import 'fight_frame_budget.dart';
 import 'funnel_analytics.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'gauntlet_pact.dart';
 import 'game_storage.dart';
+import 'save_flush_gate.dart';
+import 'day_clock.dart';
+import 'clock_guard.dart';
+import 'flutter_test_env_stub.dart'
+    if (dart.library.io) 'flutter_test_env_io.dart'
+    as test_env;
 import 'gear_service.dart';
 import 'hero_identity.dart';
 import 'home_layout.dart';
@@ -278,7 +285,6 @@ class GameDirector extends ChangeNotifier {
 
   int _wispVisibleRemainingMs = 0;
   bool _wispSpawnArmed = false;
-  bool _wispTappedThisWindow = false;
   bool _wispMenuPaused = false;
   bool _wispChoiceOpen = false;
 
@@ -968,8 +974,8 @@ class GameDirector extends ChangeNotifier {
   }
 
   void setHomeLayout(HomeLayout layout) {
-    if (_state.homeLayout == layout) return;
-    _applyUpgrade(_state.copyWith(homeLayout: layout));
+    if (_state.homeLayout == HomeLayout.home) return;
+    _applyUpgrade(_state.copyWith(homeLayout: HomeLayout.home));
   }
 
   void setHomePanelFull(bool value) {
@@ -1042,9 +1048,9 @@ class GameDirector extends ChangeNotifier {
         hapticsEnabled: true,
         keepScreenAwake: true,
         soundMuted: false,
-        sfxVolume: 0.45,
+        sfxVolume: kNewInstallSfxVolume,
         ambienceVolume: 0.20,
-        musicVolume: 0.22,
+        musicVolume: kNewInstallMusicVolume,
       ),
     );
   }
@@ -2506,6 +2512,7 @@ class GameDirector extends ChangeNotifier {
     if (_isLoading) {
       return;
     }
+    unawaited(_storage.snapshotActiveSlot(_state));
 
     final hadRogue = _state.rogueUnlocked;
     final fromAl = _state.ascensionLevel;

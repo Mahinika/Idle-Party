@@ -1,7 +1,9 @@
 package com.idleparty.app
 
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.WindowManager
+import java.io.File
 import androidx.core.view.WindowCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -23,6 +25,20 @@ class MainActivity : FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, screenChannel)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
+                    "elapsedRealtime" -> result.success(SystemClock.elapsedRealtime())
+                    "writeSaveBackup" -> {
+                        val slot = call.argument<Int>("slot") ?: 0
+                        val json = call.argument<String>("json") ?: ""
+                        val dir = File(filesDir, "idle_party_backup")
+                        dir.mkdirs()
+                        File(dir, "slot_$slot.json").writeText(json)
+                        result.success(true)
+                    }
+                    "readSaveBackup" -> {
+                        val slot = call.argument<Int>("slot") ?: 0
+                        val file = File(filesDir, "idle_party_backup/slot_$slot.json")
+                        result.success(if (file.exists()) file.readText() else null)
+                    }
                     "setKeepScreenOn" -> {
                         val on = call.argument<Boolean>("on") == true
                         runOnUiThread {

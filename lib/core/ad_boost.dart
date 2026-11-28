@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import '../models/meta_depth.dart';
+import '../models/roi2_persist.dart';
+import 'day_clock.dart';
 import 'scroll_well.dart';
 
 /// POWERUPS: Ad Tickets from rewarded ads, spent on timed buffs.
@@ -169,7 +171,7 @@ abstract final class AdBoost {
     int? nowMs,
     DateTime? now,
   }) {
-    if (md.adFree && canClaimAdFreeDaily(md, now: now)) return 'READY';
+    if (md.hasVipPerks && canClaimAdFreeDaily(md, now: now)) return 'READY';
     if (!md.adFree && ScrollWell.canClaimFree(md, now: now)) return 'READY';
     final n = md.adTickets;
     if (n > 0) return n == 1 ? '1 TICKET' : '$n TICKETS';
@@ -217,17 +219,13 @@ abstract final class AdBoost {
     ];
   }
 
-  static String utcDayKey([DateTime? now]) {
-    final d = (now ?? DateTime.now().toUtc());
-    final y = d.year.toString().padLeft(4, '0');
-    final m = d.month.toString().padLeft(2, '0');
-    final day = d.day.toString().padLeft(2, '0');
-    return '$y-$m-$day';
+  static String utcDayKey([DateTime? now, Roi2Persist? roi]) {
+    return DayClock.effective(roi ?? const Roi2Persist(), now ?? DateTime.now());
   }
 
   static bool canClaimAdFreeDaily(MetaDepthState md, {DateTime? now}) {
-    if (!md.adFree) return false;
-    return md.adFreeDailyClaimUtc != utcDayKey(now);
+    if (!md.hasVipPerks) return false;
+    return md.adFreeDailyClaimUtc != utcDayKey(now, md.roi2);
   }
 
   /// Hub SCROLLS overlay spend/claim readiness (ad-free quiet check).
@@ -237,7 +235,7 @@ abstract final class AdBoost {
   /// [HubScreen].
   static bool showHubFab(MetaDepthState md, {DateTime? now}) {
     if (anyBuffActive(md) || md.adTickets > 0) return true;
-    if (md.adFree) return canClaimAdFreeDaily(md, now: now);
+    if (md.hasVipPerks) return canClaimAdFreeDaily(md, now: now);
     if (ScrollWell.canClaimFree(md, now: now)) return true;
     return true;
   }

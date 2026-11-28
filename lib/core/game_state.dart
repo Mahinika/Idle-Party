@@ -24,6 +24,13 @@ import 'party_role_slots.dart';
 import 'relics.dart';
 import 'run_bag.dart';
 
+/// New-game music and effects. A save that already stored a volume, or
+/// never had the keys, keeps [kLegacySfxVolume] / [kLegacyMusicVolume].
+const double kNewInstallSfxVolume = 0.70;
+const double kNewInstallMusicVolume = 0.40;
+const double kLegacySfxVolume = 0.45;
+const double kLegacyMusicVolume = 0.22;
+
 /// UI text scale clamps (SETTINGS slider + MediaQuery compose).
 const double kUiTextScaleMin = 0.80;
 const double kUiTextScaleMax = 1.45;
@@ -107,9 +114,9 @@ class GameState {
     this.roomHappeningClaim = '',
     this.gauntletPact = '',
     this.soundMuted = false,
-    this.sfxVolume = 0.45,
+    this.sfxVolume = kNewInstallSfxVolume,
     this.ambienceVolume = 0.20,
-    this.musicVolume = 0.22,
+    this.musicVolume = kNewInstallMusicVolume,
     this.vfxQuality = VfxQuality.full,
     this.vfxPinned = false,
     this.combatPace = 1,
@@ -1626,10 +1633,9 @@ class GameState {
   }
 
   /// Missing [homePanelFull]: home + any forge buy → SPLIT under fight.
+  /// A classic save had no split panel, so a missing flag stays full.
   static bool defaultHomePanelFullFromJson(Map<String, dynamic> json) {
-    if (HomeLayout.fromJson(json['homeLayout']) != HomeLayout.home) {
-      return true;
-    }
+    if (json['homeLayout'] == 'classic') return true;
     if (jsonHasForgePurchases(json)) return false;
     return true;
   }
@@ -1837,16 +1843,13 @@ class GameState {
       roomHappeningClaim: json['roomHappeningClaim'] as String? ?? '',
       gauntletPact: json['gauntletPact'] as String? ?? '',
       soundMuted: (json['soundMuted'] as bool?) ?? false,
-      sfxVolume: ((json['sfxVolume'] as num?)?.toDouble() ?? 0.45).clamp(
-        0.0,
-        1.0,
-      ),
+      sfxVolume: ((json['sfxVolume'] as num?)?.toDouble() ?? kLegacySfxVolume)
+          .clamp(0.0, 1.0),
       ambienceVolume: ((json['ambienceVolume'] as num?)?.toDouble() ?? 0.20)
           .clamp(0.0, 1.0),
-      musicVolume: ((json['musicVolume'] as num?)?.toDouble() ?? 0.22).clamp(
-        0.0,
-        1.0,
-      ),
+      musicVolume:
+          ((json['musicVolume'] as num?)?.toDouble() ?? kLegacyMusicVolume)
+              .clamp(0.0, 1.0),
       vfxQuality: VfxQuality.fromJson(
         json['vfxQuality'],
         legacyReduced: json['reducedVfx'] as bool?,

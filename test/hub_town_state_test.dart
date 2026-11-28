@@ -47,7 +47,7 @@ void main() {
 
   GameState vaultReadyTown({int al = 2}) {
     final stamp = DateTime.now().toUtc();
-    var state = quietTown(boss: 1, floor: 2, al: al);
+    var state = quietTown(boss: 2, floor: 2, al: al);
     state = GameLogic.ensureWeeklyContract(state, now: stamp);
     return state.copyWith(
       metaDepth: state.metaDepth.copyWith(

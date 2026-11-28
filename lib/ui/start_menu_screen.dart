@@ -417,6 +417,7 @@ class SaveSlotPicker extends StatelessWidget {
     required this.onOpenSlot,
     required this.onEraseSlot,
     required this.onBack,
+    this.onRestorePrevious,
   });
 
   final List<SaveSlotSummary> slots;
@@ -424,6 +425,7 @@ class SaveSlotPicker extends StatelessWidget {
   final ValueChanged<int> onOpenSlot;
   final ValueChanged<int> onEraseSlot;
   final VoidCallback onBack;
+  final VoidCallback? onRestorePrevious;
 
   @override
   Widget build(BuildContext context) {
@@ -474,6 +476,15 @@ class SaveSlotPicker extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
+              if (onRestorePrevious != null) ...[
+                GameButton(
+                  label: 'RESTORE PREVIOUS',
+                  style: GameButtonStyle.grey,
+                  dense: true,
+                  onPressed: onRestorePrevious,
+                ),
+                const SizedBox(height: 8),
+              ],
               GameButton(
                 label: 'BACK',
                 style: GameButtonStyle.grey,

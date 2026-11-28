@@ -113,7 +113,7 @@ void main() {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     var state = GameLogic.createInitialState(
       now: DateTime.utc(2026, 8, 21),
-    ).copyWith(bossVictories: 1);
+    ).copyWith(bossVictories: 2);
     state = GameLogic.grantAdTicket(state, count: 4);
     state = GameLogic.spendAdBuff(state, AdBuffId.bundle, nowMs: nowMs);
     final tickets = state.metaDepth.adTickets;

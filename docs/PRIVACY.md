@@ -10,8 +10,8 @@ Idle Party is a single-player idle RPG. This document describes how the app hand
 - **Optional Google Play Games.** You may sign in with Play Games for seasonal leaderboards and cloud save. This is opt-in and not required to play.
 - **Optional rewarded ads.** On the Android app you may choose to watch a short ad (hub **SCROLLS**) for an **Ad Ticket**. You spend tickets on timed scrolls (Scroll of Damage, Scroll of Gold, Scroll of XP, Scroll of Speed, Scroll of Loot, Scroll of Haste, Scroll of Battle, Scroll of Rest). Ads do not play unless you start them. Ad serving uses Google AdMob.
 - **Tip a friend (optional).** From hub **SCROLLS** you may share a Play Store link that contains a short code stored in your save. If a friend installs from that link and opens the app, or types your code, the Android app may send Google **Firebase** a hashed install id, that code, and the time. You get 10 Ad Tickets on your save. No name, no email, and no record of who you texted or emailed. The message itself is sent by the app you pick (Messages, mail, Discord, and so on).
-- **Analytics and crash reports (Firebase).** On Android builds that include Firebase configuration, the app may send anonymous usage events to **Google Firebase Analytics** (for example: app open, tutorial steps, first dungeon enter, first combat reward, first boss, Welcome Back, SHOP views and purchases, Ascend, session length, party wipe). It may also send crash stack traces to **Firebase Crashlytics**. This helps Cognifox Studio understand what works and what crashes. In the **EU/EEA**, both follow the Google UMP consent prompt (same path as ads; **SETTINGS → AD PRIVACY**). Nothing is sent until that check finishes. If you decline, crash reports stay off, and Analytics may still send limited consent-mode pings without an advertising ID so Google can model aggregated measurement. If you accept, or outside regions where that form is required, Analytics events and crash reports are collected. Web playtest and builds without Firebase config do not send analytics or crash reports.
-- **Remote settings (Firebase).** On those same Android builds, after the same consent check, the app may fetch a few game settings from **Google Firebase Remote Config** (how often the dungeon lantern appears, and which SHOP row is highlighted). The fetch does not include your save. If consent is off, or Firebase is missing, the game uses the settings shipped in the app.
+- **Analytics and crash reports (Firebase).** On Android builds that include Firebase configuration, the app may send anonymous usage events to **Google Firebase Analytics** (for example: app open, tutorial steps, first dungeon enter, first combat reward, first boss, Welcome Back, SHOP views and purchases, Ascend, session length, party wipe). It may also send crash stack traces to **Firebase Crashlytics**. This helps Cognifox Studio understand what works and what crashes. In the **EU/EEA**, ads follow the Google UMP consent prompt (**SETTINGS → AD PRIVACY**), shown after the first fight and before the first ad request. Analytics starts at boot with Consent Mode denied, then updates after that form. Crash reports are collected even if you decline ads. They do not include an advertising ID. Analytics may still send limited consent-mode pings without an advertising ID so Google can model aggregated measurement. If you accept, or outside regions where that form is required, Analytics events and crash reports are collected. Web playtest and builds without Firebase config do not send analytics or crash reports.
+- **Remote settings (Firebase).** On those same Android builds, the app may fetch a few game settings from **Google Firebase Remote Config** (which SHOP row is highlighted, and feature flags). The fetch uses an installation ID. It does not wait on ad consent and does not include your save or an advertising ID. If Firebase is missing, the game uses the settings shipped in the app. WISP cadence stays on the numbers in the app.
 - **Local save by default.** Progress is stored on your device (e.g. SharedPreferences / platform equivalent).
 
 ## Data the app stores locally
@@ -57,7 +57,7 @@ On **Android** builds that include Firebase configuration (`google-services.json
 - Google **Firebase Analytics** may receive **anonymous** app events (device/app identifiers under Google’s policies; not an Idle Party login).
 - The SDK may initialize when the app starts (not only when you open SCROLLS). Nothing is sent until the consent check finishes. If you accept, typical events include: session start, session length, first time the game is playable, the boot and new-game steps, first dungeon enter (including seconds until combat), first combat gold, first boss, Welcome Back (and whether a watch was offered or finished), SHOP opened and a purchase granted, first return on a later UTC day, enter/leave dungeon, Ascend, party wipe, and (if you answer the reminder card) whether away reminders were turned on or off. A new purchase also includes the Play price and currency when Play has listed that pack. Events do **not** include your save file or clipboard backups.
 - If you decline in the **EU/EEA**, Analytics may still send limited consent-mode pings without an advertising ID so Google can model aggregated measurement. Those pings are not your save.
-- The same consent check gates **Firebase Crashlytics**. A crash may send a stack trace and the app version only if you accept, or if the form is not required. It does not send your save or a name. A decline keeps crash reports off.
+- **Firebase Crashlytics** records a crash stack trace and the app version even if you decline ads. It does not send your save, a name, or an advertising ID.
 - In the **EU/EEA**, the Google consent form (UMP) gates analytics and crash reports. You can change or withdraw that consent later in **SETTINGS → AD PRIVACY**.
 - Analytics and crash reports are not sent from web playtest builds, Flutter tests, or Android builds that lack Firebase config.
 
@@ -65,11 +65,11 @@ Idle Party does not run its own analytics server; Google hosts Firebase.
 
 ## Remote settings (Firebase Remote Config)
 
-On **Android** builds that include Firebase configuration, and only after the same consent check as ads and analytics:
+On **Android** builds that include Firebase configuration. Ad consent is not required:
 
 - The app may ask Google for a small set of settings: lantern timing and which SHOP row is highlighted.
 - That request does not include your save, party, or clipboard.
-- If you decline consent in the EU/EEA, or the request fails, the app keeps the settings that shipped with the build.
+- If the request fails, the app keeps the settings that shipped with the build. A decline of ads does not stop this fetch.
 - Web playtest builds and Flutter tests do not fetch these settings.
 
 ## Tip a friend (Android)
@@ -99,7 +99,7 @@ Hub **SCROLLS** is opt-in:
 - You choose when to watch. Combat is never interrupted by an ad.
 - One finished ad grants **1 Ad Ticket**. Spend tickets on Scroll of Damage (+40% ATK 2h), Scroll of Gold (×2 gold 2h), Scroll of XP (+50% party XP 2h), Scroll of Speed (+30% walk 2h), Scroll of Loot (+40% item find 2h), Scroll of Haste (+25% dungeon speed 2h), Scroll of Battle (ATK+gold for 4h / 2 tickets), or Scroll of Rest (next offline gold ×3). Timers stack per buff up to 24h.
 - Google AdMob serves the ad. Idle Party does not run its own ad server.
-- In the **EU/EEA**, a Google consent form (UMP) may appear before ads can be requested. The same form sets Analytics consent. A decline keeps crash reports off. Analytics may still send limited consent-mode pings without an advertising ID.
+- In the **EU/EEA**, a Google consent form (UMP) appears after the first fight and before the first ad request. The form sets ad consent. Crash reports stay on without an advertising ID. Analytics may still send limited consent-mode pings without an advertising ID.
 - You can change or withdraw that consent later in **SETTINGS → AD PRIVACY** (Android).
 - AdMob may be **linked** to the same Firebase / Google Analytics project so Cognifox Studio can see aggregated ad performance and (when enabled) impression-level revenue alongside analytics. That sharing stays inside Google’s products under their policies.
 
@@ -113,11 +113,11 @@ To stop sharing progress or scores with Play Games:
 2. On the web, open your [Google Account third-party apps](https://myaccount.google.com/permissions) and remove Idle Party / Play Games access.
 3. You can also delete Play Games activity from your Google Account.
 
-To limit or stop Firebase Analytics / AdMob identifiers in the EU/EEA, use **SETTINGS → AD PRIVACY**, or clear app storage / uninstall. That same control also stops Remote Config fetches. Google may retain aggregated analytics under their policies.
+To limit or stop Firebase Analytics / AdMob identifiers in the EU/EEA, use **SETTINGS → AD PRIVACY**, or clear app storage / uninstall. Remote Config still fetches with an installation ID. Crash reports stay on without an advertising ID. Google may retain aggregated analytics under their policies.
 
 Friend-invite rows are a hashed install id, a short code, and a time. Clearing app storage or uninstalling stops new writes from that phone. Google may keep those rows under their policies. There is no Idle Party account to delete.
 
-Local save on the device is removed when you clear the app’s storage or uninstall. Android backup does not restore that save (backup is off for this app). Play Games cloud save is the way to carry a save to another device. Clipboard backups you made yourself stay on your device until you delete them. A clipboard import keeps Play purchases that already belong to this device; it does not grant purchases pasted in from another save. FOREVERSCROLLS is a local code, not a Play purchase.
+Local save on the device is removed when you clear the app’s storage or uninstall. Android Auto Backup may restore the save-file copies only. Shared preferences, databases, ad ids, and Play credentials are excluded. Play Games cloud save is the way to carry a save to another device. Clipboard backups you made yourself stay on your device until you delete them. A clipboard import keeps Play purchases that already belong to this device; it does not grant purchases pasted in from another save. FOREVERSCROLLS is a local code, not a Play purchase.
 
 ## Children
 

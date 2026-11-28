@@ -597,7 +597,7 @@ void main() {
     expect(ApexCraft.rankUnlockHint(15), 'Rank 7 unlocks at Ascend 20');
     expect(ApexCraft.rankUnlockHint(20), isNull);
 
-    const muls = <double>[1.06, 1.14, 1.22, 1.30, 1.38, 1.46, 1.54];
+    const muls = <double>[1.06, 1.14, 1.22, 1.225, 1.230, 1.235, 1.240];
     for (var rank = 1; rank <= ApexCraft.absoluteMaxRank; rank++) {
       expect(ApexCraft.powerMulFor(rank), closeTo(muls[rank - 1], 1e-9));
     }
@@ -1063,16 +1063,19 @@ void main() {
         0: [3, 70, 84, 85, 84],
         1: [3, 72, 87, 89, 88],
         3: [3, 76, 92, 97, 96],
-        5: [4, 88, 113, 102, 101],
-        10: [5, 106, 144, 109, 107],
-        15: [6, 124, 178, 116, 114],
-        20: [7, 142, 216, 123, 121],
+        5: [4, 88, 107, 102, 101],
+        10: [5, 106, 128, 109, 107],
+        15: [6, 124, 151, 116, 114],
+        20: [7, 142, 174, 123, 121],
       };
       expect(
         [rank, apex.itemLevel, apexBudget, dropIlvl, dropBudget],
         rows[al],
         reason: 'AL $al',
       );
+      if (al == 20) {
+        expect(apexBudget / dropBudget, inInclusiveRange(1.25, 1.45));
+      }
     }
   });
 }

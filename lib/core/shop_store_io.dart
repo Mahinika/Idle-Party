@@ -252,6 +252,12 @@ Future<void> _settlePurchase(
         statusRestored: purchase.status == PurchaseStatus.restored,
       );
       if (item == null) {
+        if (ShopCatalog.retiredProductIds.contains(purchase.productID)) {
+          if (purchase.pendingCompletePurchase) {
+            await InAppPurchase.instance.completePurchase(purchase);
+          }
+          return;
+        }
         _onMessage?.call(
           'This pack is not recognized. Contact support with your receipt.',
         );

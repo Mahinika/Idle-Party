@@ -8,6 +8,7 @@ import 'package:idle_party/core/audio_variation_bank.dart';
 import 'package:idle_party/core/combat_feel.dart';
 import 'package:idle_party/core/game_audio.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/music_playlist.dart';
 import 'package:idle_party/core/music_playback_plan.dart';
 import 'package:idle_party/core/music_score.dart';
@@ -517,11 +518,30 @@ void main() {
     );
   });
 
-  test('new save defaults use softer audio mix', () {
+  test('new save defaults raise music and sfx', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 9, 10));
-    expect(state.sfxVolume, closeTo(0.45, 0.001));
+    expect(state.sfxVolume, closeTo(kNewInstallSfxVolume, 0.001));
+    expect(state.sfxVolume, greaterThan(kLegacySfxVolume));
     expect(state.ambienceVolume, closeTo(0.20, 0.001));
-    expect(state.musicVolume, closeTo(0.22, 0.001));
+    expect(state.musicVolume, closeTo(kNewInstallMusicVolume, 0.001));
+    expect(state.musicVolume, greaterThan(kLegacyMusicVolume));
+  });
+
+  test('a saved volume stays, and a missing key keeps the old default', () {
+    final fresh = GameLogic.createInitialState(now: DateTime(2026, 9, 10));
+    final kept = fresh.copyWith(sfxVolume: 0.45, musicVolume: 0.22);
+    final round = GameLogic.stateFromJson(kept.toJson());
+    expect(round.sfxVolume, closeTo(0.45, 0.001));
+    expect(round.musicVolume, closeTo(0.22, 0.001));
+
+    final legacy = Map<String, dynamic>.from(fresh.toJson())
+      ..remove('sfxVolume')
+      ..remove('musicVolume');
+    final loaded = GameLogic.stateFromJson(legacy);
+    expect(loaded.sfxVolume, closeTo(kLegacySfxVolume, 0.001));
+    expect(loaded.musicVolume, closeTo(kLegacyMusicVolume, 0.001));
+    expect(loaded.gold, fresh.gold);
+    expect(loaded.partyName, fresh.partyName);
   });
 }
 

@@ -291,7 +291,7 @@ void main() {
     var state = GameLogic.createInitialState(
       now: now,
     ).copyWith(bossVictories: 1);
-    expect(GameLogic.canAscend(state), isTrue);
+    expect(GameLogic.canAscend(state), isFalse);
     expect(GameLogic.showDailyRunOnHub(state), isFalse);
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.dailyVaultProgress);

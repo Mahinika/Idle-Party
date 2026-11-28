@@ -9,6 +9,7 @@ void main() {
     expect(GameLogic.createInitialState().homeLayout, HomeLayout.home);
     expect(HomeLayout.fromJson(null), HomeLayout.home);
     expect(HomeLayout.fromJson('home'), HomeLayout.home);
+    expect(HomeLayout.fromJson('classic'), HomeLayout.home);
     final json = GameLogic.createInitialState().toJson()..remove('homeLayout');
     expect(GameLogic.stateFromJson(json).homeLayout, HomeLayout.home);
   });

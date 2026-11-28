@@ -37,7 +37,7 @@ List<String> ascendWorthLines(GameState state) {
       MetaSystems.ascendStreakEssence(state);
   return [
     'Gain: AL$nextAl and Blessing ${ascendBlessingStackPhrase()}.',
-    'Lose: gold, regular gear, market listings, loadouts, GOLD tracks, and this run\'s floors.',
+    'Lost: gold, forge tracks, market listings, loadouts, and this run\'s floors. Worn and stashed gear resets to starter pieces. Heroes and Apex gear stay.',
     'Essence: +${formatCount(reward)}e. You keep ${formatCount(state.essence)}e.',
   ];
 }

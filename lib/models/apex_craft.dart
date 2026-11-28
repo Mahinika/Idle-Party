@@ -573,10 +573,13 @@ abstract final class ApexCraft {
         (slot == EquipmentSlot.weapon ? 6 : 0);
   }
 
-  /// Rank power on the drop budget. Rank 1 is 1.06; each rank adds 0.08.
+  /// Rank power on the drop budget. Ranks 1–3 step +0.08 from 1.06.
+  /// Ranks 4–7 step +0.005 so an AL20 rank-7 weapon stays about
+  /// 1.3–1.4× the best boss legendary (see the band test).
   static double powerMulFor(int rank) {
     final r = rank.clamp(1, absoluteMaxRank);
-    return (106 + (r - 1) * 8) / 100;
+    if (r <= 3) return (106 + (r - 1) * 8) / 100;
+    return (1220 + (r - 3) * 5) / 1000;
   }
 
   /// Primary+armor budget after the rank multiplier (before the stat split).

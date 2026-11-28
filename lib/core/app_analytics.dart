@@ -110,8 +110,24 @@ abstract final class AppAnalytics {
     {'days_since_install': ?daysSinceInstall},
   );
 
-  static Future<void> coachStep(String tipId) =>
-      logEvent(AnalyticsEvents.coachStep, {'tip_id': tipId});
+  static int? _sessionStartMs;
+
+  static void markSessionStart() {
+    _sessionStartMs ??= DateTime.now().millisecondsSinceEpoch;
+  }
+
+  static int get sessionElapsedSeconds {
+    final start = _sessionStartMs;
+    if (start == null) return 0;
+    final delta = DateTime.now().millisecondsSinceEpoch - start;
+    if (delta <= 0) return 0;
+    return delta ~/ 1000;
+  }
+
+  static Future<void> coachStep(String tipId) => logEvent(
+    AnalyticsEvents.coachStep,
+    {'tip_id': tipId, 'elapsed_s': sessionElapsedSeconds},
+  );
 
   static Future<void> enterDungeon({
     required String dungeonId,
@@ -284,11 +300,16 @@ abstract final class AppAnalytics {
   static Future<void> bossClear({
     required String dungeonId,
     required int floor,
-  }) =>
-      logEvent(AnalyticsEvents.bossClear, {
-        'dungeon_id': dungeonId,
-        'floor': floor,
-      });
+  }) => logEvent(AnalyticsEvents.bossClear, {
+    'dungeon_id': dungeonId,
+    'floor': floor,
+    'elapsed_s': sessionElapsedSeconds,
+  });
+
+  static Future<void> adFill({
+    required String placement,
+    required bool filled,
+  }) => logEvent(filled ? 'ad_fill' : 'ad_no_fill', {'placement': placement});
 
   static Future<void> dailyRunComplete({
     required String dungeonId,

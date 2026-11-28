@@ -17,6 +17,12 @@ abstract final class RemoteTune {
   static const String keyWelcomeBackFirstReturnShort =
       'welcome_back_first_return_short';
   static const String keyTownEnabled = 'town_enabled';
+  static const String keyGuaranteedFirstBoss = 'first_boss_guaranteed_drop';
+  static const String keyVipPassListed = 'vip_pass_listed';
+  static const String keyLiveEventId = 'live_event_id';
+  static const String keyLiveEventMul = 'live_event_mul';
+  static const String keyLiveEventStart = 'live_event_start_utc';
+  static const String keyLiveEventEnd = 'live_event_end_utc';
 
   static const int defaultDailyCap = 8;
   static const bool defaultTownEnabled = true;
@@ -34,6 +40,12 @@ abstract final class RemoteTune {
   static bool _firstClimbPlayNow = true;
   static bool _welcomeBackFirstReturnShort = true;
   static bool _townEnabled = defaultTownEnabled;
+  static bool _guaranteedFirstBoss = false;
+  static bool _vipPassListed = false;
+  static String _liveEventId = '';
+  static double _liveEventMul = 1;
+  static String _liveEventStart = '';
+  static String _liveEventEnd = '';
 
   static int get wispDailyCap => _dailyCap;
   static int get wispFirstDelayMs => _firstDelaySec * 1000;
@@ -44,6 +56,25 @@ abstract final class RemoteTune {
   static bool get firstClimbPlayNow => _firstClimbPlayNow;
   static bool get welcomeBackFirstReturnShort => _welcomeBackFirstReturnShort;
   static bool get townEnabled => _townEnabled;
+
+  /// Floor 2 first boss already ships. This adds a guaranteed blue drop.
+  static bool get guaranteedFirstBossDrop => _guaranteedFirstBoss;
+
+  /// VIP pass row. Off until a Play product exists. Not chargeable while off.
+  static bool get vipPassListed => _vipPassListed;
+
+  static String get liveEventId => _liveEventId;
+  static double get liveEventMultiplier => _liveEventMul;
+
+  /// True only inside a published window. Defaults are empty, so this is off.
+  static bool liveEventActive(DateTime utcNow) {
+    if (_liveEventId.isEmpty || _liveEventMul <= 1) return false;
+    final start = DateTime.tryParse(_liveEventStart)?.toUtc();
+    final end = DateTime.tryParse(_liveEventEnd)?.toUtc();
+    if (start == null || end == null || !end.isAfter(start)) return false;
+    final now = utcNow.toUtc();
+    return !now.isBefore(start) && now.isBefore(end);
+  }
 
   /// Out-of-cave town square (buildings). Off → fight-first rails instead.
   static bool townSquareActive(bool inDungeon) => _townEnabled && !inDungeon;
@@ -62,6 +93,12 @@ abstract final class RemoteTune {
     keyFirstClimbPlayNow: true,
     keyWelcomeBackFirstReturnShort: true,
     keyTownEnabled: defaultTownEnabled,
+    keyGuaranteedFirstBoss: false,
+    keyVipPassListed: false,
+    keyLiveEventId: '',
+    keyLiveEventMul: 1.0,
+    keyLiveEventStart: '',
+    keyLiveEventEnd: '',
   };
 
   /// [fromRemote] is true only after a fetch this process accepted.
@@ -76,16 +113,22 @@ abstract final class RemoteTune {
     bool? firstClimbPlayNow,
     bool? welcomeBackFirstReturnShort,
     bool? townEnabled,
+    bool? guaranteedFirstBoss,
+    bool? vipPassListed,
+    String? liveEventId,
+    double? liveEventMul,
+    String? liveEventStart,
+    String? liveEventEnd,
     bool fromRemote = false,
   }) {
-    final cap = _inRange(dailyCap, 1, 12, defaultDailyCap);
     final first = _inRange(firstDelaySec, 15, 3600, defaultFirstDelaySec);
-    final interval = _inRange(intervalSec, 60, 3600, defaultIntervalSec);
     final visible = _inRange(visibleSec, 5, 30, defaultVisibleSec);
     final id = (shopFeaturedId ?? '').trim();
-    _dailyCap = cap;
+    // dailyCap and intervalSec stay in the signature so a later experiment
+    // can read them. Shipped play ignores both.
+    _dailyCap = defaultDailyCap;
     _firstDelaySec = first;
-    _intervalSec = interval;
+    _intervalSec = defaultIntervalSec;
     _visibleSec = visible;
     _shopFeaturedId = ShopCatalog.byId.containsKey(id) ? id : '';
     _firstClimbAutoContinue =
@@ -94,12 +137,16 @@ abstract final class RemoteTune {
     _welcomeBackFirstReturnShort =
         welcomeBackFirstReturnShort ?? _welcomeBackFirstReturnShort;
     _townEnabled = townEnabled ?? _townEnabled;
+    _guaranteedFirstBoss = guaranteedFirstBoss ?? _guaranteedFirstBoss;
+    _vipPassListed = vipPassListed ?? _vipPassListed;
+    _liveEventId = (liveEventId ?? _liveEventId).trim();
+    final mul = liveEventMul;
+    _liveEventMul = (mul == null || mul < 1 || mul > 5) ? 1 : mul;
+    _liveEventStart = (liveEventStart ?? _liveEventStart).trim();
+    _liveEventEnd = (liveEventEnd ?? _liveEventEnd).trim();
     _wispFromRemote =
         fromRemote &&
-        (cap != defaultDailyCap ||
-            first != defaultFirstDelaySec ||
-            interval != defaultIntervalSec ||
-            visible != defaultVisibleSec);
+        (first != defaultFirstDelaySec || visible != defaultVisibleSec);
   }
 
   static void reset() => apply(
@@ -107,6 +154,12 @@ abstract final class RemoteTune {
         firstClimbPlayNow: true,
         welcomeBackFirstReturnShort: true,
         townEnabled: defaultTownEnabled,
+        guaranteedFirstBoss: false,
+        vipPassListed: false,
+        liveEventId: '',
+        liveEventMul: 1,
+        liveEventStart: '',
+        liveEventEnd: '',
       );
 
   /// Bool feature flag from Remote Config. Web, tests, and a missing value

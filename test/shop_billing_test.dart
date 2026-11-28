@@ -21,38 +21,33 @@ void main() {
   test('ad-free copy names the approved rewards and does not change the sku', () {
     final item = ShopCatalog.byId['ad_free']!;
     expect(item.id, 'ad_free');
+    expect(item.name, 'Ad-free');
     expect(item.oneTime, isTrue);
     expect(item.kind, ShopOfferKind.adFree);
-    expect(item.description, contains('five free tickets each day'));
-    expect(item.description, contains('at least 2 hours of hub gold'));
-    expect(item.description, contains('×3'));
-    expect(item.description, contains('at least 30 minutes of hub gold'));
-    expect(item.description, contains('five free CAMP levels'));
-    expect(item.description, contains('WATCH AD'));
+    expect(item.description, contains('same reward'));
+    expect(item.description, contains('Ad Ticket'));
     expect(item.description.toLowerCase(), isNot(contains('price')));
+    expect(ShopCatalog.byId.containsKey('vip_pass'), isTrue);
+    expect(ShopCatalog.mayBuy('vip_pass', playLists: true), isFalse);
   });
 
-  test('ad_free persists, grants tickets, and marks owned', () {
+  test('ad_free persists without the old ticket grant', () {
     var state = GameLogic.createInitialState(now: now);
     final item = ShopCatalog.offered.firstWhere((e) => e.id == 'ad_free');
     state = ShopBilling.applyPurchase(state, item, now: now);
     expect(state.metaDepth.adFree, isTrue);
+    expect(state.metaDepth.roi2.vipPass, isFalse);
+    expect(state.metaDepth.roi2.vipPerkSplit, isTrue);
     expect(ShopBilling.isOwned(state, item), isTrue);
-    expect(state.metaDepth.adTickets, 2);
+    expect(state.metaDepth.adTickets, 0);
   });
 
-  test('starter boost is one-time Full Boost hours', () {
-    var state = GameLogic.createInitialState(now: now);
-    final item = ShopCatalog.offered.firstWhere(
-      (e) => e.id == 'starter_boost_6h',
-    );
-    state = ShopBilling.applyPurchase(state, item, now: now);
-    expect(state.metaDepth.shopStarterClaimed, isTrue);
-    final until = state.metaDepth.adAtkUntilMs;
-    expect(until, greaterThan(now.millisecondsSinceEpoch));
-    expect(state.metaDepth.adGoldUntilMs, until);
-    state = ShopBilling.applyPurchase(state, item, now: now);
-    expect(state.metaDepth.adAtkUntilMs, until);
+  test('retired hour packs are absent and unknown to the catalog', () {
+    expect(ShopCatalog.byId.containsKey('starter_boost_6h'), isFalse);
+    expect(ShopCatalog.byId.containsKey('boost_12h'), isFalse);
+    expect(ShopCatalog.byId.containsKey('day_boost_24h'), isFalse);
+    expect(ShopCatalog.retiredProductIds, contains('starter_boost_6h'));
+    expect(ShopCatalog.timePacks, isEmpty);
   });
 
   test('supporter_qol adds bag slots once (restore-safe)', () {
@@ -70,29 +65,21 @@ void main() {
     var state = GameLogic.createInitialState(now: now);
     final item = ShopCatalog.offered.firstWhere((e) => e.id == 'ad_free');
     state = ShopBilling.applyPurchase(state, item, now: now);
-    expect(state.metaDepth.adTickets, 2);
+    expect(state.metaDepth.adTickets, 0);
     state = state.copyWith(metaDepth: state.metaDepth.copyWith(adTickets: 5));
     state = ShopBilling.applyPurchase(state, item, now: now);
     expect(state.metaDepth.adTickets, 5);
-  });
-
-  test('day pack covers a full day and the 12h pack is shorter', () {
-    expect(ShopCatalog.byId['boost_12h']!.boostHours, 12);
-    expect(ShopCatalog.byId['day_boost_24h']!.boostHours, 24);
-  });
-
-  test('consumable boost packs are marked consumable', () {
-    expect(ShopCatalog.byId['boost_12h']!.isConsumable, isTrue);
-    expect(ShopCatalog.byId['day_boost_24h']!.isConsumable, isTrue);
-    expect(ShopCatalog.byId['starter_boost_6h']!.isConsumable, isFalse);
-    expect(ShopCatalog.byId['ad_free']!.isConsumable, isFalse);
-    expect(ShopBilling.billingReady, isTrue);
+    expect(state.metaDepth.adFree, isTrue);
   });
 
   test('boost hours respect 24h cap on both timers', () {
     var state = GameLogic.createInitialState(now: now);
-    final item = ShopCatalog.offered.firstWhere((e) => e.id == 'day_boost_24h');
-    state = ShopBilling.applyPurchase(state, item, now: now);
+    final md = GameLogic.grantFullBoostHours(
+      state.metaDepth,
+      24,
+      nowMs: now.millisecondsSinceEpoch,
+    );
+    state = state.copyWith(metaDepth: md);
     expect(
       AdBoost.remainingMs(
         state.metaDepth.adAtkUntilMs,
@@ -107,6 +94,12 @@ void main() {
       ),
       lessThanOrEqualTo(AdBoost.maxStackMs),
     );
+    final again = GameLogic.grantFullBoostHours(
+      md,
+      12,
+      nowMs: now.millisecondsSinceEpoch,
+    );
+    expect(again.adAtkUntilMs, lessThanOrEqualTo(md.adAtkUntilMs));
   });
 
   test('old saves default shop billing fields', () {
@@ -136,10 +129,7 @@ void main() {
     () {
       expect(ShopCatalog.foreverSingles.length, 7);
       expect(ShopCatalog.foreverBundle.single.id, 'perm_scrolls_all');
-      expect(
-        ShopCatalog.timePacks.length,
-        3,
-      ); // restore-only, not listed in SHOP
+      expect(ShopCatalog.timePacks, isEmpty);
       expect(ShopCatalog.shelf().map((e) => e.id), [
         'ad_free',
         'long_away',
@@ -164,7 +154,6 @@ void main() {
         ShopCatalog.shelf(
           playListed: {
             'perm_scroll_atk',
-            'starter_boost_6h',
             'cinder_pouch',
             'season_pass_premium',
             'ad_free',
@@ -180,6 +169,7 @@ void main() {
         ],
       );
       expect(ShopCatalog.mayBuy('boost_12h', playLists: true), isFalse);
+      expect(ShopCatalog.mayBuy('perm_scrolls_all', playLists: false), isFalse);
       expect(ShopCatalog.mayBuy('perm_scroll_atk', playLists: false), isFalse);
       expect(ShopCatalog.mayBuy('perm_scroll_atk', playLists: true), isTrue);
       expect(ShopCatalog.mayBuy('cinder_pouch', playLists: false), isTrue);
@@ -198,20 +188,8 @@ void main() {
         isTrue,
       );
       expect(
-        ShopBilling.grantOnRestore(ShopCatalog.byId['starter_boost_6h']!),
-        isTrue,
-      );
-      expect(
         ShopBilling.grantOnRestore(ShopCatalog.byId['perm_scrolls_all']!),
         isTrue,
-      );
-      expect(
-        ShopBilling.grantOnRestore(ShopCatalog.byId['boost_12h']!),
-        isFalse,
-      );
-      expect(
-        ShopBilling.grantOnRestore(ShopCatalog.byId['day_boost_24h']!),
-        isFalse,
       );
       expect(
         ShopBilling.grantOnRestore(ShopCatalog.byId['cinder_pouch']!),
@@ -302,7 +280,7 @@ void main() {
       isFalse,
     );
     final ascended = GameLogic.ascend(
-      state.copyWith(bossVictories: 1),
+      state.copyWith(bossVictories: 2),
       now: now,
     );
     expect(ascended.metaDepth.cinders, 24);
@@ -333,7 +311,7 @@ void main() {
     final round = GameLogic.stateFromJson(state.toJson());
     expect(round.metaDepth.shopLongAway, isTrue);
     final ascended = GameLogic.ascend(
-      state.copyWith(bossVictories: 1),
+      state.copyWith(bossVictories: 2),
       now: now,
     );
     expect(ascended.metaDepth.shopLongAway, isTrue);
@@ -363,7 +341,7 @@ void main() {
 
       final scroll = find.byType(Scrollable).first;
       for (final label in [
-        'Ad-free welcome',
+        'Ad-free',
         'Long Away',
         'Supporter pack',
       ]) {

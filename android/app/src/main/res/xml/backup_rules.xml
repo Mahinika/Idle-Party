@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pre-API 31 full backup. Same save copies as data_extraction_rules. -->
+<full-backup-content>
+    <include domain="file" path="idle_party_backup/slot_0.json" />
+    <include domain="file" path="idle_party_backup/slot_1.json" />
+    <include domain="file" path="idle_party_backup/slot_2.json" />
+    <include domain="file" path="idle_party_backup/slot_3.json" />
+    <include domain="file" path="idle_party_backup/slot_4.json" />
+    <exclude domain="root" />
+    <exclude domain="database" />
+    <exclude domain="sharedpref" />
+    <exclude domain="external" />
+</full-backup-content>

@@ -1,9 +1,9 @@
-/// Which play shell a save uses. Classic is the hub + dungeon bar.
-/// Home is the fight-first shell. A save with no layout field opens on home.
+/// Which play shell a save uses. Classic was the hub + dungeon bar.
+/// Every load opens on home. The classic name stays so old JSON and
+/// NavCopy tests still compile. [fromJson] never returns classic.
 enum HomeLayout {
   classic,
   home;
 
-  static HomeLayout fromJson(Object? raw) =>
-      raw == 'classic' ? HomeLayout.classic : HomeLayout.home;
+  static HomeLayout fromJson(Object? raw) => HomeLayout.home;
 }

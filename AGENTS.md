@@ -87,14 +87,16 @@ main.dart
      │    fight or town · rails · FORGE/CAMP/MARKET under the fight
      │    HEROES · ESSENCE · FIGHT · MAP · SHOP
      │    MENU is the top button. Town is the screen outside a cave.
-     └─ classic (SETTINGS on a test build, or a save that says classic)
+     └─ classic (in-memory tests only; a loaded save never stays here)
           ├─ Hub (!inDungeon) → HubScreen
           └─ Dungeon → Is2Shell → SpatialDungeonView
               + AppBottomBar GEAR / GOLD / SHOP / ESSENCE / MORE
 ```
 
 A new game on a fresh phone uses the home layout and starts in Sandy Caverns.
-A save with no layout field also opens on that shell. Out of the cave the
+A save with no layout field also opens on that shell. A save that stored
+classic loads as home; gold, heroes, and the rest of the JSON stay.
+Out of the cave the
 party rests in town (Forge CRAFT, Market listings, Inn ROSTER, Guild quests,
 Vault claim). GOLD under the fight is still FORGE tracks + CAMP + MARKET,
 not a bottom tab. ESSENCE tiles are
