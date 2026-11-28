@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
 import '../../../core/home_layout.dart';
+import '../../../core/home_prompt_budget.dart';
 import '../../../core/game_logic.dart';
 import '../../../core/menu_router.dart';
 import '../../../core/meta_systems.dart';
 import '../../dungeon_art_warmup.dart';
 import '../../meta/notify_opt_in.dart';
 import '../../meta/offline_welcome.dart';
+import '../../meta/play_games_protect_overlay.dart';
 import '../../meta/play_review_ask_overlay.dart';
 import '../discord_thanks_overlay.dart';
 import '../whats_new_overlay.dart';
@@ -52,6 +54,7 @@ class _HomePromptHostState extends State<HomePromptHost> {
   bool _discord = false;
   bool _notify = false;
   bool _review = false;
+  bool _playGamesProtect = false;
   bool _again = false;
   bool _offlineShowing = false;
   bool _cardShown = false;
@@ -183,12 +186,29 @@ class _HomePromptHostState extends State<HomePromptHost> {
     _offering = true;
     try {
       if (await _whatsNewCard()) return;
-      if (await _discordCard()) return;
-      if (await _notifyCard()) return;
-      await _reviewCard();
+      if (await _playGamesProtectCard()) return;
+      final budgeted = HomePromptBudget.applies(director.state);
+      if (budgeted && !HomePromptBudget.canSpend(director.state)) return;
+      if (await _notifyCard(budgeted: budgeted)) return;
+      if (await _discordCard(budgeted: budgeted)) return;
+      await _reviewCard(budgeted: budgeted);
     } finally {
       _offering = false;
     }
+  }
+
+  void _markSessionModal() {
+    final id = HomePromptBudget.tipForSession(director.state.metaDepth.sessionCount);
+    director.dismissTip(id);
+  }
+
+  Future<bool> _playGamesProtectCard() async {
+    if (_playGamesProtect || !mounted) return false;
+    if (!HomePrompts.calm(director)) return false;
+    if (!PlayGamesProtectOverlay.shouldOffer(director)) return false;
+    _playGamesProtect = true;
+    await PlayGamesProtectOverlay.show(context, director);
+    return true;
   }
 
   Future<bool> _whatsNewCard() async {
@@ -203,7 +223,7 @@ class _HomePromptHostState extends State<HomePromptHost> {
     return true;
   }
 
-  Future<bool> _discordCard() async {
+  Future<bool> _discordCard({required bool budgeted}) async {
     if (_discord || !mounted) return false;
     if (_skipDiscordThisOffer) {
       _skipDiscordThisOffer = false;
@@ -211,27 +231,33 @@ class _HomePromptHostState extends State<HomePromptHost> {
     }
     if (!HomePrompts.calm(director)) return false;
     if (!DiscordThanksOverlay.shouldOffer(director)) return false;
+  if (budgeted && HomePromptBudget.consumed(director.state)) return false;
     _discord = true;
     await DiscordThanksOverlay.show(context, director);
+    if (budgeted) _markSessionModal();
     return true;
   }
 
-  Future<bool> _notifyCard() async {
+  Future<bool> _notifyCard({required bool budgeted}) async {
     if (_notify || !mounted) return false;
     if (!HomePrompts.calm(director)) return false;
     if (director.offlineSummary != null) return false;
     if (!NotifyOptInOverlay.shouldOffer(director)) return false;
+    if (budgeted && HomePromptBudget.consumed(director.state)) return false;
     _notify = true;
     await NotifyOptInOverlay.show(context, director);
+    if (budgeted) _markSessionModal();
     return true;
   }
 
-  Future<bool> _reviewCard() async {
+  Future<bool> _reviewCard({required bool budgeted}) async {
     if (_review || !mounted) return false;
     if (!HomePrompts.calm(director)) return false;
     if (!PlayReviewAskOverlay.shouldOffer(director)) return false;
+    if (budgeted && HomePromptBudget.consumed(director.state)) return false;
     _review = true;
     await PlayReviewAskOverlay.show(context, director);
+    if (budgeted) _markSessionModal();
     return true;
   }
 

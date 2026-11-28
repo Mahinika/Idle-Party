@@ -26,6 +26,12 @@ GameState _afterFirstLoot({bool inDungeon = false}) {
   return state;
 }
 
+GameState _afterFirstBoss({bool inDungeon = false}) =>
+    _afterFirstLoot(inDungeon: inDungeon).copyWith(
+      bossVictories: 1,
+      highestFloorCleared: 1,
+    );
+
 void main() {
   test('new save never offers the ping card', () {
     final state = GameLogic.createInitialState(now: DateTime.utc(2026, 9, 12));
@@ -61,7 +67,13 @@ void main() {
       ),
       isFalse,
     );
-    expect(LocalReminders.showSettingsToggle(hub), isTrue);
+    expect(LocalReminders.showSettingsToggle(hub), isFalse);
+    expect(
+      LocalReminders.showSettingsToggle(
+        hub.copyWith(highestFloorCleared: 1, bossVictories: 1),
+      ),
+      isTrue,
+    );
   });
 
   test('after the first boss, offer once — never in a fight', () {
@@ -102,7 +114,10 @@ void main() {
 
   test('opt-in plans chest full and morning or evening, never KEY', () {
     final now = DateTime.utc(2026, 9, 12, 8);
-    final opted = LocalReminders.setOptIn(_afterFirstLoot(), enabled: true);
+    final opted = LocalReminders.setOptIn(
+      _afterFirstBoss().copyWith(autoCaveOnLeave: false),
+      enabled: true,
+    );
     final pings = LocalReminders.plan(opted, now);
     expect(pings.map((p) => p.id), contains(LocalPing.goldId));
     expect(
@@ -141,16 +156,14 @@ void main() {
     expect(LocalReminders.optInBody.toLowerCase(), contains('settings'));
     expect(LocalReminders.optInBody.toLowerCase(), contains('today\'s job'));
     expect(LocalReminders.optInBody.toLowerCase(), contains('evening'));
+    expect(LocalReminders.optInBody.toLowerCase(), contains('keeps fighting'));
     expect(LocalReminders.optInBody.toLowerCase(), isNot(contains('key')));
   });
 
   test('a live cave schedules the fight cap ping', () {
     final now = DateTime.utc(2026, 9, 12, 8);
     final cave = LocalReminders.setOptIn(
-      _afterFirstLoot(inDungeon: true).copyWith(
-        highestFloorCleared: 1,
-        lastUpdated: now,
-      ),
+      _afterFirstBoss(inDungeon: true).copyWith(lastUpdated: now),
       enabled: true,
     );
     final pings = LocalReminders.plan(cave, now);
@@ -167,8 +180,7 @@ void main() {
   test('hub with auto cave schedules the fight cap ping', () {
     final now = DateTime.utc(2026, 9, 12, 10);
     final hub = LocalReminders.setOptIn(
-      _afterFirstLoot().copyWith(
-        highestFloorCleared: 1,
+      _afterFirstBoss().copyWith(
         lastUpdated: now,
         autoCaveOnLeave: true,
       ),
@@ -182,8 +194,7 @@ void main() {
   test('auto cave off on the hub skips the fight cap ping', () {
     final now = DateTime.utc(2026, 9, 12, 10);
     final hub = LocalReminders.setOptIn(
-      _afterFirstLoot().copyWith(
-        highestFloorCleared: 1,
+      _afterFirstBoss().copyWith(
         lastUpdated: now,
         autoCaveOnLeave: false,
       ),
@@ -197,7 +208,7 @@ void main() {
 
   test('quiet hours bump a late-night gold ping to morning', () {
     final now = DateTime.utc(2026, 9, 12, 14);
-    final opted = LocalReminders.setOptIn(_afterFirstLoot(), enabled: true);
+    final opted = LocalReminders.setOptIn(_afterFirstBoss(), enabled: true);
     final rawFull = now.add(Duration(seconds: GoldIncome.hubChestCapSec));
     expect(LocalReminders.isQuietLocalHour(rawFull), isTrue);
     final gold = LocalReminders.plan(opted, now).firstWhere(
@@ -296,7 +307,7 @@ void main() {
       attackBonus: 3,
       speciesId: 'cave_bat',
     );
-    var state = _afterFirstLoot().copyWith(ownedPets: const [pet]);
+    var state = _afterFirstBoss().copyWith(ownedPets: const [pet]);
     state = GameLogic.sendPetErrand(state, pet.id, 4, now: now);
     state = LocalReminders.setOptIn(state, enabled: true);
     final pings = LocalReminders.plan(state, now);
@@ -311,7 +322,7 @@ void main() {
 
   test('UTC day cap skips a same-day gold ping when two already fired', () {
     final now = DateTime.utc(2026, 9, 12, 10);
-    var state = LocalReminders.setOptIn(_afterFirstLoot(), enabled: true);
+    var state = LocalReminders.setOptIn(_afterFirstBoss(), enabled: true);
     state = state.copyWith(
       metaDepth: state.metaDepth.copyWith(
         notifyPingMs: [
@@ -344,7 +355,7 @@ void main() {
     expect(md.notifyPrompted, isFalse);
     expect(md.notifyPingMs, isEmpty);
 
-    final opted = LocalReminders.setOptIn(_afterFirstLoot(), enabled: true);
+    final opted = LocalReminders.setOptIn(_afterFirstBoss(), enabled: true);
     final round = MetaDepthState.fromJson(opted.metaDepth.toJson());
     expect(round.notifyOptIn, isTrue);
     expect(round.notifyPrompted, isTrue);
@@ -352,7 +363,7 @@ void main() {
 
   test('Ascend keeps notify opt-in', () {
     final now = DateTime.utc(2026, 9, 12, 14);
-    var state = LocalReminders.setOptIn(_afterFirstLoot(), enabled: true);
+    var state = LocalReminders.setOptIn(_afterFirstBoss(), enabled: true);
     state = GameLogic.ascend(state, now: now);
     expect(state.metaDepth.notifyOptIn, isTrue);
     expect(state.metaDepth.notifyPrompted, isTrue);
@@ -361,7 +372,7 @@ void main() {
   test(
     'background pause records the plan; resume drops unsent futures',
     () async {
-      final opted = LocalReminders.setOptIn(_afterFirstLoot(), enabled: true);
+      final opted = LocalReminders.setOptIn(_afterFirstBoss(), enabled: true);
       final director = GameDirector.preview(initialState: opted);
       addTearDown(director.dispose);
       director.setAppPaused(true);

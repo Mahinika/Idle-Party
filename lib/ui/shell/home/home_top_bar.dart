@@ -59,7 +59,7 @@ class HomeTopBar extends StatelessWidget {
                 '${s.keystoneRunActive}|${s.keystoneTimerMs}|'
                 '${s.inDungeon}|${s.currentRoom.floorNumber}|'
                 '${GoldIncome.hubGoldPerMinute(s)}|'
-                '${HomeCatalog.townMenuBadge(s, director)}';
+                '${HomeCatalog.townMenuBadge(s, director, menuOpen: router.isOpen && router.route == MenuRoute.more)}';
           },
           builder: (context, state) =>
               _bar(context, state, router.route, router.essencePanel),
@@ -120,7 +120,11 @@ class HomeTopBar extends StatelessWidget {
     final chromeInset = textScale > GameTheme.typeScaleMax ? 6.0 : 8.0;
     // Town has no quick rail (F100): SCROLLS / POUCH / UPDATE wait in MENU,
     // so their red dot moves onto the MENU button.
-    final menuDot = HomeCatalog.townMenuBadge(state, director);
+    final menuDot = HomeCatalog.townMenuBadge(
+      state,
+      director,
+      menuOpen: router.isOpen && router.route == MenuRoute.more,
+    );
     // Stone fills the cutout. The words start below it.
     final topInset = MenuChrome.systemTopInset(context);
     return Material(

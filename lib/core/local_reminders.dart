@@ -55,16 +55,12 @@ abstract final class LocalReminders {
   static const String optInTitle = 'A quiet ping?';
 
   static String get optInBody =>
+      'Your party keeps fighting while the app is closed. '
       'In the morning: today\'s job. In the evening: a prize is waiting. '
       'Never between 10pm and 8am. Turn off anytime in SETTINGS.';
 
   static bool milestoneReached(GameState state) {
-    final reward =
-        FunnelAnalytics.has(state, FunnelAnalytics.firstReward) ||
-        FunnelAnalytics.has(state, FunnelAnalytics.firstBoss) ||
-        state.lifetimeGoldEarned > 0 ||
-        state.bossVictories > 0;
-    if (!reward) return false;
+    if (state.bossVictories < 1) return false;
     return FunnelAnalytics.has(state, FunnelAnalytics.firstEnter) ||
         state.highestFloorCleared >= 1 ||
         state.metaDepth.lifetimeFloorClears >= 1 ||

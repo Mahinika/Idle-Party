@@ -712,6 +712,7 @@ class DungeonTopHud extends StatelessWidget {
                   GameLogic.dungeonModeChipTip(DungeonMode.farm, state),
               onTap: () {
                 director.dismissTip('farm_push');
+                director.dismissTip('farm_push_mode_ack');
                 setMode(DungeonMode.farm);
               },
             ),
@@ -732,6 +733,7 @@ class DungeonTopHud extends StatelessWidget {
                   GameLogic.dungeonModeChipTip(DungeonMode.push, state),
               onTap: () {
                 director.dismissTip('farm_push');
+                director.dismissTip('farm_push_mode_ack');
                 setMode(DungeonMode.push);
               },
             ),

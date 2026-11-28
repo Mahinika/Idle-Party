@@ -64,32 +64,29 @@ class HomeNavBar extends StatelessWidget {
                         Expanded(
                           child: _tab(MenuRoute.gear, 'HEROES', UiIcon.gear),
                         ),
-                        Expanded(
-                          child: essence
-                              ? _tab(
-                                  MenuRoute.essence,
-                                  'ESSENCE',
-                                  UiIcon.essence,
-                                )
-                              : _locked('ESSENCE', _essenceHint()),
-                        ),
+                        if (essence)
+                          Expanded(
+                            child: _tab(
+                              MenuRoute.essence,
+                              'ESSENCE',
+                              UiIcon.essence,
+                            ),
+                          ),
                         // The round FIGHT sits over this slot.
                         const Expanded(child: SizedBox.shrink()),
-                        Expanded(
-                          child: map
-                              ? _tab(
-                                  MenuRoute.map,
-                                  'MAP',
-                                  UiIcon.map,
-                                  count: _mapTimer(),
-                                )
-                              : _locked('MAP', _bossHint),
-                        ),
-                        Expanded(
-                          child: shop
-                              ? _tab(MenuRoute.shop, 'SHOP', UiIcon.shop)
-                              : _locked('SHOP', _bossHint),
-                        ),
+                        if (map)
+                          Expanded(
+                            child: _tab(
+                              MenuRoute.map,
+                              'MAP',
+                              UiIcon.map,
+                              count: _mapTimer(),
+                            ),
+                          ),
+                        if (shop)
+                          Expanded(
+                            child: _tab(MenuRoute.shop, 'SHOP', UiIcon.shop),
+                          ),
                       ],
                     ),
                   ),
@@ -144,49 +141,6 @@ class HomeNavBar extends StatelessWidget {
     if (textScale <= GameTheme.typeScaleMax) return base;
     final grown = base * textScale / GameTheme.typeScaleMax;
     return grown < base + 4 ? grown : base + 4;
-  }
-
-  static const String _bossHint = 'Boss F2';
-
-  String _essenceHint() => MenuTabs.showGold(state) ? '1st essence' : _bossHint;
-
-  /// A padlock over the tab's real name, dimmed; what opens it is in the
-  /// tooltip and semantics. Four tabs all reading "Boss F2" said nothing
-  /// about what they were (audit F038).
-  Widget _locked(String label, String hint) {
-    return Tooltip(
-      message: '$label opens at $hint',
-      child: Semantics(
-        label: '$label locked · $hint',
-        excludeSemantics: true,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-          child: Opacity(
-            opacity: 0.75,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const GameIcon.glyph(
-                  UiGlyph.lock,
-                  size: 18,
-                  color: GameTheme.buyGreyText,
-                ),
-                const SizedBox(height: 3),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 2,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.hint(color: GameTheme.buyGreyText),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   String? _mapTimer() {

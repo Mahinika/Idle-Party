@@ -105,6 +105,15 @@ void main() {
     expect(chase.detail, contains('Spend the gold in TRAIN'));
   });
 
+  test('ready vault on CAMP day names free camp levels', () {
+    final ready = week(1).copyWith(
+      metaDepth: week(1).metaDepth.copyWith(
+        dailyVaultClears: GameLogic.dailyVaultClearTarget,
+      ),
+    );
+    expect(ReturnWeek.coachLine(ready), 'CAMP: 5 free levels ready');
+  });
+
   test('gold, essence, and tickets name the shelf that can be spent now', () {
     final broke = week(2);
     expect(ReturnWeek.readySpend(broke), isNull);

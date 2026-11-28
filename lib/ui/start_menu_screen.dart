@@ -71,6 +71,7 @@ class _StartMenuScreenState extends State<StartMenuScreen>
   late final AnimationController _exit;
   bool _finishing = false;
   bool _inputUnlocked = false;
+  bool _showRestore = false;
 
   @override
   void initState() {
@@ -296,13 +297,26 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                           }
                                         : null,
                                   ),
-                                  const SizedBox(height: 8),
-                                  GameButton(
-                                    label: 'CHOOSE PARTY',
-                                    style: GameButtonStyle.grey,
-                                    tip: 'Pick class, race, and a party name',
+                                  if (_showRestore) ...[
+                                    const SizedBox(height: 8),
+                                    GameButton(
+                                      label: 'CHOOSE PARTY',
+                                      style: GameButtonStyle.grey,
+                                      tip: 'Pick class, race, and a party name',
+                                      onPressed: _inputUnlocked
+                                          ? _pressNewGame
+                                          : null,
+                                    ),
+                                  ],
+                                  const SizedBox(height: 6),
+                                  MenuChrome.textLink(
+                                    label: _showRestore
+                                        ? 'Hide save options'
+                                        : 'Have a save?',
                                     onPressed: _inputUnlocked
-                                        ? _pressNewGame
+                                        ? () => setState(
+                                              () => _showRestore = !_showRestore,
+                                            )
                                         : null,
                                   ),
                                 ] else
@@ -314,54 +328,57 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                         ? _pressNewGame
                                         : null,
                                   ),
-                                const SizedBox(height: 8),
-                                GameButton(
-                                  label: 'RESTORE SAVE',
-                                  style: GameButtonStyle.grey,
-                                  tip: 'Paste a save from the clipboard',
-                                  onPressed: _inputUnlocked
-                                      ? widget.onRestore
-                                      : null,
-                                ),
-                                if (widget.onRestoreCloud != null) ...[
+                                if (widget.onPlay == null || _showRestore) ...[
                                   const SizedBox(height: 8),
                                   GameButton(
-                                    label: 'RESTORE CLOUD',
+                                    label: 'RESTORE SAVE',
                                     style: GameButtonStyle.grey,
-                                    tip:
-                                        'Play Games backup on this Google account',
+                                    tip: 'Paste a save from the clipboard',
                                     onPressed: _inputUnlocked
-                                        ? widget.onRestoreCloud
+                                        ? widget.onRestore
                                         : null,
                                   ),
-                                ],
-                                const SizedBox(height: 4),
-                                Wrap(
-                                  alignment: WrapAlignment.center,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  spacing: 4,
-                                  children: [
-                                    if (widget.onSettings != null)
-                                      MenuChrome.textLink(
-                                        label: 'SETTINGS',
-                                        onPressed: _inputUnlocked
-                                            ? widget.onSettings
-                                            : null,
-                                      ),
-                                    MenuChrome.textLink(
-                                      label: 'PRIVACY',
+                                  if (widget.onRestoreCloud != null) ...[
+                                    const SizedBox(height: 8),
+                                    GameButton(
+                                      label: 'RESTORE CLOUD',
+                                      style: GameButtonStyle.grey,
+                                      tip:
+                                          'Play Games backup on this Google account',
                                       onPressed: _inputUnlocked
-                                          ? AdRewarded.showPrivacyOptions
-                                          : null,
-                                    ),
-                                    MenuChrome.textLink(
-                                      label: 'DISCORD',
-                                      onPressed: _inputUnlocked
-                                          ? () => CommunityLinks.openDiscord()
+                                          ? widget.onRestoreCloud
                                           : null,
                                     ),
                                   ],
-                                ),
+                                  const SizedBox(height: 4),
+                                  Wrap(
+                                    alignment: WrapAlignment.center,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: 4,
+                                    children: [
+                                      if (widget.onSettings != null)
+                                        MenuChrome.textLink(
+                                          label: 'SETTINGS',
+                                          onPressed: _inputUnlocked
+                                              ? widget.onSettings
+                                              : null,
+                                        ),
+                                      MenuChrome.textLink(
+                                        label: 'PRIVACY',
+                                        onPressed: _inputUnlocked
+                                            ? AdRewarded.showPrivacyOptions
+                                            : null,
+                                      ),
+                                      MenuChrome.textLink(
+                                        label: 'DISCORD',
+                                        onPressed: _inputUnlocked
+                                            ? () => CommunityLinks.openDiscord()
+                                            : null,
+                                      ),
+                                    ],
+                                  ),
+                                ],
                                 const SizedBox(height: 6),
                                 Text(
                                   kReleaseMode
