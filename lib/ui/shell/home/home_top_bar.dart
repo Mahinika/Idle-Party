@@ -223,6 +223,7 @@ class HomeTopBar extends StatelessWidget {
                       child: Text(
                         fast ? '2×' : '1×',
                         maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GameTheme.button(
                           size: GameTheme.typeButtonDense,
                           color: fast
@@ -271,6 +272,7 @@ class HomeTopBar extends StatelessWidget {
                                     : Text(
                                         'MENU',
                                         maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         softWrap: false,
                                         textAlign: TextAlign.center,
                                         style: GameTheme.hint(

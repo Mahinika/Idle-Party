@@ -152,7 +152,12 @@ class PartyHudSpecLine extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 4),
-        Text('L$level', maxLines: 1, style: GameTheme.combat(color: color)),
+        Text(
+          'L$level',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.combat(color: color),
+        ),
         if (extra.isNotEmpty) ...[
           const SizedBox(width: 4),
           Flexible(
@@ -1169,6 +1174,7 @@ class _HomePartyChip extends StatelessWidget {
                 'L$level',
                 key: PartyCornerHud.chipLevelKey,
                 maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 softWrap: false,
                 style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),

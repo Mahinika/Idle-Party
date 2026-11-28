@@ -556,6 +556,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
           child: Text(
             ForgeOverlay.boughtSummary(state, plain: plain),
             maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             softWrap: true,
             style: GameTheme.readable(
               color: homeFight ? GameTheme.parchmentDim : GameTheme.parchment,

@@ -343,6 +343,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
                         SanctuaryOverlay.watchFreeCaption(state),
                         key: SanctuaryOverlay.watchFreeCaptionKey,
                         maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: GameTheme.hint(color: GameTheme.parchmentDim),
                       ),
                     ),

@@ -399,6 +399,7 @@ class QtyBadge extends StatelessWidget {
         child: Text(
           '×$quantity',
           maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: GameTheme.hint(color: GameTheme.toggleOnText),
         ),
       ),

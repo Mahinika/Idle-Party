@@ -8,6 +8,7 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- Fixlist UI batch 4 (IP-337–381): `TextOverflow.ellipsis` on remaining capped `Text` widgets in shell/hub HUD; mechanical fixlist status in `docs/fixlist-ui-751c-status.md`.
 - Fixlist UI batch 3 (IP-026–030): a11y on race/spec picks, rift tier stepper, offline banner, sheet scrim; party HUD and coach lines allow two lines at 1.45; MARKET chip ellipsis; Apex material rows min touch; offline welcome still opens at 5 min away (not 2 min).
 - Fixlist UI (IP-022–228): SLOW chip hint, SCROLLS rail rename, MERGE copy, ASCEND ghost, vault claimed tap, quest reroll (ad) label, party chip text scale, shop blurbs, Apex CRAFT a11y, Cinders on ESSENCE bar, title CHOOSE PARTY, starter pouch label.
 - Fixlist UI copy: town QUESTS sign, TRAIN/MENU/MARKET player strings, hub→town via NavCopy, lantern and bag empty hints, Discord defer after offline return, relic discover line.

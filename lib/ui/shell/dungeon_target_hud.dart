@@ -335,6 +335,7 @@ class TargetCornerHud extends StatelessWidget {
                   Text(
                     hpLabel,
                     maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 ],
@@ -452,6 +453,7 @@ class _TargetRoleTag extends StatelessWidget {
       child: Text(
         label,
         maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: GameTheme.combat(color: color),
       ),
     );

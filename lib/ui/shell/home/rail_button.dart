@@ -143,6 +143,7 @@ class RailButton extends StatelessWidget {
                       child: Text(
                         pip,
                         maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GameTheme.hint(
                           color: GameTheme.ink,
                         ).copyWith(height: 1.0),
