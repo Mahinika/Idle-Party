@@ -362,6 +362,7 @@ class CharacterEquipPanel extends StatelessWidget {
                         : 'HP ${hero.currentHp.clamp(0, maxHp)}/$maxHp',
                     textAlign: TextAlign.center,
                     maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GameTheme.section(color: GameTheme.parchmentDim),
                   ),
                 ],
@@ -503,6 +504,7 @@ class CharacterEquipPanel extends StatelessWidget {
                         key: CharacterEquipPanel.slotLegendKey,
                         textAlign: TextAlign.center,
                         maxLines: compact && big ? 3 : 2,
+                        overflow: TextOverflow.ellipsis,
                         style: GameTheme.hint(color: GameTheme.parchmentDim),
                       );
                     },
