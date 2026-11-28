@@ -8,6 +8,8 @@ checks that this file changed.
 
 ## [Unreleased]
 
+- Combat floaters use left/right gutter lanes for heals and hits, mitigation pills under units, hit merge within 0.4s, mid-fight toasts under the target strip (not on the scrum).
+
 - ROI round 2: Play leaderboard month fallback, seasonal week rotation past 2026-W53, WISP claim timing, shop unknown SKU safety, Firebase single boot, CI push dedupe + release appbundle on PR, sampled virtual-currency analytics, auto-sell single pass, guides dedupe, FTUE integration_test, status in `docs/roi2_status.md`.
 - ROI batch 2: title PLAY + restore sheet, FARM/PUSH hint through 3 clears, MENU dot for claims only, CAMP coach line, locked town signs, modal budget, notify after first boss, Play Games protect card, hide locked nav tabs.
 - IP-048–222: Crashlytics non-fatals on save/friend/boot catches, release `debugPrint` gated behind `kDebugMode`, post-frame measure guards on fight chrome/docks, deferred install-referrer read, shop restore idempotency test.

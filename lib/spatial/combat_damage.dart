@@ -10,16 +10,16 @@ int combatApplyHeroIncomingDamage(
   bool isMelee = true,
 }) {
   if (hero.iceBlockTimer > 0 || hero.vanishTimer > 0) {
-    if (!reducedVfx) {
-      SpatialCombat.spawnFloater(
-        world,
-        x: hero.x,
-        y: hero.y - 0.45,
-        text: hero.iceBlockTimer > 0 ? 'ICE BLOCK' : 'MISS',
-        argb: 0xFFA0D8FF,
-        life: 0.35,
-      );
-    }
+    SpatialCombat.spawnFloater(
+      world,
+      x: hero.x,
+      y: hero.y - 0.45,
+      text: hero.iceBlockTimer > 0 ? 'ICE BLOCK' : 'MISS',
+      argb: 0xFFA0D8FF,
+      life: 0.35,
+      priority: 2,
+      followActorId: hero.id,
+    );
     return 0;
   }
 
@@ -47,6 +47,7 @@ int combatApplyHeroIncomingDamage(
         argb: 0xFF90E0A0,
         life: 0.35,
         priority: 2,
+        followActorId: hero.id,
       );
     }
     if (blocked &&
@@ -97,7 +98,7 @@ int combatApplyHeroIncomingDamage(
     hero.absorbShield -= absorbed;
     dealt -= absorbed;
     held += absorbed;
-    if (!reducedVfx && absorbed > 0) {
+    if (absorbed > 0) {
       SpatialCombat.spawnFloater(
         world,
         x: hero.x,
@@ -105,6 +106,8 @@ int combatApplyHeroIncomingDamage(
         text: 'ABSORB $absorbed',
         argb: 0xFF80C0FF,
         life: 0.4,
+        priority: 2,
+        followActorId: hero.id,
       );
     }
     if (dealt <= 0) {
@@ -136,6 +139,7 @@ int combatApplyHeroIncomingDamage(
       argb: 0xFF9AD0FF,
       life: 0.4,
       priority: 2,
+      followActorId: hero.id,
     );
   }
   if (dealt > 0) {

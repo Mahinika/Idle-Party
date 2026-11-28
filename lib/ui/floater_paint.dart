@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
+import '../models/vfx_quality.dart';
+import '../spatial/combat_floater_layout.dart';
 import '../spatial/spatial_combat.dart';
 import 'floater_banner_stack.dart';
 import 'floater_label_cache.dart';
@@ -16,16 +18,24 @@ class HeldFloater {
     required this.argb,
     required this.priority,
     required this.speech,
+    required this.placement,
+    required this.isCrit,
+    required this.initialLife,
     required this.x,
     required this.y,
+    required this.spawnOrder,
   });
 
   final int born;
   final int span;
-  final String text;
-  final int argb;
+  String text;
+  int argb;
   final int priority;
   final bool speech;
+  final CombatFloaterPlacement placement;
+  final bool isCrit;
+  final double initialLife;
+  final int spawnOrder;
   double x;
   double y;
 }
@@ -34,8 +44,12 @@ class HeldFloater {
 @visibleForTesting
 abstract final class FloaterHold {
   static final Map<int, HeldFloater> live = {};
+  static var _spawnSeq = 0;
 
-  static void reset() => live.clear();
+  static void reset() {
+    live.clear();
+    _spawnSeq = 0;
+  }
 
   static void sync({
     required List<SpatialFloater> floaters,
@@ -59,12 +73,18 @@ abstract final class FloaterHold {
           argb: floater.argb,
           priority: floater.priority,
           speech: floater.kind == SpatialFloaterKind.speech,
+          placement: floater.placement,
+          isCrit: floater.isCrit,
+          initialLife: floater.initialLife,
+          spawnOrder: _spawnSeq++,
           x: floater.x,
           y: floater.y,
         );
       } else {
         held.x = floater.x;
         held.y = floater.y;
+        held.text = floater.text;
+        held.argb = floater.argb;
       }
     }
     live.removeWhere((id, held) {
@@ -96,7 +116,11 @@ Offset floaterLabelAnchor({
   required double tile,
   required double width,
   required double height,
+  bool pill = false,
 }) {
+  if (pill) {
+    return Offset(center.dx - width / 2, center.dy - height / 2);
+  }
   return speech
       ? Offset(center.dx - width / 2, center.dy - height / 2)
       : Offset(
@@ -112,6 +136,7 @@ Rect floaterLabelRect({
   required double tile,
   required double width,
   required double height,
+  bool pill = false,
 }) {
   final anchor = floaterLabelAnchor(
     center: center,
@@ -119,6 +144,7 @@ Rect floaterLabelRect({
     tile: tile,
     width: width,
     height: height,
+    pill: pill,
   );
   return Rect.fromLTWH(anchor.dx, anchor.dy, width, height);
 }
@@ -132,6 +158,15 @@ void resetFloaterPaintState() {
 
 @visibleForTesting
 void debugResetFloaterCaches() => resetFloaterPaintState();
+
+@visibleForTesting
+double gutterLaneYOffset({
+  required int stackIndex,
+  required double lineHeight,
+  required double rise,
+}) {
+  return -(stackIndex + 1) * lineHeight - rise;
+}
 
 /// Paints floater labels for one frame. Used by the dungeon painter and by
 /// widget tests that drive a [PictureRecorder] or [CustomPaint] canvas.
@@ -148,9 +183,13 @@ void paintFloaterLabels({
   double? minLabelTop,
   double? maxLabelBottom,
   List<FloaterReserve> avoid = const [],
+  VfxQuality vfxQuality = VfxQuality.full,
+  double viewWidthTiles = 12,
 }) {
   final rareLoot = floaters.any((f) => f.priority >= 3);
-  final show = showBursts || showPriorityFloaters || rareLoot;
+  final showMitigationOnly =
+      vfxQuality == VfxQuality.minimal && !showBursts && !showPriorityFloaters;
+  final show = showBursts || showPriorityFloaters || rareLoot || showMitigationOnly;
   FloaterHold.sync(floaters: floaters, frame: visualFrame, show: show);
   FloaterLabelCache.beginFrame();
   if (!show) {
@@ -161,83 +200,109 @@ void paintFloaterLabels({
     Offset center(double tx, double ty) =>
         Offset(originX + tx * tile, originY + ty * tile);
 
-    final maxW = tile * 4.4;
+    final maxW = tile * 3.2;
     final visible = <HeldFloater>[];
     for (final floater in FloaterHold.live.values) {
+      final mitigation =
+          floater.placement == CombatFloaterPlacement.unitPill &&
+          (CombatFloaterLayout.isMitigationWord(floater.text) ||
+              CombatFloaterLayout.isAbsorbWord(floater.text));
       final rare = floater.priority >= 3;
-      if (!showBursts && !showPriorityFloaters && !rare) continue;
-      if (!showBursts && floater.priority < 2) continue;
+      if (vfxQuality == VfxQuality.minimal && !mitigation && !rare) continue;
+      if (!showBursts &&
+          !showPriorityFloaters &&
+          !rare &&
+          !(vfxQuality == VfxQuality.minimal && mitigation)) {
+        if (floater.placement == CombatFloaterPlacement.gutterBeneficial ||
+            floater.placement == CombatFloaterPlacement.gutterHostile) {
+          continue;
+        }
+      }
+      if (!showBursts &&
+          floater.placement == CombatFloaterPlacement.gutterHostile &&
+          floater.priority < 2) {
+        continue;
+      }
+      if (floater.placement == CombatFloaterPlacement.gutterBeneficial ||
+          floater.placement == CombatFloaterPlacement.gutterHostile ||
+          floater.placement == CombatFloaterPlacement.speech) {
+        visible.add(floater);
+        continue;
+      }
       if (!inView(floater.x, floater.y, pad: 0.5)) continue;
       visible.add(floater);
     }
 
-    final pairs = <({TextPainter fill, TextPainter outline})>[];
-    final stackSpecs = <FloaterBannerSpec>[];
-    final laneIndex = <int>[];
-    var laneX = 0.0;
-    var laneTop = double.infinity;
-    for (var i = 0; i < visible.length; i++) {
-      final floater = visible[i];
-      if (!FloaterBannerStack.usesSharedLane(floater.text)) continue;
-      laneIndex.add(i);
-      laneX += floater.x;
-      final y = floaterDisplayY(
-        y: floater.y,
-        speech: floater.speech,
-        priority: floater.priority,
-      );
-      if (y < laneTop) laneTop = y;
+    final leftLane = <HeldFloater>[];
+    final rightLane = <HeldFloater>[];
+    for (final f in visible) {
+      if (f.placement == CombatFloaterPlacement.gutterBeneficial) {
+        leftLane.add(f);
+      } else if (f.placement == CombatFloaterPlacement.gutterHostile) {
+        rightLane.add(f);
+      }
     }
-    final sharedLane = laneIndex.isNotEmpty;
-    if (sharedLane) {
-      laneX /= laneIndex.length;
-      // One column above the bodies the words used to sit on.
-      laneTop -= 1.6;
-    }
-    for (var i = 0; i < visible.length; i++) {
-      final floater = visible[i];
+    leftLane.sort((a, b) => a.spawnOrder.compareTo(b.spawnOrder));
+    rightLane.sort((a, b) => a.spawnOrder.compareTo(b.spawnOrder));
+
+    final laneBottomPx = maxLabelBottom != null
+        ? originY + maxLabelBottom * tile - tile * 0.15
+        : originY + tile * 10;
+    final lineH = tile * 0.34;
+    final leftX = originX + tile * 0.12;
+    final rightMargin = originX + viewWidthTiles * tile - tile * 0.12;
+
+    final pairs = <({TextPainter fill, TextPainter outline, HeldFloater floater})>[];
+
+    for (final floater in visible) {
       final speech = floater.speech;
       final age = (visualFrame - floater.born) / floater.span;
       final alpha = (1 - age).clamp(0.0, 1.0);
+      final critScale = floater.isCrit ? 1.12 : 1.0;
       final size =
           tile *
-          (speech ? 0.28 : 0.32) *
-          SpatialCombat.floaterReadScale(floater.priority);
+          (speech ? 0.28 : (floater.placement == CombatFloaterPlacement.unitPill ? 0.24 : 0.30)) *
+          SpatialCombat.floaterReadScale(floater.priority) *
+          critScale;
       final snapped = (alpha * 10).round() / 10.0;
       final color = Color(floater.argb).withValues(alpha: snapped);
       final outline = GameTheme.lootInkShadow.withValues(alpha: snapped * 0.9);
-      final abilityName = FloaterBannerStack.isAbilityName(floater.text);
       final pair = FloaterLabelCache.pair(
         text: floater.text,
         size: size < GameTheme.hudPixel ? GameTheme.hudPixel : size,
         color: color,
         outline: outline,
         maxWidth: maxW,
-        maxLines: abilityName ? 2 : null,
+        maxLines: floater.placement == CombatFloaterPlacement.unitPill ? 1 : null,
       );
-      pairs.add(pair);
-      final displayY = floaterDisplayY(
-        y: floater.y,
-        speech: speech,
-        priority: floater.priority,
-      );
-      final inLane = sharedLane && laneIndex.contains(i);
-      if (FloaterBannerStack.isStackable(
-        speech: speech,
+      pairs.add((fill: pair.fill, outline: pair.outline, floater: floater));
+    }
+
+    final stackSpecs = <FloaterBannerSpec>[];
+    for (var i = 0; i < pairs.length; i++) {
+      final floater = pairs[i].floater;
+      if (floater.placement != CombatFloaterPlacement.payoffBanner) continue;
+      if (!FloaterBannerStack.isStackable(
+        speech: floater.speech,
         priority: floater.priority,
         text: floater.text,
       )) {
-        stackSpecs.add(
-          FloaterBannerSpec(
-            id: i,
-            x: inLane ? laneX : floater.x,
-            y: inLane ? laneTop : displayY,
-            priority: floater.priority,
-            born: floater.born,
-            heightTiles: pair.fill.height / tile,
-          ),
-        );
+        continue;
       }
+      stackSpecs.add(
+        FloaterBannerSpec(
+          id: i,
+          x: floater.x,
+          y: floaterDisplayY(
+            y: floater.y,
+            speech: floater.speech,
+            priority: floater.priority,
+          ),
+          priority: floater.priority,
+          born: floater.born,
+          heightTiles: pairs[i].fill.height / tile,
+        ),
+      );
     }
     final stackDy = FloaterBannerStack.dyById(
       stackSpecs,
@@ -245,52 +310,94 @@ void paintFloaterLabels({
       maxLabelBottom: maxLabelBottom,
       avoid: avoid,
     );
+
     final bubbleFill = Paint()..style = PaintingStyle.fill;
     final bubbleStroke = Paint()..style = PaintingStyle.stroke;
-    for (var i = 0; i < visible.length; i++) {
-      final floater = visible[i];
+    final pillFill = Paint()..style = PaintingStyle.fill;
+    final pillStroke = Paint()..style = PaintingStyle.stroke;
+
+    for (var i = 0; i < pairs.length; i++) {
+      final floater = pairs[i].floater;
+      final tp = pairs[i].fill;
+      final tpOutline = pairs[i].outline;
       final speech = floater.speech;
       final age = (visualFrame - floater.born) / floater.span;
       final alpha = (1 - age).clamp(0.0, 1.0);
-      final tp = pairs[i].fill;
-      final tpOutline = pairs[i].outline;
-      final inLane = sharedLane && laneIndex.contains(i);
-      final displayY =
-          (inLane
-              ? laneTop
-              : floaterDisplayY(
-                  y: floater.y,
-                  speech: speech,
-                  priority: floater.priority,
-                )) +
-          (stackDy[i] ?? 0);
-      final c = center(inLane ? laneX : floater.x, displayY);
-      if (speech) {
-        final padX = tile * 0.12;
-        final padY = tile * 0.06;
-        final bubble = RRect.fromRectAndRadius(
-          Rect.fromLTWH(
-            c.dx - tp.width / 2 - padX,
-            c.dy - tp.height / 2 - padY,
-            tp.width + padX * 2,
-            tp.height + padY * 2,
-          ),
-          Radius.circular(tile * 0.12),
+      final rise = (1 - floater.span > 0
+              ? age * tile * 0.45
+              : 0.0);
+      late Offset anchor;
+      if (floater.placement == CombatFloaterPlacement.gutterBeneficial) {
+        final idx = leftLane.indexOf(floater);
+        final yOff = gutterLaneYOffset(
+          stackIndex: idx,
+          lineHeight: lineH,
+          rise: rise,
         );
-        bubbleFill.color = const Color(0xCC1A1420).withValues(alpha: alpha);
-        canvas.drawRRect(bubble, bubbleFill);
-        bubbleStroke
-          ..color = Color(floater.argb).withValues(alpha: alpha * 0.55)
-          ..strokeWidth = tile * 0.03 < 1.0 ? 1.0 : tile * 0.03;
-        canvas.drawRRect(bubble, bubbleStroke);
+        anchor = Offset(leftX, laneBottomPx + yOff);
+      } else if (floater.placement == CombatFloaterPlacement.gutterHostile) {
+        final idx = rightLane.indexOf(floater);
+        final yOff = gutterLaneYOffset(
+          stackIndex: idx,
+          lineHeight: lineH,
+          rise: rise,
+        );
+        anchor = Offset(rightMargin - tp.width, laneBottomPx + yOff);
+      } else {
+        final displayY = floaterDisplayY(
+              y: floater.y,
+              speech: speech,
+              priority: floater.priority,
+            ) +
+            (stackDy[i] ?? 0);
+        final c = center(floater.x, displayY);
+        final pill = floater.placement == CombatFloaterPlacement.unitPill;
+        if (pill) {
+          final padX = tile * 0.08;
+          final padY = tile * 0.04;
+          final bubble = RRect.fromRectAndRadius(
+            Rect.fromLTWH(
+              c.dx - tp.width / 2 - padX,
+              c.dy - tp.height / 2 - padY,
+              tp.width + padX * 2,
+              tp.height + padY * 2,
+            ),
+            Radius.circular(tile * 0.1),
+          );
+          pillFill.color = GameTheme.stoneDeep.withValues(alpha: alpha * 0.82);
+          canvas.drawRRect(bubble, pillFill);
+          pillStroke
+            ..color = Color(floater.argb).withValues(alpha: alpha * 0.65)
+            ..strokeWidth = 1;
+          canvas.drawRRect(bubble, pillStroke);
+        } else if (speech) {
+          final padX = tile * 0.12;
+          final padY = tile * 0.06;
+          final bubble = RRect.fromRectAndRadius(
+            Rect.fromLTWH(
+              c.dx - tp.width / 2 - padX,
+              c.dy - tp.height / 2 - padY,
+              tp.width + padX * 2,
+              tp.height + padY * 2,
+            ),
+            Radius.circular(tile * 0.12),
+          );
+          bubbleFill.color = const Color(0xCC1A1420).withValues(alpha: alpha);
+          canvas.drawRRect(bubble, bubbleFill);
+          bubbleStroke
+            ..color = Color(floater.argb).withValues(alpha: alpha * 0.55)
+            ..strokeWidth = tile * 0.03 < 1.0 ? 1.0 : tile * 0.03;
+          canvas.drawRRect(bubble, bubbleStroke);
+        }
+        anchor = floaterLabelAnchor(
+          center: c,
+          speech: speech,
+          tile: tile,
+          width: tp.width,
+          height: tp.height,
+          pill: pill,
+        );
       }
-      final anchor = floaterLabelAnchor(
-        center: c,
-        speech: speech,
-        tile: tile,
-        width: tp.width,
-        height: tp.height,
-      );
       for (final off in const [
         Offset(-1, 0),
         Offset(1, 0),

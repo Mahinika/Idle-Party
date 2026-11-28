@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/spatial/combat_floater_layout.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/spatial/tile_map.dart';
 import 'package:idle_party/ui/floater_banner_stack.dart';
@@ -126,38 +127,40 @@ void main() {
     );
   });
 
-  test(
-    'ABSORB is dropped by the routine cap of 4 (documented spawn behavior)',
-    () {
-      // ABSORB is spawned at priority 0 (combat_damage.dart). The routine cap
-      // of 4 in spawnFloater can therefore drop it. Paint-time stacking treats
-      // text starting with ABSORB as stackable but does not raise its spawn
-      // priority, so visibility and caps stay unchanged.
-      final world = _emptyWorld();
-      for (var i = 0; i < 4; i++) {
-        SpatialCombat.spawnFloater(
-          world,
-          x: 4,
-          y: 4,
-          text: '${10 + i}',
-          argb: 0xFFFF6A4A,
-        );
-      }
-      expect(world.floaters.where((f) => f.priority <= 0).length, 4);
+  test('ABSORB mitigation pill spawns beside a full hostile lane cap', () {
+    final world = _emptyWorld();
+    for (var i = 0; i < 6; i++) {
       SpatialCombat.spawnFloater(
         world,
-        x: 8,
-        y: 8,
-        text: 'ABSORB 12',
-        argb: 0xFF80C0FF,
+        x: 4,
+        y: 4,
+        text: '${10 + i}',
+        argb: 0xFFFF6A4A,
       );
-      expect(
-        world.floaters.any((f) => f.text.startsWith('ABSORB')),
-        isFalse,
-        reason: 'routine cap 4 drops ABSORB when four priority-0 numbers are live',
-      );
-    },
-  );
+    }
+    expect(
+      world.floaters
+          .where((f) => f.placement == CombatFloaterPlacement.gutterHostile)
+          .length,
+      6,
+    );
+    SpatialCombat.spawnFloater(
+      world,
+      x: 8,
+      y: 8,
+      text: 'ABSORB 12',
+      argb: 0xFF80C0FF,
+      priority: 2,
+    );
+    expect(
+      world.floaters.any(
+        (f) =>
+            f.text.startsWith('ABSORB') &&
+            f.placement == CombatFloaterPlacement.unitPill,
+      ),
+      isTrue,
+    );
+  });
 
   test(
     'ABSORB stacks with ELITE DOWN and LEVEL UP when the routine cap leaves room',
