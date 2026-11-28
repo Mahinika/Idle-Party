@@ -181,5 +181,10 @@ jobs:
           echo "sdk.dir=$sdk" >> android/local.properties
           echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14'
+
       - name: Build release app bundle (unsigned)
         run: flutter build appbundle --release
