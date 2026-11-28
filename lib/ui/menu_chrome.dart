@@ -1139,6 +1139,7 @@ abstract final class MenuChrome {
     required int divisions,
     required ValueChanged<double> onChanged,
     String? label,
+    String? semanticsValue,
   }) {
     return _MenuSlider(
       value: value,
@@ -1147,6 +1148,7 @@ abstract final class MenuChrome {
       divisions: divisions,
       onChanged: onChanged,
       label: label,
+      semanticsValue: semanticsValue,
     );
   }
 
@@ -1182,6 +1184,7 @@ class _MenuSlider extends StatelessWidget {
     required this.divisions,
     required this.onChanged,
     this.label,
+    this.semanticsValue,
   });
 
   final double value;
@@ -1190,6 +1193,7 @@ class _MenuSlider extends StatelessWidget {
   final int divisions;
   final ValueChanged<double> onChanged;
   final String? label;
+  final String? semanticsValue;
 
   void _setFromLocal(double localX, double width) {
     if (width <= 0) return;
@@ -1210,7 +1214,7 @@ class _MenuSlider extends StatelessWidget {
         return Semantics(
           slider: true,
           label: label ?? 'Slider',
-          value: '$pct percent',
+          value: semanticsValue ?? '$pct percent',
           child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapDown: (d) => _setFromLocal(d.localPosition.dx, w),

@@ -81,6 +81,7 @@ abstract final class LocalReminders {
   /// Never on install, never on first loot, never in a fight.
   static bool shouldOfferOptIn(GameState state) {
     if (state.inDungeon) return false;
+    if (state.bossVictories < 1) return false;
     if (state.metaDepth.notifyPrompted || state.metaDepth.notifyOptIn) {
       return false;
     }
@@ -93,11 +94,8 @@ abstract final class LocalReminders {
     GameState state, {
     required bool floorClear,
   }) {
-    if (!floorClear || state.isPartyDefeated) return false;
-    if (state.metaDepth.notifyPrompted || state.metaDepth.notifyOptIn) {
-      return false;
-    }
-    return _playedAFloor(state);
+    // Town or next session only — never over a floor-clear reward moment.
+    return false;
   }
 
   /// SETTINGS row after the milestone (or after they already answered).
