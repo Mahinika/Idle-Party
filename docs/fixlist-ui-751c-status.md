@@ -343,3 +343,11 @@ The table above has **165** `verified-not-real` rows (the summary line is not an
 - Enemy name on the target HUD used `TextOverflow.clip` (`dungeon_target_hud.dart`, same HUD as IP-095–099).
 - God Hand cooldown (`9.9s`) sits in a 28 dp ring (`spatial_dungeon_view.dart`, same view as IP-251/252).
 - MERGE slot label `FIRST` / `SECOND` had `maxLines` and no overflow (`bag_combine_slot.dart`, IP-311's file; the item name already ellipsized).
+
+Shop and SCROLLS goldens were rebaked on Linux Flutter 3.47.9 because #138 and #140 both changed the same screens. Paths:
+
+- `test/goldens/after/home_shop_compact_a56.png`
+- `test/goldens/after/scrolls_a56.png`
+- `test/goldens/after/shop_a56.png`
+
+`test/goldens/after/welcome_back_a56.png` is the #140 image (only that PR changed it). The other #138 goldens are unchanged from that PR.
