@@ -335,3 +335,11 @@ Status values: **fixed** | **verified-not-real** | **skipped-needs-approval** | 
 - `flutter analyze lib test --no-fatal-infos`
 - Targeted widget tests for touched files
 - GitHub: `changelog-main`, `analyze-test`, `compile-kotlin` on PR #138
+
+## Integration spot-check (cursor/integrate-fixlist-751c)
+
+The table above has **165** `verified-not-real` rows (the summary line is not an item). A 32-id spot-check against this branch's source found **29 truly not real**. Three neighboring clips in files those rows already named were real and got `TextOverflow.ellipsis` (no `FittedBox`, no copy change):
+
+- Enemy name on the target HUD used `TextOverflow.clip` (`dungeon_target_hud.dart`, same HUD as IP-095–099).
+- God Hand cooldown (`9.9s`) sits in a 28 dp ring (`spatial_dungeon_view.dart`, same view as IP-251/252).
+- MERGE slot label `FIRST` / `SECOND` had `maxLines` and no overflow (`bag_combine_slot.dart`, IP-311's file; the item name already ellipsized).

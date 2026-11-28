@@ -403,7 +403,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
           targetHeight: targetHeight,
         );
       } catch (e, st) {
-        if (kDebugMode) debugPrint('DecodedImageCache soft load failed ($asset): $e\n$st');
+        if (kDebugMode)
+          debugPrint('DecodedImageCache soft load failed ($asset): $e\n$st');
         return null;
       }
     }
@@ -875,8 +876,9 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                   1.0,
                                 );
                               }
-                              final presentationCalm =
-                                  fightPresentationCalm(context);
+                              final presentationCalm = fightPresentationCalm(
+                                context,
+                              );
                               final frame = widget.director.visualFrame;
                               final advanced = _easeVisualFrame == null
                                   ? 0
@@ -1296,6 +1298,7 @@ class GodHandRing extends StatelessWidget {
                                     formatCombatSeconds(cooldown),
                                     maxLines: 1,
                                     softWrap: false,
+                                    overflow: TextOverflow.ellipsis,
                                     style: GameTheme.hint(color: color),
                                   ),
                           ),

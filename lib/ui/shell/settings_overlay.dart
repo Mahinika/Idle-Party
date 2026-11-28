@@ -298,9 +298,9 @@ class _SettingsOverlayState extends State<SettingsOverlay>
                   SizedBox(
                     width:
                         40 *
-                            MediaQuery.textScalerOf(context)
-                                .scale(1)
-                                .clamp(1.0, 2.0) +
+                            MediaQuery.textScalerOf(
+                              context,
+                            ).scale(1).clamp(1.0, 2.0) +
                         12,
                     child: Text(
                       percent,
@@ -352,7 +352,8 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         const SizedBox(height: 8),
         _SettingsCycle(
           label: state.combatPace >= 2 ? 'Fight speed 2×' : 'Fight speed 1×',
-          hint: 'How fast the cave plays. Gold while you are away does not change.',
+          hint:
+              'How fast the cave plays. Gold while you are away does not change.',
           onCycle: director.cycleCombatPace,
         ),
         const SizedBox(height: 8),

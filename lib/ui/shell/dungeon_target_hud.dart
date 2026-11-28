@@ -13,9 +13,7 @@ import 'shell_common.dart';
 double targetStripHeight(TextScaler scaler) {
   final raw = scaler.scale(1);
   final scale = raw.clamp(1.0, GameTheme.typeScaleMax);
-  final vPad = raw > GameTheme.typeScaleMax
-      ? 0.0
-      : (scale >= 1.4 ? 1.0 : 2.0);
+  final vPad = raw > GameTheme.typeScaleMax ? 0.0 : (scale >= 1.4 ? 1.0 : 2.0);
   // Measured from combat + hint on two lines (name row + HP row).
   // Name row may wrap to two lines on wide targets; reserve two at 1.45.
   final titleLine = GameTheme.hudPixelComfort * 1.2 * scale;
@@ -38,7 +36,11 @@ double bossIntroBannerTop(double textScale) {
 
 /// Timed "BOSS — name" callout. Sits in open map, not on the corner frame.
 class BossIntroBanner extends StatelessWidget {
-  const BossIntroBanner({super.key, required this.name, this.prefix = 'BOSS — '});
+  const BossIntroBanner({
+    super.key,
+    required this.name,
+    this.prefix = 'BOSS — ',
+  });
 
   final String name;
   final String prefix;
@@ -271,7 +273,7 @@ class TargetCornerHud extends StatelessWidget {
         key: titleKey,
         maxLines: 2,
         softWrap: true,
-        overflow: TextOverflow.clip,
+        overflow: TextOverflow.ellipsis,
         style: GameTheme.combat(
           color: showEmpty
               ? GameTheme.parchmentDim.withValues(alpha: 0.55)
@@ -326,8 +328,9 @@ class TargetCornerHud extends StatelessWidget {
                         value: hpFrac,
                         minHeight: 3,
                         backgroundColor: GameTheme.equipChipBlocked,
-                        color:
-                            hpFrac > 0.35 ? GameTheme.bloodLit : GameTheme.blood,
+                        color: hpFrac > 0.35
+                            ? GameTheme.bloodLit
+                            : GameTheme.blood,
                       ),
                     ),
                   ),
@@ -383,10 +386,7 @@ class TargetCornerHud extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         title,
-        if (secondary != null) ...[
-          const SizedBox(height: 2),
-          secondary,
-        ],
+        if (secondary != null) ...[const SizedBox(height: 2), secondary],
       ],
     );
   }

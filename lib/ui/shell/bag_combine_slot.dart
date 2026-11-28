@@ -31,9 +31,12 @@ class _CombineSlot extends StatelessWidget {
                 label,
                 maxLines: 1,
                 softWrap: false,
-                style: GameTheme.hint(color: item != null
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.hint(
+                  color: item != null
                       ? GameTheme.torchHot
-                      : GameTheme.parchmentDim),
+                      : GameTheme.parchmentDim,
+                ),
               ),
             ),
             if (item != null) ...[

@@ -290,7 +290,8 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
       children: [
         MenuChrome.fold(
           title: 'Pick a hero and slot, then craft Apex gear.',
-          subtitle: 'Weapon first. Bosses fill the meter for the target you set here.',
+          subtitle:
+              'Weapon first. Bosses fill the meter for the target you set here.',
           children: [
             Text(
               'Opening this sheet saves that goal. Keeps through Ascend. '
